@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BVS ERP</title>
 <style>
 :root{
@@ -213,9 +213,25 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .mdb .bt{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 
 /* 반응형 */
+#mnav{display:none}
 @media(max-width:860px){
-  #app{grid-template-columns:0 1fr}#sb{display:none}
-  #main{padding:14px}.ksearch{min-width:0}.ksearch span{display:none}
+  #app{display:flex;flex-direction:column;height:100vh;height:100dvh}#sb{display:none}
+  #top{flex:none;height:auto;min-height:52px;padding:8px 12px;gap:6px;flex-wrap:wrap}
+  #top .ttl{font-size:14px}#top .crumb{display:none}.ksearch{min-width:0;padding:6px 8px}.ksearch span,.ksearch kbd{display:none}
+  .sel{padding:6px 24px 6px 8px;font-size:13px}.stamp{display:none}
+  #main{flex:1;min-height:0;padding:12px 12px calc(76px + env(safe-area-inset-bottom))}
+  .ph{margin-bottom:12px}.ph h2{font-size:18px}.ph .act{margin-left:0;width:100%}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:8px}.kpi{padding:10px 12px;min-height:76px}.kpi .v{font-size:18px}
+  .grid2,.grid32,.mapwrap{grid-template-columns:1fr!important}
+  #mapList{max-height:none}.sec h3{flex-wrap:wrap}.sec h3 .r.tiny{display:none}
+  .tbar .q{min-width:0;flex:1}
+  #dr{width:100vw;max-width:100vw}
+  #mnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--sf);border-top:1px solid var(--ln);overflow-x:auto;z-index:30;padding-bottom:env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch}
+  #mnav .mi{flex:1 0 64px;text-align:center;padding:8px 2px 6px;font-size:11px;color:var(--tx3);white-space:nowrap;position:relative}
+  #mnav .mi svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 2px}
+  #mnav .mi.on{color:var(--ac);font-weight:600}
+  #mnav .mi .bd{position:absolute;top:4px;right:10px;background:var(--crit);color:#fff;font-size:10px;padding:0 5px;border-radius:10px}
+  #toasts{left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -373,6 +389,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     </section>
   </main>
 </div>
+<nav id="mnav"></nav>
 
 <!-- 드로어 -->
 <div id="ovl" onclick="drClose()"></div>
@@ -525,9 +542,10 @@ var I={home:'<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/
 var NAV=[{g:'대시보드'},{k:'home',t:'홈',kb:'1'},{k:'alerts',t:'경보·무결성',kb:'2'},{g:'업무'},{k:'site',t:'현장 투입',kb:'3'},{k:'sales',t:'매출·문서',kb:'4'},{k:'money',t:'돈·정산',kb:'5'},{k:'close',t:'월 마감',kb:'6'},{g:'원장'},{k:'pl',t:'손익',kb:'7'},{k:'pm',t:'구매·자재',kb:'8'},{k:'hr',t:'인사·노무',kb:'9'},{k:'crew',t:'인력 배치표',kb:'0'}];
 var TITLE={home:'홈',alerts:'경보 · 무결성',site:'현장 투입',sales:'매출 · 업무문서',money:'돈 · 정산',close:'월 마감',pl:'손익',pm:'구매 · 자재',hr:'인사 · 노무',crew:'현장인력 배치표'};
 function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
-  return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+n.kb+'</span>')+'</div>'}).join('')}
+  return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+n.kb+'</span>')+'</div>'}).join('');
+  var mn=el('mnav');if(mn)mn.innerHTML=NAV.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
 function go(p){ST.page=p;
-  document.querySelectorAll('.ni').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});
+  document.querySelectorAll('.ni,#mnav .mi').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});
   document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});
   el('ttl').textContent=TITLE[p]||p;el('crumb').textContent=TITLE[p]||p;el('main').scrollTop=0;
   try{localStorage.setItem('bvs_page',p)}catch(e){}
@@ -1046,7 +1064,7 @@ async function reopenMonth(pm){var why=await ask('마감 해제',pm+' 마감을 
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast(pm+' 해제 '+r.data.reopened+'건','g');loadAll()}
 function renderAlerts(){
-  var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}
+  var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}var nm=el('alertNm');if(nm){nm.textContent=hot;nm.classList.toggle('hide',!hot)}
   el('alerts').innerHTML=D.al.length?D.al.map(function(r){var c=+r.cnt||0;return '<div class="al'+(c?' hot':' ok')+'"><div class="n">'+c+'</div><div class="t">'+esc(r.title)+'</div></div>'}).join(''):'<div class="al ok"><div class="n">–</div><div class="t">경보 뷰 0건</div></div>';
   grid('gIntg',[{k:'sort_ord',t:'#',f:'int'},{k:'check_name',t:'점검',l:1},{k:'cnt',t:'건수',f:function(v){return '<b class="'+((+v)?'wn':'pos')+'">'+v+'</b>'}},{k:'why',t:'설명',l:1,cls:'tiny dim'}],{rows:D.intg,csv:false});
 }
