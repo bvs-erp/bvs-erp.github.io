@@ -307,6 +307,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select><button class="btn p" id="btnApprove" onclick="approveDay()">이 날 제출분 승인</button></div></div>
       <div class="kpis" id="siteKpi"></div>
       <div class="sec"><h3>투입 명세</h3><div class="tb" id="gAtt"></div></div>
+      <div class="sec"><h3>공수 이의 신청 <span class="cnt" id="dispN"></span></h3><div class="tb" id="gDisp"></div></div>
       <div class="sec"><h3>일자 추이</h3><div class="tb" id="gTrend"></div></div>
     </section>
 
@@ -404,7 +405,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <script>
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
-var D={plans:[],attk:[],att:[],set:[],dash:[],pay:[],ldr:[],al:[],sd:[],sdm:[],gap:[],di:[],alw:[],cons:[],retro:[],pump:[],intg:[],ptn:[],close:[],items:[],pgap:[],sup:[],crew:[],carpool:[]};
+var D={disp:[],plans:[],attk:[],att:[],set:[],dash:[],pay:[],ldr:[],al:[],sd:[],sdm:[],gap:[],di:[],alw:[],cons:[],retro:[],pump:[],intg:[],ptn:[],close:[],items:[],pgap:[],sup:[],crew:[],carpool:[]};
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -688,6 +689,7 @@ async function loadAll(){
     ['carpool',sb.from('ceo_carpool').select('*')],
     ['mrev',sb.from('ceo_month_revenue').select('*').order('period_ym',{ascending:false}).limit(600)],
     ['mrevl',sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)],
+    ['disp',sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)],
     ['plans',sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')]
   ];
   var res;
@@ -756,10 +758,14 @@ function renderSite(){
   grid('gAtt',[{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,e:{field:'site_id',ph:'현장명 또는 코드'}},{k:'work_start',t:'출근',f:tm,e:{field:'work_start',get:tget('work_start'),ph:'HH:MM'}},{k:'work_end',t:'퇴근',f:tm,e:{field:'work_end',get:tget('work_end'),ph:'HH:MM'}},{k:'work_md',t:'공수',f:'num',sum:1,e:'work_md'},{k:'ot_hours',t:'잔업h',f:'num',sum:1,e:'ot_hours'},{k:'night_hours',t:'야간h',f:'num',e:'night_hours'},{k:'pay_amt',t:'지급',f:'won',sum:1},{k:'revenue_amt',t:'매출',f:'won',sum:1},{k:'margin',t:'마진',f:'sgn',sum:1},{k:'status',t:'상태',l:1,f:function(v,r){return (r.settled_ym?'<span class="pill g">마감</span>':pillSt(v))+(r.work_start&&!r.work_end&&r.source==='worker_app'?' <span class="pill r">퇴근 미등록</span>':'')+(r.source==='worker_app'?' <span class="pill">앱</span>':'')}},{k:'_x',t:'',l:1,f:function(v,r){return r.entry_id?(r.settled_ym?'':delBtn('labor',r.entry_id,r.person_name+' '+r.work_date)):''}}],
     {rows:rows,q:['person_name','site_name'],qph:'이름·현장',foot:true,sort:{k:'site_name',d:1},save:function(r,f,v){if(!r.entry_id)return Promise.resolve({ok:false,error:'키 없음(새로고침)'});return ceoSave('labor','entry_id')(r,f,v)},afterSave:function(){loadAll()}});
   edHint('gAtt','셀 더블클릭 → 수정 (지급·매출은 자동 재계산) · 삭제는 마감 전 기록만');
+  var openD=(D.disp||[]).filter(function(x){return x.status==='open'}).length;el('dispN').textContent=openD?'미처리 '+openD+'건':'';
+  grid('gDisp',[{k:'created_at',t:'접수',l:1,f:function(v){return esc(String(v).replace('T',' ').slice(0,16))}},{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num'},{k:'ot_hours',t:'연장h',f:'num'},{k:'message',t:'내용',l:1},{k:'status',t:'상태',l:1,f:function(v){return v==='open'?'<span class="pill y">미처리</span>':'<span class="pill g">처리</span>'}},{k:'resolution',t:'답변',l:1,cls:'tiny dim'},{k:'_a',t:'',l:1,f:function(v,r){return r.status==='open'?'<button class="stbtn" onclick="event.stopPropagation();resolveDisp('+r.dispute_id+')">처리</button>':''}}],{rows:D.disp,csv:false,empty:'이의 신청 없음'});
   var t=by(D.att,'work_date'),tr=Object.keys(t).sort().reverse().map(function(d){var v=t[d];return {work_date:d,n:v.length,md:sum(v,'work_md'),ot:sum(v,'ot_hours'),pay:sum(v,'pay_amt'),rev:sum(v,'revenue_amt'),margin:sum(v,'revenue_amt')-sum(v,'pay_amt')}});
   grid('gTrend',[{k:'work_date',t:'일자',l:1},{k:'n',t:'인원',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot',t:'잔업h',f:'num'},{k:'pay',t:'지급',f:'won'},{k:'rev',t:'매출',f:'won'},{k:'margin',t:'마진',f:'sgn'}],{rows:tr,page:40});
 }
 
+async function resolveDisp(id){var why=await ask('이의 처리','기록을 먼저 고친 뒤(셀 더블클릭) 답변을 적으면 직원 앱에 표시됩니다.',{input:true,placeholder:'답변 (예: 연장 2h로 정정했습니다)',ok:'처리 완료'});if(!why)return;
+  var r=await sb.rpc('ceo_resolve_dispute',{p_dispute_id:id,p_resolution:why});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||'실패','e');return}toast('처리 완료','g');loadAll()}
 async function approveDay(){var d=el('btnApprove').dataset.d;if(!d)return;var ok=await ask('일괄 승인',d+' 제출·임시 상태의 투입 기록을 전부 승인합니다. 승인 후에도 마감 전에는 수정할 수 있습니다.',{ok:'승인'});if(!ok)return;
   var r=await sb.rpc('ceo_approve_labor',{p_date:d});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast(d+' '+r.data.approved+'건 승인','g');loadAll()}
 /* ═══════════ 매출·문서 ═══════════ */
