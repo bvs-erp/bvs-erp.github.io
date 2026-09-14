@@ -109,7 +109,7 @@ b{font-weight:600}
 .kpi .s{font-size:12px;color:var(--tx2);margin-top:6px}
 .kpi.hl{border-color:var(--ac);background:linear-gradient(180deg,var(--ac2),var(--sf) 70%)}
 .kpi .spk{position:absolute;right:12px;bottom:10px;color:var(--s1);opacity:.85}
-.kpi.click{cursor:pointer}.kpi.click:hover{border-color:var(--ac)}
+.kpi.click{cursor:pointer}.kpi.warn{border-color:var(--warn)}.kpi.warn .v{color:var(--warn)}.kpi.crit{border-color:var(--crit)}.kpi.crit .v{color:var(--crit)}.kpi.click:hover{border-color:var(--ac)}
 
 /* 표 */
 .tb{background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
@@ -419,6 +419,16 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec"><h3>세금계산서 발행·수취 목록</h3><div class="tb" id="gTaxDocs"></div></div>
     </section>
 
+    <!-- 홈택스 -->
+    <section class="page" id="p-ht">
+      <div class="ph"><h2>홈택스 전자(세금)계산서</h2><div class="desc">대표 PC의 수집기가 매일 07:30 홈택스에서 읽어온 원본 · 정본은 홈택스이며 여기서는 거래처·문서 연결만 합니다 · 상대방이 PYRO·SSJG면 Tax-Risk 표시</div></div>
+      <div class="kpis" id="htKpi"></div>
+      <div class="sec"><h3>월별 요약 (매출 · 매입)</h3><div class="tb" id="gHtMonth"></div></div>
+      <div class="sec"><h3>거래처별 매출 계산서 — SD 등록 vs 홈택스 실발행 <span class="cnt" id="htVsN"></span></h3><div class="desc" style="margin-bottom:8px">차이가 0이 아니면 ERP에 계산서 문서를 안 만들었거나(＋), 홈택스에 발행이 안 된 것(−)입니다. 상단 월 기준.</div><div class="tb" id="gHtVs"></div></div>
+      <div class="sec"><h3>계산서 목록</h3><div class="tb" id="gHtInv"></div></div>
+      <div class="sec"><h3>수집 기록</h3><div class="tb" id="gHtRuns"></div></div>
+    </section>
+
     <!-- 경보 -->
     <section class="page" id="p-alerts">
       <div class="ph"><h2>경보 · 무결성</h2><div class="desc">0이 아닌 항목만 조치 대상</div></div>
@@ -577,8 +587,8 @@ function barChart(id,title,labels,series,opt){opt=opt||{};
 
 /* ═══════════ 내비·테마·팔레트 ═══════════ */
 var I={home:'<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>',site:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>',sales:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/>',money:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',pl:'<path d="M3 3v18h18M7 14l4-4 4 3 5-6"/>',pm:'<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>',hr:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/>',crew:'<path d="M5 17h14l2-6H3zM7 11V7a5 5 0 0 1 10 0v4M7 21v-4M17 21v-4"/>',close:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M9 15l2 2 4-4"/>',alerts:'<path d="M12 3l10 18H2zM12 10v4M12 17.5v.5"/>',tax:'<path d="M4 4h16v16H4zM8 9h8M8 13h8M8 17h5"/>'};
-var NAV=[{g:'대시보드'},{k:'home',t:'홈',kb:'1'},{k:'alerts',t:'경보·무결성',kb:'2'},{g:'업무'},{k:'site',t:'현장 투입',kb:'3'},{k:'sales',t:'매출·문서',kb:'4'},{k:'money',t:'돈·정산',kb:'5'},{k:'close',t:'월 마감',kb:'6'},{g:'원장'},{k:'pl',t:'손익',kb:'7'},{k:'pm',t:'구매·자재',kb:'8'},{k:'hr',t:'인사·노무',kb:'9'},{k:'crew',t:'인력 배치표',kb:'0'},{k:'tax',t:'세무사 제출',kb:'-'}];
-var TITLE={home:'홈',alerts:'경보 · 무결성',site:'현장 투입',sales:'매출 · 업무문서',money:'돈 · 정산',close:'월 마감',pl:'손익',pm:'구매 · 자재',hr:'인사 · 노무',crew:'현장인력 배치표',tax:'세무사 제출 자료'};
+var NAV=[{g:'대시보드'},{k:'home',t:'홈',kb:'1'},{k:'alerts',t:'경보·무결성',kb:'2'},{g:'업무'},{k:'site',t:'현장 투입',kb:'3'},{k:'sales',t:'매출·문서',kb:'4'},{k:'money',t:'돈·정산',kb:'5'},{k:'close',t:'월 마감',kb:'6'},{g:'원장'},{k:'pl',t:'손익',kb:'7'},{k:'pm',t:'구매·자재',kb:'8'},{k:'hr',t:'인사·노무',kb:'9'},{k:'crew',t:'인력 배치표',kb:'0'},{k:'tax',t:'세무사 제출',kb:'-'},{k:'ht',t:'홈택스 계산서',kb:'='}];
+var TITLE={home:'홈',alerts:'경보 · 무결성',site:'현장 투입',sales:'매출 · 업무문서',money:'돈 · 정산',close:'월 마감',pl:'손익',pm:'구매 · 자재',hr:'인사 · 노무',crew:'현장인력 배치표',tax:'세무사 제출 자료',ht:'홈택스 전자(세금)계산서'};
 function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
   return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+n.kb+'</span>')+'</div>'}).join('');
   var mn=el('mnav');if(mn)mn.innerHTML=NAV.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
@@ -729,6 +739,10 @@ async function loadAll(){
     ['disp',sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)],
     ['payp',sb.from('ceo_pay_profiles').select('*').order('person_name')],
     ['co',sb.from('ceo_company').select('*')],
+    ['ht',sb.from('ceo_hometax_invoices').select('*').order('issue_date',{ascending:false}).limit(3000)],
+    ['htm',sb.from('ceo_hometax_month').select('*').order('period_ym',{ascending:false})],
+    ['htv',sb.from('ceo_hometax_vs_sd').select('*').order('period_ym',{ascending:false}).limit(2000)],
+    ['htr',sb.from('ceo_hometax_runs').select('*').limit(30)],
     ['pick',sb.from('ceo_item_pick').select('*').order('name_ko').limit(3000)],
     ['plans',sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')]
   ];
@@ -742,7 +756,7 @@ async function loadAll(){
   buildMonths();renderAll();
   if(!D.dash.length&&!errs.length)el('errbox').innerHTML='<span class="wn">연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.</span>';
 }
-function renderAll(){renderHome();renderSite();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax()}
+function renderAll(){renderHome();renderSite();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt()}
 
 /* ═══════════ 공통 상수 ═══════════ */
 var KIND={quote:'견적',order:'발주',contract:'계약',tax:'계산서',settle:'정산',report:'일보',receipt:'인수증',cert:'증명',invoice:'청구서',statement:'명세표',worklog:'작업내역서'};
@@ -991,6 +1005,38 @@ async function itemSave(fromDoc){var m=el('it_msg');var p={item_code:el('it_code
 var TAX={period:null,rows:[]};
 function maskRrn(v){v=String(v||'');return v?v.slice(0,6)+'-'+(v.length>7?v.replace(/[^0-9]/g,'').slice(6,7):'')+'******':''}
 function maskBank(v){v=String(v||'');if(!v)return '';var m=v.match(/([0-9]{4})(?!.*[0-9])/);return v.replace(/[0-9]{5,}[0-9-]*/,function(x){return '****'+x.replace(/-/g,'').slice(-4)})}
+function renderHt(){if(!el('gHtMonth'))return;var m=M(),ht=D.ht||[],htm=D.htm||[],htv=(D.htv||[]).filter(function(r){return r.period_ym===m});
+  var mm=htm.filter(function(r){return r.period_ym===m}),ms=mm.filter(function(r){return r.side==='sales'})[0]||{},mp=mm.filter(function(r){return r.side==='purchase'})[0]||{};
+  var risk=ht.filter(function(r){return r.related_entity}),unm=ht.filter(function(r){return !r.matched_doc_no}),nop=ht.filter(function(r){return !r.partner_id});
+  var last=(D.htr||[])[0];
+  el('htKpi').innerHTML=kpi(m+' 매출 계산서',won(ms.supply_amt||0),(ms.cnt||0)+'건 · 세액 '+won(ms.tax_amt||0),'hl')+kpi(m+' 매입 계산서',won(mp.supply_amt||0),(mp.cnt||0)+'건 · 세액 '+won(mp.tax_amt||0))
+    +kpi('SD 문서 미연결',unm.length+'건',won(sum(unm,'supply_amt'))+' · 전체 기간',unm.length?'warn':'')+kpi('거래처 미등록',nop.length+'건','상대 사업자번호가 거래처 마스터에 없음',nop.length?'warn':'')
+    +kpi('Tax-Risk (엔티티 간)',risk.length+'건',risk.length?'PYRO·SSJG와의 계산서 — 세무사 확인':'없음',risk.length?'crit':'')
+    +kpi('마지막 수집',last?String(last.ran_at).slice(0,16).replace('T',' '):'아직 없음',last?(last.fetched+'건 · 신규 '+last.inserted+(last.error?' · 오류':'')):'대표 PC에서 run.bat 실행 필요',last&&last.error?'crit':'');
+  grid('gHtMonth',[{k:'period_ym',t:'귀속월',l:1},{k:'side',t:'구분',l:1,f:function(v){return v==='sales'?'<span class="pill b">매출</span>':'<span class="pill">매입</span>'}},{k:'cnt',t:'건수',f:'int'},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'total_amt',t:'합계',f:'won',sum:1},{k:'matched_cnt',t:'SD 연결',f:'int'},{k:'unmatched_supply',t:'미연결 공급가',f:'sgn'},{k:'no_partner_cnt',t:'거래처 미등록',f:'int'}],{rows:htm,csv:false,empty:'수집된 계산서가 없습니다 — 대표 PC에서 run.bat 을 실행하십시오'});
+  el('htVsN').textContent=m+' · '+htv.length+'곳';
+  grid('gHtVs',[{k:'partner_name',t:'거래처',l:1},{k:'sd_cnt',t:'SD 건',f:'int'},{k:'sd_supply',t:'SD 등록 공급가',f:'won',sum:1},{k:'ht_cnt',t:'홈택스 건',f:'int'},{k:'ht_supply',t:'홈택스 발행 공급가',f:'won',sum:1},{k:'diff_amt',t:'홈택스−SD',f:'sgn',sum:1}],{rows:htv,foot:true,csv:false,sort:{k:'diff_amt',d:-1},empty:'해당 월 자료 없음'});
+  grid('gHtInv',[{k:'issue_date',t:'작성일',l:1},{k:'side',t:'구분',f:function(v){return v==='sales'?'매출':'매입'}},{k:'counterparty',t:'상대방',l:1,f:function(v,r){return esc(v||'')+(r.related_entity?' <span class="pill r">Tax-Risk '+esc(r.related_entity)+'</span>':'')+(r.partner_id?'':' <span class="pill y">거래처 미등록</span>')}},{k:'invoice_class',t:'종류',f:function(v,r){return esc(v||'')+(r.is_amended?' <span class="pill y">수정</span>':'')}},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'matched_doc_no',t:'SD 문서',l:1,f:function(v,r){return v?esc(v)+' <span class="tiny dim">'+esc(r.match_how||'')+'</span>':'<span class="neg">미연결</span>'}},{k:'approval_no',t:'승인번호',l:1,f:function(v){return '<span class="tiny">'+esc(v||'')+'</span>'}}],
+    {rows:ht,q:['counterparty','approval_no','matched_doc_no','partner_name'],qph:'상대방·승인번호·문서번호',chips:[{k:'side',vals:[['','전체'],['sales','매출'],['purchase','매입']]},{k:'_m',vals:[['','전체'],['1','미연결'],['0','연결됨']]}],foot:true,page:80,onRow:htOpen});
+  ht.forEach(function(r){r._m=r.matched_doc_no?'0':'1'});
+  grid('gHtRuns',[{k:'ran_at',t:'실행',l:1,f:function(v){return String(v||'').slice(0,19).replace('T',' ')}},{k:'host',t:'PC',l:1},{k:'range_from',t:'시작',l:1},{k:'range_to',t:'끝',l:1},{k:'fetched',t:'수집',f:'int'},{k:'inserted',t:'신규',f:'int'},{k:'updated',t:'갱신',f:'int'},{k:'matched',t:'연결 누계',f:'int'},{k:'error',t:'오류',l:1,f:function(v){return v?'<span class="neg">'+esc(String(v).slice(0,120))+'</span>':''}}],{rows:D.htr||[],csv:false,empty:'실행 기록 없음'});
+}
+function htOpen(r){var items=(r.items||[]);
+  var cands=(D.sd||[]).filter(function(d){return d.partner_id&&d.partner_id===r.partner_id&&d.trade_side===r.side&&(d.doc_kind==='tax'||d.doc_kind==='invoice')&&d.status!=='void'}).slice(0,12);
+  drOpen((r.side==='sales'?'매출':'매입')+' 계산서 · '+esc(r.counterparty||''),
+    '<div style="display:grid;gap:6px;font-size:13px"><div><b>작성일</b> '+esc(r.issue_date)+' · 전송 '+esc(r.sent_date||'–')+'</div><div><b>승인번호</b> '+esc(r.approval_no)+'</div><div><b>종류</b> '+esc(r.invoice_class||'')+' / '+esc(r.invoice_type||'')+(r.is_amended?' <span class="pill y">수정</span>':'')+'</div>'
+    +'<div><b>상대방</b> '+esc(r.counterparty||'')+' ('+esc(r.counterparty_biz_no||'')+')'+(r.partner_id?' → '+esc(r.partner_name||r.partner_id):' <span class="neg">거래처 마스터에 없음</span>')+'</div>'
+    +(r.related_entity?'<div class="neg"><b>⚠ Tax-Risk Guard</b> 상대방이 '+esc(r.related_entity)+' — 엔티티 간 거래입니다. 금액·명목·상환계획을 확인하고 반증 자료가 없으면 세무사 확인이 필요합니다.</div>':'')
+    +'<div><b>금액</b> 공급가 '+won(r.supply_amt)+' · 세액 '+won(r.tax_amt)+' · 합계 '+won(r.total_amt)+'</div>'+(r.note?'<div><b>비고</b> '+esc(r.note)+'</div>':'')+'</div>'
+    +'<table class="lines" style="margin-top:10px"><thead><tr><th class="l">품목</th><th class="l">규격</th><th>수량</th><th>단가</th><th>공급가액</th><th>세액</th></tr></thead><tbody>'+(items.length?items.map(function(i){return '<tr><td class="l">'+esc(i.name||'')+'</td><td class="l">'+esc(i.spec||'')+'</td><td>'+(i.qty==null?'':num(i.qty))+'</td><td>'+won(i.unit_price)+'</td><td>'+won(i.supply_amt)+'</td><td>'+won(i.tax_amt)+'</td></tr>'}).join(''):'<tr><td colspan="6" class="empty">품목 없음</td></tr>')+'</tbody></table>'
+    +'<div class="sec" style="margin-top:12px"><h3>SD 문서 연결</h3><div>'+(r.matched_doc_no?'현재 <b>'+esc(r.matched_doc_no)+'</b> ('+esc(r.match_how||'')+(r.matched_title?' · '+esc(r.matched_title):'')+') <button class="btn sm" onclick="htMatch(\''+esc(r.approval_no)+'\',\'\')">해제</button>':'<span class="neg">미연결</span>')+'</div>'
+    +'<div class="fr" style="margin-top:8px"><div class="f"><label>문서번호 직접 입력</label><input id="ht_doc" class="in" placeholder="예: B26083101"></div><div class="f"><label>&nbsp;</label><button class="btn p" onclick="htMatch(\''+esc(r.approval_no)+'\',el(\'ht_doc\').value)">연결</button></div></div>'
+    +(cands.length?'<div class="tiny dim" style="margin-top:6px">같은 거래처 후보</div>'+cands.map(function(d){return '<div class="row click" onclick="htMatch(\''+esc(r.approval_no)+'\',\''+esc(d.doc_no)+'\')" style="padding:4px 0;border-bottom:1px solid var(--ln)">'+esc(d.doc_no)+' · '+esc(KIND[d.doc_kind]||d.doc_kind)+' · '+esc(d.doc_date)+' · '+won(d.supply_amt)+(d.supply_amt===r.supply_amt?' <span class="pill g">금액 일치</span>':'')+'</div>'}).join(''):'')+'</div>',
+    '<button class="btn" onclick="drClose()">닫기</button>');
+}
+async function htMatch(no,doc){var r=await sb.rpc('ceo_hometax_match',{p_approval_no:no,p_doc_no:doc||null});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast(doc?'연결됨 '+doc:'연결 해제','g');drClose();loadAll();}
 async function renderTax(){var m=M();if(!el('gTaxPay'))return;
   if(TAX.period!==m){TAX.period=m;var r=await sb.rpc('ceo_payroll_report',{p_period:m});TAX.rows=Array.isArray(r.data)?r.data:[];if(r.error)toast('인건비 조회 실패: '+r.error.message,'e');if(M()!==m)return}
   var rows=TAX.rows.map(function(r){var o=Object.assign({},r);o.rrn_m=maskRrn(r.rrn);o.bank_m=maskBank(r.bank);return o});
