@@ -129,6 +129,10 @@ tr.row:hover td{background:var(--sf2)}
 tr.row.click{cursor:pointer}
 tfoot td{background:var(--sf2);font-weight:600;border-top:1px solid var(--ln);position:sticky;bottom:0}
 td.empty{text-align:center;color:var(--tx3);padding:28px}
+td.ed{cursor:cell}td.ed:hover{box-shadow:inset 0 0 0 1px var(--ac);border-radius:4px}
+td.ed input.cell{width:100%;min-width:72px;padding:3px 6px;border:1px solid var(--ac);border-radius:4px;background:var(--sf);outline:none;box-shadow:0 0 0 3px var(--ac2);font:inherit}
+td.saved{background:var(--goodbg)!important;transition:background .6s}
+.edhint{font-size:12px;color:var(--tx3);margin:-4px 0 8px}
 .more{padding:10px;text-align:center;border-top:1px solid var(--ln2)}
 .pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--sf2);border:1px solid var(--ln);color:var(--tx2)}
 .pill.b{background:var(--ac2);border-color:transparent;color:var(--ac)}
@@ -458,13 +462,29 @@ function gRender(id){var g=G[id],o=g.opt,box=el(id),rows=gData(id);
   var ps=o.page||60,shown=rows.slice(0,ps*g.page);
   box.querySelector('thead').innerHTML='<tr>'+g.cols.map(function(c){var s=g.sort&&g.sort.k===c.k;return '<th class="'+(c.l?'l':'')+'"'+(c.w?' style="min-width:'+c.w+'px"':'')+' onclick="gSort(\''+id+'\',\''+c.k+'\')">'+esc(c.t)+(s?'<span class="ar">'+(g.sort.d>0?'▲':'▼')+'</span>':'')+'</th>'}).join('')+'</tr>';
   box.querySelector('tbody').innerHTML=shown.length?shown.map(function(r,i){
-    return '<tr class="row'+(o.onRow?' click':'')+'"'+(o.onRow?' onclick="G[\''+id+'\'].opt.onRow(G[\''+id+'\']._v['+i+'])"':'')+'>'+g.cols.map(function(c){return '<td class="'+(c.l?'l':'')+(c.cls?' '+c.cls:'')+'">'+fmtCell(c,r)+'</td>'}).join('')+'</tr>'}).join('')
+    return '<tr class="row'+(o.onRow?' click':'')+'"'+(o.onRow?' onclick="G[\''+id+'\'].opt.onRow(G[\''+id+'\']._v['+i+'])"':'')+'>'+g.cols.map(function(c,ci){return '<td class="'+(c.l?'l':'')+(c.cls?' '+c.cls:'')+(c.e?' ed':'')+'"'+(c.e?' title="더블클릭하여 수정" ondblclick="event.stopPropagation();gEdit(\''+id+'\','+i+','+ci+',this)"':'')+'>'+fmtCell(c,r)+'</td>'}).join('')+'</tr>'}).join('')
     :'<tr><td colspan="'+g.cols.length+'" class="empty">'+esc(o.empty||'데이터 없음')+'</td></tr>';
   g._v=shown;
   var tf=box.querySelector('tfoot');
   if(o.foot&&rows.length){tf.innerHTML='<tr>'+g.cols.map(function(c,i){if(i===0)return '<td class="l">합계 '+rows.length+'건</td>';if(!c.sum)return '<td></td>';var s=sum(rows,c.k);return '<td>'+(c.f==='sgn'?sgn(s):c.f==='num'?num(s,c.d):won(s))+'</td>'}).join('')+'</tr>'}else tf.innerHTML='';
   var cnt=box.querySelector('.cnt');if(cnt)cnt.textContent=rows.length+'건'+(shown.length<rows.length?' 중 '+shown.length:'');
   var more=box.querySelector('.more');if(shown.length<rows.length){more.classList.remove('hide');more.innerHTML='<button class="btn sm" onclick="gMore(\''+id+'\')">더 보기 ('+(rows.length-shown.length)+'건 남음)</button>'}else more.classList.add('hide');
+}
+/* 셀 인라인 편집: col.e = {field, get(row)->text, save(row,text)->Promise<{ok,error,apply}>} 또는 col.e = fieldName(문자열) + opt.save(row,field,text) */
+function gEdit(id,i,ci,td){var g=G[id],c=g.cols[ci],r=g._v[i];if(!c||!c.e||td.querySelector('input'))return;
+  var e=typeof c.e==='string'?{field:c.e}:c.e;var cur=e.get?e.get(r):String(r[c.k]==null?'':r[c.k]);
+  var old=td.innerHTML;td.innerHTML='<input class="cell" value="'+esc(cur)+'"'+(e.ph?' placeholder="'+esc(e.ph)+'"':'')+'>';var inp=td.querySelector('input');inp.focus();inp.select();
+  var done=false;
+  function cancel(){if(done)return;done=true;td.innerHTML=old}
+  async function commit(){if(done)return;var v=inp.value.trim();if(v===cur){cancel();return}done=true;td.innerHTML='<span class="dim">저장 중…</span>';
+    try{var res=e.save?await e.save(r,v):await g.opt.save(r,e.field,v);
+      if(!res||!res.ok){toast((res&&res.error)||'저장 실패','e');td.innerHTML=old;return}
+      if(e.apply)e.apply(r,v);else r[c.k]=v;
+      td.innerHTML=fmtCell(c,r);td.classList.add('saved');setTimeout(function(){td.classList.remove('saved')},1200);toast('저장됨 · '+esc(c.t)+' = '+(v||'(비움)'),'g');
+      if(g.opt.afterSave)g.opt.afterSave(r,c,v);
+    }catch(ex){toast('저장 오류: '+ex.message,'e');td.innerHTML=old}}
+  inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();commit()}else if(ev.key==='Escape'){cancel()}else if(ev.key==='Tab'){ev.preventDefault();commit().then(function(){var n=td.parentNode.children[ci+(ev.shiftKey?-1:1)];if(n&&n.classList.contains('ed'))gEdit(id,i,ci+(ev.shiftKey?-1:1),n)})}});
+  inp.addEventListener('blur',function(){setTimeout(function(){if(!done)commit()},120)});
 }
 function gCsv(id){var g=G[id],rows=gData(id);
   var lines=[g.cols.map(function(c){return '"'+c.t+'"'}).join(',')].concat(rows.map(function(r){return g.cols.map(function(c){var v=r[c.k];return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}).join(',')}));
@@ -854,9 +874,32 @@ function renderCrew(){
   var areas=by(c,'배치(우선지역)');
   el('crewKpi').innerHTML=kpi('가용 인력',c.length+'<small>명</small>',Object.keys(by(c,'소속')).map(function(k){return k+' '+by(c,'소속')[k].length}).join(' · '),'hl')+Object.keys(areas).sort().map(function(a){return kpi(a,areas[a].length+'<small>명</small>','')}).join('')+kpi('카풀조',D.carpool.length+'<small>조</small>','');
   grid('gCarpool',[{k:'우선지역',t:'우선지역',l:1},{k:'인원',t:'인원',f:'int'},{k:'운행차량',t:'운행차량',f:'int'},{k:'동승',t:'동승',f:'int'},{k:'카풀조',t:'카풀조',l:1},{k:'업무',t:'업무',l:1}],{rows:D.carpool,csv:false});
-  var cols=c.length?Object.keys(c[0]).map(function(k){return {k:k,t:k,l:true}}):[{k:'이름',t:'이름',l:1}];
-  grid('gCrew',cols,{rows:c,q:true,qph:'이름·소속·지역·업무',chips:[{k:'배치(우선지역)',vals:[['','전체']].concat(Object.keys(areas).sort().map(function(a){return [a,a]}))}],page:60});
+  var cols=c.length?Object.keys(c[0]).map(function(k){var e=CREW_ED[k];return {k:k,t:k,l:true,e:e||null}}):[{k:'이름',t:'이름',l:1}];
+  grid('gCrew',cols,{rows:c,q:true,qph:'이름·소속·지역·업무',chips:[{k:'배치(우선지역)',vals:[['','전체']].concat(Object.keys(areas).sort().map(function(a){return [a,a]}))}],page:60,
+    save:function(r,field,v){return crewSave(r,field,v)},afterSave:function(r,col){if(col.k==='배치(우선지역)'||col.k==='차량'||col.k==='카풀'||col.k==='소속')renderCrewTop()}});
+  var h=el('gCrew').querySelector('.tbar');if(h&&!h.querySelector('.edhint'))h.insertAdjacentHTML('beforeend','<span class="edhint" style="margin:0 0 0 6px">셀 더블클릭 → 수정 · Enter 저장 · Esc 취소 · Tab 다음 칸</span>');
 }
+function renderCrewTop(){var c=D.crew,areas=by(c,'배치(우선지역)');
+  el('crewKpi').innerHTML=kpi('가용 인력',c.length+'<small>명</small>',Object.keys(by(c,'소속')).map(function(k){return k+' '+by(c,'소속')[k].length}).join(' · '),'hl')+Object.keys(areas).sort().map(function(a){return kpi(a,areas[a].length+'<small>명</small>','')}).join('')+kpi('카풀조',D.carpool.length+'<small>조</small>','');
+  sb.from('ceo_carpool').select('*').then(function(r){if(!r.error){D.carpool=r.data||[];grid('gCarpool',G.gCarpool.cols,{rows:D.carpool,csv:false})}})}
+/* 배치표 열 → hr.site_profiles 칸. 합성 열은 split 규칙으로 두 칸에 나눠 저장 */
+async function crewSave(r,field,v){var no=r['인력코드'];if(!no)return {ok:false,error:'인력코드 없음'};
+  var jobs=[];
+  if(field==='__home'){var p=v.split('/');jobs=[['home_area',p[0]||''],['lodging_area',p[1]||'']]}
+  else if(field==='__area'){var q=v.split(/->|→|>/);jobs=[['primary_area',q[0]||''],['secondary_area',q[1]||'']]}
+  else jobs=[[field,v]];
+  for(var i=0;i<jobs.length;i++){var res=await sb.rpc('hr_update_site_profile',{p_employment_no:no,p_field:jobs[i][0],p_value:jobs[i][1].trim()});
+    if(res.error)return {ok:false,error:res.error.message};if(!res.data||!res.data.ok)return res.data||{ok:false,error:'실패'}}
+  return {ok:true}}
+var CREW_ED={
+  '직급':'rank_title','소속':'affiliation',
+  '거주지/숙소':{field:'__home',ph:'거주지/숙소'},
+  '배치(우선지역)':{field:'__area',ph:'이천->청주'},
+  '차량':{field:'own_vehicle_known',ph:'유 / 무',apply:function(r,v){r['차량']=/^(유|y|o|1|true|가능)$/i.test(v)?'유':(v?'무':'')}},
+  '카풀':'carpool_driver','업무':'work_type','방진복':'suit_size','방진화':'shoe_size','SK출입ID':'sk_id','삼성출입ID':'ss_id',
+  '기본A-D':{field:'edu_basic',ph:'YYYY-MM-DD'},'중량물':{field:'edu_heavy',ph:'YYYY-MM-DD'},'신규PJT':{field:'edu_newpjt',ph:'YYYY-MM-DD'},
+  '작업지휘자':{field:'edu_leader',ph:'YYYY-MM-DD'},'급소':{field:'edu_critical',ph:'YYYY-MM-DD'},'유해물질8H':{field:'edu_haz8h_off',ph:'YYYY-MM-DD'}
+};
 
 /* ═══════════ 마감·경보 ═══════════ */
 function renderClose(){
