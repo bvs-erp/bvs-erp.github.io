@@ -205,6 +205,9 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       <div class="card"><h2>내 기록 <small class="dim" id="listN"></small></h2><div id="list"></div></div>
     </section>
 
+    <section class="page" id="p-me">
+      <div class="card"><h2>내 스펙 <small class="dim tiny">사이즈·출입ID·교육 이수</small></h2><div id="meRows"></div><p class="tiny dim" style="margin:10px 0 0">사이즈·거주지·카풀은 직접 고칠 수 있습니다(연필 표시). 출입ID·교육 이수일은 대표가 관리합니다.</p></div>
+    </section>
     <section class="page" id="p-pay">
       <div class="card"><h2>월별 정산</h2><div id="pay"></div><p class="tiny dim" style="margin:12px 0 0">지급액은 대표 확정 후 다음 달 10일에 지급됩니다. 확정 전 금액은 바뀔 수 있습니다.</p></div>
     </section>
@@ -216,6 +219,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
   <div data-p="list" onclick="go('list')"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>기록</div>
   <div data-p="deploy" class="lead hide" onclick="go('deploy')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0"/></svg>투입</div>
   <div data-p="pump" class="lead hide" onclick="go('pump')"><svg viewBox="0 0 24 24"><path d="M4 18V8h6l2-3h8v13zM8 12h8"/></svg>펌프실</div>
+  <div data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>내 스펙</div>
   <div data-p="pay" onclick="go('pay')"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>정산</div>
 </div>
 <div id="toasts"></div>
@@ -273,9 +277,9 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date')]);
+  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false})]);
   var errs=res.filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
-  D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];
+  D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];D.me=((res[4]&&res[4].data)||[])[0]||null;D.disp=(res[5]&&res[5].data)||[];
   renderPlaces();renderState();renderList();renderPay();
 }
 
@@ -467,13 +471,21 @@ function renderList(){
   el('myKpi').innerHTML='<div class="kpi"><div class="k">'+ym+' 근무일</div><div class="v">'+cur.length+'</div></div><div class="kpi"><div class="k">공수</div><div class="v">'+md.toFixed(1)+'</div></div><div class="kpi"><div class="k">잔업 h</div><div class="v">'+ot.toFixed(1)+'</div></div>';
   el('listN').textContent=D.labor.length?'최근 '+D.labor.length+'건':'';
   el('list').innerHTML=D.labor.length?D.labor.map(function(r){var st=STMAP[r.status]||[r.status,''];var d=String(r.work_date);
-    return '<div class="item"><div class="d"><b>'+d.slice(8)+'</b><small>'+d.slice(5,7)+'월</small></div><div class="m"><div class="s">'+esc(r.site_name)+' <span class="pill '+st[1]+'">'+st[0]+'</span></div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end)+' · ':'')+esc(r.work_desc||'')+'</div></div><div class="r"><b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">'+((+r.ot_hours)>0?'+'+(+r.ot_hours)+'h':'공수')+'</small>'+(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+'</div></div>'}).join(''):'<div class="empty">기록 없음</div>';
+    return '<div class="item"><div class="d"><b>'+d.slice(8)+'</b><small>'+d.slice(5,7)+'월</small></div><div class="m"><div class="s">'+esc(r.site_name)+' <span class="pill '+st[1]+'">'+st[0]+'</span></div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end)+' · ':'')+esc(r.work_desc||'')+'</div></div><div class="r"><b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">'+((+r.ot_hours)>0?'+'+(+r.ot_hours)+'h':'공수')+'</small>'+(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+(function(){var d=(D.disp||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(d)return '<div class="tiny '+(d.status==='open'?'wn':'pos')+'" style="margin-top:4px">'+(d.status==='open'?'이의 접수됨':'처리됨'+(d.resolution?': '+esc(d.resolution):''))+'</div>';return r.status!=='void'?'<div><button class="btn sm" style="margin-top:4px" onclick="dispute('+r.entry_id+',\''+esc(d?'':r.work_date)+'\')">이의</button></div>':''})()+'</div></div>'}).join(''):'<div class="empty">기록 없음</div>';
 }
+async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용을 적어 주세요 (예: 연장 2시간 했는데 1시간으로 등록됨)');if(!msg)return;
+  var r=await sb.rpc('my_dispute',{p_entry_id:id,p_message:msg});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('이의 접수 — 대표가 확인 후 답합니다','g');loadAll()}
+var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id','SK 출입ID'],['ss_id','삼성 출입ID'],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
+function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">✎</button>':'')+'</div>'}).join('')}
+async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=prompt(label+(k==='own_vehicle_known'?' (유/무)':''),cur==null?'':String(cur));if(v===null)return;
+  var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
 function renderPay(){
   el('pay').innerHTML=D.pay.length?D.pay.map(function(r){return '<div class="item"><div class="d"><b>'+String(r.period_ym).slice(5)+'</b><small>'+String(r.period_ym).slice(0,4)+'</small></div><div class="m"><div class="s">공수 '+(+r.work_md_sum).toFixed(1)+' · 잔업 '+(+r.ot_hours_sum||0)+'h <span class="pill '+(r.is_closed?'g':'y')+'">'+(r.is_closed?'확정':'집계 중')+'</span></div><div class="t">기본 '+won(r.base_amt)+' · 연장 '+won(r.ot_amt)+' · 수당 '+won(r.allowance_amt)+'</div></div><div class="r"><b>'+won(r.payable_amt)+'</b><small class="dim">원</small></div></div>'}).join(''):'<div class="empty">정산 자료 없음</div>';
 }
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});window.scrollTo(0,0);
-  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p!=='in')loadAll()}
+  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
 </script>
