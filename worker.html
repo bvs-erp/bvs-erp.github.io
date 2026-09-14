@@ -106,6 +106,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
     <section class="page on" id="p-in">
       <div class="card" id="todayCard">
         <div class="f" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><label style="margin:0;flex:none">일자</label><input id="w_date" class="in" type="date" style="padding:8px 10px" onchange="onDate()"><span class="tiny dim" id="dateHint" style="white-space:nowrap"></span></div>
+        <div id="planBox" class="state hide" style="background:var(--goodbg)"></div>
         <div id="stateBox" class="state hide"></div>
         <div class="f"><label>장소</label><div class="chips big" id="w_place"></div></div>
         <div class="f" id="lineBox"><label>라인</label><div class="chips big" id="w_line"></div></div>
@@ -169,6 +170,15 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
         <div class="msg" id="dpMsg"></div>
       </div>
       <div class="card"><h2>인원별 <small class="dim tiny" id="dpN"></small></h2><div id="dpRows"></div></div>
+      <div class="card">
+        <h2>내일 배치 <small class="dim tiny">리드·대표 · 저장하면 각자 앱 첫 화면에 뜹니다</small></h2>
+        <div class="f" style="display:flex;align-items:center;gap:10px"><label style="margin:0;flex:none">일자</label><input id="pl_date" class="in" type="date" style="padding:8px 10px" onchange="plOpen(this.value)"></div>
+        <div id="plRows"></div>
+        <div class="row2" style="margin-top:10px"><button class="btn" onclick="plCopyToday()">오늘 배치 그대로</button><button class="btn p" onclick="plSave()">저장</button></div>
+        <pre id="plText" class="hide" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:10px 0 0"></pre>
+        <div class="row2" style="margin-top:10px"><button class="btn" onclick="copyText('plText')">문구 복사</button><button class="btn" onclick="shareText('plText','내일 배치')">카톡으로 공유</button></div>
+        <div class="msg" id="plMsg"></div>
+      </div>
     </section>
 
     <!-- 리드: 펌프실 -->
@@ -263,9 +273,9 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12)]);
+  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date')]);
   var errs=res.filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
-  D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];
+  D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];
   renderPlaces();renderState();renderList();renderPay();
 }
 
@@ -301,7 +311,9 @@ function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':
 function tickClock(){el('nowIn').textContent='지금 '+nowHM();el('nowOut').textContent='지금 '+nowHM()}
 function entryOf(date){return D.labor.filter(function(r){return String(r.work_date)===date&&r.status!=='void'})[0]}
 function onDate(){renderState()}
-function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');
+function renderPlan(){var d=el('w_date').value;var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];var b=el('planBox');if(!p){b.classList.add('hide');return}
+  b.classList.remove('hide');b.innerHTML='<b>'+kdate(d)+' 배치</b> → '+esc(p.site_name||p.site_id)+(p.memo?'<div class="t">'+esc(p.memo)+'</div>':'')+'<div class="t">누르면 장소·라인이 자동 선택됩니다</div>';b.style.cursor='pointer';b.onclick=function(){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}
+function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');renderPlan();
   el('dateHint').textContent=d===today()?'오늘':'';
   if(!e){box.classList.add('hide');el('btnIn').classList.remove('done');el('btnOut').classList.remove('on');return}
   box.classList.remove('hide');
@@ -403,6 +415,26 @@ async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDay
   el('dpRows').innerHTML=(d.rows||[]).map(function(x){return '<div class="item"><div class="m"><div class="s">'+esc(x.name)+' <span class="pill '+(x.status==='submitted'?'b':x.status==='approved'?'g':'')+'">'+esc((STMAP[x.status]||[x.status])[0])+'</span></div><div class="t">'+esc(x.site||'')+' · '+esc(x.project)+(x.start?' · '+hhmm(x.start)+' 시작':'')+'</div></div><div class="r"><b>'+(+x.md||0).toFixed(1)+'</b><small class="dim">'+((+x.ot)>0?'+'+x.ot+'h':'공수')+'</small></div></div>'}).join('')||'<div class="empty">기록 없음</div>';
 }
 
+/* ══════ 리드: 내일 배치 ══════ */
+var PL={date:null,staff:[],rows:{}};
+function tomorrow(){var d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+async function plOpen(d){PL.date=d||PL.date||tomorrow();el('pl_date').value=PL.date;
+  if(!PL.staff.length){var r0=await sb.rpc('lead_active_staff');PL.staff=(r0&&r0.data)||[]}
+  var r=await sb.rpc('lead_plan',{p_date:PL.date});PL.rows={};((r&&r.data&&r.data.rows)||[]).forEach(function(x){PL.rows[x.employment_no]={site_id:x.site_id,memo:x.memo||''}});
+  plRender()}
+function plRender(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.site_id)});
+  el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows[\''+w.employment_no+'\']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur.site_id?' selected':'')+'>'+esc(s.site_name)+'</option>'}).join('')+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
+  plText()}
+function plText(){var g={};PL.staff.forEach(function(w){var c=PL.rows[w.employment_no];if(c&&c.site_id){(g[c.site_id]=g[c.site_id]||[]).push(w.name)}});
+  var ks=Object.keys(g).sort();if(!ks.length){el('plText').classList.add('hide');return}
+  var lines=[kdate(PL.date)+' 배치 계획'];ks.forEach(function(k){lines.push('· '+siteName(k)+' — '+g[k].join(', '))});lines.push('총 '+ks.reduce(function(a,k){return a+g[k].length},0)+'명');
+  el('plText').textContent=lines.join('\n');el('plText').classList.remove('hide')}
+function plCopyToday(){PL.staff.forEach(function(w){if(w.last_site)PL.rows[w.employment_no]={site_id:w.last_site,memo:''}});plRender();toast('최근 현장으로 채웠습니다. 저장을 눌러야 반영됩니다')}
+async function plSave(){var m=el('plMsg');m.textContent='저장 중…';var rows=PL.staff.map(function(w){var c=PL.rows[w.employment_no]||{};return {employment_no:w.employment_no,site_id:c.site_id||'',memo:c.memo||''}});
+  var r=await sb.rpc('lead_set_plan',{p:{plan_date:PL.date,replace:true,rows:rows}});
+  if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
+  m.innerHTML='<span class="pos">'+r.data.rows+'명 배치 저장</span>';toast('배치 저장','g');plText()}
+
 /* ══════ 리드: 펌프실 ══════ */
 var PM={date:null,site:null,rows:[]};
 function pmOpen(d){PM.date=d||PM.date||today();el('pm_date').value=PM.date;pmLoadReport();
@@ -441,7 +473,7 @@ function renderPay(){
   el('pay').innerHTML=D.pay.length?D.pay.map(function(r){return '<div class="item"><div class="d"><b>'+String(r.period_ym).slice(5)+'</b><small>'+String(r.period_ym).slice(0,4)+'</small></div><div class="m"><div class="s">공수 '+(+r.work_md_sum).toFixed(1)+' · 잔업 '+(+r.ot_hours_sum||0)+'h <span class="pill '+(r.is_closed?'g':'y')+'">'+(r.is_closed?'확정':'집계 중')+'</span></div><div class="t">기본 '+won(r.base_amt)+' · 연장 '+won(r.ot_amt)+' · 수당 '+won(r.allowance_amt)+'</div></div><div class="r"><b>'+won(r.payable_amt)+'</b><small class="dim">원</small></div></div>'}).join(''):'<div class="empty">정산 자료 없음</div>';
 }
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});window.scrollTo(0,0);
-  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();return}if(p==='pump'){pmOpen();return}if(p!=='in')loadAll()}
+  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
 </script>
