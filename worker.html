@@ -31,6 +31,12 @@ textarea.in{min-height:76px;resize:vertical}
 .step button{width:48px;height:48px;border-radius:12px;border:1px solid var(--ln);background:var(--sf2);font-size:22px;cursor:pointer}
 .step .v{flex:1;text-align:center;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cbar{display:flex;height:22px;border-radius:8px;overflow:hidden;margin:8px 0 10px}.cbar span{display:block;height:100%}
+.ctbl{width:100%;border-collapse:collapse;font-size:14px}.ctbl td{padding:6px 0;border-bottom:1px solid var(--ln)}.ctbl td:last-child{text-align:right;font-variant-numeric:tabular-nums}.ctbl tr.sum td{font-weight:700;border-bottom:0}
+.big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:8px 0}
+.lad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.lad div{background:var(--sf2);border-radius:10px;padding:8px 4px}.lad b{display:block;font-size:14px}.lad small{color:var(--tx3);font-size:11px}
+.dpblk{margin-bottom:14px}.dpblk h3{font-size:14px;margin:0 0 6px;display:flex;align-items:center;gap:6px}
 .msg{font-size:14px;margin-top:10px;min-height:20px}
 .pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600;background:var(--sf2);border:1px solid var(--ln);color:var(--tx2)}
 .pill.b{background:var(--ac2);border-color:transparent;color:var(--ac)}.pill.g{background:var(--goodbg);border-color:transparent;color:var(--good)}.pill.y{background:var(--warnbg);border-color:transparent;color:var(--warn)}
@@ -165,8 +171,8 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       <div class="card">
         <h2>투입현황 <small class="dim tiny">리드·대표</small></h2>
         <div class="chips" id="dpDates" style="margin-bottom:10px"></div>
-        <pre id="dpText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre>
-        <div class="row2" style="margin-top:10px"><button class="btn" onclick="copyText('dpText')">복사</button><button class="btn p" onclick="shareText('dpText','투입현황')">카톡으로 공유</button></div>
+        <div id="dpBlocks"><pre id="dpText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre></div>
+        <p class="tiny dim" style="margin:8px 0 0">매출처별로 따로 복사·공유됩니다 (우주이엔지 보고와 메인이엔씨 보고를 섞지 않음).</p>
         <div class="msg" id="dpMsg"></div>
       </div>
       <div class="card"><h2>인원별 <small class="dim tiny" id="dpN"></small></h2><div id="dpRows"></div></div>
@@ -209,6 +215,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       <div class="card"><h2>내 스펙 <small class="dim tiny">사이즈·출입ID·교육 이수</small></h2><div id="meRows"></div><p class="tiny dim" style="margin:10px 0 0">사이즈·거주지·카풀은 직접 고칠 수 있습니다(연필 표시). 출입ID·교육 이수일은 대표가 관리합니다.</p></div>
     </section>
     <section class="page" id="p-pay">
+      <div id="comp"></div>
       <div class="card"><h2>월별 정산</h2><div id="pay"></div><p class="tiny dim" style="margin:12px 0 0">지급액은 대표 확정 후 다음 달 10일에 지급됩니다. 확정 전 금액은 바뀔 수 있습니다.</p></div>
     </section>
   </div>
@@ -220,7 +227,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
   <div data-p="deploy" class="lead hide" onclick="go('deploy')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0"/></svg>투입</div>
   <div data-p="pump" class="lead hide" onclick="go('pump')"><svg viewBox="0 0 24 24"><path d="M4 18V8h6l2-3h8v13zM8 12h8"/></svg>펌프실</div>
   <div data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>내 스펙</div>
-  <div data-p="pay" onclick="go('pay')"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>정산</div>
+  <div data-p="pay" onclick="go('pay')"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>보상·정산</div>
 </div>
 <div id="toasts"></div>
 <script>
@@ -409,14 +416,17 @@ function aiDismiss(){el('aiBox').classList.add('hide')}
 
 /* ══════ 리드: 투입현황 ══════ */
 var DP={date:null};
-async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDays(7),DP.date,'dpOpen');el('dpText').textContent='불러오는 중…';
+async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDays(7),DP.date,'dpOpen');el('dpBlocks').innerHTML='<div class="dim tiny">불러오는 중…</div>';
   var r=await sb.rpc('lead_deployment',{p_date:DP.date});
-  if(r.error||!r.data||!r.data.ok){el('dpText').textContent='';el('dpMsg').innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
-  var d=r.data,lines=[kdate(d.date)+' 투입현황'];
-  (d.groups||[]).forEach(function(g){if(g.project==='휴무')return;lines.push('['+g.project+'] '+g.n+'명');(g.sites||[]).forEach(function(s){lines.push('· '+s.place+(s.site&&s.site.split(' ')[1]?' '+s.site.split(' ').slice(1).join(' '):'')+' — '+s.names)})});
-  lines.push('총 '+d.total+'명');el('dpText').textContent=lines.join('\n');el('dpMsg').textContent='';
+  if(r.error||!r.data||!r.data.ok){el('dpBlocks').innerHTML='';el('dpMsg').innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
+  var d=r.data;var parts=(d.partners&&d.partners.length)?d.partners:[{partner:'전체',partner_id:'all',n:d.total,groups:d.groups||[]}];
+  el('dpBlocks').innerHTML=parts.map(function(pt,i){var lines=[kdate(d.date)+' 투입현황 — '+pt.partner];
+    (pt.groups||[]).forEach(function(g){if(g.project==='휴무')return;lines.push('['+g.project+'] '+g.n+'명');(g.sites||[]).forEach(function(s){lines.push('· '+s.place+(s.site&&s.site.split(' ')[1]?' '+s.site.split(' ').slice(1).join(' '):'')+' — '+s.names)})});
+    lines.push('총 '+pt.n+'명');
+    return '<div class="dpblk"><h3>'+esc(pt.partner)+' <span class="pill b">'+pt.n+'명</span></h3><pre id="dpText'+i+'" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0">'+esc(lines.join('\n'))+'</pre><div class="row2" style="margin-top:8px"><button class="btn" onclick="copyText(\'dpText'+i+'\')">복사</button><button class="btn p" onclick="shareText(\'dpText'+i+'\',\'투입현황 '+esc(pt.partner)+'\')">카톡으로 공유</button></div></div>'}).join('');
+  el('dpMsg').textContent='';
   el('dpN').textContent=(d.rows||[]).length+'명';
-  el('dpRows').innerHTML=(d.rows||[]).map(function(x){return '<div class="item"><div class="m"><div class="s">'+esc(x.name)+' <span class="pill '+(x.status==='submitted'?'b':x.status==='approved'?'g':'')+'">'+esc((STMAP[x.status]||[x.status])[0])+'</span></div><div class="t">'+esc(x.site||'')+' · '+esc(x.project)+(x.start?' · '+hhmm(x.start)+' 시작':'')+'</div></div><div class="r"><b>'+(+x.md||0).toFixed(1)+'</b><small class="dim">'+((+x.ot)>0?'+'+x.ot+'h':'공수')+'</small></div></div>'}).join('')||'<div class="empty">기록 없음</div>';
+  el('dpRows').innerHTML=(d.rows||[]).map(function(x){return '<div class="item"><div class="m"><div class="s">'+esc(x.name)+' <span class="pill '+(x.status==='submitted'?'b':x.status==='approved'?'g':'')+'">'+esc((STMAP[x.status]||[x.status])[0])+'</span></div><div class="t">'+esc(x.site||'')+' · '+esc(x.project)+(x.partner?' · '+esc(x.partner):'')+(x.start?' · '+hhmm(x.start)+' 시작':'')+'</div></div><div class="r"><b>'+(+x.md||0).toFixed(1)+'</b><small class="dim">'+((+x.ot)>0?'+'+x.ot+'h':'공수')+'</small></div></div>'}).join('')||'<div class="empty">기록 없음</div>';
 }
 
 /* ══════ 리드: 내일 배치 ══════ */
@@ -481,11 +491,44 @@ var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'
 function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">✎</button>':'')+'</div>'}).join('')}
 async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=prompt(label+(k==='own_vehicle_known'?' (유/무)':''),cur==null?'':String(cur));if(v===null)return;
   var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
+/* ══════ 내 보상 (월급제 본인 행만) ══════ */
+var CP={ten:null,grade:null};
+function cf(R,k,d){var v=parseFloat(R[k]);return isNaN(v)?d:v}
+async function compLoad(){try{var r=await Promise.all([sb.from('my_comp').select('*'),sb.from('my_pay_rules').select('*')]);D.comp=((r[0]&&r[0].data)||[])[0]||null;D.rules=(((r[1]&&r[1].data)||[])[0]||{}).rules||{};}catch(e){D.comp=null}renderComp()}
+function compOrd(c,R,tenY,grade){if(c.base_override)return +c.ordinary_amt;var skill=Math.min(Math.max(grade-1,0)*cf(R,'pay_skill_unit',40000),cf(R,'pay_skill_cap',400000));var car=Math.min((+c.career_amt||0)+((+c.tenure_years||0)+tenY)*cf(R,'pay_tenure_unit',40000),cf(R,'pay_career_tenure_cap',400000));return (+c.base_amt||0)+(+c.meal_amt||0)+skill+(+c.position_amt||0)+car}
+function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.innerHTML='';return}
+  if(CP.ten==null)CP.ten=0;if(CP.grade==null)CP.grade=+c.tech_grade||1;
+  var ord=+c.ordinary_amt,veh=+c.vehicle_amt||0,insCo=+c.employer_ins_amt||0,ret=+c.retire_accrual_amt||0,tu=cf(R,'pay_tenure_unit',40000),su=cf(R,'pay_skill_unit',40000);
+  var insMe=Math.round((ord-(+c.meal_amt||0))*cf(R,'ins_employee_rate',0.094));
+  var bT=+c.bonus_target_count||2,bPaid=+c.bonus_paid_ytd||0,bPlan=bT*ord,bShow=bPaid>0?bPaid:bPlan,bIsPlan=!(bPaid>0);
+  var aPay=ord*12,aVeh=veh*12,aIns=insCo*12,aRet=ret*12,cash=aPay+aVeh+bShow,total=cash+aIns+aRet,ratio=(total/aPay).toFixed(2);
+  var segs=[['급여',aPay,'var(--ac)'],['성과금',bShow,'#8b5cf6'],['차량',aVeh,'#0ea5e9'],['4대보험 회사부담',aIns,'#f59e0b'],['퇴직 적립',aRet,'#10b981']];
+  var fixed=!!c.base_override;
+  var h='<div class="card"><h2>이번 달 <small class="dim tiny">'+esc(c.person_name)+' · '+(fixed?'고정 패키지':(c.tech_grade+'등급'+(c.position_title?' · '+esc(c.position_title):'')))+'</small></h2>'
+   +'<table class="ctbl">'+[['기본급',c.base_amt],['식대 (비과세)',c.meal_amt]].concat(fixed?[]:[['기술등급수당 ('+c.tech_grade+'등급)',c.skill_amt],['직책수당'+(c.position_title?' ('+esc(c.position_title)+')':''),c.position_amt],['경력근속수당 (경력 '+(+c.career_years)+'년 · 근속 '+c.tenure_years+'년)',c.career_total_amt]]).map(function(x){return '<tr><td>'+x[0]+'</td><td>'+won(x[1])+'</td></tr>'}).join('')
+   +'<tr class="sum"><td>월 고정급 (통상임금)</td><td>'+won(ord)+'</td></tr>'+(veh?'<tr><td>차량유지비 (비과세 실비)</td><td>'+won(veh)+'</td></tr>':'')
+   +'<tr><td class="dim">4대보험 본인부담 예상 <span class="tiny">(소득세 별도)</span></td><td class="dim">−'+won(insMe)+'</td></tr><tr class="sum"><td>실수령 예상 (소득세 전)</td><td>'+won(ord+veh-insMe)+'</td></tr></table>'
+   +'<p class="tiny dim" style="margin:8px 0 0">회사도 4대보험으로 같은 금액대('+won(insCo)+')를 따로 냅니다.</p></div>'
+  +'<div class="card"><h2>올해 총보상 <small class="dim tiny">회사가 나에게 쓰는 돈</small></h2><div class="big">'+won(total)+'<small class="dim tiny"> /년</small></div>'
+   +'<div class="cbar">'+segs.map(function(g){return '<span style="width:'+(100*g[1]/total).toFixed(1)+'%;background:'+g[2]+'" title="'+g[0]+'"></span>'}).join('')+'</div>'
+   +'<table class="ctbl"><tr><td>급여 12개월</td><td>'+won(aPay)+'</td></tr><tr><td>성과금 (연 '+bT+'회) '+(bIsPlan?'<span class="pill y">예정</span>':'<span class="pill g">지급 '+c.bonus_cnt_ytd+'회</span>')+'</td><td>'+won(bShow)+'</td></tr><tr><td>명절 떡값 (연 2회) <span class="pill y">예정</span></td><td class="dim">별도</td></tr>'+(veh?'<tr><td>차량유지비 12개월</td><td>'+won(aVeh)+'</td></tr>':'')+'<tr><td>4대보험 회사부담</td><td>'+won(aIns)+'</td></tr><tr><td>퇴직급여 적립 (추정)</td><td>'+won(aRet)+'</td></tr><tr class="sum"><td>합계</td><td>'+won(total)+'</td></tr></table>'
+   +'<p class="tiny" style="margin:10px 0 0"><b>회사가 쓰는 돈은 내 급여의 '+ratio+'배</b> — 통장에 들어오는 돈 '+won(cash)+' + 회사가 대신 내는 돈 '+won(aIns+aRet)+'</p><p class="tiny dim" style="margin:4px 0 0">성과금·떡값은 경영 성과에 따라 정해지며 「예정」은 확정 금액이 아닙니다.</p></div>';
+  if(!fixed){var now=compOrd(c,R,0,+c.tech_grade),lad=[1,3,5,10].map(function(k){return [k,compOrd(c,R,k,+c.tech_grade)]});
+   h+='<div class="card"><h2>내 사다리 <small class="dim tiny">남아 있으면 이만큼</small></h2><div class="tiny">근속 <b id="cpTen">'+CP.ten+'</b>년 뒤 월 고정급 <span class="big" id="cpTenV">'+won(compOrd(c,R,CP.ten,+c.tech_grade))+'</span></div><input type="range" min="0" max="10" step="1" value="'+CP.ten+'" oninput="cpTen(this.value)">'
+    +'<div class="lad">'+lad.map(function(x){return '<div><small>'+x[0]+'년 뒤</small><b>'+won(x[1])+'</b><small>+'+won(x[1]-now)+'</small></div>'}).join('')+'</div><p class="tiny dim" style="margin:8px 0 0">근속 1년 = 월 +'+won(tu)+'원 (경력·근속 합산 한도 '+won(cf(R,'pay_career_tenure_cap',400000))+')</p></div>'
+    +'<div class="card"><h2>승급하면</h2><div class="tiny">기술등급 <select class="in" style="width:auto;display:inline-block;padding:4px 8px" onchange="cpGrade(this.value)">'+[1,2,3,4,5,6,7,8,9,10,11].map(function(g){return '<option value="'+g+'"'+(g===CP.grade?' selected':'')+'>'+g+'등급'+(g===+c.tech_grade?' (현재)':'')+'</option>'}).join('')+'</select> → 월 고정급 <span class="big" id="cpGradeV">'+won(compOrd(c,R,0,CP.grade))+'</span> <span class="tiny dim" id="cpGradeD">'+(CP.grade!==+c.tech_grade?'(현재 대비 '+(compOrd(c,R,0,CP.grade)-now>=0?'+':'')+won(compOrd(c,R,0,CP.grade)-now)+')':'')+'</span></div><p class="tiny dim" style="margin:8px 0 0">한 등급 = 월 +'+won(su)+'원, 11등급이면 +'+won(cf(R,'pay_skill_cap',400000))+'원. 등급 평가 기준은 취업규칙 별표 2.</p></div>'}
+  else h+='<div class="card"><h2>내 사다리 · 승급</h2><p class="tiny dim">고정 패키지 계약이라 등급·근속 가산이 적용되지 않습니다.</p></div>';
+  var mo=+c.months_employed||0,days=+c.days_employed||0;var cum=mo*(insCo+ret);var sev=days>=365?Math.round(ord*days/365):null;
+  h+='<div class="card"><h2>회사가 내는 것 (누계) <small class="dim tiny">'+esc(String(c.hired_on))+' 입사 · '+mo+'개월</small></h2><table class="ctbl"><tr><td>4대보험 회사부담 + 퇴직 적립 누계 (추정)</td><td>'+won(cum)+'</td></tr><tr class="sum"><td>지금 퇴직하면 받는 퇴직금 (추정)</td><td>'+(sev==null?'<span class="dim tiny">근속 1년부터 발생 ('+(365-days)+'일 남음)</span>':won(sev))+'</td></tr></table><p class="tiny dim" style="margin:8px 0 0">퇴직금은 퇴직 시점 평균임금 × 계속근로기간으로 확정됩니다. 위 값은 현재 급여 기준 추정치입니다.</p></div>'
+  +'<p class="tiny dim" style="margin:0 0 14px">이 화면은 회사가 귀하에게 지출하는 총액을 알려 드리는 자료이며, 지급의 근거는 취업규칙과 근로계약서입니다.</p>';
+  box.innerHTML=h}
+function cpTen(v){CP.ten=+v;var c=D.comp,R=D.rules||{};el('cpTen').textContent=CP.ten;el('cpTenV').textContent=won(compOrd(c,R,CP.ten,+c.tech_grade))}
+function cpGrade(v){CP.grade=+v;var c=D.comp,R=D.rules||{};var now=compOrd(c,R,0,+c.tech_grade),g=compOrd(c,R,0,CP.grade);el('cpGradeV').textContent=won(g);el('cpGradeD').textContent=CP.grade!==+c.tech_grade?'(현재 대비 '+(g-now>=0?'+':'')+won(g-now)+')':''}
 function renderPay(){
   el('pay').innerHTML=D.pay.length?D.pay.map(function(r){return '<div class="item"><div class="d"><b>'+String(r.period_ym).slice(5)+'</b><small>'+String(r.period_ym).slice(0,4)+'</small></div><div class="m"><div class="s">공수 '+(+r.work_md_sum).toFixed(1)+' · 잔업 '+(+r.ot_hours_sum||0)+'h <span class="pill '+(r.is_closed?'g':'y')+'">'+(r.is_closed?'확정':'집계 중')+'</span></div><div class="t">기본 '+won(r.base_amt)+' · 연장 '+won(r.ot_amt)+' · 수당 '+won(r.allowance_amt)+'</div></div><div class="r"><b>'+won(r.payable_amt)+'</b><small class="dim">원</small></div></div>'}).join(''):'<div class="empty">정산 자료 없음</div>';
 }
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});window.scrollTo(0,0);
-  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p!=='in')loadAll()}
+  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
 </script>
