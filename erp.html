@@ -288,7 +288,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     <!-- 현장 -->
     <section class="page" id="p-site">
       <div class="ph"><h2>현장 투입</h2><div class="desc">일자별 인원·공수·지급·매출</div>
-        <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select></div></div>
+        <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select><button class="btn p" id="btnApprove" onclick="approveDay()">이 날 제출분 승인</button></div></div>
       <div class="kpis" id="siteKpi"></div>
       <div class="sec"><h3>투입 명세</h3><div class="tb" id="gAtt"></div></div>
       <div class="sec"><h3>일자 추이</h3><div class="tb" id="gTrend"></div></div>
@@ -708,7 +708,8 @@ function renderHome(){
     +kpi('누적 미지급',won(bal),'이전 달분 포함','click',' onclick="go(\'money\')"')
     +kpi(m+' 회사마진',sgn(mar),'매출 − 지급 − 팀장몫','click',' onclick="go(\'money\')"')
     +kpi(m+' 영업이익',sgn(dm.operating_profit),dm.is_closed?'마감':'진행 중','click',' onclick="go(\'pl\')"')
-    +kpi('경보',hot?'<span class="neg">'+hot+'</span>':'<span class="pos">0</span>',hot?'조치 필요':'특이사항 없음','click',' onclick="go(\'alerts\')"');
+    +kpi('경보',hot?'<span class="neg">'+hot+'</span>':'<span class="pos">0</span>',hot?'조치 필요':'특이사항 없음','click',' onclick="go(\'alerts\')"')
+    +(function(){var km={};D.attk.forEach(function(k){km[k.work_date+'|'+k.employment_no]=k});var no=today.filter(function(r){var k=km[r.work_date+'|'+r.employment_no]||{};return r.work_start&&!r.work_end&&k.source==='worker_app'}).length;var pend=today.filter(function(r){return r.status==='submitted'}).length;return kpi('퇴근 미등록 / 승인대기',(no?'<span class="neg">'+no+'</span>':'0')+' <small>/</small> '+(pend?'<span class="wn">'+pend+'</span>':'0'),'현장앱 기준 · 현장 화면에서 승인','click',' onclick="go(\'site\')"')})();
   var last=D.dash.slice(-12);
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
@@ -729,15 +730,19 @@ function renderSite(){
   var km={};D.attk.forEach(function(k){km[k.work_date+'|'+k.employment_no]=k});
   var rows=D.att.filter(function(r){return r.work_date===cur}).map(function(r){r.margin=(+r.revenue_amt||0)-(+r.pay_amt||0);var k=km[r.work_date+'|'+r.employment_no];if(k){r.entry_id=k.entry_id;r.site_id=k.site_id;r.project_code=k.project_code;r.settled_ym=k.settled_ym;r.source=k.source}return r});
   var md=sum(rows,'work_md'),ot=sum(rows,'ot_hours'),pay=sum(rows,'pay_amt'),rev=sum(rows,'revenue_amt');
-  el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl')+kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h')+kpi('지급액',won(pay))+kpi('현장매출',won(rev))+kpi('일 마진',sgn(rev-pay));
+  var pend=rows.filter(function(r){return (r.status==='submitted'||r.status==='draft')&&!r.settled_ym}).length,noout=rows.filter(function(r){return r.work_start&&!r.work_end&&r.source==='worker_app'}).length;
+  el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl')+kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h')+kpi('지급액',won(pay))+kpi('현장매출',won(rev))+kpi('일 마진',sgn(rev-pay))+kpi('승인 대기',pend?'<span class="wn">'+pend+'</span>':'0','제출·임시 상태')+kpi('퇴근 미등록',noout?'<span class="neg">'+noout+'</span>':'0','현장앱 출근 후 퇴근 없음');
+  var ab=el('btnApprove');if(ab){ab.textContent=cur+' 승인 대기 '+pend+'건 일괄 승인';ab.disabled=!pend;ab.dataset.d=cur}
   var tm=function(v){return hhmm(v)}; var tget=function(k){return function(r){return hhmm(r[k])||''}};
-  grid('gAtt',[{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,e:{field:'site_id',ph:'현장명 또는 코드'}},{k:'work_start',t:'출근',f:tm,e:{field:'work_start',get:tget('work_start'),ph:'HH:MM'}},{k:'work_end',t:'퇴근',f:tm,e:{field:'work_end',get:tget('work_end'),ph:'HH:MM'}},{k:'work_md',t:'공수',f:'num',sum:1,e:'work_md'},{k:'ot_hours',t:'잔업h',f:'num',sum:1,e:'ot_hours'},{k:'night_hours',t:'야간h',f:'num',e:'night_hours'},{k:'pay_amt',t:'지급',f:'won',sum:1},{k:'revenue_amt',t:'매출',f:'won',sum:1},{k:'margin',t:'마진',f:'sgn',sum:1},{k:'_x',t:'',l:1,f:function(v,r){return r.entry_id?(r.settled_ym?'<span class="pill g">마감</span>':delBtn('labor',r.entry_id,r.person_name+' '+r.work_date)):''}}],
+  grid('gAtt',[{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,e:{field:'site_id',ph:'현장명 또는 코드'}},{k:'work_start',t:'출근',f:tm,e:{field:'work_start',get:tget('work_start'),ph:'HH:MM'}},{k:'work_end',t:'퇴근',f:tm,e:{field:'work_end',get:tget('work_end'),ph:'HH:MM'}},{k:'work_md',t:'공수',f:'num',sum:1,e:'work_md'},{k:'ot_hours',t:'잔업h',f:'num',sum:1,e:'ot_hours'},{k:'night_hours',t:'야간h',f:'num',e:'night_hours'},{k:'pay_amt',t:'지급',f:'won',sum:1},{k:'revenue_amt',t:'매출',f:'won',sum:1},{k:'margin',t:'마진',f:'sgn',sum:1},{k:'status',t:'상태',l:1,f:function(v,r){return (r.settled_ym?'<span class="pill g">마감</span>':pillSt(v))+(r.work_start&&!r.work_end&&r.source==='worker_app'?' <span class="pill r">퇴근 미등록</span>':'')+(r.source==='worker_app'?' <span class="pill">앱</span>':'')}},{k:'_x',t:'',l:1,f:function(v,r){return r.entry_id?(r.settled_ym?'':delBtn('labor',r.entry_id,r.person_name+' '+r.work_date)):''}}],
     {rows:rows,q:['person_name','site_name'],qph:'이름·현장',foot:true,sort:{k:'site_name',d:1},save:function(r,f,v){if(!r.entry_id)return Promise.resolve({ok:false,error:'키 없음(새로고침)'});return ceoSave('labor','entry_id')(r,f,v)},afterSave:function(){loadAll()}});
   edHint('gAtt','셀 더블클릭 → 수정 (지급·매출은 자동 재계산) · 삭제는 마감 전 기록만');
   var t=by(D.att,'work_date'),tr=Object.keys(t).sort().reverse().map(function(d){var v=t[d];return {work_date:d,n:v.length,md:sum(v,'work_md'),ot:sum(v,'ot_hours'),pay:sum(v,'pay_amt'),rev:sum(v,'revenue_amt'),margin:sum(v,'revenue_amt')-sum(v,'pay_amt')}});
   grid('gTrend',[{k:'work_date',t:'일자',l:1},{k:'n',t:'인원',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot',t:'잔업h',f:'num'},{k:'pay',t:'지급',f:'won'},{k:'rev',t:'매출',f:'won'},{k:'margin',t:'마진',f:'sgn'}],{rows:tr,page:40});
 }
 
+async function approveDay(){var d=el('btnApprove').dataset.d;if(!d)return;var ok=await ask('일괄 승인',d+' 제출·임시 상태의 투입 기록을 전부 승인합니다. 승인 후에도 마감 전에는 수정할 수 있습니다.',{ok:'승인'});if(!ok)return;
+  var r=await sb.rpc('ceo_approve_labor',{p_date:d});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast(d+' '+r.data.approved+'건 승인','g');loadAll()}
 /* ═══════════ 매출·문서 ═══════════ */
 function renderSales(){
   var m=M(),cur=D.sdm.filter(function(r){return r.period_ym===m});
@@ -834,7 +839,7 @@ function renderMoney(){
   el('setN').textContent=set.length+'명';
   grid('gSet',[{k:'person_name',t:'이름',l:1},{k:'income_type',t:'소득',l:1,f:function(v){return '<span class="pill">'+esc(v)+'</span>'}},{k:'work_md_sum',t:'공수',f:'num',sum:1},{k:'ot_hours_sum',t:'잔업h',f:'num',sum:1},{k:'base_amt',t:'기본',f:'won',sum:1},{k:'ot_amt',t:'연장',f:'won',sum:1},{k:'allowance_amt',t:'수당',f:'won',sum:1},{k:'other_pay_amt',t:'기타',f:'won',sum:1},{k:'payable_amt',t:'지급액',f:'won',sum:1},{k:'revenue_sum',t:'매출',f:'won',sum:1},{k:'company_margin',t:'회사마진',f:'sgn',sum:1},{k:'balance',t:'누적잔액',f:'sgn'},{k:'is_closed',t:'마감',l:1,f:function(v){return v?'<span class="pill g">마감</span>':'<span class="pill">진행</span>'}}],
     {rows:set,q:['person_name'],qph:'이름',foot:true,sort:{k:'payable_amt',d:-1}});
-  grid('gPay',[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'ID',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],{rows:D.pay.filter(function(r){return Math.abs(+r.balance_amt||0)>=1}),q:['person_name'],foot:true,sort:{k:'balance_amt',d:-1},empty:'미지급 잔액 없음'});
+  grid('gPay',[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'ID',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],{rows:D.pay.filter(function(r){return Math.abs(+r.balance_amt||0)>=1000}),q:['person_name'],foot:true,sort:{k:'balance_amt',d:-1},empty:'미지급 잔액 없음 (1,000원 미만 단수 차이는 숨김)'});
   grid('gLdr',[{k:'leader_name',t:'팀장',l:1},{k:'period_ym',t:'월',l:1},{k:'self_pay_amt',t:'본인급여',f:'won'},{k:'team_margin_amt',t:'팀마진',f:'won'},{k:'earned_amt',t:'귀속',f:'won'},{k:'taken_amt',t:'수령',f:'won'},{k:'month_net_amt',t:'당월',f:'sgn'},{k:'balance_amt',t:'누적',f:'sgn'}],{rows:D.ldr,csv:false,page:24});
 }
 
@@ -1018,14 +1023,14 @@ function renderClose(){
     {k:'_act',t:'조치',l:1,f:function(v,r){return (+r.미마감>0)?'<button class="stbtn" onclick="event.stopPropagation();closeMonth(\''+r.period_ym+'\')">마감</button>':'<button class="stbtn x" onclick="event.stopPropagation();reopenMonth(\''+r.period_ym+'\')">해제</button>'}}],{rows:D.close,csv:false});
   var m=M();var mr=(D.mrev||[]).filter(function(r){return r.period_ym===m});
   el('mrevN').textContent=m+' · '+mr.length+'곳';
-  grid('gMrev',[{k:'partner_name',t:'거래처',l:1},{k:'entries',t:'투입건',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot_hours',t:'연장h',f:'num'},{k:'labor_amt',t:'공수매출',f:'won',sum:1},{k:'holiday_premium',t:'휴일가산',f:'won',sum:1},{k:'pump_billed',t:'펌프실 청구',f:'won',sum:1},{k:'billing_amt',t:'청구기준 합계',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'sd_supply',t:'계산서 공급가',f:'won',sum:1},{k:'sd_doc_nos',t:'문서번호',l:1,cls:'tiny dim'},{k:'diff_amt',t:'차이',f:function(v){return (+v)?'<b class="'+((+v)>0?'wn':'neg')+'">'+won(v)+'</b>':'<span class="pos">0</span>'},sum:1}],
+  grid('gMrev',[{k:'partner_name',t:'거래처',l:1},{k:'entries',t:'투입건',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot_hours',t:'연장h',f:'num'},{k:'labor_amt',t:'공수매출',f:'won',sum:1},{k:'holiday_premium',t:'휴일가산',f:'won',sum:1},{k:'pump_billed',t:'펌프실 청구',f:'won',sum:1},{k:'billing_amt',t:'청구기준 합계',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'sd_supply',t:'계산서 공급가',f:'won',sum:1},{k:'sd_doc_nos',t:'문서번호',l:1,cls:'tiny dim'},{k:'diff_amt',t:'계산서−청구',f:function(v,r){return v==null?'<span class="dim tiny">'+(r.partner_id?'문서 기준':'비청구')+'</span>':(+v)?'<b class="'+((+v)>0?'wn':'neg')+'">'+won(v)+'</b>':'<span class="pos">0</span>'},sum:1}],
     {rows:mr,csv:true,foot:true,onRow:mrevOpen,empty:m+' 투입·계산서 없음'});
   grid('gIntg2',[{k:'check_name',t:'점검',l:1},{k:'cnt',t:'건수',f:function(v){return '<b class="'+((+v)?'wn':'pos')+'">'+v+'</b>'}},{k:'why',t:'설명',l:1,cls:'tiny dim'}],{rows:D.intg,csv:false});
 }
 function mrevOpen(r){
   var ls=(D.mrevl||[]).filter(function(x){return x.period_ym===r.period_ym&&(x.partner_id||'')===(r.partner_id||'')}).sort(function(a,b){return String(a.project).localeCompare(String(b.project),'ko')||(a.is_holiday?1:-1)});
   var pump=(D.pump||[]).filter(function(x){return x.period_ym===r.period_ym});
-  var body=kv([['귀속월',r.period_ym],['거래처',esc(r.partner_name||'–')],['청구기준 합계','<b>'+won(r.billing_amt)+'</b> = 공수 '+won(r.labor_amt)+' + 휴일가산 '+won(r.holiday_premium)+' + 펌프실 '+won(r.pump_billed)],['계산서 공급가',won(r.sd_supply)+' ('+(r.sd_docs||0)+'건 '+esc(r.sd_doc_nos||'')+')'],['차이',(+r.diff_amt)?'<b class="'+((+r.diff_amt)>0?'wn':'neg')+'">'+won(r.diff_amt)+'</b>':'<span class="pos">0</span>']])
+  var body=kv([['귀속월',r.period_ym],['거래처',esc(r.partner_name||'–')],['청구기준 합계','<b>'+won(r.billing_amt)+'</b> = 공수 '+won(r.labor_amt)+' + 휴일가산 '+won(r.holiday_premium)+' + 펌프실 '+won(r.pump_billed)],['계산서 공급가',won(r.sd_supply)+' ('+(r.sd_docs||0)+'건 '+esc(r.sd_doc_nos||'')+')'],['차이',r.diff_amt==null?'<span class="dim">투입 기록 없음 · 문서 기준</span>':(+r.diff_amt)?'<b class="'+((+r.diff_amt)>0?'wn':'neg')+'">'+won(r.diff_amt)+'</b>':'<span class="pos">0 · 일치</span>']])
    +'<h4 style="margin:14px 0 6px">프로젝트 · 휴일별 내역</h4><table class="mini" style="width:100%"><thead><tr><th class="l">프로젝트</th><th class="l">구분</th><th>건</th><th>공수</th><th>연장h</th><th>공수매출</th><th>휴일가산</th></tr></thead><tbody>'
    +(ls.length?ls.map(function(x){return '<tr><td class="l">'+esc(x.project)+'</td><td class="l">'+(x.is_holiday?'<span class="pill y">휴일</span>':'평일')+'</td><td>'+x.entries+'</td><td>'+num(x.md)+'</td><td>'+num(x.ot_hours)+'</td><td>'+won((+x.labor_amt||0)+(+x.pump_labor_amt||0))+'</td><td>'+won(x.holiday_premium)+'</td></tr>'}).join(''):'<tr><td colspan="7" class="empty">투입 없음</td></tr>')+'</tbody></table>'
    +(r.partner_id==='C0087'&&pump.length?'<h4 style="margin:14px 0 6px">펌프실 수량제 (일별 MAX 합)</h4>'+kv(pump.map(function(p){return [p.period_ym,'수량 '+won(p.qty_amt)+' · 공수보장 '+won(p.guarantee_amt)+' · 청구 <b>'+won(p.billed_amt)+'</b>']})):'')
