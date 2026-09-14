@@ -54,6 +54,21 @@ textarea.in{min-height:76px;resize:vertical}
 .toast{background:var(--tx);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;text-align:center}
 .toast.e{background:var(--crit);color:#fff}.toast.g{background:var(--good);color:#fff}
 .empty{color:var(--tx3);text-align:center;padding:20px 0}
+.chips.big .chip{padding:12px 16px;font-size:16px;min-width:64px;text-align:center}
+.btn.big{flex-direction:column;gap:2px;min-height:76px;font-size:20px;border-width:2px}
+.btn.big small{font-size:13px;font-weight:400;opacity:.85}
+.btn.in-btn{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn.out-btn{background:var(--sf);border-color:var(--crit);color:var(--crit)}
+.btn.out-btn.on{background:var(--crit);color:#fff}
+.btn.in-btn.done{background:var(--goodbg);border-color:var(--good);color:var(--good)}
+.state{background:var(--ac2);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:15px}
+.state b{font-size:17px}.state .t{font-size:13px;color:var(--tx2);margin-top:2px}
+.sw{display:flex;align-items:center;gap:10px;font-size:16px;padding:10px 12px;border:1px solid var(--ln);border-radius:12px;background:var(--sf2)}
+.sw input{width:22px;height:22px}
+.fix{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fix .btn{flex-direction:column;gap:0;min-height:64px}
+.fix .btn small{font-size:12px;color:var(--tx3);font-weight:400}
+details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-webkit-details-marker{display:none}
 .note{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px}
 </style>
 </head>
@@ -85,20 +100,40 @@ textarea.in{min-height:76px;resize:vertical}
     <div class="top"><div class="lg">BV</div><div class="nm"><b id="uName">–</b><small id="uSub">–</small></div><button class="btn sm" onclick="doLogout()">로그아웃</button></div>
 
     <section class="page on" id="p-in">
-      <div class="card">
-        <h2 id="inTitle">오늘 공수 입력</h2>
-        <div class="f"><label>일자</label><input id="w_date" class="in" type="date"></div>
-        <div class="f"><label>현장</label><select id="w_site" class="in"></select></div>
-        <div class="f"><label>업무 유형</label><div class="chips" id="w_pc"></div></div>
-        <div class="f"><label>근무 시간 (내부 기준, 8시간 = 1공수)</label>
-          <div class="step"><button onclick="hStep(-1)">−</button><div class="v"><span id="w_hours">8</span><small class="dim" style="font-size:13px"> 시간</small></div><button onclick="hStep(1)">＋</button></div>
-          <div class="chips" style="margin-top:8px"><span class="chip" onclick="hSet(4)">4</span><span class="chip on" onclick="hSet(8)">8</span><span class="chip" onclick="hSet(9)">9</span><span class="chip" onclick="hSet(10)">10</span><span class="chip" onclick="hSet(12)">12</span></div></div>
-        <div class="row2"><div class="f"><label>출근</label><input id="w_start" class="in" type="time"></div><div class="f"><label>퇴근</label><input id="w_end" class="in" type="time"></div></div>
-        <div class="f"><label>업무 내용</label><textarea id="w_desc" class="in" placeholder="예: M15X 5EAL7005 반입, EFEM 레벨링"></textarea></div>
-        <button class="btn p w" id="w_btn" onclick="submitLabor()">제출</button>
+      <div class="card" id="todayCard">
+        <div class="f" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><label style="margin:0;flex:none">일자</label><input id="w_date" class="in" type="date" style="padding:8px 10px" onchange="onDate()"><span class="tiny dim" id="dateHint" style="white-space:nowrap"></span></div>
+        <div id="stateBox" class="state hide"></div>
+        <div class="f"><label>장소</label><div class="chips big" id="w_place"></div></div>
+        <div class="f" id="lineBox"><label>라인</label><div class="chips big" id="w_line"></div></div>
+        <div class="f hide" id="pumpBox"><label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업 (수량제)</span></label></div>
+        <details class="f"><summary class="tiny dim">메모 추가 (선택)</summary><textarea id="w_desc" class="in" placeholder="예: M15X 5EAL7005 반입, EFEM 레벨링" style="margin-top:8px"></textarea></details>
+        <div class="row2" style="margin-top:4px">
+          <button class="btn big in-btn" id="btnIn" onclick="clockIn()"><b>출근</b><small id="nowIn">--:--</small></button>
+          <button class="btn big out-btn" id="btnOut" onclick="clockOut()"><b>퇴근</b><small id="nowOut">--:--</small></button>
+        </div>
         <div class="msg" id="w_msg"></div>
       </div>
-      <div class="note tiny">같은 날 같은 현장에 다시 제출하면 덮어씁니다. 7일 이전 기록이나 확정된 기록의 수정은 대표에게 요청하십시오.</div>
+
+      <div class="card hide" id="confirmCard">
+        <h2>근무시간 확인</h2>
+        <p class="tiny dim" id="cfWhy"></p>
+        <div class="step"><button onclick="cfStep(-0.5)">−</button><div class="v"><span id="cfHours">8</span><small class="dim" style="font-size:13px"> 시간</small></div><button onclick="cfStep(0.5)">＋</button></div>
+        <p class="tiny" id="cfNote" style="margin:8px 0 12px;text-align:center"></p>
+        <div class="row2"><button class="btn" onclick="cfCancel()">취소</button><button class="btn p" onclick="cfOk()">확정</button></div>
+      </div>
+
+      <div class="card">
+        <h2>출퇴근을 못 눌렀을 때 <small class="dim tiny">시간보정</small></h2>
+        <p class="tiny dim" style="margin:0 0 10px">위에서 일자·장소·라인을 고른 뒤 하나만 누르면 바로 등록됩니다.</p>
+        <div class="fix">
+          <button class="btn" onclick="fixSubmit(8,'1공수')"><b>1공수</b><small>8시간</small></button>
+          <button class="btn" onclick="fixSubmit(9,'연장 1시간')"><b>연장 1h</b><small>9시간</small></button>
+          <button class="btn" onclick="fixSubmit(10,'연장 2시간')"><b>연장 2h</b><small>10시간</small></button>
+          <button class="btn" onclick="fixSubmit(11,'연장 3시간')"><b>연장 3h</b><small>11시간</small></button>
+          <button class="btn" onclick="fixSubmit(4,'반일')"><b>반일</b><small>4시간</small></button>
+        </div>
+      </div>
+      <div class="note tiny">같은 날 같은 현장에 다시 등록하면 덮어씁니다. 7일 이전 기록이나 확정된 기록의 수정은 대표에게 요청하십시오.</div>
     </section>
 
     <section class="page" id="p-list">
@@ -119,8 +154,8 @@ textarea.in{min-height:76px;resize:vertical}
 <div id="toasts"></div>
 <script>
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, ME=null;
-var D={sites:[],labor:[],pay:[]}, HOURS=8, PC='PJ-SETUP';
-var PCS=[['PJ-SETUP','장비셋업'],['PJ-PUMP','펌프실'],['PJ-TESMFG','TES제조'],['PJ-HQ','본사업무'],['PJ-EDU','교육'],['PJ-OFF','휴무·연차']];
+var D={sites:[],labor:[],pay:[]};
+var SEL={place:null,site:null};
 var STMAP={draft:['임시',''],submitted:['제출','b'],approved:['확정','g'],settled:['정산완료','g'],void:['취소','']};
 function el(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -154,7 +189,8 @@ async function afterLogin(){
   el('gate').classList.add('hide');el('app').classList.remove('hide');el('tabs').classList.remove('hide');
   el('uName').textContent=ME.name||ME.email||'';el('uSub').textContent=(ME.employment_no?'ID '+ME.employment_no+' · ':'')+today();
   if(!el('w_date').value)el('w_date').value=today();
-  el('w_pc').innerHTML=PCS.map(function(p){return '<span class="chip'+(p[0]===PC?' on':'')+'" data-v="'+p[0]+'" onclick="pcSet(\''+p[0]+'\')">'+p[1]+'</span>'}).join('');
+  try{el('w_pump').checked=localStorage.getItem('bvs_w_pump')==='1'}catch(e){}
+  tickClock();setInterval(tickClock,15000);
   loadAll();
 }
 async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg');
@@ -173,24 +209,83 @@ async function loadAll(){
   var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12)]);
   var errs=res.filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
   D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];
-  var cur=el('w_site').value;
-  var last=D.labor[0];var pref=cur||(last?last.site_id:'');
-  el('w_site').innerHTML='<option value="">현장 선택</option>'+D.sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===pref?' selected':'')+'>'+esc(s.site_name)+'</option>'}).join('');
-  if(last&&!cur&&last.project_code&&!PC_touched)pcSet(last.project_code);
-  renderList();renderPay();
+  renderPlaces();renderState();renderList();renderPay();
 }
-var PC_touched=false;
-function pcSet(v){PC=v;PC_touched=true;document.querySelectorAll('#w_pc .chip').forEach(function(c){c.classList.toggle('on',c.dataset.v===v)})}
-function hSet(h){HOURS=h;el('w_hours').textContent=h;document.querySelectorAll('#p-in .chips:not(#w_pc) .chip').forEach(function(c){c.classList.toggle('on',+c.textContent===h)})}
-function hStep(d){hSet(Math.max(0,Math.min(16,HOURS+d)))}
-async function submitLabor(){var m=el('w_msg'),b=el('w_btn');
-  if(!el('w_site').value){m.innerHTML='<span class="neg">현장을 선택해 주세요</span>';return}
-  b.disabled=true;m.textContent='제출 중…';
-  var p={work_date:el('w_date').value,site_id:el('w_site').value,project_code:PC,hours:HOURS,work_start:el('w_start').value||null,work_end:el('w_end').value||null,work_desc:el('w_desc').value||null};
-  var r=await sb.rpc('op_submit_labor',{p:p});b.disabled=false;
-  if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
-  m.innerHTML='<span class="pos">'+(r.data.mode==='updated'?'수정 제출됨':'제출됨')+' · '+esc(el('w_date').value)+'</span>';toast('제출 완료','g');
-  el('w_desc').value='';loadAll();
+
+/* ── 장소 → 라인 ── */
+var PLACES=[['IC','SK이천'],['CJ','SK청주'],['PT','삼성평택'],['HS','삼성화성'],['BV','BVS이천'],['UO','우주이천'],['TE','TES용인'],['ED','교육'],['OFF','휴무·병가']];
+function sitesOf(pf){return D.sites.filter(function(s){return String(s.site_id).split('-')[0]===pf})}
+function lineLabel(s){var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
+  if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
+  var pf=String(s.site_id).split('-')[0];if(pf==='IC'&&l==='이천')return '이천 (라인 미정)';if(pf==='CJ'&&l==='청주')return '청주 (라인 미정)';return l}
+function renderPlaces(){
+  if(!SEL.site){var last=D.labor.filter(function(r){return r.status!=='void'})[0];if(last)SEL.site=last.site_id;}
+  if(SEL.site&&!SEL.place)SEL.place=String(SEL.site).split('-')[0];
+  el('w_place').innerHTML=PLACES.filter(function(p){return sitesOf(p[0]).length}).map(function(p){return '<span class="chip'+(p[0]===SEL.place?' on':'')+'" onclick="pickPlace(\''+p[0]+'\')">'+p[1]+'</span>'}).join('');
+  renderLines();
+}
+function pickPlace(pf){SEL.place=pf;var ss=sitesOf(pf);SEL.site=ss.length===1?ss[0].site_id:(ss.some(function(s){return s.site_id===SEL.site})?SEL.site:null);
+  document.querySelectorAll('#w_place .chip').forEach(function(c){c.classList.toggle('on',c.textContent===(PLACES.filter(function(p){return p[0]===pf})[0]||[])[1])});renderLines()}
+function renderLines(){var ss=SEL.place?sitesOf(SEL.place):[];
+  el('lineBox').classList.toggle('hide',ss.length<=1);
+  el('w_line').innerHTML=ss.map(function(s){return '<span class="chip'+(s.site_id===SEL.site?' on':'')+'" onclick="pickLine(\''+esc(s.site_id)+'\')">'+esc(lineLabel(s))+'</span>'}).join('');
+  el('pumpBox').classList.toggle('hide',!(SEL.place==='IC'||SEL.place==='CJ'));
+  renderState();
+}
+function pickLine(id){SEL.site=id;document.querySelectorAll('#w_line .chip').forEach(function(c){c.classList.toggle('on',c.textContent===lineLabel(D.sites.filter(function(s){return s.site_id===id})[0]||{site_name:''}))});renderState()}
+function savePump(){try{localStorage.setItem('bvs_w_pump',el('w_pump').checked?'1':'0')}catch(e){}}
+function projectCode(){var pf=SEL.place;
+  if(pf==='IC'||pf==='CJ')return el('w_pump').checked?'PJ-PUMP':'PJ-SETUP';
+  if(pf==='PT'||pf==='HS')return 'PJ-SETUP';if(pf==='TE')return 'PJ-TESMFG';if(pf==='BV'||pf==='UO')return 'PJ-HQ';if(pf==='ED')return 'PJ-EDU';if(pf==='OFF')return 'PJ-OFF';return 'PJ-SETUP'}
+function siteName(id){var s=D.sites.filter(function(x){return x.site_id===id})[0];return s?s.site_name:id}
+
+/* ── 오늘 상태 · 시계 ── */
+function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function tickClock(){el('nowIn').textContent='지금 '+nowHM();el('nowOut').textContent='지금 '+nowHM()}
+function entryOf(date){return D.labor.filter(function(r){return String(r.work_date)===date&&r.status!=='void'})[0]}
+function onDate(){renderState()}
+function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');
+  el('dateHint').textContent=d===today()?'오늘':'';
+  if(!e){box.classList.add('hide');el('btnIn').classList.remove('done');el('btnOut').classList.remove('on');return}
+  box.classList.remove('hide');
+  var st=hhmm(e.work_start),en=hhmm(e.work_end);
+  box.innerHTML='<b>'+esc(siteName(e.site_id))+'</b> · '+(st?st+' 출근':'출근시각 없음')+(en?' → '+en+' 퇴근':'')+'<div class="t">'+(+e.work_md).toFixed(1)+'공수'+((+e.ot_hours)>0?' · 잔업 '+(+e.ot_hours)+'h':'')+' · '+(STMAP[e.status]||[e.status])[0]+(en?'':' · 퇴근 버튼을 누르면 근무시간이 계산됩니다')+'</div>';
+  el('btnIn').classList.toggle('done',!!st);el('btnOut').classList.toggle('on',!!st&&!en);
+}
+
+/* ── 제출 공통 ── */
+async function submitLabor(p,okMsg){var m=el('w_msg');
+  if(!SEL.site){m.innerHTML='<span class="neg">장소와 라인을 골라 주세요</span>';return null}
+  m.textContent='등록 중…';
+  var body={work_date:el('w_date').value,site_id:p.site_id||SEL.site,project_code:p.project_code||projectCode(),hours:p.hours,work_start:p.work_start||null,work_end:p.work_end||null,work_desc:el('w_desc').value||p.work_desc||null};
+  var r=await sb.rpc('op_submit_labor',{p:body});
+  if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return null}
+  m.innerHTML='<span class="pos">'+okMsg+'</span>';toast(okMsg,'g');el('w_desc').value='';await loadAll();return r.data;
+}
+/* ── 출근 ── */
+async function clockIn(){var d=el('w_date').value,e=entryOf(d);
+  if(e&&hhmm(e.work_start)){if(!confirm(hhmm(e.work_start)+'에 이미 출근했습니다. 지금 시각으로 다시 찍을까요?'))return}
+  var t=nowHM();await submitLabor({hours:8,work_start:t,work_end:null,site_id:e?e.site_id:null,project_code:e?e.project_code:null},t+' 출근 등록');
+}
+/* ── 퇴근 → 근무시간 확인 ── */
+var CF={hours:8,start:null,end:null,entry:null};
+function calcHours(st,en){var a=st.split(':'),b=en.split(':');var h=(+b[0]+ +b[1]/60)-(+a[0]+ +a[1]/60);if(h<0)h+=24;if(h>5)h-=1;return Math.max(0.5,Math.round(h*2)/2)}
+async function clockOut(){var d=el('w_date').value,e=entryOf(d);
+  if(!e||!hhmm(e.work_start)){el('w_msg').innerHTML='<span class="neg">출근 기록이 없습니다. 아래 시간보정 버튼으로 등록해 주세요.</span>';return}
+  var t=nowHM();CF={entry:e,start:hhmm(e.work_start),end:t,hours:calcHours(hhmm(e.work_start),t)};
+  el('cfWhy').textContent=CF.start+' 출근 → '+t+' 퇴근 (점심 1시간 제외, 30분 단위)';cfRender();
+  el('todayCard').classList.add('hide');el('confirmCard').classList.remove('hide');window.scrollTo(0,0);
+}
+function cfRender(){el('cfHours').textContent=CF.hours;var ot=Math.max(0,CF.hours-8);el('cfNote').innerHTML=CF.hours>=8?'<b>1공수</b>'+(ot?' + 잔업 <b>'+ot+'시간</b>':''):'<b>'+(CF.hours/8).toFixed(2)+'공수</b> (8시간 미만)'}
+function cfStep(d){CF.hours=Math.max(0.5,Math.min(16,Math.round((CF.hours+d)*2)/2));cfRender()}
+function cfCancel(){el('confirmCard').classList.add('hide');el('todayCard').classList.remove('hide')}
+async function cfOk(){cfCancel();var e=CF.entry;
+  await submitLabor({hours:CF.hours,work_start:CF.start,work_end:CF.end,site_id:e.site_id,project_code:e.project_code},CF.end+' 퇴근 · '+CF.hours+'시간 등록');
+}
+/* ── 시간보정 ── */
+async function fixSubmit(h,label){var d=el('w_date').value,e=entryOf(d);
+  if(e&&!confirm(d+' 기록('+(+e.work_md).toFixed(1)+'공수)을 '+label+'로 바꿀까요?'))return;
+  await submitLabor({hours:h,work_start:e?hhmm(e.work_start)||null:null,work_end:null,site_id:e?e.site_id:null},d+' '+label+' 등록');
 }
 async function withdraw(id){if(!confirm('이 기록을 취소할까요?'))return;
   var r=await sb.rpc('op_withdraw_labor',{p_entry_id:id});
