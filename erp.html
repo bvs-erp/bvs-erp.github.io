@@ -404,7 +404,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <script>
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
-var D={attk:[],att:[],set:[],dash:[],pay:[],ldr:[],al:[],sd:[],sdm:[],gap:[],di:[],alw:[],cons:[],retro:[],pump:[],intg:[],ptn:[],close:[],items:[],pgap:[],sup:[],crew:[],carpool:[]};
+var D={plans:[],attk:[],att:[],set:[],dash:[],pay:[],ldr:[],al:[],sd:[],sdm:[],gap:[],di:[],alw:[],cons:[],retro:[],pump:[],intg:[],ptn:[],close:[],items:[],pgap:[],sup:[],crew:[],carpool:[]};
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -687,7 +687,8 @@ async function loadAll(){
     ['crew',sb.from('ceo_crew_roster').select('*')],
     ['carpool',sb.from('ceo_carpool').select('*')],
     ['mrev',sb.from('ceo_month_revenue').select('*').order('period_ym',{ascending:false}).limit(600)],
-    ['mrevl',sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)]
+    ['mrevl',sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)],
+    ['plans',sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')]
   ];
   var res;
   try{res=await Promise.all(Q.map(function(q){return q[1]}))}
@@ -1013,7 +1014,9 @@ function mapList(){var box=el('mapList');if(!box)return;var byP=by(MAPD.rows,'pl
   box.innerHTML=PLACES.filter(function(p){return (byP[p.c]||[]).length}).map(function(p){var g=byP[p.c];var ls=by(g,'line');
     return '<div class="al" style="cursor:pointer;display:block" onclick="mapOpen(\''+p.c+'\')"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>'+esc(p.n)+'</b><span class="tiny dim">'+g.length+'명 · '+num(sum(g,'md'))+' M/D</span></div>'
       +Object.keys(ls).sort().map(function(k){return '<div class="tiny" style="margin-top:3px"><span class="dim">'+esc(k||'라인 미지정')+'</span> '+ls[k].map(function(r){return esc(r.name)}).join(', ')+'</div>'}).join('')+'</div>'}).join('')
-    +((byP['']||[]).length?'<div class="al hot"><div class="t">현장 미분류 '+byP[''].map(function(r){return esc(r.name)}).join(', ')+'</div></div>':'');
+    +((byP['']||[]).length?'<div class="al hot"><div class="t">현장 미분류 '+byP[''].map(function(r){return esc(r.name)}).join(', ')+'</div></div>':'')
+    +(function(){var pl=(D.plans||[]);if(!pl.length)return '';var d=pl[0].plan_date;var rows=pl.filter(function(x){return x.plan_date===d});var g=by(rows,'site_name');
+      return '<div class="al" style="display:block;border-style:dashed"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>'+esc(d)+' 배치 계획</b><span class="tiny dim">'+rows.length+'명 · 리드 등록</span></div>'+Object.keys(g).sort().map(function(k){return '<div class="tiny" style="margin-top:3px"><span class="dim">'+esc(k||'미지정')+'</span> '+g[k].map(function(r){return esc(r.person_name)}).join(', ')+'</div>'}).join('')+'</div>'})();
 }
 function mapOpen(pc){var p=PLACES.filter(function(x){return x.c===pc})[0]||{n:pc};var g=MAPD.rows.filter(function(r){return r.place===pc});
   var PJ={'PJ-SETUP':'장비셋업','PJ-PUMP':'펌프실','PJ-TESMFG':'TES제조','PJ-HQ':'본사업무','PJ-EDU':'교육','PJ-OFF':'휴무'};
