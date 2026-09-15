@@ -434,6 +434,15 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec"><h3>수집 기록</h3><div class="tb" id="gHtRuns"></div></div>
     </section>
 
+    <section class="page" id="p-settle">
+      <div class="ph"><h2>미수 · 미지급 대사</h2><div class="desc">계산서(매출·매입) ↔ 통장 입출금 대사 · 거래처별 지급을 오래된 계산서부터 차례로 배분(FIFO) · 시트 시절 대사는 월 일괄입금을 한 건에 통째로 붙였으므로 대사 시작월(설정 settle_start_ym, 현재 2026-01) 이후만 정산 대상 · 원본(통장·홈택스)은 바꾸지 않음</div></div>
+      <div class="kpis" id="stKpi"></div>
+      <div class="sec"><h3>거래처별 잔액 <span class="cnt" id="stPtnN"></span><button class="btn sm p" style="margin-left:10px" onclick="stRun()">자동 대사 실행</button></h3><div class="desc" style="margin-bottom:8px">자동 대사 3단: ① 계산서 1건 = 입출금 1건 ② 입출금 1건 = 미결 계산서 여러 건 합계 ③ 입출금 1건 = 거래처 미결 잔액 전체. 수집기(07:30)와 은행 드롭 뒤에도 자동으로 돕니다. 나머지는 아래 계산서를 눌러 직접 대사.</div><div class="tb" id="gStPtn"></div></div>
+      <div class="sec"><h3>계산서별 원장 <span class="cnt" id="stLedN"></span></h3><div class="desc" style="margin-bottom:8px">행을 누르면 후보 입출금(같은 거래처·같은 금액)을 보여주고 바로 대사할 수 있습니다. 매입 계산서는 발주서 연결도 여기서.</div><div class="tb" id="gStLed"></div></div>
+      <div class="sec"><h3>발주서 현황 <span class="cnt" id="stPoN"></span></h3><div class="desc" style="margin-bottom:8px">계산서가 아직 안 온 발주서는 "미도착". 60일 넘으면 경보.</div><div class="tb" id="gStPo"></div></div>
+      <div class="sec"><h3>대사 이력 (최근 500건)</h3><div class="tb" id="gStMatch"></div></div>
+    </section>
+
     <!-- 경보 -->
     <section class="page" id="p-alerts">
       <div class="ph"><h2>경보 · 무결성</h2><div class="desc">0이 아닌 항목만 조치 대상</div></div>
@@ -592,8 +601,9 @@ function barChart(id,title,labels,series,opt){opt=opt||{};
 
 /* ═══════════ 내비·테마·팔레트 ═══════════ */
 var I={home:'<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>',site:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>',sales:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/>',money:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',pl:'<path d="M3 3v18h18M7 14l4-4 4 3 5-6"/>',pm:'<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>',hr:'<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/>',crew:'<path d="M5 17h14l2-6H3zM7 11V7a5 5 0 0 1 10 0v4M7 21v-4M17 21v-4"/>',close:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M9 15l2 2 4-4"/>',alerts:'<path d="M12 3l10 18H2zM12 10v4M12 17.5v.5"/>',tax:'<path d="M4 4h16v16H4zM8 9h8M8 13h8M8 17h5"/>'};
-var NAV=[{g:'대시보드'},{k:'home',t:'홈',kb:'1'},{k:'alerts',t:'경보·무결성',kb:'2'},{g:'업무'},{k:'site',t:'현장 투입',kb:'3'},{k:'sales',t:'매출·문서',kb:'4'},{k:'money',t:'돈·정산',kb:'5'},{k:'close',t:'월 마감',kb:'6'},{g:'원장'},{k:'pl',t:'손익',kb:'7'},{k:'pm',t:'구매·자재',kb:'8'},{k:'hr',t:'인사·노무',kb:'9'},{k:'crew',t:'인력 배치표',kb:'0'},{k:'tax',t:'세무사 제출',kb:'-'},{k:'ht',t:'홈택스·은행·카드',kb:'='}];
-var TITLE={home:'홈',alerts:'경보 · 무결성',site:'현장 투입',sales:'매출 · 업무문서',money:'돈 · 정산',close:'월 마감',pl:'손익',pm:'구매 · 자재',hr:'인사 · 노무',crew:'현장인력 배치표',tax:'세무사 제출 자료',ht:'홈택스 · 은행 · 카드'};
+var NAV=[{g:'대시보드'},{k:'home',t:'홈',kb:'1'},{k:'alerts',t:'경보·무결성',kb:'2'},{g:'업무'},{k:'site',t:'현장 투입',kb:'3'},{k:'sales',t:'매출·문서',kb:'4'},{k:'money',t:'돈·정산',kb:'5'},{k:'close',t:'월 마감',kb:'6'},{g:'원장'},{k:'pl',t:'손익',kb:'7'},{k:'pm',t:'구매·자재',kb:'8'},{k:'hr',t:'인사·노무',kb:'9'},{k:'crew',t:'인력 배치표',kb:'0'},{k:'tax',t:'세무사 제출',kb:'-'},{k:'ht',t:'홈택스·은행·카드',kb:'='},{k:'settle',t:'미수·미지급',kb:'['}];
+var TITLE={home:'홈',alerts:'경보 · 무결성',site:'현장 투입',sales:'매출 · 업무문서',money:'돈 · 정산',close:'월 마감',pl:'손익',pm:'구매 · 자재',hr:'인사 · 노무',crew:'현장인력 배치표',tax:'세무사 제출 자료',ht:'홈택스 · 은행 · 카드',settle:'미수 · 미지급 대사'};
+I.ht=I.ht||'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/>';I.settle='<path d="M3 6h13M3 12h9M3 18h6"/><circle cx="18" cy="15" r="3.5"/><path d="M18 13v2l1.5 1"/>';
 function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
   return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+n.kb+'</span>')+'</div>'}).join('');
   var mn=el('mnav');if(mn)mn.innerHTML=NAV.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
@@ -619,6 +629,7 @@ function cpItems(q){q=(q||'').toLowerCase();var out=[];
   NAV.filter(function(n){return n.k}).forEach(function(n){out.push({g:'메뉴',t:n.t,sub:'단축키 '+n.kb,run:function(){go(n.k)}})});
   out.push({g:'동작',t:'새 문서 작성',sub:'견적·발주·계산서',run:newDoc});
   out.push({g:'동작',t:'새로고침',sub:'모든 뷰 다시 조회',run:loadAll});
+  out.push({g:'동작',t:'자동 대사 실행',sub:'계산서 ↔ 입출금 · 발주서 연결',run:stRun});
   out.push({g:'동작',t:'테마 전환',sub:'라이트 / 다크',run:toggleTheme});
   out.push({g:'동작',t:'로그아웃',sub:USER||'',run:doLogout});
   if(q.length>=1){
@@ -642,7 +653,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){if(el('cp').classList.contains('on'))cpClose();else if(el('md').classList.contains('on'))el('mdNo').onclick&&el('mdNo').onclick();else drClose();return}
   var tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='select'||tag==='textarea')return;
   if(el('app').classList.contains('hide'))return;
-  var m={'1':'home','2':'alerts','3':'site','4':'sales','5':'money','6':'close','7':'pl','8':'pm','9':'hr','0':'crew'};
+  var m={'1':'home','2':'alerts','3':'site','4':'sales','5':'money','6':'close','7':'pl','8':'pm','9':'hr','0':'crew','-':'tax','=':'ht','[':'settle'};
   if(m[e.key]){go(m[e.key]);return}
   if(e.key==='r'||e.key==='R'){loadAll();return}
   if(e.key==='n'||e.key==='N'){newDoc();return}
@@ -753,6 +764,10 @@ async function loadAll(){
     ['card',sb.from('ceo_card_txns').select('*').order('approved_at',{ascending:false}).limit(1500)],
     ['cash',sb.from('ceo_cash_receipts').select('*').order('txn_at',{ascending:false}).limit(500)],
     ['acct',sb.from('ceo_accounts').select('*')],
+    ['stl',sb.from('ceo_settle_ledger').select('*').order('doc_date',{ascending:false}).limit(4000)],
+    ['stp',sb.from('ceo_settle_partner').select('*')],
+    ['stm',sb.from('ceo_settle_matches').select('*').order('matched_at',{ascending:false}).limit(500)],
+    ['po',sb.from('ceo_po_open').select('*').order('doc_date',{ascending:false})],
     ['pick',sb.from('ceo_item_pick').select('*').order('name_ko').limit(3000)],
     ['plans',sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')]
   ];
@@ -766,7 +781,7 @@ async function loadAll(){
   buildMonths();renderAll();
   if(!D.dash.length&&!errs.length)el('errbox').innerHTML='<span class="wn">연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.</span>';
 }
-function renderAll(){renderHome();renderSite();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt()}
+function renderAll(){renderHome();renderSite();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt();renderSettle()}
 
 /* ═══════════ 공통 상수 ═══════════ */
 var KIND={quote:'견적',order:'발주',contract:'계약',tax:'계산서',settle:'정산',report:'일보',receipt:'인수증',cert:'증명',invoice:'청구서',statement:'명세표',worklog:'작업내역서'};
@@ -1025,6 +1040,60 @@ async function itemSave(fromDoc){var m=el('it_msg');var p={item_code:el('it_code
 var TAX={period:null,rows:[]};
 function maskRrn(v){v=String(v||'');return v?v.slice(0,6)+'-'+(v.length>7?v.replace(/[^0-9]/g,'').slice(6,7):'')+'******':''}
 function maskBank(v){v=String(v||'');if(!v)return '';var m=v.match(/([0-9]{4})(?!.*[0-9])/);return v.replace(/[0-9]{5,}[0-9-]*/,function(x){return '****'+x.replace(/-/g,'').slice(-4)})}
+var ST_STATUS={paid:'<span class="pill g">완납</span>',partial:'<span class="pill b">일부</span>',open:'<span class="pill">미결</span>',overdue:'<span class="pill r">기한경과</span>'};
+function stStatus(v,r){return (ST_STATUS[v]||esc(v||''))+(r&&r.is_legacy?' <span class="tiny dim">과거분</span>':'')}
+function renderSettle(){if(!el('stKpi'))return;
+  var led=D.stl||[],cur=led.filter(function(r){return !r.is_legacy}),ptn=D.stp||[],po=D.po||[],stm=D.stm||[];
+  var ar=cur.filter(function(r){return r.side==='sales'}),ap=cur.filter(function(r){return r.side==='purchase'});
+  var arBal=sum(ar,'balance_amt'),apBal=sum(ap,'balance_amt');
+  var arOv=ar.filter(function(r){return r.settle_status==='overdue'}),apOv=ap.filter(function(r){return r.settle_status==='overdue'});
+  var credit=sum(ptn,'credit_amt');var poOpen=po.filter(function(r){return !(+r.n_next)});
+  el('stKpi').innerHTML=kpi('미수금 잔액',won(arBal),ar.filter(function(r){return r.balance_amt>0}).length+'건 · 매출 계산서',arBal>0?'warn':'')
+    +kpi('미지급 잔액',won(apBal),ap.filter(function(r){return r.balance_amt>0}).length+'건 · 매입 계산서',apBal>0?'warn':'')
+    +kpi('기한 경과',arOv.length+' / '+apOv.length,'미수 '+won(sum(arOv,'balance_amt'))+' · 미지급 '+won(sum(apOv,'balance_amt')),(arOv.length+apOv.length)?'crit':'')
+    +kpi('초과 수령·지급',won(credit),'계산서보다 많이 받거나 준 금액(선수·선급)',credit?'warn':'')
+    +kpi('발주서 미도착',poOpen.length+'건','계산서가 아직 안 온 발주서 · '+won(sum(poOpen,'total_amt')),poOpen.some(function(r){return +r.age_days>60})?'warn':'')
+    +kpi('대사 이력',stm.length+'건','자동 '+stm.filter(function(r){return r.rule_name==='자동'}).length+' · 수동 '+stm.filter(function(r){return r.rule_name==='수동'}).length);
+  el('stPtnN').textContent=ptn.length+'곳';
+  grid('gStPtn',[{k:'side',t:'구분',f:function(v){return v==='sales'?'<span class="pill b">매출·미수</span>':'<span class="pill">매입·미지급</span>'}},{k:'partner_name',t:'거래처',l:1},{k:'n_open',t:'미결',f:'int'},{k:'total_amt',t:'계산서 합계',f:'won',sum:1},{k:'paid_amt',t:'입출금 누계',f:'won',sum:1},{k:'balance_amt',t:'잔액',f:'won',sum:1},{k:'n_overdue',t:'기한경과',f:function(v){return +v?'<span class="neg">'+v+'건</span>':'<span class="dim">–</span>'}},{k:'overdue_amt',t:'경과 금액',f:'won'},{k:'first_due_on',t:'최초 기한',l:1},{k:'last_paid_on',t:'최근 입출금',l:1},{k:'credit_amt',t:'초과',f:function(v){return +v?'<span class="wn">'+won(v)+'</span>':'<span class="dim">–</span>'}}],
+    {rows:ptn,q:['partner_name'],qph:'거래처',chips:[{k:'side',vals:[['','전체'],['sales','매출'],['purchase','매입']]}],foot:true,page:100,sort:{k:'balance_amt',d:-1},onRow:function(r){G.gStLed.q=r.partner_name||'';G.gStLed.page=1;var q=el('gStLed').querySelector('.q');if(q)q.value=r.partner_name||'';gRender('gStLed');el('gStLed').scrollIntoView({behavior:'smooth',block:'start'})},empty:'대사 시작월 이후 계산서 없음'});
+  el('stLedN').textContent=cur.length+'건 (과거분 '+(led.length-cur.length)+'건은 칩으로)';
+  led.forEach(function(r){r._era=r.is_legacy?'legacy':'cur'});
+  G.gStLed=G.gStLed||{q:'',chip:{_era:'cur'},page:1,sort:null};
+  grid('gStLed',[{k:'side',t:'구분',f:function(v){return v==='sales'?'<span class="pill b">매출</span>':'<span class="pill">매입</span>'}},{k:'doc_date',t:'일자',l:1},{k:'doc_no',t:'문서',l:1,cls:'tiny'},{k:'partner_name',t:'거래처',l:1},{k:'title',t:'건명',l:1},{k:'total_amt',t:'합계',f:'won',sum:1},{k:'paid_amt',t:'입출금',f:'won',sum:1},{k:'balance_amt',t:'잔액',f:'won',sum:1},{k:'due_on',t:'기한',l:1},{k:'d_day',t:'D-day',f:function(v,r){if(r.balance_amt<=0)return '<span class="dim">–</span>';v=+v;return v<0?'<span class="neg">D+'+(-v)+'</span>':'D-'+v}},{k:'settle_status',t:'상태',f:stStatus},{k:'po_no',t:'발주서',l:1,f:function(v,r){return r.side!=='purchase'?'<span class="dim">–</span>':v?esc(v):'<span class="wn">미연결</span>'}}],
+    {rows:led,q:['doc_no','partner_name','title','approval_no'],qph:'거래처·문서·건명',chips:[{k:'_era',vals:[['cur','대사 대상'],['legacy','과거분'],['','전체']]},{k:'side',vals:[['','전체'],['sales','매출'],['purchase','매입']]},{k:'settle_status',vals:[['','전체'],['overdue','기한경과'],['open','미결'],['partial','일부'],['paid','완납']]}],foot:true,page:80,onRow:stOpen,empty:'계산서 없음'});
+  (function(){var grp=el('gStLed').querySelector('.chipgrp[data-k="_era"]');if(grp){var want=G.gStLed.chip._era===undefined?'':G.gStLed.chip._era;var lbl={cur:'대사 대상',legacy:'과거분','':'전체'}[want];Array.prototype.forEach.call(grp.children,function(c){c.classList.toggle('on',c.textContent===lbl)})}})();
+  el('stPoN').textContent=po.length+'건';
+  grid('gStPo',[{k:'doc_date',t:'발주일',l:1},{k:'po_no',t:'발주서',l:1,cls:'tiny'},{k:'partner_name',t:'공급사',l:1},{k:'title',t:'건명',l:1},{k:'total_amt',t:'합계',f:'won',sum:1},{k:'n_next',t:'계산서',f:function(v,r){return +v?'<span class="pos">연결 '+v+'건</span>':(+r.age_days>60?'<span class="neg">미도착 '+r.age_days+'일</span>':'<span class="wn">미도착 '+r.age_days+'일</span>')}},{k:'status',t:'상태',l:1}],{rows:po,q:['po_no','partner_name','title'],qph:'발주서·공급사',foot:true,page:60,empty:'발주서 없음 — 새 문서 → 발주서'});
+  grid('gStMatch',[{k:'matched_at',t:'대사일시',l:1,f:function(v){return String(v||'').slice(0,16).replace('T',' ')}},{k:'rule_name',t:'방식',f:function(v){return v==='수동'?'<span class="pill b">수동</span>':'<span class="pill">자동</span>'}},{k:'side',t:'구분',f:function(v){return v==='sales'?'매출':v==='purchase'?'매입':'–'}},{k:'doc_no',t:'문서',l:1,cls:'tiny'},{k:'partner_name',t:'거래처',l:1},{k:'txn_date',t:'입출금일',l:1},{k:'counterparty',t:'통장 상대',l:1},{k:'matched_amt',t:'대사 금액',f:'won',sum:1},{k:'memo',t:'메모',l:1,cls:'tiny dim'},{k:'match_id',t:'',f:function(v){return '<button class="btn sm" onclick="event.stopPropagation();stUnmatch('+v+')">해제</button>'}}],{rows:stm,q:['doc_no','partner_name','counterparty','memo'],qph:'문서·거래처·상대',foot:true,page:60,empty:'대사 이력 없음'});
+}
+async function stOpen(r){var isP=r.side==='purchase';
+  var mine=(D.stm||[]).filter(function(m){return m.approval_no===r.approval_no});
+  var head=kv([['문서',esc(r.doc_no)+' · '+(isP?'매입':'매출')+' 계산서'],['거래처',esc(r.partner_name||'–')],['건명',esc(r.title||'')],['일자 / 기한',esc(r.doc_date)+' → '+esc(r.due_on)+(r.payment_terms?' ('+esc(r.payment_terms)+')':'')],['합계',won(r.total_amt)],['입출금 배분',won(r.paid_amt)+(r.direct_paid_amt!==r.paid_amt?' <span class="tiny dim">(직접 대사 '+won(r.direct_paid_amt)+' · 거래처 FIFO 재배분)</span>':'')],['잔액','<b>'+won(r.balance_amt)+'</b> '+stStatus(r.settle_status,r)],['승인번호',esc(r.approval_no||'–')]]);
+  var poSel='';
+  if(isP){var opts=(D.po||[]).filter(function(p){return !p.partner_id||!r.partner_id||p.partner_id===r.partner_id||p.po_no===r.po_no}).map(function(p){return '<option value="'+esc(p.po_no)+'"'+(p.po_no===r.po_no?' selected':'')+'>'+esc(p.po_no)+' · '+esc(p.doc_date)+' · '+esc(p.title||'')+' · '+won(p.total_amt)+'</option>'}).join('');
+    poSel='<div class="f" style="margin-top:12px"><label>발주서 연결 (같은 공급사)</label><div style="display:flex;gap:6px"><select id="st_po" class="sel" style="flex:1"><option value="">(연결 없음)</option>'+opts+'</select><button class="btn" onclick="stLinkPo(\''+esc(r.doc_no)+'\')">저장</button></div></div>';}
+  var mineHtml=mine.length?'<div class="sec" style="margin-top:12px"><h3>이 계산서에 직접 붙은 입출금</h3>'+mine.map(function(m){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)"><span>'+esc(m.txn_date)+' · '+esc(m.counterparty||m.description||'')+' · <b>'+won(m.matched_amt)+'</b> <span class="tiny dim">'+esc(m.rule_name)+' '+esc(m.memo||'')+'</span></span><button class="btn sm" onclick="stUnmatch('+m.match_id+')">해제</button></div>'}).join('')+'</div>':'';
+  drOpen((isP?'매입':'매출')+' 계산서 대사 · '+r.doc_no, head+poSel+mineHtml+'<div class="sec" style="margin-top:12px"><h3>후보 입출금</h3><div id="st_cand" class="dim">조회 중…</div></div>',
+    '<button class="btn" onclick="drClose()">닫기</button>'+(r.doc_no?'<button class="btn" onclick="drClose();var d=(D.sd||[]).filter(function(x){return x.doc_no===\''+esc(r.doc_no)+'\'})[0];if(d)openDoc(d)">문서 열기</button>':''));
+  var c=await sb.rpc('ceo_settle_candidates',{p_approval_no:r.approval_no});var rows=c.data||[];
+  if(!el('st_cand'))return;
+  if(c.error){el('st_cand').innerHTML='<span class="neg">'+esc(c.error.message)+'</span>';return}
+  if(!rows.length){el('st_cand').innerHTML='<span class="dim">같은 거래처(통장 예금주 별칭)나 같은 금액의 미사용 입출금이 없습니다. 통장 상대명이 거래처와 다르면 홈택스·은행 화면의 인박스에서 거래처를 지정하면 다음부터 후보에 잡힙니다.</span>';return}
+  el('st_cand').innerHTML='<table style="width:100%"><thead><tr><th class="l">일자</th><th class="l">통장 상대</th><th class="l">내용</th><th>금액</th><th>여유</th><th>근거</th><th></th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td class="l">'+esc(x.txn_date)+'</td><td class="l">'+esc(x.counterparty||'')+'</td><td class="l tiny">'+esc(x.description||'')+'</td><td>'+won(x.amt)+'</td><td>'+won(x.free_amt)+'</td><td class="tiny">'+esc(x.why)+'</td><td><button class="btn sm p" onclick="stMatch(\''+esc(r.approval_no)+'\',\''+esc(x.txn_id)+'\','+Math.min(+x.free_amt,+r.balance_amt)+')">대사 '+won(Math.min(+x.free_amt,+r.balance_amt))+'</button></td></tr>'}).join('')+'</tbody></table><div class="tiny dim" style="margin-top:6px">대사 금액은 잔액과 은행 여유액 중 작은 쪽. 초과분은 거래처 FIFO로 다음 계산서에 배분됩니다.</div>';
+}
+async function stMatch(ap,txn,amt){var r=await sb.rpc('ceo_settle_match',{p_approval_no:ap,p_txn_id:txn,p_amt:amt});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('대사 완료 '+won(r.data.amt)+(r.data.remain>0?' · 잔액 '+won(r.data.remain):' · 완납'),'g');drClose();loadAll();}
+async function stUnmatch(id){if(!await ask('대사 해제','이 입출금 연결을 해제합니다. 원본은 바뀌지 않으며 다시 대사할 수 있습니다.',{ok:'해제',danger:true}))return;
+  var r=await sb.rpc('ceo_settle_unmatch',{p_match_id:id});if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||'실패','e');return}toast('해제됨','g');drClose();loadAll();}
+async function stLinkPo(docNo){var po=el('st_po').value;var r=await sb.rpc('ceo_link_po',{p_doc_no:docNo,p_po_no:po||null});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast(po?'발주서 연결 '+po+(r.data.partner_diff?' (공급사가 다릅니다 — 확인 필요)':''):'발주서 연결 해제',r.data.partner_diff?'w':'g');drClose();loadAll();}
+async function stRun(){toast('자동 대사 실행 중…');var r=await sb.rpc('ceo_settle_run');
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||'실패','e');return}
+  var s=r.data.settle||{},a=r.data.aliases||{},p=r.data.po||{};
+  toast('자동 대사: 단건 '+(s.single||0)+' · 합산 '+(s.grouped||0)+' · 거래처잔액 '+(s.partner_balance||0)+' · 발주연결 '+(p.linked||0)+' · 별칭 학습 '+((a.learned_match||0)+(a.name_equal||0)+(a.bank_rule||0)+(a.journal||0)),'g');loadAll();}
 function renderHt(){if(!el('gHtMonth'))return;var m=M(),ht=D.ht||[],htm=D.htm||[],htv=(D.htv||[]).filter(function(r){return r.period_ym===m});
   var mm=htm.filter(function(r){return r.period_ym===m}),ms=mm.filter(function(r){return r.side==='sales'})[0]||{},mp=mm.filter(function(r){return r.side==='purchase'})[0]||{};
   var risk=ht.filter(function(r){return r.related_entity}),unm=ht.filter(function(r){return !r.matched_doc_no}),nop=ht.filter(function(r){return !r.partner_id});
