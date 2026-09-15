@@ -113,6 +113,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       <div class="card" id="todayCard">
         <div class="f" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><label style="margin:0;flex:none">일자</label><input id="w_date" class="in" type="date" style="padding:8px 10px" onchange="onDate()"><span class="tiny dim" id="dateHint" style="white-space:nowrap"></span></div>
         <div id="planBox" class="state hide" style="background:var(--goodbg)"></div>
+        <div id="sfNudge" class="state hide" style="background:var(--warnbg);color:var(--warn);cursor:pointer" onclick="sfGo()"><b>작업 전 안전점검이 아직입니다</b><div class="t">눌러서 오늘 점검을 제출하십시오 — 1분이면 됩니다</div></div>
         <div id="stateBox" class="state hide"></div>
         <div class="f"><label>장소</label><div class="chips big" id="w_place"></div></div>
         <div class="f" id="lineBox"><label>라인</label><div class="chips big" id="w_line"></div></div>
@@ -206,6 +207,24 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       </div>
     </section>
 
+    <!-- 안전 · 교육 -->
+    <section class="page" id="p-safety">
+      <div class="card" id="sfCard">
+        <h2>작업 전 안전점검 <small class="dim tiny" id="sfDateLbl"></small></h2>
+        <p class="tiny dim" style="margin:0 0 10px">오늘 일을 시작하기 전에 확인하고 제출하십시오. 제출 기록은 회사가 안전조치를 했다는 증빙이 됩니다.</p>
+        <div id="sfItems"></div>
+        <div class="f" style="margin-top:10px"><label>이상이 있으면 적어 주십시오 (없으면 비워 둠)</label><textarea id="sf_ng" class="in" placeholder="예: M15 3층 통로 자재 적치로 통행 불가 — 리드에게 보고"></textarea></div>
+        <button class="btn p w" style="margin-top:10px" onclick="sfSubmit()">안전점검 제출</button>
+        <div class="msg" id="sfMsg"></div>
+      </div>
+      <div class="card">
+        <h2>교육 서명 <small class="dim tiny" id="edN"></small></h2>
+        <p class="tiny dim" style="margin:0 0 10px">교육을 받은 뒤 본인이 직접 누릅니다. 서명 시각이 그대로 기록됩니다.</p>
+        <div id="edList"></div>
+      </div>
+      <div class="card"><h2>최근 안전점검</h2><div id="sfFeed"></div></div>
+    </section>
+
     <section class="page" id="p-list">
       <div class="kpis" id="myKpi"></div>
       <div class="card"><h2>내 기록 <small class="dim" id="listN"></small></h2><div id="list"></div></div>
@@ -223,6 +242,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
 <div class="tabs hide" id="tabs">
   <div class="on" data-p="in" onclick="go('in')"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>입력</div>
   <div data-p="log" onclick="go('log')"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5zM8 12h8M8 16h6"/></svg>일지</div>
+  <div data-p="safety" onclick="go('safety')"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>안전</div>
   <div data-p="list" onclick="go('list')"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>기록</div>
   <div data-p="deploy" class="lead hide" onclick="go('deploy')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0"/></svg>투입</div>
   <div data-p="pump" class="lead hide" onclick="go('pump')"><svg viewBox="0 0 24 24"><path d="M4 18V8h6l2-3h8v13zM8 12h8"/></svg>펌프실</div>
@@ -232,7 +252,8 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
 <div id="toasts"></div>
 <script>
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, ME=null;
-var D={sites:[],labor:[],pay:[]};
+var D={sites:[],labor:[],pay:[],safety:[],edu:[],sfItems:[]};
+var SF={sel:{},date:null};
 var SEL={place:null,site:null};
 var STMAP={draft:['임시',''],submitted:['제출','b'],approved:['확정','g'],settled:['정산완료','g'],void:['취소','']};
 function el(id){return document.getElementById(id)}
@@ -284,10 +305,66 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false})]);
+  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false}),sb.from('my_safety').select('*').order('check_date',{ascending:false}).limit(60),sb.from('my_training_sessions').select('*').order('held_on',{ascending:false}),sb.rpc('my_safety_items')]);
   var errs=res.filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
   D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];D.me=((res[4]&&res[4].data)||[])[0]||null;D.disp=(res[5]&&res[5].data)||[];
-  renderPlaces();renderState();renderList();renderPay();
+  D.safety=(res[6]&&res[6].data)||[];D.edu=(res[7]&&res[7].data)||[];D.sfItems=(res[8]&&res[8].data)||[];
+  renderPlaces();renderState();renderList();renderPay();renderSafety();renderEdu();
+}
+
+/* ── 안전점검 · 교육 서명 ── */
+function sfToday(){return SF.date||today()}
+function sfRecord(d){return (D.safety||[]).filter(function(x){return String(x.check_date)===d})[0]}
+function renderSafety(){
+  if(!el('sfItems'))return;
+  var d=sfToday(),rec=sfRecord(d),items=D.sfItems||[];
+  el('sfDateLbl').textContent=kdate(d)+(d===today()?' · 오늘':'');
+  if(!items.length){el('sfItems').innerHTML='<div class="empty">점검 항목이 아직 등록되지 않았습니다. 대표에게 알려 주십시오.</div>';return}
+  if(rec&&!Object.keys(SF.sel).length){SF.sel={};items.forEach(function(it){SF.sel[it.code]=(rec.items&&rec.items[it.code]!==false)})}
+  el('sfItems').innerHTML=items.map(function(it){
+    var on=SF.sel[it.code]!==false;
+    return '<label class="sw" style="margin-bottom:8px"><input type="checkbox" id="sf_'+esc(it.code)+'"'+(on?' checked':'')+' onchange="sfTick(\''+esc(it.code)+'\',this.checked)"> <span>'+esc(it.label)+'</span></label>'}).join('');
+  if(rec){el('sf_ng').value=rec.ng_note||'';el('sfMsg').innerHTML='<span class="dim tiny">'+kdate(d)+' 제출됨 · '+String(rec.signed_at||'').slice(11,16)+' — 다시 제출하면 덮어씁니다</span>'}
+  else el('sfMsg').textContent='';
+  var f=el('sfFeed');if(f){var rs=(D.safety||[]).slice(0,10);
+    f.innerHTML=rs.length?rs.map(function(r){
+      var ng=Object.keys(r.items||{}).filter(function(k){return r.items[k]===false}).length;
+      return '<div class="item"><div><b>'+kdate(r.check_date)+'</b> <span class="dim tiny">'+esc(r.site_name||r.site_id||'')+'</span></div><div class="tiny '+(ng||r.ng_note?'neg':'dim')+'">'+(ng?'이상 '+ng+'건':'이상 없음')+(r.ng_note?' · '+esc(r.ng_note):'')+'</div></div>'}).join('')
+      :'<div class="empty">아직 기록이 없습니다.</div>'}
+}
+function sfTick(code,on){SF.sel[code]=on}
+async function sfSubmit(){
+  var d=sfToday(),items=D.sfItems||[],m=el('sfMsg');
+  if(!items.length){toast('점검 항목이 없습니다','e');return}
+  var obj={};items.forEach(function(it){obj[it.code]=SF.sel[it.code]!==false});
+  var ng=Object.keys(obj).filter(function(k){return !obj[k]}).length,note=el('sf_ng').value.trim();
+  if(ng&&!note){toast('이상 항목이 있으면 내용을 적어 주십시오','e');el('sf_ng').focus();return}
+  m.textContent='제출 중…';
+  var e=entryOf(d);
+  var r=await sb.rpc('my_safety_submit',{p:{check_date:d,site_id:(e&&e.site_id)||SEL.site||null,items:obj,ng_note:note}});
+  if(r.error||!(r.data&&r.data.ok)){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
+  m.textContent='';var nb=el('sfNudge');if(nb)nb.classList.add('hide');
+  toast(ng?'제출됨 — 이상 '+ng+'건은 리드에게도 알리십시오':'안전점검 제출 완료','g');await loadAll();
+}
+function renderEdu(){
+  var box=el('edList');if(!box)return;
+  var rows=(D.edu||[]).slice();
+  var open=rows.filter(function(r){return r.status==='OPEN'&&!r.signed});
+  el('edN').textContent=open.length?'서명 대기 '+open.length+'건':'대기 없음';
+  if(!rows.length){box.innerHTML='<div class="empty">대상인 교육이 없습니다.</div>';return}
+  box.innerHTML=rows.slice(0,20).map(function(r){
+    var can=r.status==='OPEN'&&!r.signed;
+    return '<div class="item"><div style="flex:1"><b>'+esc(r.course_name)+'</b>'
+      +'<div class="tiny dim">'+kdate(r.held_on)+(r.hours?' · '+(+r.hours)+'시간':'')+(r.place?' · '+esc(r.place):'')+(r.instructor?' · '+esc(r.instructor):'')+'</div>'
+      +(r.content_url?'<div class="tiny"><a href="'+esc(r.content_url)+'" target="_blank" rel="noopener">교육 자료 열기 →</a></div>':'')+'</div>'
+      +(r.signed?'<span class="pill g">서명 '+String(r.signed_at||'').slice(5,10)+'</span>'
+        :(can?'<button class="btn sm p" onclick="edSign('+r.session_id+')">서명</button>':'<span class="pill">마감</span>'))
+      +'</div>'}).join('');
+}
+async function edSign(id){
+  var r=await sb.rpc('my_training_sign',{p_session_id:id});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('서명 완료','g');await loadAll();
 }
 
 /* ── 장소 → 라인 ── */
@@ -322,7 +399,12 @@ function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':
 function tickClock(){el('nowIn').textContent='지금 '+nowHM();el('nowOut').textContent='지금 '+nowHM()}
 function entryOf(date){return D.labor.filter(function(r){return String(r.work_date)===date&&r.status!=='void'})[0]}
 function onDate(){renderState()}
-function renderPlan(){var d=el('w_date').value;var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];var b=el('planBox');if(!p){b.classList.add('hide');return}
+function renderPlan(){var d=el('w_date').value;var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];var b=el('planBox');
+  if(!p){var nx=(D.plan||[]).filter(function(x){return String(x.plan_date)>d}).sort(function(a,c){return String(a.plan_date).localeCompare(String(c.plan_date))})[0];
+    if(nx){b.classList.remove('hide');b.style.cursor='pointer';
+      b.innerHTML='<b>다음 배치 '+kdate(nx.plan_date)+'</b> → '+esc(nx.site_name||nx.site_id)+(nx.memo?'<div class="t">'+esc(nx.memo)+'</div>':'')+'<div class="t">누르면 그 날짜로 이동합니다</div>';
+      b.onclick=function(){el('w_date').value=nx.plan_date;onDate()};return}
+    b.classList.add('hide');return}
   b.classList.remove('hide');b.innerHTML='<b>'+kdate(d)+' 배치</b> → '+esc(p.site_name||p.site_id)+(p.memo?'<div class="t">'+esc(p.memo)+'</div>':'')+'<div class="t">누르면 장소·라인이 자동 선택됩니다</div>';b.style.cursor='pointer';b.onclick=function(){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}
 function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');renderPlan();
   el('dateHint').textContent=d===today()?'오늘':'';
@@ -346,7 +428,17 @@ async function submitLabor(p,okMsg){var m=el('w_msg');
 async function clockIn(){var d=el('w_date').value,e=entryOf(d);
   if(e&&hhmm(e.work_start)){if(!confirm(hhmm(e.work_start)+'에 이미 출근했습니다. 지금 시각으로 다시 찍을까요?'))return}
   var t=nowHM();await submitLabor({hours:8,work_start:t,work_end:null,site_id:e?e.site_id:null,project_code:e?e.project_code:null},t+' 출근 등록');
+  sfNudge(d);
 }
+/* 출근을 막지는 않는다 — 공수 기록이 빠지는 쪽이 더 나쁘다. 안내만 띄운다. */
+function sfNudge(d){
+  if(d!==today())return;
+  if(!(D.sfItems||[]).length)return;
+  if(sfRecord(d))return;
+  var b=el('sfNudge');if(!b)return;
+  b.classList.remove('hide');
+}
+function sfGo(){el('sfNudge').classList.add('hide');go('safety')}
 /* ── 퇴근 → 근무시간 확인 ── */
 var CF={hours:8,start:null,end:null,entry:null};
 function calcHours(st,en){var a=st.split(':'),b=en.split(':');var h=(+b[0]+ +b[1]/60)-(+a[0]+ +a[1]/60);if(h<0)h+=24;if(h>5)h-=1;return Math.max(0.5,Math.round(h*2)/2)}
