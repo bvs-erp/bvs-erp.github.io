@@ -358,8 +358,9 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec"><h3>이달 정산 <span class="cnt" id="setN"></span></h3><div class="tb" id="gSet"></div></div>
       <div class="grid2">
         <div class="sec"><h3>누적 미지급 잔액</h3><div class="tb" id="gPay"></div></div>
-        <div class="sec"><h3>팀장 정산</h3><div class="tb" id="gLdr"></div></div>
+        <div class="sec"><h3>팀장 정산 <span class="cnt" id="ldrN"></span></h3><div class="desc" style="margin-bottom:8px">팀도급(full) 팀은 팀단가×공수 전액이 팀장 청구액 · 팀원은 회사 지급 0 · 행을 누르면 팀원별 공수·청구 내역</div><div class="tb" id="gLdr"></div></div>
       </div>
+      <div class="sec"><h3>지급기록 자동 생성 (통장 출금) <span class="cnt" id="apayN"></span><button class="btn sm p" style="margin-left:10px" onclick="apRun()">통장 출금 → 지급기록 생성</button></h3><div class="desc" style="margin-bottom:8px">은행 드롭·수집기 뒤 자동으로 돕니다. 상대 계좌번호 또는 예금주명이 재직자와 맞는 출금을 지급기록으로 만듭니다(15일 이전 지급은 전월분). 사업소득은 3.3% 역산 총액, 근로소득은 정산표 총액을 씁니다. 대표 송금은 자동 생성하지 않습니다(급여·가수금 구분 필요). 귀속월·총액·소득구분은 더블클릭으로 고치고, 맞으면 확정, 아니면 삭제(자동 생성분만).</div><div class="tb" id="gApay"></div></div>
     </section>
 
     <!-- 손익 -->
@@ -392,6 +393,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       </div>
       <div class="sec"><h3>수당 마스터</h3><div class="tb" id="gAlw"></div></div>
       <div class="sec"><h3>펌프실 수량제 (일 단위 MAX 보전)</h3><div class="tb" id="gPump"></div></div>
+      <div class="sec"><h3>펌프실 일별 (최근 120일) <span class="cnt" id="pumpdN"></span></h3><div class="desc" style="margin-bottom:8px">수량은 업무보고 시트 OP작업보고에서 30분마다 동기화 · 보전 = 인원×최소보장(220,000) − 수량매출 · 고객사와 따로 합의한 날은 "협의 보전"에 금액을 더블클릭으로 넣으면 그 금액으로 청구(사유 필수). 비우면 자동 계산으로 복귀.</div><div class="tb" id="gPumpDay"></div></div>
     </section>
 
     <!-- 인력배치 -->
@@ -630,6 +632,7 @@ function cpItems(q){q=(q||'').toLowerCase();var out=[];
   out.push({g:'동작',t:'새 문서 작성',sub:'견적·발주·계산서',run:newDoc});
   out.push({g:'동작',t:'새로고침',sub:'모든 뷰 다시 조회',run:loadAll});
   out.push({g:'동작',t:'자동 대사 실행',sub:'계산서 ↔ 입출금 · 발주서 연결',run:stRun});
+  out.push({g:'동작',t:'통장 출금 → 지급기록 생성',sub:'재직자 계좌·이름 일치 출금',run:apRun});
   out.push({g:'동작',t:'테마 전환',sub:'라이트 / 다크',run:toggleTheme});
   out.push({g:'동작',t:'로그아웃',sub:USER||'',run:doLogout});
   if(q.length>=1){
@@ -742,6 +745,9 @@ async function loadAll(){
     ['cons',sb.from('ceo_consent_missing').select('*')],
     ['retro',sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})],
     ['pump',sb.from('ceo_pump').select('*').order('period_ym')],
+    ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
+    ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
+    ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
     ['intg',sb.from('ceo_integrity').select('*').order('sort_ord')],
     ['ptn',sb.from('ceo_partners').select('*').order('name')],
     ['close',sb.from('ceo_month_close').select('*').order('period_ym',{ascending:false}).limit(24)],
@@ -1175,15 +1181,30 @@ function renderMoney(){
   var m=M(),set=D.set.filter(function(r){return r.period_ym===m});
   var due=sum(set,'payable_amt'),bal=sum(D.pay,'balance_amt'),mar=sum(set,'company_margin'),rev=sum(set,'revenue_sum');
   var dm=D.dash.filter(function(r){return r.period_ym===m})[0]||{};
-  el('moneyKpi').innerHTML=kpi(m+' 줘야 할 돈','<span class="wn">'+won(due)+'</span>',set.length+'명 · 다음 달 10일 지급','hl')+kpi('누적 미지급',won(bal),'이전 달분 포함')+kpi(m+' 현장매출',won(rev))+kpi(m+' 회사마진',sgn(mar),'매출 − 지급 − 팀장몫')+kpi(m+' 영업이익',sgn(dm.operating_profit),(dm.is_closed?'마감':'진행'));
+  el('moneyKpi').innerHTML=kpi(m+' 줘야 할 돈','<span class="wn">'+won(due)+'</span>',set.filter(function(r){return r.team_mode!=='full'}).length+'명 · 다음 달 10일 지급'+(sum(set,'team_claim_amt')?' · 팀도급 청구 '+won(sum(set,'team_claim_amt'))+' 별도':''),'hl')+kpi('누적 미지급',won(bal),'이전 달분 포함')+kpi(m+' 현장매출',won(rev))+kpi(m+' 회사마진',sgn(mar),'매출 − 지급 − 팀장몫')+kpi(m+' 영업이익',sgn(dm.operating_profit),(dm.is_closed?'마감':'진행'));
   var balBy={};D.pay.forEach(function(r){balBy[r.employment_no]=+r.balance_amt||0});
   set.forEach(function(r){r.balance=balBy[r.employment_no]||0});
   el('setN').textContent=set.length+'명';
-  grid('gSet',[{k:'person_name',t:'이름',l:1},{k:'income_type',t:'소득',l:1,f:function(v){return '<span class="pill">'+esc(v)+'</span>'}},{k:'work_md_sum',t:'공수',f:'num',sum:1},{k:'ot_hours_sum',t:'잔업h',f:'num',sum:1},{k:'base_amt',t:'기본',f:'won',sum:1},{k:'ot_amt',t:'연장',f:'won',sum:1},{k:'allowance_amt',t:'수당',f:'won',sum:1},{k:'other_pay_amt',t:'기타',f:'won',sum:1},{k:'payable_amt',t:'지급액',f:'won',sum:1},{k:'revenue_sum',t:'매출',f:'won',sum:1},{k:'company_margin',t:'회사마진',f:'sgn',sum:1},{k:'balance',t:'누적잔액',f:'sgn'},{k:'is_closed',t:'마감',l:1,f:function(v){return v?'<span class="pill g">마감</span>':'<span class="pill">진행</span>'}}],
+  grid('gSet',[{k:'person_name',t:'이름',l:1},{k:'income_type',t:'소득',l:1,f:function(v){return '<span class="pill">'+esc(v)+'</span>'}},{k:'work_md_sum',t:'공수',f:'num',sum:1},{k:'ot_hours_sum',t:'잔업h',f:'num',sum:1},{k:'base_amt',t:'기본',f:'won',sum:1},{k:'ot_amt',t:'연장',f:'won',sum:1},{k:'allowance_amt',t:'수당',f:'won',sum:1},{k:'other_pay_amt',t:'기타',f:'won',sum:1},{k:'payable_amt',t:'지급액',f:function(v,r){return r.team_mode==='full'?'<span class="pill y" title="팀도급: 회사는 팀장에게 팀단가 전액 지급">팀도급</span> '+won(v):won(v)},sum:1},{k:'team_claim_amt',t:'팀장청구',f:function(v,r){return r.team_mode==='full'?won(v)+' <span class="tiny dim">→ '+esc(r.claim_leader_name||'')+'</span>':'<span class="dim">–</span>'},sum:1},{k:'revenue_sum',t:'매출',f:'won',sum:1},{k:'company_margin',t:'회사마진',f:'sgn',sum:1},{k:'balance',t:'누적잔액',f:'sgn'},{k:'is_closed',t:'마감',l:1,f:function(v){return v?'<span class="pill g">마감</span>':'<span class="pill">진행</span>'}}],
     {rows:set,q:['person_name'],qph:'이름',foot:true,sort:{k:'payable_amt',d:-1}});
   grid('gPay',[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'ID',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],{rows:D.pay.filter(function(r){return Math.abs(+r.balance_amt||0)>=1000}),q:['person_name'],foot:true,sort:{k:'balance_amt',d:-1},empty:'미지급 잔액 없음 (1,000원 미만 단수 차이는 숨김)'});
-  grid('gLdr',[{k:'leader_name',t:'팀장',l:1},{k:'period_ym',t:'월',l:1},{k:'self_pay_amt',t:'본인급여',f:'won'},{k:'team_margin_amt',t:'팀마진',f:'won'},{k:'earned_amt',t:'귀속',f:'won'},{k:'taken_amt',t:'수령',f:'won'},{k:'month_net_amt',t:'당월',f:'sgn'},{k:'balance_amt',t:'누적',f:'sgn'}],{rows:D.ldr,csv:false,page:24});
+  var tc=D.tclaim||[];el('ldrN').textContent=D.ldr.length?D.ldr.length+'행':'';
+  grid('gLdr',[{k:'leader_name',t:'팀장',l:1},{k:'period_ym',t:'월',l:1},{k:'self_pay_amt',t:'본인급여',f:'won'},{k:'team_margin_amt',t:'팀몫',f:function(v,r){var f=tc.filter(function(x){return x.leader_no===r.leader_no&&x.period_ym===r.period_ym});return won(v)+(f.length?' <span class="pill y tiny">도급 '+f.length+'명</span>':'')}},{k:'earned_amt',t:'귀속',f:'won'},{k:'taken_amt',t:'수령',f:'won'},{k:'month_net_amt',t:'당월',f:'sgn'},{k:'balance_amt',t:'누적',f:'sgn'}],{rows:D.ldr,csv:false,page:24,onRow:ldrOpen});
+  var ap=D.apay||[],apAuto=ap.filter(function(r){return r.is_auto});el('apayN').innerHTML=apAuto.length?'<span class="wn">확인 대기 '+apAuto.length+'건</span>':'';
+  ap.forEach(function(r){r._st=r.is_auto?'auto':(String(r.memo||'').indexOf('[은행자동·확정')===0?'ok':(r.bank_txn_id?'linked':'manual'))});
+  grid('gApay',[{k:'paid_on',t:'지급일',l:1},{k:'payee_name',t:'이름',l:1},{k:'_st',t:'상태',f:function(v){return v==='auto'?'<span class="pill y">자동·확인 대기</span>':v==='ok'?'<span class="pill g">확정</span>':v==='linked'?'<span class="pill">수기·통장연결</span>':'<span class="pill">수기</span>'}},{k:'period_ym',t:'귀속월',l:1,e:{field:'period_ym',ph:'YYYY-MM'}},{k:'income_type',t:'소득',l:1,f:function(v){return '<span class="pill">'+esc(v)+'</span>'},e:{field:'income_type',ph:'wage / business / daily'}},{k:'gross_amt',t:'총액',f:'won',sum:1,e:{field:'gross_amt',ph:'세전 총액'}},{k:'tax_income',t:'소득세',f:'won'},{k:'other_deduction',t:'공제',f:'won'},{k:'net_amt',t:'실지급',f:'won',sum:1},{k:'counterparty',t:'통장 상대',l:1,cls:'tiny dim'},{k:'memo',t:'메모',l:1,cls:'tiny dim',e:{field:'memo',ph:'메모'}},{k:'payment_id',t:'',f:function(v,r){return r._st==='auto'?'<button class="btn sm p" onclick="event.stopPropagation();apConfirm(\''+esc(v)+'\')">확정</button> <button class="btn sm" onclick="event.stopPropagation();apDelete(\''+esc(v)+'\',\''+esc(r.payee_name||'')+'\')">삭제</button>':''}}],
+    {rows:ap,q:['payee_name','memo','counterparty','payment_id'],qph:'이름·메모',chips:[{k:'_st',vals:[['','전체'],['auto','확인 대기'],['ok','확정'],['linked','수기·연결'],['manual','수기']]}],foot:true,page:60,sort:{k:'paid_on',d:-1},save:function(r,field,v){return sb.rpc('ceo_payment_set',{p_payment_id:r.payment_id,p_field:field,p_value:v}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})},afterSave:function(){loadAll()},empty:'최근 120일 지급기록 없음'});
+  edHint('gApay');
 }
+function ldrOpen(r){var f=(D.tclaim||[]).filter(function(x){return x.leader_no===r.leader_no&&x.period_ym===r.period_ym});
+  var body=kv([['팀장',esc(r.leader_name)+' <span class="tiny dim">'+esc(r.leader_no)+'</span>'],['귀속월',r.period_ym],['본인 급여',won(r.self_pay_amt)],['팀 몫',won(r.team_margin_amt)+(f.length?' <span class="tiny dim">(팀도급 청구 '+won(sum(f,'claim_amt'))+' 포함)</span>':'')],['귀속 합계','<b>'+won(r.earned_amt)+'</b>'],['수령 합계',won(r.taken_amt)+' <span class="tiny dim">공제 '+won(r.deduction_amt)+' · 대리수령 '+won(r.proxy_amt)+' · 직접 '+won(r.direct_amt)+' · 급여 '+won(r.wage_amt)+' · 회사부담 '+won(r.employer_ins_amt)+'</span>'],['당월 순액',sgn(r.month_net_amt)],['누적 잔액','<b>'+sgn(r.balance_amt)+'</b>']]);
+  if(f.length)body+='<h4 style="margin:14px 0 6px">팀도급 청구 내역 (팀원 공수 × 팀단가)</h4><table style="width:100%"><thead><tr><th class="l">팀원</th><th>공수</th><th>연장h</th><th>팀단가</th><th>청구액</th><th>팀원 원단가 기준</th></tr></thead><tbody>'+f.map(function(x){return '<tr><td class="l">'+esc(x.person_name)+' <span class="tiny dim">'+esc(x.employment_no)+'</span></td><td>'+num(x.work_md)+'</td><td>'+num(x.ot_hours)+'</td><td>'+won(x.contract_daily_amt)+'</td><td><b>'+won(x.claim_amt)+'</b></td><td class="dim">'+won(x.member_ref_amt)+'</td></tr>'}).join('')+'</tbody></table><div class="tiny dim" style="margin-top:6px">회사는 팀원에게 직접 지급하지 않고 팀장에게 청구액 전액을 지급합니다. 팀원 공수는 팀장 청구서 검증용으로 계속 기록됩니다. "팀원 원단가 기준"은 팀장이 팀원에게 줄 몫의 참고치일 뿐 회사 지급과 무관합니다.</div>';
+  drOpen('팀장 정산 · '+r.leader_name+' '+r.period_ym,body,'<button class="btn" onclick="drClose()">닫기</button>');}
+async function apRun(){toast('통장 출금 → 지급기록 생성 중…');var r=await sb.rpc('ceo_bank_to_payments');
+  if(r.error){toast(r.error.message,'e');return}var d=r.data||{};toast('연결 '+(d.linked||0)+' · 생성 '+(d.created||0)+' · 건너뜀 '+(d.skipped||0)+' (대표 송금·동명이인)','g');loadAll();}
+async function apConfirm(id){var r=await sb.rpc('ceo_payment_confirm',{p_payment_id:id});if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||'실패','e');return}toast('확정 '+id,'g');loadAll();}
+async function apDelete(id,name){if(!await ask('지급기록 삭제',name+' '+id+' 자동 생성 지급기록을 삭제합니다. 통장 원본은 그대로이며 다음 자동 실행 때 다시 생성될 수 있으니, 사람이 아닌 출금이면 은행 화면에서 손익코드를 지정해 두세요.',{ok:'삭제',danger:true}))return;
+  var r=await sb.rpc('ceo_payment_delete',{p_payment_id:id});if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('삭제됨','g');loadAll();}
 
 /* ═══════════ 손익 ═══════════ */
 function renderPl(){
@@ -1229,7 +1250,7 @@ function renderHr(){
   edHint('gAlw');
   var pp=D.payp||[],pf=pp.filter(function(r){return r.profile_id});el('payN').textContent=pf.length+'명 · 월 '+won(sum(pf,'package_amt'));
   grid('gPayProf',[{k:'person_name',t:'이름',l:1,f:function(v,r){return esc(v)+(r.payroll_excluded?' <span class="pill">ERP 제외</span>':'')+(r.base_override?' <span class="pill y">고정</span>':'')}},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'valid_from',t:'적용일',l:1},
-    {k:'tech_grade',t:'등급',f:'int',e:{field:'tech_grade',ph:'1~11'}},{k:'position_title',t:'직책',l:1,e:{field:'position_title',ph:'실장·수석·책임·팀장·과장·선임 (비움 가능)'}},{k:'career_years',t:'경력',f:'num',e:{field:'career_years',ph:'년 (8년 상한)'}},{k:'tenure_years',t:'근속',f:'int'},
+    {k:'tech_grade',t:'등급',f:'int',e:{field:'tech_grade',ph:'1~11'}},{k:'position_title',t:'직책',l:1,e:{field:'position_title',ph:'파트리드·팀리드·그룹리드·총괄리드 (비움 가능)'}},{k:'career_years',t:'경력',f:'num',e:{field:'career_years',ph:'년 (8년 상한)'}},{k:'tenure_years',t:'근속',f:'int'},
     {k:'has_vehicle',t:'차량',l:1,f:'yn',e:{field:'has_vehicle',ph:'유 / 무',apply:function(r,v){r.has_vehicle=/^(o|y|1|true|유|예|있음)$/i.test(v)}}},{k:'base_override',t:'고정기본급',f:function(v){return v?won(v):'<span class="dim">기준표</span>'},e:{field:'base_override',ph:'비우면 기준표 230만'}},
     {k:'base_amt',t:'기본급',f:'won'},{k:'meal_amt',t:'식대',f:'won'},{k:'skill_amt',t:'기술',f:'won'},{k:'position_amt',t:'직책수당',f:'won'},{k:'career_total_amt',t:'경력근속',f:'won'},
     {k:'ordinary_amt',t:'통상임금',f:function(v){return v==null?'':'<b>'+won(v)+'</b>'},sum:1},{k:'vehicle_amt',t:'차량',f:'won'},{k:'package_amt',t:'월 지급',f:function(v){return v==null?'':'<b>'+won(v)+'</b>'},sum:1},
@@ -1237,6 +1258,15 @@ function renderHr(){
     {k:'_a',t:'',l:1,f:function(v,r){return r.profile_id?'':'<button class="stbtn" onclick="event.stopPropagation();payNew(\''+r.employment_no+'\',\''+esc(r.person_name)+'\')">프로필 추가</button>'}}],
     {rows:pp,csv:false,foot:true,empty:'월급제 프로필 없음',save:function(r,field,v){if(!r.profile_id)return Promise.resolve({ok:false,error:'먼저 프로필을 추가하십시오'});return sb.rpc('ceo_set_pay_profile',{p_employment_no:r.employment_no,p_field:field,p_value:v}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})},afterSave:function(){loadAll()}});
   edHint('gPayProf','셀 더블클릭 → 수정 · 저장 즉시 단가표(hr.pay_rates) 동기화 · 고정기본급을 넣으면 기술·직책·경력근속 0');
+  var pd=D.pumpd||[];el('pumpdN').textContent=pd.length?pd.length+'일':'';
+  var pdSave=function(r,field,v){var amt=field==='override_amt'?(v===''?null:Math.round(+String(v).replace(/[^\d.-]/g,''))):(r.override_amt==null?null:+r.override_amt);var reason=field==='override_reason'?v:(r.override_reason||'');
+    if(field==='override_amt'&&v!==''&&isNaN(amt))return Promise.resolve({ok:false,error:'숫자를 입력하세요'});
+    if(field==='override_reason'&&amt==null)return Promise.resolve({ok:true,local:true});   // 사유만 먼저 적어두고 금액을 넣으면 그때 저장
+    if(field==='override_amt'&&amt!=null&&!reason)return Promise.resolve({ok:false,error:'사유를 먼저 넣으세요 (사유 칸 더블클릭 → 금액)'});
+    return sb.rpc('ceo_pump_override',{p_date:r.work_date,p_site:r.sites,p_amt:amt,p_reason:reason||null}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false}})};
+  grid('gPumpDay',[{k:'work_date',t:'일자',l:1},{k:'sites',t:'현장',l:1},{k:'md',t:'공수',f:'num'},{k:'guarantee_amt',t:'최소보장',f:'won',cls:'dim'},{k:'qty_amt',t:'수량매출',f:'won',sum:1},{k:'makeup_amt',t:'보전',f:function(v,r){return (+v||0)>0?won(v)+(r.override_amt!=null?' <span class="pill y tiny">협의</span>':''):'<span class="dim">–</span>'},sum:1},{k:'billed_amt',t:'청구',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'override_reason',t:'협의 사유',l:1,cls:'tiny',e:{field:'override_reason',ph:'예: 5대뿐이라 인건비 반반 합의'}},{k:'override_amt',t:'협의 보전',f:function(v){return v==null?'<span class="dim">자동</span>':won(v)},e:{field:'override_amt',ph:'금액 (비우면 자동)'}},{k:'verdict',t:'판정',l:1,cls:'tiny dim'}],
+    {rows:pd,q:['sites','override_reason','verdict'],qph:'현장·사유',foot:true,page:40,save:pdSave,afterSave:function(r,c){if(c.k==='override_amt'||r.override_amt!=null)loadAll();else toast('사유를 적어두었습니다. 협의 보전 금액을 넣으면 저장됩니다.')},empty:'최근 펌프실 투입 없음'});
+  edHint('gPumpDay');
   grid('gPump',[{k:'period_ym',t:'월',l:1},{k:'work_days',t:'일수',f:'int'},{k:'md_sum',t:'공수',f:'num'},{k:'guarantee_amt',t:'공수보장',f:'won',cls:'dim'},{k:'qty_amt',t:'수량청구',f:'won',sum:1},{k:'makeup_amt',t:'보전',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},sum:1},{k:'billed_amt',t:'청구액',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'check_amt',t:'점검',l:1,f:function(v,r){return (+v||0)>0?'<span class="wn">'+won(v)+' ('+(+r.check_days||0)+'일)</span>':'<span class="dim">없음</span>'}}],{rows:D.pump,csv:false,foot:true});
 }
 
