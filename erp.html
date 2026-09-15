@@ -414,6 +414,13 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec"><h3>인력 마스터 <span class="cnt" id="staffN"></span><span class="r"><button class="btn sm p" onclick="staffNew()">+ 신규 인력</button></span></h3>
         <div class="desc" style="margin-bottom:8px">한 사람의 모든 것: 인적사항 · 출입 자료 · 단가(적용일별 이력) · 소득구분 · 팀/도급 · 교육 이수. 연락처·혈액형·차량·직책·입사/퇴사일은 셀 더블클릭, 단가·소득구분·팀·교육은 행을 눌러 적용일과 함께 변경합니다. 월급제 월급은 아래 급여 기준표에서. 주민번호·계좌는 화면에 두지 않습니다.</div>
         <div class="tb" id="gStaff"></div></div>
+      <div class="sec"><h3>고객사 출입신청 명단 <span class="cnt" id="rosN"></span><span class="r"><button class="btn sm p" onclick="rosExport()">내보내기 · 제공대장 기록</button></span></h3>
+        <div class="desc" style="margin-bottom:8px">고객사에 넘길 항목만 골라서 내보냅니다. 개인정보보호법 제17조상 제3자 제공은 동의가 있어야 하므로, 개인정보 동의서에 3자 제공 동의가 없는 사람은 기본으로 빠집니다(사람 행을 눌러 동의일을 먼저 기록하십시오). 내보내면 제공 사실이 아래 제공대장에 자동으로 남습니다.</div>
+        <div id="rosPick" style="margin-bottom:8px"></div>
+        <div class="tb" id="gRos"></div></div>
+      <div class="sec"><h3>개인정보 제공대장 <span class="cnt" id="dlogN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">누구에게 · 왜 · 어떤 항목을 · 몇 명분 넘겼는지의 기록입니다. 개인정보 처리방침 제4조(제3자 제공)와 내부관리계획의 점검 대상입니다.</div>
+        <div class="tb" id="gDlog"></div></div>
       <div class="sec"><h3>급여 기준 (월급제) <span class="cnt" id="payN"></span><span class="r"><button class="btn sm" onclick="payHelp()">산식·상수</button></span></h3><div class="tb" id="gPayProf"></div></div>
       <div class="grid2">
         <div class="sec"><h3>계약·동의 미비 <span class="cnt" id="consN"></span></h3><div class="tb" id="gCons"></div></div>
@@ -664,6 +671,7 @@ function cpItems(q){q=(q||'').toLowerCase();var out=[];
   out.push({g:'동작',t:'통장 출금 → 지급기록 생성',sub:'재직자 계좌·이름 일치 출금',run:apRun});
   out.push({g:'동작',t:'투입 추가 (달력)',sub:'사람·일자·현장·공수',run:function(){go('site');calAdd()}});
   out.push({g:'동작',t:'신규 인력 등록',sub:'이름·입사일·단가·팀',run:function(){go('hr');staffNew()}});
+  out.push({g:'동작',t:'고객사 출입신청 명단 내보내기',sub:'항목 고르고 제공대장에 기록',run:function(){go('hr');setTimeout(rosExport,200)}});
   (D.staff||[]).filter(function(s){return !s.resigned_on}).forEach(function(s){out.push({g:'인력',t:s.name,sub:(s.job_title||ETYPE[s.employment_type]||'')+' · '+(s.rate_from?(s.payroll_type==='monthly'?'월 '+won(s.monthly_amt):won(s.daily_amt)+'/일'):'단가 없음'),run:function(){go('hr');staffOpen(s)}})});
   out.push({g:'동작',t:'테마 전환',sub:'라이트 / 다크',run:toggleTheme});
   out.push({g:'동작',t:'로그아웃',sub:USER||'',run:doLogout});
@@ -784,6 +792,9 @@ async function loadAll(){
     ['perh',sb.from('ceo_period_history').select('*').order('valid_from',{ascending:false}).limit(2000)],
     ['teamh',sb.from('ceo_team_history').select('*').order('valid_from',{ascending:false}).limit(2000)],
     ['trn',sb.from('ceo_trainings').select('*').order('trained_on',{ascending:false}).limit(3000)],
+    ['roster',sb.from('ceo_access_roster').select('*').order('name')],
+    ['ctr',sb.from('ceo_contracts').select('*').order('signed_on',{ascending:false}).limit(2000)],
+    ['dlog',sb.from('ceo_disclosure_log').select('*').order('disclosed_on',{ascending:false}).limit(500)],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -1349,7 +1360,7 @@ function renderHr(){
   var bapply=function(k){return function(r,v){r[k]=/^(o|y|1|true|과세|유|예)$/i.test(v)}};
   grid('gAlw',[{k:'allowance_code',t:'코드',l:1,cls:'dim'},{k:'allowance_name',t:'수당',l:1,e:'allowance_name'},{k:'calc_basis',t:'기준',l:1,f:function(v){return esc(BASIS[v]||v)}},{k:'default_unit_amt',t:'단가',f:'won',e:'default_unit_amt'},{k:'cap_monthly',t:'월상한',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},e:'cap_monthly'},{k:'nontax_limit_monthly',t:'비과세한도',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},e:'nontax_limit_monthly'},{k:'is_taxable',t:'과세',l:1,f:function(v){return v?'과세':'<span class="pos">비과세</span>'},e:{field:'is_taxable',ph:'과세 / 비과세',apply:bapply('is_taxable')}},{k:'include_in_ordinary_wage',t:'통상',l:1,f:'yn',e:{field:'include_in_ordinary_wage',ph:'O / X',apply:bapply('include_in_ordinary_wage')}},{k:'include_in_average_wage',t:'평균',l:1,f:'yn',e:{field:'include_in_average_wage',ph:'O / X',apply:bapply('include_in_average_wage')}},{k:'legal_basis',t:'근거',l:1,cls:'tiny dim',e:'legal_basis'},{k:'_x',t:'',l:1,f:function(v,r){return delBtn('allowance',r.allowance_code,r.allowance_name)}}],{rows:D.alw,csv:false,save:ceoSave('allowance','allowance_code')});
   edHint('gAlw');
-  renderStaff();
+  renderStaff();renderRoster();renderDlog();
   var pp=D.payp||[],pf=pp.filter(function(r){return r.profile_id});el('payN').textContent=pf.length+'명 · 월 '+won(sum(pf,'package_amt'));
   grid('gPayProf',[{k:'person_name',t:'이름',l:1,f:function(v,r){return esc(v)+(r.payroll_excluded?' <span class="pill">ERP 제외</span>':'')+(r.base_override?' <span class="pill y">고정</span>':'')}},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'valid_from',t:'적용일',l:1},
     {k:'tech_grade',t:'등급',f:'int',e:{field:'tech_grade',ph:'1~11'}},{k:'position_title',t:'직책',l:1,e:{field:'position_title',ph:'파트리드·팀리드·그룹리드·총괄리드 (비움 가능)'}},{k:'career_years',t:'경력',f:'num',e:{field:'career_years',ph:'년 (8년 상한)'}},{k:'tenure_years',t:'근속',f:'int'},
@@ -1381,6 +1392,69 @@ async function payHelp(){var r=await sb.from('my_pay_rules').select('*');var R=(
 /* ═══════════ 범용 수정·삭제 (대표) ═══════════ */
 var INC={wage:'근로',business:'사업 3.3%',daily:'일용'},ETYPE={regular:'정규직',service:'용역',daily:'일용',contract:'계약'},PT={daily:'일급',monthly:'월급',hourly:'시급'};
 function staffSave(r,field,v){return sb.rpc('ceo_staff_set',{p_emp:r.employment_no,p_field:field,p_value:v}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})}
+/* ── 고객사 출입신청 명단 ── */
+var ROS={set:'badge',birth:1,phone:1,veh:0,blood:0,edu:0,only:1};
+var ROSSET={
+  badge:{t:'출입증 신청',d:'이름·생년월일·연락처·소속·직책',cols:['name','birth_ymd','phone','affiliation','rank_title']},
+  car:{t:'차량 출입',d:'출입증 + 차량번호',cols:['name','birth_ymd','phone','affiliation','rank_title','vehicle_no']},
+  safety:{t:'안전·교육 제출',d:'출입증 + 혈액형·교육 이수',cols:['name','birth_ymd','phone','affiliation','rank_title','blood_type','last_trained_on','last_course','training_cnt']},
+  full:{t:'전체 (내부 확인용)',d:'내보내기 전 우리가 보는 용도',cols:['name','employment_no','birth_ymd','phone','affiliation','rank_title','employment_type','blood_type','vehicle_no','emergency_contact','sk_company','sk_id','ss_company','ss_id','home_area','primary_area','suit_size','shoe_size','edu_basic','edu_haz8h_off','last_trained_on','training_cnt','hired_on','last_work_date']}
+};
+var ROSLBL={name:'이름',employment_no:'사번',birth_ymd:'생년월일',phone:'연락처',affiliation:'소속',rank_title:'직책',employment_type:'고용형태',blood_type:'혈액형',vehicle_no:'차량번호',emergency_contact:'비상연락처',sk_company:'SK 소속사',sk_id:'SK ID',ss_company:'SS 소속사',ss_id:'SS ID',home_area:'거주권역',primary_area:'배치권역',suit_size:'방진복',shoe_size:'안전화',edu_basic:'기본교육',edu_haz8h_off:'유해8h',last_trained_on:'최근 교육일',last_course:'최근 과정',training_cnt:'교육 건수',hired_on:'입사일',last_work_date:'최근 투입일'};
+function rosRows(){var r=(D.roster||[]).filter(function(x){return !x.resigned_on});
+  if(ROS.only)r=r.filter(function(x){return x.consent_third_party});
+  return r}
+function rosCols(){var c=ROSSET[ROS.set].cols.slice();
+  if(ROS.set!=='full'){
+    if(!ROS.birth)c=c.filter(function(k){return k!=='birth_ymd'});
+    if(!ROS.phone)c=c.filter(function(k){return k!=='phone'});
+    if(ROS.veh&&c.indexOf('vehicle_no')<0)c.push('vehicle_no');
+    if(ROS.blood&&c.indexOf('blood_type')<0)c.push('blood_type');
+    if(ROS.edu&&c.indexOf('last_trained_on')<0){c.push('last_trained_on');c.push('training_cnt')}
+  }
+  return c}
+function rosSet(k){ROS.set=k;var c=ROSSET[k].cols;ROS.birth=c.indexOf('birth_ymd')>=0?1:0;ROS.phone=c.indexOf('phone')>=0?1:0;ROS.veh=c.indexOf('vehicle_no')>=0?1:0;ROS.blood=c.indexOf('blood_type')>=0?1:0;ROS.edu=c.indexOf('last_trained_on')>=0?1:0;renderRoster()}
+function rosTog(k){ROS[k]=ROS[k]?0:1;renderRoster()}
+function renderRoster(){if(!el('gRos'))return;
+  var all=(D.roster||[]).filter(function(x){return !x.resigned_on}),rows=rosRows(),cols=rosCols();
+  var noC=all.filter(function(x){return !x.consent_third_party}).length;
+  el('rosN').textContent=rows.length+'명';
+  el('rosPick').innerHTML='<div class="chipgrp">'+Object.keys(ROSSET).map(function(k){return '<span class="chip'+(ROS.set===k?' on':'')+'" onclick="rosSet(\''+k+'\')" title="'+esc(ROSSET[k].d)+'">'+esc(ROSSET[k].t)+'</span>'}).join('')+'</div>'
+    +'<div class="tiny dim" style="margin:4px 0">'+esc(ROSSET[ROS.set].d)+(ROS.set==='full'?' — 이 조합은 고객사에 그대로 보내지 마십시오.':'')+'</div>'
+    +(ROS.set==='full'?'':'<div class="chipgrp">'+[['birth','생년월일'],['phone','연락처'],['veh','차량번호'],['blood','혈액형'],['edu','교육 이수']].map(function(p){return '<span class="chip'+(ROS[p[0]]?' on':'')+'" onclick="rosTog(\''+p[0]+'\')">'+p[1]+'</span>'}).join('')+'</div>')
+    +'<div class="chipgrp" style="margin-top:4px"><span class="chip'+(ROS.only?' on':'')+'" onclick="rosTog(\'only\')">3자 제공 동의자만</span></div>'
+    +(noC?'<div class="tiny" style="margin-top:4px"><span class="wn">동의 기록 없는 재직자 '+noC+'명</span> — 인력 마스터에서 이름을 눌러 「서류·동의」에 개인정보 동의서 서명일과 3자 제공 동의를 기록하면 명단에 들어옵니다.</div>':'');
+  var gc=cols.map(function(k){return {k:k,t:ROSLBL[k]||k,l:(k!=='training_cnt')}});
+  gc.push({k:'consent_third_party',t:'3자 제공 동의',l:1,f:function(v,r){return v?'<span class="pill g tiny">'+esc(r.consent_signed_on||'동의')+'</span>':'<span class="pill r tiny">없음</span>'}});
+  grid('gRos',gc,{rows:rows,q:['name','employment_no'],page:60,sort:{k:'name',d:1},csv:false,empty:ROS.only?'동의가 기록된 재직자가 없습니다 — 「3자 제공 동의자만」을 끄면 전원이 보입니다':'재직자 없음',onRow:function(r){var s=(D.staff||[]).filter(function(x){return x.employment_no===r.employment_no})[0];if(s)staffOpen(s)}});}
+async function rosExport(){var rows=rosRows(),cols=rosCols();
+  if(!rows.length){toast('내보낼 사람이 없습니다','e');return}
+  var items=cols.map(function(k){return ROSLBL[k]||k}).join(' · ');
+  drOpen('출입신청 명단 내보내기',
+    '<div class="tiny dim" style="margin-bottom:8px">아래 내용 그대로 제공대장에 기록되고 CSV가 내려받아집니다.</div>'
+    +kv([['대상',rows.length+'명 (재직'+(ROS.only?' · 3자 제공 동의자만':' 전원')+')'],['제공 항목',esc(items)],['서식',esc(ROSSET[ROS.set].t)]])
+    +'<div class="fr" style="margin-top:10px"><div class="f"><label>제공받는 곳 *</label><input id="dl_to" class="in" placeholder="예: SK하이닉스 이천 M14"></div><div class="f"><label>제공 일자</label><input id="dl_on" class="in" type="date" value="'+today()+'"></div></div>'
+    +'<div class="f"><label>제공 목적 *</label><input id="dl_why" class="in" value="고객사 현장 출입 신청 및 출입증 발급"></div>'
+    +'<div class="fr"><div class="f"><label>제공 방법</label><input id="dl_how" class="in" value="파일(CSV) 이메일 전달"></div><div class="f"><label>메모</label><input id="dl_memo" class="in" placeholder="담당자·회신 기한 등"></div></div>'
+    +(ROS.set==='full'?'<div class="tiny" style="margin-top:6px"><span class="wn">「전체」 서식은 내부 확인용입니다.</span> 고객사 제출이면 필요한 항목만 있는 서식으로 바꾸십시오.</div>':''),
+    '<button class="btn" onclick="drClose()">취소</button><button class="btn p" onclick="rosExportGo()">내보내기</button>');
+  setTimeout(function(){el('dl_to').focus()},60)}
+async function rosExportGo(){var rows=rosRows(),cols=rosCols();
+  var to=el('dl_to').value.trim(),why=el('dl_why').value.trim();
+  if(!to){toast('제공받는 곳을 적으십시오','e');return}
+  if(!why){toast('제공 목적을 적으십시오','e');return}
+  var items=cols.map(function(k){return ROSLBL[k]||k}).join(' · ');
+  var r=await sb.rpc('ceo_disclosure_add',{p:{disclosed_on:el('dl_on').value,recipient:to,purpose:why,item_list:items,person_cnt:String(rows.length),method:el('dl_how').value,memo:el('dl_memo').value}});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'제공대장 기록 실패','e');return}
+  var lines=[cols.map(function(k){return '"'+(ROSLBL[k]||k)+'"'}).join(',')].concat(rows.map(function(x){return cols.map(function(k){return '"'+String(x[k]==null?'':x[k]).replace(/"/g,'""')+'"'}).join(',')}));
+  var b=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download='BVS_출입신청명단_'+to.replace(/[^가-힣A-Za-z0-9]/g,'')+'_'+(el('dl_on').value||today())+'.csv';a.click();
+  toast('명단 '+rows.length+'명 내보냄 · 제공대장 기록됨','g');drClose();loadAll()}
+function renderDlog(){if(!el('gDlog'))return;var rows=D.dlog||[];el('dlogN').textContent=rows.length?rows.length+'건':'';
+  grid('gDlog',[{k:'disclosed_on',t:'제공일',l:1},{k:'recipient',t:'제공받는 곳',l:1},{k:'purpose',t:'목적',l:1},{k:'item_list',t:'제공 항목',l:1,cls:'tiny dim'},{k:'person_cnt',t:'인원',f:'int'},{k:'method',t:'방법',l:1,cls:'tiny'},{k:'memo',t:'메모',l:1,cls:'tiny dim'},{k:'_x',t:'',l:1,f:function(v,r){return '<button class="stbtn x" onclick="event.stopPropagation();dlogDel('+r.disclosure_id+')">삭제</button>'}}],
+    {rows:rows,q:['recipient','purpose'],csv:false,page:40,empty:'제공 기록 없음'});}
+async function dlogDel(id){if(!await ask('제공대장 삭제','이 제공 기록을 지웁니다. 실제로 제공한 사실이 있었다면 지우지 마십시오 — 기록 자체가 법정 증빙입니다.',{ok:'삭제',danger:true}))return;
+  var r=await sb.rpc('ceo_disclosure_delete',{p_id:id});if(r.error){toast(r.error.message,'e');return}toast('삭제됨','g');loadAll()}
 function renderStaff(){if(!el('gStaff'))return;var st=(D.staff||[]).slice();st.forEach(function(r){r._st=r.resigned_on?'out':'in';r._rate=r.payroll_type==='monthly'?(+r.monthly_amt||0):(+r.daily_amt||0)});
   var act=st.filter(function(r){return !r.resigned_on});el('staffN').innerHTML=act.length+'명 재직'+(act.filter(function(r){return !r.rate_from}).length?' · <span class="wn">단가 없음 '+act.filter(function(r){return !r.rate_from}).length+'명</span>':'');
   grid('gStaff',[{k:'name',t:'이름',l:1,f:function(v,r){return '<b>'+esc(v)+'</b>'+(r.payroll_type==='monthly'?' <span class="pill tiny">월급</span>':'')+(r.contract_mode==='full'?' <span class="pill y tiny">도급</span>':'')+(+r.team_size?' <span class="pill b tiny">팀장 '+r.team_size+'</span>':'')+(r.payroll_excluded?' <span class="pill tiny">ERP제외</span>':'')}},
@@ -1415,6 +1489,14 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   // 팀
   body+='<h4 style="margin:16px 0 6px">팀 배정 이력</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th class="l">팀장</th><th>방식</th><th class="l">메모</th></tr></thead><tbody>'+(th.length?th.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td class="l">'+esc(x.leader_name||x.leader_no)+'</td><td>'+(x.contract_mode==='full'?'<span class="pill y tiny">팀도급</span>':'마진')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="5" class="empty">팀 없음 (본인 단가로 직접 정산)</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="tm_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>팀장 (비우면 팀 해제)</label>'+staffSel('tm_leader',r.leader_no,emp)+'</div></div><div class="fr"><div class="f"><label>정산 방식</label><select id="tm_mode" class="sel" style="width:100%"><option value="margin"'+(r.contract_mode!=='full'?' selected':'')+'>마진 — 회사가 팀원에게 직접 지급, 팀장은 (팀단가−팀원단가) 차액</option><option value="full"'+(r.contract_mode==='full'?' selected':'')+'>팀도급 — 회사는 팀장에게 팀단가 전액, 팀원 직접 지급 없음</option></select></div><div class="f"><label>메모</label><input id="tm_memo" class="in"></div></div><button class="btn sm p" onclick="teamSave(\''+esc(emp)+'\')">팀 저장</button>';
+  // 서류·동의
+  var ct=(D.ctr||[]).filter(function(x){return x.employment_no===emp});
+  var KINDS=['근로계약서','비밀유지서약서','개인정보동의서','연봉계약서','기타'];
+  body+='<h4 style="margin:16px 0 6px">서류 · 동의 <span class="tiny dim">개인정보 동의서의 3자 제공 동의가 있어야 고객사 출입신청 명단에 들어갑니다 (개보법 제17조)</span></h4><table style="width:100%"><thead><tr><th class="l">서류</th><th class="l">판</th><th class="l">서명일</th><th class="l">교부일</th><th>3자제공</th><th>민감정보</th><th class="l">상태</th><th></th></tr></thead><tbody>'+(ct.length?ct.map(function(x){return '<tr><td class="l">'+esc(x.doc_kind)+'</td><td class="l tiny dim">'+esc(x.doc_version||'')+'</td><td class="l">'+esc(x.signed_on||'–')+'</td><td class="l">'+esc(String(x.delivered_at||'').slice(0,10)||'–')+'</td><td>'+yn(x.consent_third_party)+'</td><td>'+yn(x.consent_sensitive)+'</td><td class="l tiny">'+esc(x.status||'')+'</td><td><button class="stbtn x" onclick="ctrDel('+x.contract_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="8" class="empty">기록 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>서류</label><select id="ct_kind" class="sel" style="width:100%">'+KINDS.map(function(k){return '<option value="'+k+'">'+k+'</option>'}).join('')+'</select></div><div class="f"><label>판(버전)</label><input id="ct_ver" class="in" value="v1"></div></div>'
+   +'<div class="fr"><div class="f"><label>서명일</label><input id="ct_signed" class="in" type="date" value="'+today()+'"></div><div class="f"><label>교부일 (근로계약서는 교부가 의무)</label><input id="ct_deliv" class="in" type="date"></div></div>'
+   +'<div class="fr"><div class="f"><label>제3자 제공 동의 (고객사 출입)</label><select id="ct_tp" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div><div class="f"><label>민감정보 동의 (건강진단 등)</label><select id="ct_sn" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div></div>'
+   +'<div class="f"><label>메모</label><input id="ct_memo" class="in" placeholder="예: 스캔본 드라이브 32 HR 폴더"></div><button class="btn sm p" onclick="ctrSave(\''+esc(emp)+'\')">서류 기록 저장</button>';
   // 교육
   body+='<h4 style="margin:16px 0 6px">교육 이수 <span class="tiny dim">업무보고 시트 ED이수현황은 30분마다 자동 반영</span></h4><table style="width:100%"><thead><tr><th class="l">일자</th><th class="l">과정</th><th class="l">구분</th><th>시간</th><th class="l">장소</th><th class="l">유효</th><th></th></tr></thead><tbody>'+(tr.length?tr.slice(0,30).map(function(x){return '<tr><td class="l">'+esc(x.trained_on)+'</td><td class="l">'+esc(x.course_name)+(x.attended===false?' <span class="pill r tiny">불참</span>':'')+'</td><td class="l tiny">'+esc(x.category||'')+'</td><td>'+(x.hours!=null?num(x.hours):'')+'</td><td class="l tiny">'+esc(x.place||'')+'</td><td class="l tiny">'+(x.expires_on?esc(x.expires_on):'')+'</td><td><button class="stbtn x" onclick="trnDel('+x.training_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">교육 이력 없음</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>일자</label><input id="tr_date" class="in" type="date" value="'+today()+'"></div><div class="f"><label>과정명</label><input id="tr_name" class="in" placeholder="예: 팹 출입 안전교육"></div></div><div class="fr"><div class="f"><label>구분</label><input id="tr_cat" class="in" placeholder="법정교육 / 고객사교육 / 현장교육"></div><div class="f"><label>시간</label><input id="tr_hours" class="in" type="number" step="0.5" placeholder="2"></div></div><div class="fr"><div class="f"><label>장소</label><input id="tr_place" class="in"></div><div class="f"><label>유효기간 (있으면)</label><input id="tr_exp" class="in" type="date"></div></div><button class="btn sm p" onclick="trnSave(\''+esc(emp)+'\')">교육 추가</button>';
@@ -1429,6 +1511,13 @@ async function rateSave(emp){var p={employment_no:emp,valid_from:el('rt_from').v
 async function periodSave(emp){rpcDone(await sb.rpc('ceo_period_set',{p_emp:emp,p_from:el('pd_from').value,p_income:el('pd_inc').value,p_reason:el('pd_why').value||null}),'소득구분 저장')}
 async function teamSave(emp){rpcDone(await sb.rpc('ceo_team_set',{p_emp:emp,p_from:el('tm_from').value,p_leader:el('tm_leader').value||null,p_mode:el('tm_mode').value,p_memo:el('tm_memo').value||null}),'팀 배정 저장')}
 async function trnSave(emp){if(!el('tr_name').value.trim()){toast('과정명을 넣으세요','e');return}rpcDone(await sb.rpc('ceo_training_set',{p:{employment_no:emp,course_name:el('tr_name').value,category:el('tr_cat').value,trained_on:el('tr_date').value,hours:el('tr_hours').value,place:el('tr_place').value,expires_on:el('tr_exp').value}}),'교육 추가')}
+async function ctrSave(emp){var p={employment_no:emp,doc_kind:el('ct_kind').value,doc_version:el('ct_ver').value||'v1',signed_on:el('ct_signed').value,memo:el('ct_memo').value};
+  if(el('ct_deliv').value)p.delivered_at=el('ct_deliv').value;
+  if(el('ct_tp').value!=='')p.consent_third_party=el('ct_tp').value;
+  if(el('ct_sn').value!=='')p.consent_sensitive=el('ct_sn').value;
+  rpcDone(await sb.rpc('ceo_contract_set',{p:p}),'서류 기록 저장 · '+p.doc_kind)}
+async function ctrDel(id){if(!await ask('서류 기록 삭제','이 서류 기록을 지웁니다.',{ok:'삭제',danger:true}))return;
+  var r=await sb.rpc('ceo_contract_delete',{p_id:id});if(r.error){toast(r.error.message,'e');return}toast('삭제됨','g');drClose();loadAll()}
 async function trnDel(id){if(!await ask('교육 이력 삭제','이 교육 이력을 삭제합니다.',{ok:'삭제',danger:true}))return;rpcDone(await sb.rpc('ceo_training_delete',{p_id:id}),'삭제됨')}
 function staffNew(){drOpen('신규 인력 등록',
   '<div class="fr"><div class="f"><label>이름 *</label><input id="sn_name" class="in"></div><div class="f"><label>연락처</label><input id="sn_phone" class="in" placeholder="010-0000-0000"></div></div>'
