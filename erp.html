@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.03</title>
+<title>BVS ERP v1.06</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -186,6 +186,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .pill.g{background:var(--goodbg);border-color:transparent;color:var(--good)}
 .pill.y{background:var(--warnbg);border-color:transparent;color:var(--warn)}
 .pill.r{background:var(--critbg);border-color:transparent;color:var(--crit)}
+.sw2{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--ln);border-radius:10px;background:var(--sf2);font-size:13px;cursor:pointer;margin:0 6px 6px 0}
+.sw2 input{width:16px;height:16px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .dot.on{background:var(--good)}.dot.off{background:var(--tx3)}
 .stbtn{padding:3px 8px;border-radius:6px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-size:12px;margin-left:4px}
@@ -278,6 +280,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 #md{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;background:rgba(10,12,16,.4)}
 #md.on{display:flex}
 .mdb{width:420px;max-width:92vw;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#mdM{white-space:pre-line}
 .mdb h3{margin:0 0 8px;font-size:16px}.mdb p{margin:0 0 14px;color:var(--tx2);font-size:13px}
 .mdb .bt{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 
@@ -364,7 +367,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.03</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.06</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -484,6 +487,19 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     </section>
 
     <!-- 인력배치 -->
+    <!-- 안전·교육 -->
+    <section class="page" id="p-safety">
+      <div class="ph"><h2>안전 · 교육 관리</h2><div class="desc">작업 전 안전점검 제출 현황과 교육 서명부<button class="hbtn" onclick="helpSafety()">?</button></div>
+        <div class="act"><button class="btn p" onclick="edNew()">+ 교육 등록</button></div></div>
+      <div class="kpis" id="sfKpi"></div>
+      <div class="sec"><h3>교육 서명부 <span class="cnt" id="edSN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">줄을 누르면 그 교육의 대상자와 서명 현황이 열립니다. 서명은 직원이 현장앱에서 직접 누른 시각으로 기록됩니다.</div>
+        <div class="tb" id="gEdS"></div></div>
+      <div class="sec"><h3>작업 전 안전점검 <span class="cnt" id="sfN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">투입 기록이 있는 날에 그 사람이 점검을 제출했는지 봅니다. 최근 90일.</div>
+        <div class="tb" id="gSf"></div></div>
+    </section>
+
     <section class="page" id="p-crew">
       <div class="ph"><h2>현장인력 배치표</h2><div class="desc">고객사 제공용 · 가용 인력과 카풀조 · 교육 이수일은 12개월 유효 기준으로 만료 임박(D-30)을 표시합니다<button class="hbtn" onclick="helpCrew()">?</button></div>
         <div class="act"><button class="btn" onclick="csv('crew')">CSV 내보내기</button></div></div>
@@ -558,7 +574,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.03';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.06';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -749,9 +765,10 @@ var I={home:'<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/
 var NAV=[{g:'경영 관제'},{k:'home',t:'종합 상황실',kb:'1'},{k:'alerts',t:'리스크 관제',kb:'2'},
   {g:'현장·공수 (OP)'},{k:'site',t:'현장 공수 현황',kb:'3'},{k:'crew',t:'인력 배치표',kb:'4'},
   {g:'영업·수주 (SD)'},{k:'sales',t:'영업·계약 문서',kb:'5'},{k:'close',t:'월간 청구·마감',kb:'6'},
-  {g:'인사·노무 (HR)'},{k:'money',t:'노무비·급여 정산',kb:'7'},{k:'hr',t:'인사·근로계약',kb:'8'},
+  {g:'인사·노무 (HR)'},{k:'money',t:'노무비·급여 정산',kb:'7'},{k:'hr',t:'인사·근로계약',kb:'8'},{k:'safety',t:'안전·교육 관리'},
   {g:'재무·손익 (FI)'},{k:'pl',t:'경영 손익 분석',kb:'9'},{k:'settle',t:'채권·채무 관리',kb:'0'},{k:'ht',t:'자금·통장·카드',kb:'-'},{k:'pm',t:'구매·외주 자재',kb:'='},{k:'tax',t:'세무 신고 패키지',kb:'['}];
-var TITLE={home:'종합 상황실',alerts:'리스크 관제',site:'현장 공수 현황',sales:'영업·계약 문서',money:'노무비·급여 정산 (인건비 및 팀장몫)',close:'월간 청구·마감',pl:'경영 손익 분석',pm:'구매·외주 자재',hr:'인사·근로계약',crew:'현장인력 배치표',tax:'세무 신고 패키지',ht:'자금·통장·카드',settle:'채권·채무 관리 (AR / AP 정산 대사)'};
+var TITLE={home:'종합 상황실',alerts:'리스크 관제',site:'현장 공수 현황',sales:'영업·계약 문서',money:'노무비·급여 정산 (인건비 및 팀장몫)',close:'월간 청구·마감',pl:'경영 손익 분석',pm:'구매·외주 자재',hr:'인사·근로계약',crew:'현장인력 배치표',tax:'세무 신고 패키지',ht:'자금·통장·카드',settle:'채권·채무 관리 (AR / AP 정산 대사)',safety:'안전 · 교육 관리'};
+I.safety='<path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>';
 I.ht=I.ht||'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/>';I.settle='<path d="M3 6h13M3 12h9M3 18h6"/><circle cx="18" cy="15" r="3.5"/><path d="M18 13v2l1.5 1"/>';
 function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
   return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+n.kb+'</span>')+'</div>'}).join('');
@@ -894,6 +911,9 @@ async function loadAll(){
     ['gap',sb.from('ceo_sd_fi_gap').select('*').limit(300)],
     ['di',sb.from('ceo_deemed_interest').select('*').order('yr')],
     ['tr',sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)],
+    ['sfk',sb.from('ceo_safety').select('*').order('work_date',{ascending:false}).limit(4000)],
+    ['eds',sb.from('ceo_training_sessions').select('*').order('held_on',{ascending:false}).limit(300)],
+    ['edg',sb.from('ceo_training_signs').select('*').limit(4000)],
     ['alw',sb.from('ceo_allowance_master').select('*').order('sort_ord')],
     ['cons',sb.from('ceo_consent_missing').select('*')],
     ['retro',sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})],
@@ -967,7 +987,7 @@ async function loadAll(){
   if(!D.dash.length&&!errs.length)toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
 }
 var LASTERR=[];
-function renderAll(){CAL.loadedFor=CAL.loadedFor||null;renderHome();renderSite();renderPlans();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt();renderSettle()}
+function renderAll(){CAL.loadedFor=CAL.loadedFor||null;renderHome();renderSite();renderPlans();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt();renderSettle();renderSafety()}
 
 /* ═══════════ 공통 상수 ═══════════ */
 var KIND={quote:'견적',order:'발주',contract:'계약',tax:'계산서',settle:'정산',report:'일보',receipt:'인수증',cert:'증명',invoice:'청구서',statement:'명세표',worklog:'작업내역서'};
@@ -976,10 +996,21 @@ var STCLS={draft:'',submitted:'b',approved:'b',settled:'g',void:'r'};
 var BASIS={monthly_fixed:'월정액',per_day:'일할',per_hour:'시간',per_case:'건당',actual:'실비'};
 function pillKind(v){return '<span class="pill '+(v==='quote'?'y':v==='tax'?'b':'')+'">'+esc(KIND[v]||v)+'</span>'}
 function pillSt(v){return '<span class="pill '+(STCLS[v]||'')+'">'+esc(STMAP[v]||v||'–')+'</span>'}
+function attKm(){var km={};(D.attk||[]).forEach(function(k){km[k.work_date+'|'+k.employment_no]=k});return km}
+/* 퇴근 미등록: 현장앱이 출근만 찍고 퇴근을 안 찍은 날. 오늘은 아직 근무 중일 수 있어 제외한다. */
+function noOutRows(){var km=attKm(),td=today();
+  return (D.att||[]).filter(function(r){var k=km[r.work_date+'|'+r.employment_no]||{};
+    return r.work_start&&!r.work_end&&String(r.work_date)<td&&k.source==='worker_app'&&!r.settled_ym})
+    .sort(function(a,b){return String(b.work_date).localeCompare(String(a.work_date))})}
+/* 승인 대기: 현장앱에서 제출됐지만 대표 승인 전. 마감하면 더 못 고친다. */
+function pendRows(){return (D.att||[]).filter(function(r){return r.status==='submitted'})
+  .sort(function(a,b){return String(b.work_date).localeCompare(String(a.work_date))})}
+var NOOUTT='퇴근 미등록 (현장앱)',PENDT='투입 기록 승인 대기',SFT='작업 전 안전점검 미제출',EDT='교육 서명 미완료';
+function attOpen(r){var f=(D.att||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(f)calForm(f);else toast('기록을 찾지 못했습니다','e')}
 function trRows(){return (D.tr||[]).filter(function(r){return !r.is_cancelled})}
 function trNet(k){var t=0;trRows().forEach(function(r){t+=(+r[k]||0)});return t}
 var TRTITLE='Tax-Risk 엔티티 간 거래 (전 기간)';
-function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.intg.filter(function(r){return +r.cnt>0}).length+(D.gap.length?1:0)+(trRows().length?1:0)}
+function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.intg.filter(function(r){return +r.cnt>0}).length+(D.gap.length?1:0)+(trRows().length?1:0)+(sfMiss().length?1:0)+(edUnsigned().length?1:0)+(pendRows().length?1:0)+(noOutRows().length&&!D.al.some(function(r){return /퇴근 미등록/.test(r.title)&&+r.cnt>0})?1:0)}
 
 /* ═══════════ 홈 ═══════════ */
 function renderHome(){
@@ -992,13 +1023,13 @@ function renderHome(){
   var lastDay=D.att.length?D.att[0].work_date:null,today=D.att.filter(function(r){return r.work_date===lastDay});
   el('homeDesc').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'})+' · 기준월 '+m;
   var km={};D.attk.forEach(function(k){km[k.work_date+'|'+k.employment_no]=k});
-  var noOut=today.filter(function(r){var k=km[r.work_date+'|'+r.employment_no]||{};return r.work_start&&!r.work_end&&k.source==='worker_app'}).length;
-  var pend=today.filter(function(r){return r.status==='submitted'}).length;
+  var noOut=noOutRows().length;
+  var pend=pendRows().length;
   function grp(label,inner){return '<div class="kgrp"><div class="gl">'+label+'</div><div class="gi">'+inner+'</div></div>'}
   el('homeKpi').innerHTML=
     grp('현장 '+(lastDay?'· '+lastDay:''),
        kpi('현장 투입',today.length+'<small>명</small>',(Object.keys(by(today,'site_name')).length)+'개 현장 · '+num(sum(today,'work_md'))+' M/D','hl click',' onclick="go(\'site\')"')
-      +kpi('퇴근 미등록 · 승인 대기',(noOut?'<span class="neg">'+noOut+'</span>':'0')+' <small>/</small> '+(pend?'<span class="wn">'+pend+'</span>':'0'),'현장앱 기준 · 현장 화면에서 승인','click',' onclick="go(\'site\')"'))
+      +kpi('퇴근 미등록 · 승인 대기',(noOut?'<span class="neg">'+noOut+'</span>':'0')+' <small>/</small> '+(pend?'<span class="wn">'+pend+'</span>':'0'),'전 기간 · 눌러서 대상자 보기',((noOut||pend)?'warn ':'')+'click',' onclick="alGo(\''+(noOut?'퇴근':'승인')+'\')"'))
    +grp(m+' 손익',
        kpi('영업이익',sgn(dm.operating_profit),dm.is_closed?'마감':'진행 중','click',' onclick="go(\'pl\')"')
       +kpi('매출 발행액',won(sum(sales,'supply_amt')),sum(sales,'doc_cnt')+'건 · 세금계산서','click',' onclick="go(\'sales\')"')
@@ -1011,6 +1042,9 @@ function renderHome(){
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
   var als=D.al.filter(function(r){return +r.cnt>0}).concat(D.intg.filter(function(r){return +r.cnt>0}).map(function(r){return {title:r.check_name,cnt:r.cnt}}));
+  if(sfMiss().length)als=als.concat([{title:SFT,cnt:sfMiss().length}]);
+  if(edUnsigned().length)als=als.concat([{title:EDT,cnt:edUnsigned().length}]);
+  if(pendRows().length)als=[{title:PENDT,cnt:pendRows().length}].concat(als);
   if(trRows().length)als=[{title:TRTITLE,cnt:trRows().length}].concat(als);
   el('homeAlN').textContent=als.length?als.length+'건':'';
   el('homeAl').innerHTML=als.length?als.slice(0,6).map(function(r){return '<div class="al hot"><div class="n">'+r.cnt+'</div><div class="t">'+esc(r.title)+'</div></div>'}).join(''):'<div class="al ok"><div class="n">0</div><div class="t">특이사항 없음</div></div>';
@@ -1131,6 +1165,123 @@ async function resolveDisp(id){var why=await ask('이의 처리','기록을 먼�
   var r=await sb.rpc('ceo_resolve_dispute',{p_dispute_id:id,p_resolution:why});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||'실패','e');return}toast('처리 완료','g');loadAll()}
 async function approveDay(){var d=el('btnApprove').dataset.d;if(!d)return;var ok=await ask('일괄 승인',d+' 제출·임시 상태의 투입 기록을 전부 승인합니다. 승인 후에도 마감 전에는 수정할 수 있습니다.',{ok:'승인'});if(!ok)return;
   var r=await sb.rpc('ceo_approve_labor',{p_date:d});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast(d+' '+r.data.approved+'건 승인','g');loadAll()}
+/* ═══════════ 안전 · 교육 ═══════════ */
+function sfMiss(){return (D.sfk||[]).filter(function(r){return !r.checked})}
+function sfNg(){return (D.sfk||[]).filter(function(r){return r.checked&&((+r.ng_cnt||0)>0||r.ng_note)})}
+function edUnsigned(){return (D.edg||[]).filter(function(r){return !r.signed&&(D.eds||[]).some(function(s){return s.session_id===r.session_id&&s.status==='OPEN'})})}
+function helpSafety(){help('안전 · 교육 관리 — 무엇을 보나',
+  '<p><b>작업 전 안전점검</b>은 현장앱의 「안전」 탭에서 직원이 직접 제출합니다. 투입 기록이 있는 날인데 제출이 없으면 「미제출」로 뜹니다.</p>'
+ +'<p>제출 기록은 산업안전보건법 제38조 안전조치를 실제로 했다는 증빙이 됩니다. 사고가 났을 때 회사가 내놓을 수 있는 유일한 문서이므로, 미제출을 방치하지 않는 편이 낫습니다.</p>'
+ +'<p><b>교육 서명부</b>는 교육을 하나 등록하면 대상자가 자동으로 잡히고, 직원이 현장앱에서 「서명」을 누른 시각이 그대로 기록됩니다. 대표가 대신 눌러 줄 수는 없습니다 — 그래야 서명의 뜻이 있습니다.</p>'
+ +'<p>대상은 <b>전체 / 특정 현장 / 지정 인원</b> 셋 중 하나입니다. 서명이 하나라도 있으면 그 교육은 지울 수 없고 마감(CLOSED)만 됩니다.</p>')}
+function renderSafety(){
+  if(!el('gSf'))return;
+  var sk=D.sfk||[],miss=sfMiss(),ng=sfNg(),uns=edUnsigned(),td=today();
+  var tdRows=sk.filter(function(r){return String(r.work_date)===td});
+  var tdOk=tdRows.filter(function(r){return r.checked}).length;
+  el('sfKpi').innerHTML=
+     kpi('오늘 안전점검',tdRows.length?(tdOk+'<small> / '+tdRows.length+'명</small>'):'–',tdRows.length?(tdOk===tdRows.length?'전원 제출':(tdRows.length-tdOk)+'명 미제출'):'오늘 투입 기록 없음',(tdRows.length&&tdOk<tdRows.length?'warn ':'hl '))
+    +kpi('미제출 (90일)',miss.length+'<small>건</small>','투입은 있는데 점검 기록 없음',miss.length?'warn click':'click',' onclick="alGo(\'안전\')"')
+    +kpi('이상 보고',ng.length+'<small>건</small>',ng.length?'점검에서 이상이 체크된 날':'없음',(ng.length?'crit ':'')+'click',' onclick="gSetChip(\'gSf\',\'_ng\',\'1\')"')
+    +kpi('교육 서명 대기',uns.length+'<small>명</small>','진행 중인 교육 기준',(uns.length?'warn ':'')+'click',' onclick="alGo(\'교육\')"')
+    +kpi('진행 중 교육',(D.eds||[]).filter(function(r){return r.status==='OPEN'}).length+'<small>건</small>','마감하면 서명이 닫힙니다');
+
+  el('edSN').textContent=(D.eds||[]).length+'건';
+  grid('gEdS',[{k:'held_on',t:'실시일',l:1},{k:'course_name',t:'교육명',l:1},{k:'category',t:'구분',l:1,cls:'tiny dim'},
+    {k:'hours',t:'시간',f:'num'},{k:'place',t:'장소',l:1,cls:'tiny'},{k:'instructor',t:'강사',l:1,cls:'tiny'},
+    {k:'target_kind',t:'대상',l:1,f:function(v,r){return v==='all'?'전체':v==='site'?('현장 '+esc(r.target_site||'')):'지정 '+((r.target_emps||[]).length)+'명'}},
+    {k:'target_cnt',t:'대상 인원',f:'int'},{k:'signed_cnt',t:'서명',f:'int'},
+    {k:'unsigned_cnt',t:'미서명',f:function(v){return (+v>0)?'<span class="wn">'+v+'</span>':'0'}},
+    {k:'status',t:'상태',l:1,f:function(v){return '<span class="pill '+(v==='OPEN'?'b':'')+'">'+(v==='OPEN'?'진행':'마감')+'</span>'}}],
+    {rows:(D.eds||[]).slice(),q:true,qph:'교육명·장소·강사',page:30,csv:true,
+     chips:[{k:'status',vals:[['','전체'],['OPEN','진행'],['CLOSED','마감']]}],
+     onRow:edOpen});
+
+  var rows=sk.map(function(r){var o={};Object.keys(r).forEach(function(k){o[k]=r[k]});
+    o._ng=((+r.ng_cnt||0)>0||r.ng_note)?'1':'0';o._st=r.checked?'1':'0';return o});
+  el('sfN').textContent=sk.length+'건 · 미제출 '+miss.length;
+  grid('gSf',[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,f:function(v,r){return esc(v||r.site_id||'–')}},
+    {k:'checked',t:'점검',f:function(v){return v?'<span class="pill g">제출</span>':'<span class="pill r">미제출</span>'}},
+    {k:'signed_at',t:'제출시각',l:1,cls:'tiny',f:function(v){return v?esc(String(v).slice(0,16).replace('T',' ')):'–'}},
+    {k:'ng_cnt',t:'이상',f:function(v){return (+v>0)?'<span class="neg">'+v+'</span>':(v==null?'–':'0')}},
+    {k:'ng_note',t:'내용',l:1,cls:'tiny'}],
+    {rows:rows,q:true,qph:'이름·현장·내용',page:60,csv:true,
+     chips:[{k:'_st',vals:[['','전체'],['0','미제출만'],['1','제출만']]},{k:'_ng',vals:[['','이상 무관'],['1','이상만']]}]});
+}
+function edOpen(r){
+  var g=(D.edg||[]).filter(function(x){return x.session_id===r.session_id});
+  var sg=g.filter(function(x){return x.signed}),un=g.filter(function(x){return !x.signed});
+  var body=kv([['교육명',esc(r.course_name)],['실시일',esc(r.held_on)+(r.start_time?' '+String(r.start_time).slice(0,5)+'~'+String(r.end_time||'').slice(0,5):'')+(r.hours?' · '+(+r.hours)+'시간':'')],
+    ['장소·강사',esc(r.place||'–')+' · '+esc(r.instructor||'–')],
+    ['대상',(r.target_kind==='all'?'재직 전체':r.target_kind==='site'?('현장 '+esc(r.target_site||'')):'지정 인원')+' '+r.target_cnt+'명'],
+    ['서명','<b>'+sg.length+'</b> / '+r.target_cnt+'명'+(un.length?' <span class="wn">· 미서명 '+un.length+'명</span>':'')],
+    ['자료',r.content_url?'<a href="'+esc(r.content_url)+'" target="_blank" rel="noopener">열기 →</a>':'–'],
+    ['상태',r.status==='OPEN'?'진행 (서명 가능)':'마감']])
+   +'<h4 style="margin:14px 0 6px">미서명 <span class="tiny dim">'+un.length+'명</span></h4>'
+   +(un.length?'<div class="chipgrp">'+un.map(function(x){return '<span class="chip" style="margin:0 6px 6px 0">'+esc(x.person_name)+'</span>'}).join('')+'</div>':'<div class="tiny dim">전원 서명 완료</div>')
+   +'<h4 style="margin:14px 0 6px">서명 <span class="tiny dim">'+sg.length+'명</span></h4>'
+   +(sg.length?'<table class="mini" style="width:100%"><thead><tr><th class="l">이름</th><th class="l">서명 시각</th><th class="l">방법</th></tr></thead><tbody>'
+      +sg.sort(function(a,b){return String(a.signed_at).localeCompare(String(b.signed_at))}).map(function(x){
+        return '<tr><td class="l">'+esc(x.person_name)+'</td><td class="l">'+esc(String(x.signed_at||'').slice(0,16).replace('T',' '))+'</td><td class="l tiny dim">'+esc(x.sign_method==='app'?'현장앱':x.sign_method||'')+'</td></tr>'}).join('')
+      +'</tbody></table>':'<div class="tiny dim">아직 서명이 없습니다</div>');
+  drOpen('교육 '+esc(r.course_name),body,
+    '<button class="btn" onclick="drClose()">닫기</button>'
+    +(sg.length?'':'<button class="btn d" onclick="edDelete('+r.session_id+')">삭제</button>')
+    +'<button class="btn" onclick="edStatus('+r.session_id+',\''+(r.status==='OPEN'?'CLOSED':'OPEN')+'\')">'+(r.status==='OPEN'?'마감':'다시 열기')+'</button>'
+    +'<button class="btn p" onclick="edNew('+r.session_id+')">수정</button>');
+}
+function edNew(id){
+  var r=id?((D.eds||[]).filter(function(x){return x.session_id===id})[0]||{}):{};
+  var sites=(D.sites||[]).map(function(x){return '<option value="'+esc(x.site_id)+'"'+(r.target_site===x.site_id?' selected':'')+'>'+esc(x.site_name)+'</option>'}).join('');
+  var staff=(D.staff||[]).filter(function(x){return !x.resigned_on}).map(function(x){
+    return '<label class="sw2"><input type="checkbox" class="edEmp" value="'+esc(x.employment_no)+'"'+(((r.target_emps||[]).indexOf(x.employment_no)>=0)?' checked':'')+'> '+esc(x.name)+'</label>'}).join('');
+  drOpen(id?'교육 수정':'교육 등록',
+     '<div class="f"><label>교육명</label><input id="ed_name" class="in" value="'+esc(r.course_name||'')+'" placeholder="예: 정기 안전보건교육 (3분기)"></div>'
+    +'<div class="fr"><div class="f"><label>구분</label><input id="ed_cat" class="in" value="'+esc(r.category||'')+'" placeholder="정기 · 채용시 · 특별 · 관리감독자"></div><div class="f"><label>실시일</label><input id="ed_date" class="in" type="date" value="'+esc(r.held_on||today())+'"></div></div>'
+    +'<div class="fr"><div class="f"><label>시작</label><input id="ed_st" class="in" type="time" value="'+String(r.start_time||'').slice(0,5)+'"></div><div class="f"><label>종료</label><input id="ed_et" class="in" type="time" value="'+String(r.end_time||'').slice(0,5)+'"></div></div>'
+    +'<div class="fr"><div class="f"><label>시간 수</label><input id="ed_hr" class="in" type="number" step="0.5" value="'+(r.hours!=null?r.hours:'')+'"></div><div class="f"><label>장소</label><input id="ed_pl" class="in" value="'+esc(r.place||'')+'"></div></div>'
+    +'<div class="fr"><div class="f"><label>강사</label><input id="ed_ins" class="in" value="'+esc(r.instructor||'')+'"></div><div class="f"><label>자료 링크 (선택)</label><input id="ed_url" class="in" value="'+esc(r.content_url||'')+'" placeholder="드라이브 링크"></div></div>'
+    +'<div class="f"><label>대상</label><select id="ed_tk" class="sel" style="width:100%" onchange="edTk()">'
+      +'<option value="all"'+((r.target_kind||'all')==='all'?' selected':'')+'>재직 전체</option>'
+      +'<option value="site"'+(r.target_kind==='site'?' selected':'')+'>특정 현장</option>'
+      +'<option value="list"'+(r.target_kind==='list'?' selected':'')+'>지정 인원</option></select></div>'
+    +'<div class="f hide" id="ed_siteBox"><label>현장</label><select id="ed_site" class="sel" style="width:100%">'+sites+'</select></div>'
+    +'<div class="f hide" id="ed_listBox"><label>인원</label><div class="chipgrp" style="max-height:200px;overflow:auto">'+(staff||'<span class="tiny dim">인력 목록을 불러오지 못했습니다</span>')+'</div></div>'
+    +'<div class="f"><label>메모</label><input id="ed_memo" class="in" value="'+esc(r.memo||'')+'"></div>',
+    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="edSave('+(id||'null')+')">저장</button>');
+  setTimeout(function(){edTk();var n=el('ed_name');if(n&&!n.value)n.focus()},60);
+}
+function edTk(){var v=el('ed_tk').value;el('ed_siteBox').classList.toggle('hide',v!=='site');el('ed_listBox').classList.toggle('hide',v!=='list')}
+async function edSave(id){
+  var nm=el('ed_name').value.trim();if(!nm){toast('교육명을 입력하십시오','e');return}
+  var tk=el('ed_tk').value;
+  var p={session_id:id||'',course_name:nm,category:el('ed_cat').value,held_on:el('ed_date').value,
+    start_time:el('ed_st').value,end_time:el('ed_et').value,hours:el('ed_hr').value,
+    place:el('ed_pl').value,instructor:el('ed_ins').value,content_url:el('ed_url').value,
+    target_kind:tk,target_site:tk==='site'?el('ed_site').value:'',
+    target_emps:tk==='list'?[].slice.call(document.querySelectorAll('.edEmp:checked')).map(function(x){return x.value}):[],
+    memo:el('ed_memo').value};
+  if(!p.held_on){toast('실시일을 고르십시오','e');return}
+  if(tk==='list'&&!p.target_emps.length){toast('대상 인원을 고르십시오','e');return}
+  var r=await sb.rpc('ceo_training_session_set',{p:p});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast(r.data.mode==='inserted'?'교육 등록됨':'저장됨','g');drClose();loadAll();
+}
+async function edStatus(id,st){
+  var r0=(D.eds||[]).filter(function(x){return x.session_id===id})[0]||{};
+  var r=await sb.rpc('ceo_training_session_set',{p:{session_id:id,course_name:r0.course_name,held_on:r0.held_on,target_kind:r0.target_kind,target_site:r0.target_site||'',target_emps:r0.target_emps||[],status:st,
+    category:r0.category||'',start_time:String(r0.start_time||'').slice(0,5),end_time:String(r0.end_time||'').slice(0,5),hours:r0.hours!=null?String(r0.hours):'',place:r0.place||'',instructor:r0.instructor||'',content_url:r0.content_url||'',memo:r0.memo||''}});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast(st==='CLOSED'?'마감했습니다':'다시 열었습니다','g');drClose();loadAll();
+}
+async function edDelete(id){
+  var ok=await ask('교육 삭제','서명이 하나도 없는 교육만 지울 수 있습니다. 지우면 대상자 기록도 함께 사라집니다.',{ok:'삭제',danger:true});
+  if(!ok)return;
+  var r=await sb.rpc('ceo_training_session_delete',{p_session_id:id});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('삭제됨','g');drClose();loadAll();
+}
+
 /* ═══════════ 매출·문서 ═══════════ */
 function ptnSave(r,f,v){var p={partner_id:r.partner_id};p[f]=v;return sb.rpc('ceo_set_partner',{p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data})}
 function ptnNew(){drOpen('새 거래처','<div class="f"><label>거래처명 (상호)</label><input id="pn_name" class="in" placeholder="예: 주식회사 OOO"></div><div class="fr"><div class="f"><label>사업자번호</label><input id="pn_biz" class="in" placeholder="000-00-00000"></div><div class="f"><label>대표자</label><input id="pn_ceo" class="in"></div></div><div class="f"><label>주소</label><input id="pn_addr" class="in"></div><div class="fr"><div class="f"><label>담당</label><input id="pn_ct" class="in"></div><div class="f"><label>연락처</label><input id="pn_tel" class="in"></div></div><div class="tiny dim" style="margin-top:6px">코드(C0000)는 자동 부여. 나머지 항목은 저장 후 표에서 더블클릭으로 채울 수 있습니다.</div>',
@@ -1852,7 +2003,7 @@ function renderCrew(){
   renderCarCards();
   var EDCOL=/교육|A-D|중량물|신규PJT|작업지휘자|급소|유해물질|안전|출입신청|이수/;
   var cols=c.length?Object.keys(c[0]).map(function(k){var e=CREW_ED[k];return {k:k,t:k,l:true,e:e||null,f:EDCOL.test(k)?function(v,r){return eduBadge(v,r,k)}:null}}):[{k:'이름',t:'이름',l:1}];
-  grid('gCrew',cols,{rows:c,q:true,qph:'이름·소속·지역·업무',chips:[{k:'배치(우선지역)',vals:[['','전체']].concat(Object.keys(areas).sort().map(function(a){return [a,a]}))}],page:60,
+  grid('gCrew',cols,{rows:c,q:true,qph:'이름·소속·지역·업무',chips:[{k:'배치(우선지역)',vals:[['','전체']].concat(Object.keys(areas).sort().map(function(a){return [a,a]}))}],page:60,csv:true,
     save:function(r,field,v){return crewSave(r,field,v)},afterSave:function(r,col){if(col.k==='배치(우선지역)'||col.k==='차량'||col.k==='카풀'||col.k==='소속')renderCrewTop()}});
   var h=el('gCrew').querySelector('.tbar');if(h&&!h.querySelector('.edhint'))h.insertAdjacentHTML('beforeend','<span class="edhint" style="margin:0 0 0 6px">셀 더블클릭 → 수정 · Enter 저장 · Esc 취소 · Tab 다음 칸</span>');
 }
@@ -2001,7 +2152,24 @@ function mrevOpen(r){
    +'<div class="tiny dim" style="margin-top:10px">공수매출 = Σ일별 청구단가(기본 220,000 + 연장 30,000/h) · 휴일가산 = 토·일·공휴일 장비셋업/TES제조 공수 × 30,000 · 펌프실 = 일별 MAX(수량청구, 공수×220,000)</div>';
   drOpen(esc(r.partner_name||'')+' '+r.period_ym+' 청구 내역',body,'<button class="btn" onclick="drClose();setMonth(\''+r.period_ym+'\');go(\'sales\')">계산서 보기 →</button><button class="btn" onclick="drClose();go(\'site\')">투입 기록 →</button>');
 }
-async function closeMonth(pm){var ok=await ask('월 마감',pm+' 정산을 마감합니다. 마감 후에는 그 달 정산이 잠깁니다.',{ok:'마감'});if(!ok)return;
+/* 마감 전 점검 — 마감하면 그 달 기록이 잠겨 뒤에서 못 고친다. 무엇이 걸려 있는지 먼저 보여 준다. */
+function closeBlockers(pm){
+  var pre=pm+'-',out=[];
+  var pend=pendRows().filter(function(r){return String(r.work_date).indexOf(pre)===0});
+  var noout=noOutRows().filter(function(r){return String(r.work_date).indexOf(pre)===0});
+  var sfm=sfMiss().filter(function(r){return String(r.work_date).indexOf(pre)===0});
+  var dsp=(D.disp||[]).filter(function(r){return r.status==='open'&&String(r.work_date||'').indexOf(pre)===0});
+  if(pend.length)out.push(['승인 대기 투입 '+pend.length+'건','승인하지 않은 채 마감하면 그대로 잠깁니다']);
+  if(noout.length)out.push(['퇴근 미등록 '+noout.length+'건','근무시간이 비어 있어 연장수당 계산이 어긋날 수 있습니다']);
+  if(dsp.length)out.push(['미처리 이의 신청 '+dsp.length+'건','직원이 제기한 이의를 먼저 처리하는 편이 낫습니다']);
+  if(sfm.length)out.push(['안전점검 미제출 '+sfm.length+'건','마감을 막지는 않습니다 — 기록만 남지 않습니다']);
+  return out;
+}
+async function closeMonth(pm){
+  var bl=closeBlockers(pm);
+  var body=pm+' 정산을 마감합니다. 마감 후에는 그 달 정산이 잠깁니다.'
+    +(bl.length?'\n\n걸려 있는 것:\n'+bl.map(function(x){return '· '+x[0]+' — '+x[1]}).join('\n')+'\n\n그래도 마감하시겠습니까?':'\n\n걸려 있는 것 없음.');
+  var ok=await ask('월 마감',body,{ok:'마감',danger:bl.length>0});if(!ok)return;
   var r=await sb.rpc('op_close_month',{p_entity:'BVS',p_period:pm});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast(pm+' 마감 '+r.data.closed+'건','g');loadAll()}
@@ -2013,7 +2181,7 @@ async function reopenMonth(pm){var why=await ask('마감 해제',pm+' 마감을 
 var ALT={1:{n:'긴급',d:'세무 · 법적 · 회계 정합'},2:{n:'주의',d:'노무 · 수당 · 현장'},3:{n:'일반',d:'연결 · 미등록 · 기한'}};
 function alTier(t){t=String(t||'');
   if(/Tax-Risk|가지급금|지급의제|개인정보|계약서교부|계약·동의|청구기준|차대|전표|불일치|RLS|퇴사 후|헤더/.test(t))return 1;
-  if(/연장수당|비과세|휴일|이의 신청|퇴근 미등록|상주현장|주민번호|계좌|펌프실|공수/.test(t))return 2;
+  if(/연장수당|비과세|휴일|이의 신청|퇴근 미등록|상주현장|주민번호|계좌|펌프실|공수|안전점검|교육 서명|승인 대기/.test(t))return 2;
   return 3}
 /* 카드 → 상세 대상자. ds가 있으면 그 데이터셋을 걸러 표로, 없으면 해당 화면으로 보낸다. */
 function alDetail(t){t=String(t||'');
@@ -2030,6 +2198,10 @@ function alDetail(t){t=String(t||'');
    pay:[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],
    lm:[{k:'work_date',t:'일자',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1},{k:'cost_amt',t:'회사부담',f:'won',sum:1}],
    staff:[{k:'name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'employment_type',t:'고용',l:1},{k:'hired_on',t:'입사',l:1},{k:'work_site_id',t:'상주현장',l:1}],
+   sfk:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'ng_note',t:'비고',l:1,cls:'tiny dim'}],
+   edg:[{k:'held_on',t:'실시일',l:1},{k:'course_name',t:'교육명',l:1},{k:'person_name',t:'이름',l:1}],
+   noout:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_start',t:'출근',l:1,f:function(v){return hhmm(v)}},{k:'work_end',t:'퇴근',l:1,f:function(){return '<span class="neg">미등록</span>'}},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1}],
+   pend:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1},{k:'cost_amt',t:'회사부담',f:'won',sum:1},{k:'work_desc',t:'메모',l:1,cls:'tiny dim'}],
    tr:[{k:'voucher_date',t:'일자',l:1},{k:'counter_entity',t:'상대 엔티티',l:1},{k:'flow',t:'방향',l:1},{k:'risk_kind',t:'명목',l:1},{k:'evidence_name',t:'증빙',l:1,cls:'tiny'},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'title',t:'적요',l:1},{k:'flag',t:'점검',l:1,cls:'tiny wn'}],
    htr:[{k:'ran_at',t:'실행',l:1,f:function(v){return esc(String(v||'').slice(0,19).replace('T',' '))}},{k:'host',t:'PC',l:1},{k:'fetched',t:'수집',f:'int'},{k:'error',t:'오류',l:1,cls:'tiny'}]
   };
@@ -2043,6 +2215,9 @@ function alDetail(t){t=String(t||'');
   if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>60},'발주는 나갔는데 계산서가 오지 않았습니다.','settle');
   if(/거래처 미등록/.test(t))return d('ht',C.ht,function(r){return !r.partner_id},'거래처 마스터에 등록하면 자동으로 연결됩니다.','ht');
   if(/SD 문서 미연결/.test(t))return d('ht',C.ht,function(r){return !r.matched_doc_no},'홈택스 계산서와 업무 문서가 연결되지 않았습니다.','ht');
+  if(/안전점검 미제출/.test(t))return {rows:sfMiss(),cols:C.sfk,note:'투입 기록은 있는데 그날 작업 전 안전점검 제출이 없는 사람입니다. 현장앱 「안전」 탭에서 본인이 제출합니다 — 대표가 대신 넣지 않는 편이 증빙으로서 낫습니다.',go:'safety'};
+  if(/교육 서명 미완료/.test(t))return {rows:edUnsigned(),cols:C.edg,note:'진행 중인 교육의 대상자 가운데 아직 서명하지 않은 사람입니다. 교육을 마감하면 더는 서명할 수 없습니다.',go:'safety'};
+  if(/승인 대기/.test(t))return {rows:pendRows(),cols:C.pend,note:'현장앱에서 제출됐지만 아직 승인 전입니다. 현장 화면에서 날짜별로 일괄 승인하거나, 줄을 눌러 내용을 고친 뒤 승인하십시오.',go:'site',onRow:attOpen};
   if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
   if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
@@ -2051,12 +2226,16 @@ function alDetail(t){t=String(t||'');
   if(/휴일·토요일|휴일 근무/.test(t))return d('lm',C.lm,function(r){var w=new Date(r.work_date+'T00:00:00').getDay();return w===0||w===6},'휴일·토요일 투입은 가산임금 대상입니다.','site');
   if(/상주현장 미지정/.test(t))return d('staff',C.staff,function(r){return !r.resigned_on&&!r.work_site_id},'인력 마스터에서 상주 현장을 지정하십시오.','hr');
   if(/주민번호·계좌/.test(t))return {rows:[],cols:C.staff,note:'주민번호·계좌는 화면에 두지 않습니다. 시트→DB 통로(Apps Script syncHrSecrets)로 넣으십시오.',go:'hr'};
-  if(/퇴근 미등록/.test(t))return {rows:[],cols:C.lm,note:'현장 화면의 투입 명세에서 퇴근 시각을 채웁니다.',go:'site'};
+  if(/퇴근 미등록/.test(t))return {rows:noOutRows(),cols:C.noout,note:'현장앱에서 출근만 찍고 퇴근을 누르지 않은 날입니다. 줄을 누르면 그 기록의 출퇴근 시각을 바로 고칠 수 있습니다. 오늘 날짜는 아직 근무 중일 수 있어 빠져 있습니다.',go:'site',onRow:attOpen};
   if(/비과세 요건/.test(t))return {rows:[],cols:C.cons,note:'인사·노무 화면의 수당 마스터에서 비과세 한도와 요건을 확인하십시오.',go:'hr'};
   if(/RLS/.test(t))return {rows:[],cols:C.cons,note:'DB 접근 정책 문제입니다. 화면 목록이 아니라 Supabase에서 정책을 걸어야 합니다.',go:null};
   if(/미지급 기한|미수금 기한|발주서 미연결/.test(t))return {rows:[],cols:C.cons,note:'미수·미지급 대사 화면에서 확인합니다.',go:'settle'};
   return {rows:[],cols:C.cons,note:'이 경보는 아직 상세 목록이 연결되지 않았습니다.',go:null}}
 var ALF={tier:'',zero:false,sel:null};
+function alGo(kw){go('alerts');setTimeout(function(){
+  var t=(kw==='퇴근')?(((D.al||[]).filter(function(r){return /퇴근 미등록/.test(r.title)})[0]||{}).title||NOOUTT)
+        :(kw==='안전')?SFT:(kw==='교육')?EDT:PENDT;
+  ALF.tier='';ALF.sel=t;renderAlerts();var s=el('alDetSec');if(s)s.scrollIntoView({behavior:'smooth',block:'nearest'})},120)}
 function alTab(k){ALF.tier=k;ALF.sel=null;renderAlerts()}
 function alZero(){ALF.zero=!ALF.zero;renderAlerts()}
 function alPick(t){ALF.sel=(ALF.sel===t?null:t);renderAlerts();if(ALF.sel){var s=el('alDetSec');if(s)s.scrollIntoView({behavior:'smooth',block:'nearest'})}}
@@ -2065,7 +2244,9 @@ function renderAlerts(){
   if(!el('alerts'))return;
   var all=(D.al||[]).map(function(r){return {title:r.title,cnt:+r.cnt||0,tier:alTier(r.title)}})
     .concat((D.intg||[]).map(function(r){return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),intg:1}}))
-    .concat([{title:TRTITLE,cnt:trRows().length,tier:1}]);
+    .concat([{title:TRTITLE,cnt:trRows().length,tier:1},{title:PENDT,cnt:pendRows().length,tier:2}])
+    .concat((D.al||[]).some(function(r){return /퇴근 미등록/.test(r.title)})?[]:[{title:NOOUTT,cnt:noOutRows().length,tier:2}])
+    .concat([{title:SFT,cnt:sfMiss().length,tier:2},{title:EDT,cnt:edUnsigned().length,tier:2}]);
   var cnts={1:0,2:0,3:0};all.forEach(function(r){if(r.cnt)cnts[r.tier]+=1});
   var zeros=all.filter(function(r){return !r.cnt}).length;
   el('alTabs').innerHTML='<span class="chip'+(ALF.tier===''?' on':'')+'" onclick="alTab(\'\')">전체 '+(cnts[1]+cnts[2]+cnts[3])+'</span>'
@@ -2082,7 +2263,7 @@ function renderAlerts(){
     sec.classList.remove('hide');
     el('alDetT').innerHTML=esc(ALF.sel)+' <span class="cnt">'+(dd.rows.length?dd.rows.length+'건':(hit?hit+'건':''))+'</span>';
     el('alDetD').innerHTML=esc(dd.note||'')+(dd.go?' <a href="#" onclick="event.preventDefault();go(\''+dd.go+'\')">해당 화면으로 이동 →</a>':'');
-    grid('gAlDet',dd.cols,{rows:dd.rows,foot:dd.rows.length>0,page:50,csv:dd.rows.length>0,empty:'이 경보는 표로 보여 줄 목록이 없습니다 — 위 안내를 따르십시오'});
+    grid('gAlDet',dd.cols,{rows:dd.rows,foot:dd.rows.length>0,page:50,csv:dd.rows.length>0,onRow:dd.onRow,empty:'이 경보는 표로 보여 줄 목록이 없습니다 — 위 안내를 따르십시오'});
   }else sec.classList.add('hide');
   grid('gIntg',[{k:'sort_ord',t:'#',f:'int'},{k:'check_name',t:'점검',l:1},{k:'cnt',t:'건수',f:function(v){return '<b class="'+((+v)?'wn':'pos')+'">'+v+'</b>'}},{k:'why',t:'설명',l:1,cls:'tiny dim'}],{rows:D.intg,csv:false});
 }
