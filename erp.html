@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.02</title>
+<title>BVS ERP v1.03</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -364,7 +364,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.02</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.03</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -558,7 +558,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.02';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.03';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -893,6 +893,7 @@ async function loadAll(){
     ['sdm',sb.from('ceo_sd_month').select('*')],
     ['gap',sb.from('ceo_sd_fi_gap').select('*').limit(300)],
     ['di',sb.from('ceo_deemed_interest').select('*').order('yr')],
+    ['tr',sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)],
     ['alw',sb.from('ceo_allowance_master').select('*').order('sort_ord')],
     ['cons',sb.from('ceo_consent_missing').select('*')],
     ['retro',sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})],
@@ -975,7 +976,10 @@ var STCLS={draft:'',submitted:'b',approved:'b',settled:'g',void:'r'};
 var BASIS={monthly_fixed:'월정액',per_day:'일할',per_hour:'시간',per_case:'건당',actual:'실비'};
 function pillKind(v){return '<span class="pill '+(v==='quote'?'y':v==='tax'?'b':'')+'">'+esc(KIND[v]||v)+'</span>'}
 function pillSt(v){return '<span class="pill '+(STCLS[v]||'')+'">'+esc(STMAP[v]||v||'–')+'</span>'}
-function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.intg.filter(function(r){return +r.cnt>0}).length+(D.gap.length?1:0)}
+function trRows(){return (D.tr||[]).filter(function(r){return !r.is_cancelled})}
+function trNet(k){var t=0;trRows().forEach(function(r){t+=(+r[k]||0)});return t}
+var TRTITLE='Tax-Risk 엔티티 간 거래 (전 기간)';
+function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.intg.filter(function(r){return +r.cnt>0}).length+(D.gap.length?1:0)+(trRows().length?1:0)}
 
 /* ═══════════ 홈 ═══════════ */
 function renderHome(){
@@ -1007,6 +1011,7 @@ function renderHome(){
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
   var als=D.al.filter(function(r){return +r.cnt>0}).concat(D.intg.filter(function(r){return +r.cnt>0}).map(function(r){return {title:r.check_name,cnt:r.cnt}}));
+  if(trRows().length)als=[{title:TRTITLE,cnt:trRows().length}].concat(als);
   el('homeAlN').textContent=als.length?als.length+'건':'';
   el('homeAl').innerHTML=als.length?als.slice(0,6).map(function(r){return '<div class="al hot"><div class="n">'+r.cnt+'</div><div class="t">'+esc(r.title)+'</div></div>'}).join(''):'<div class="al ok"><div class="n">0</div><div class="t">특이사항 없음</div></div>';
   el('homeAttN').textContent=lastDay||'';
@@ -1392,25 +1397,28 @@ async function stRun(){toast('자동 대사 실행 중…');var r=await sb.rpc('
 function helpHt(){help('자금 · 통장 · 카드 — 어떻게 들어오나',
   '<p>대표 PC의 수집기가 매일 07:30에 홈택스(세금계산서 · 사업용카드 · 현금영수증)를 가져오고, <code>bank_in</code> 폴더에 넣어 둔 기업은행 엑셀을 함께 적재합니다.</p>'
  +'<p>원본은 바꾸지 않습니다. 거래처 · 문서 · 계정만 연결합니다.</p>'
- +'<p>상대방이 파이로 또는 승승장구컴퍼니면 <b>Tax-Risk</b>로 표시합니다. 엔티티 사이의 거래는 금액 · 방향 · 명목 · 상환계획을 갖춰 두지 않으면 가지급금 인정이자나 부당행위계산부인으로 이어질 수 있습니다.</p>')}
-function htRisk(){var risk=(D.ht||[]).filter(function(r){return r.related_entity});
+ +'<p>상대방이 파이로 · 승승장구컴퍼니 · 대표 개인이면 <b>Tax-Risk</b>로 표시합니다. 판정 범위는 홈택스 수집분이 아니라 <b>회계 전표 전 기간</b>입니다.</p>'
+ +'<p>엔티티 사이의 거래는 금액 · 방향 · 명목 · 상환계획과 <b>시가 근거</b>를 갖춰 두지 않으면 가지급금 인정이자나 부당행위계산부인으로 이어집니다.</p>')}
+function htRisk(){var risk=trRows();
   if(!risk.length){toast('Tax-Risk 거래가 없습니다','g');return}
-  var by={};risk.forEach(function(r){var k=r.related_entity||'기타';(by[k]=by[k]||[]).push(r)});
-  var body='<div class="al t1" style="display:block;margin-bottom:12px"><b>4개 엔티티 사이의 거래 '+risk.length+'건</b><div class="tiny" style="margin-top:4px;color:var(--tx2)">개인 자금과 법인 자금이 섞이면 가지급금 인정이자 · 상여처분 · 부당행위계산부인이 실제로 발생합니다. 금액 · 방향 · 명목 · 상환계획을 확인하고, 반증 자료가 없으면 세무사 확인을 권합니다.</div></div>'
-   +Object.keys(by).map(function(k){var g=by[k];
-     return '<h4 style="margin:14px 0 6px">'+esc(k)+' <span class="tiny dim">'+g.length+'건 · 공급가 '+won(sum(g,'supply_amt'))+'</span></h4>'
-      +'<table class="mini" style="width:100%"><thead><tr><th class="l">작성일</th><th class="l">구분</th><th class="l">상대방</th><th>공급가</th><th>세액</th><th class="l">SD 문서</th></tr></thead><tbody>'
-      +g.sort(function(a,b){return String(b.issue_date).localeCompare(String(a.issue_date))}).map(function(r){
-        return '<tr><td class="l">'+esc(r.issue_date)+'</td><td class="l">'+(r.side==='sales'?'매출':'매입')+'</td><td class="l">'+esc(r.counterparty||'')+'</td><td>'+won(r.supply_amt)+'</td><td>'+won(r.tax_amt)+'</td><td class="l tiny">'+(r.matched_doc_no?esc(r.matched_doc_no):'<span class="wn">미연결</span>')+'</td></tr>'}).join('')
+  var by={};risk.forEach(function(r){var k=(r.counter_entity||'기타')+' · '+(r.risk_kind||'기타');(by[k]=by[k]||[]).push(r)});
+  var np=0,ns=0;risk.forEach(function(r){if(r.trade_side==='sales')ns+=(+r.supply_amt||0);else np+=(+r.supply_amt||0)});
+  var body='<div class="al t1" style="display:block;margin-bottom:12px"><b>4개 엔티티 사이의 거래 '+risk.length+'건 · 매입 '+won(np)+' · 매출 '+won(ns)+'</b>'
+   +'<div class="tiny" style="margin-top:6px;color:var(--tx2)">특수관계인 거래입니다(법인세법 시행령 제2조 제8항). 대가가 시가와 다르면 법인세법 제52조 부당행위계산부인으로 손금이 부인되고 그 금액은 대표 상여로 처분됩니다. 명목마다 <b>계약서 · 산출물 · 시가 근거</b> 세 가지를 갖춰 두어야 방어가 됩니다. 반증 자료가 없으면 세무사 확인을 권합니다.</div></div>'
+   +Object.keys(by).sort().map(function(k){var g=by[k];
+     return '<h4 style="margin:14px 0 6px">'+esc(k)+' <span class="tiny dim">'+g.length+'건 · 공급가 '+won(sum(g,'supply_amt'))+' · 세액 '+won(sum(g,'tax_amt'))+'</span></h4>'
+      +'<table class="mini" style="width:100%"><thead><tr><th class="l">일자</th><th class="l">방향</th><th class="l">증빙</th><th>공급가</th><th>세액</th><th class="l">적요</th><th class="l">점검</th></tr></thead><tbody>'
+      +g.sort(function(a,b){return String(b.voucher_date).localeCompare(String(a.voucher_date))}).map(function(r){
+        return '<tr><td class="l">'+esc(r.voucher_date)+'</td><td class="l tiny">'+esc(r.flow||'')+'</td><td class="l tiny">'+esc(r.evidence_name||'')+'</td><td>'+won(r.supply_amt)+'</td><td>'+won(r.tax_amt)+'</td><td class="l tiny">'+esc(r.title||'')+'</td><td class="l tiny wn">'+esc(r.flag||'')+'</td></tr>'}).join('')
       +'</tbody></table>'}).join('');
-  drOpen('Tax-Risk 거래 소명',body,'<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="drClose();go(\'ht\')">계산서 목록에서 보기 →</button>')}
+  drOpen('Tax-Risk 거래 소명 (전 기간)',body,'<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="drClose();go(\'alerts\')">경보 화면에서 보기 →</button>')}
 function renderHt(){if(!el('gHtMonth'))return;var m=M(),ht=D.ht||[],htm=D.htm||[],htv=(D.htv||[]).filter(function(r){return r.period_ym===m});
   var mm=htm.filter(function(r){return r.period_ym===m}),ms=mm.filter(function(r){return r.side==='sales'})[0]||{},mp=mm.filter(function(r){return r.side==='purchase'})[0]||{};
   var risk=ht.filter(function(r){return r.related_entity}),unm=ht.filter(function(r){return !r.matched_doc_no}),nop=ht.filter(function(r){return !r.partner_id});
   var last=(D.htr||[])[0];
   el('htKpi').innerHTML=kpi(m+' 매출 계산서',won(ms.supply_amt||0),(ms.cnt||0)+'건 · 세액 '+won(ms.tax_amt||0),'hl')+kpi(m+' 매입 계산서',won(mp.supply_amt||0),(mp.cnt||0)+'건 · 세액 '+won(mp.tax_amt||0))
     +kpi('SD 문서 미연결',unm.length+'건',won(sum(unm,'supply_amt'))+' · 전체 기간',unm.length?'warn':'')+kpi('거래처 미등록',nop.length+'건','상대 사업자번호가 거래처 마스터에 없음',nop.length?'warn':'')
-    +kpi('Tax-Risk (엔티티 간)',risk.length+'건',risk.length?'PYRO·SSJG와의 계산서 — 눌러서 소명':'없음',(risk.length?'crit ':'')+'click',' onclick="htRisk()"')
+    +kpi('Tax-Risk (엔티티 간)',trRows().length+'건',trRows().length?'전 기간 · 공급가 '+won(trNet('supply_amt'))+' — 눌러서 소명':'없음',(trRows().length?'crit ':'')+'click',' onclick="htRisk()"')
     +kpi('미분류 인박스',(D.inbox||[]).length+'건','은행 '+(D.inbox||[]).filter(function(r){return r.kind==='bank'}).length+' · 카드 '+(D.inbox||[]).filter(function(r){return r.kind==='card'}).length,(D.inbox||[]).length?'warn':'')+kpi('마지막 수집',last?String(last.ran_at).slice(0,16).replace('T',' '):'아직 없음',last?(last.fetched+'건 · 신규 '+last.inserted+(last.error?' · 오류':'')):'대표 PC에서 run.bat 실행 필요',last&&last.error?'crit':'');
   (function(){var s=el('htStatus');if(!s)return;
     var ok=last&&!last.error,ran=last?String(last.ran_at).slice(0,16).replace('T',' ').slice(5):null;
@@ -2022,6 +2030,7 @@ function alDetail(t){t=String(t||'');
    pay:[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],
    lm:[{k:'work_date',t:'일자',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1},{k:'cost_amt',t:'회사부담',f:'won',sum:1}],
    staff:[{k:'name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'employment_type',t:'고용',l:1},{k:'hired_on',t:'입사',l:1},{k:'work_site_id',t:'상주현장',l:1}],
+   tr:[{k:'voucher_date',t:'일자',l:1},{k:'counter_entity',t:'상대 엔티티',l:1},{k:'flow',t:'방향',l:1},{k:'risk_kind',t:'명목',l:1},{k:'evidence_name',t:'증빙',l:1,cls:'tiny'},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'title',t:'적요',l:1},{k:'flag',t:'점검',l:1,cls:'tiny wn'}],
    htr:[{k:'ran_at',t:'실행',l:1,f:function(v){return esc(String(v||'').slice(0,19).replace('T',' '))}},{k:'host',t:'PC',l:1},{k:'fetched',t:'수집',f:'int'},{k:'error',t:'오류',l:1,cls:'tiny'}]
   };
   function d(ds,cols,filt,note,go){return {rows:(D[ds]||[]).filter(filt||function(){return true}),cols:cols,note:note,go:go}}
@@ -2034,6 +2043,7 @@ function alDetail(t){t=String(t||'');
   if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>60},'발주는 나갔는데 계산서가 오지 않았습니다.','settle');
   if(/거래처 미등록/.test(t))return d('ht',C.ht,function(r){return !r.partner_id},'거래처 마스터에 등록하면 자동으로 연결됩니다.','ht');
   if(/SD 문서 미연결/.test(t))return d('ht',C.ht,function(r){return !r.matched_doc_no},'홈택스 계산서와 업무 문서가 연결되지 않았습니다.','ht');
+  if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
   if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
   if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,null,'업무 문서와 회계 전표의 금액이 어긋났습니다.','money');
@@ -2054,7 +2064,8 @@ function renderAlerts(){
   var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}var nm=el('alertNm');if(nm){nm.textContent=hot;nm.classList.toggle('hide',!hot)}
   if(!el('alerts'))return;
   var all=(D.al||[]).map(function(r){return {title:r.title,cnt:+r.cnt||0,tier:alTier(r.title)}})
-    .concat((D.intg||[]).map(function(r){return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),intg:1}}));
+    .concat((D.intg||[]).map(function(r){return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),intg:1}}))
+    .concat([{title:TRTITLE,cnt:trRows().length,tier:1}]);
   var cnts={1:0,2:0,3:0};all.forEach(function(r){if(r.cnt)cnts[r.tier]+=1});
   var zeros=all.filter(function(r){return !r.cnt}).length;
   el('alTabs').innerHTML='<span class="chip'+(ALF.tier===''?' on':'')+'" onclick="alTab(\'\')">전체 '+(cnts[1]+cnts[2]+cnts[3])+'</span>'
