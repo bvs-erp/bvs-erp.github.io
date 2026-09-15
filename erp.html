@@ -772,7 +772,7 @@ async function loadAll(){
     ['cons',sb.from('ceo_consent_missing').select('*')],
     ['retro',sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})],
     ['pump',sb.from('ceo_pump').select('*').order('period_ym')],
-    ['lm',sb.from('ceo_labor_month').select('*').gte('work_date',M()+'-01').lte('work_date',M()+'-31').order('work_date').limit(4000)],
+    ['lm',sb.from('ceo_labor_month').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').limit(4000)],
     ['sites',sb.from('ceo_sites').select('*').order('site_name')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
@@ -882,9 +882,10 @@ function renderSite(){
 function costPill(k){return k==='team_full'?' <span class="pill y tiny">팀장청구</span>':k==='monthly'?' <span class="pill tiny">월급 일할</span>':k==='team_margin'?' <span class="pill tiny">팀</span>':''}
 var CAL={mode:'all',cache:{}};
 function calMode(m,elm){CAL.mode=m;Array.prototype.forEach.call(elm.parentNode.children,function(c){c.classList.toggle('on',c===elm)});renderCal()}
+function ymNext(m){var y=+m.slice(0,4),mo=+m.slice(5,7)+1;if(mo>12){mo=1;y++}return y+'-'+String(mo).padStart(2,'0')+'-01'}
 function siteShort(n){return String(n||'').replace(/SK\s*/,' ').replace(/\s*제조동/,'').replace(/^\s+/,'')}
 function calRows(m){if(m===CAL.loadedFor)return D.lm||[];return CAL.cache[m]}
-async function calFetch(m){var r=await sb.from('ceo_labor_month').select('*').gte('work_date',m+'-01').lte('work_date',m+'-31').order('work_date').limit(4000);if(r.error){toast(r.error.message,'e');return []}CAL.cache[m]=r.data||[];return CAL.cache[m]}
+async function calFetch(m){var r=await sb.from('ceo_labor_month').select('*').gte('work_date',m+'-01').lt('work_date',ymNext(m)).order('work_date').limit(4000);if(r.error){toast(r.error.message,'e');return []}CAL.cache[m]=r.data||[];return CAL.cache[m]}
 async function renderCal(){var box=el('calBox');if(!box)return;var m=M();
   if(D.lm&&!CAL.loadedFor)CAL.loadedFor=M();
   var rows=calRows(m);if(!rows){box.innerHTML='<div class="dim" style="padding:20px">'+m+' 불러오는 중…</div>';rows=await calFetch(m);if(M()!==m)return}
