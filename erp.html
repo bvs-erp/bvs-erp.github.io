@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.11</title>
+<title>BVS ERP v1.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -369,7 +369,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.11</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.12</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -406,7 +406,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="ph"><h2>현장 투입</h2><div class="desc">일자별 인원·공수·지급·매출</div>
         <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select><button class="btn p" id="btnApprove" onclick="approveDay()">이 날 제출분 승인</button><button class="btn" onclick="approveRange()">기간 일괄 승인</button></div></div>
       <div class="kpis" id="siteKpi"></div>
-      <div class="sec" id="site-check"><h3>마감 전 점검 <span class="cnt" id="chkN"></span></h3>
+      <div class="sec" id="site-check"><h3>마감 전 점검 <span class="cnt" id="chkN"></span><span class="r"><button class="btn sm" id="btnFillP" onclick="fillPartner()">청구처 자동 채우기</button></span></h3>
         <div class="desc" style="margin-bottom:8px">돈이 어긋나는 순서로 놓았습니다. <b>차단</b>이 붙은 것은 월 마감이 막힙니다 — 청구처가 없으면 청구서가 나가지 않고, 같은 날 두 건이면 이중 지급·이중 청구가 됩니다. 줄을 누르면 그 날짜 투입 명세로 갑니다.</div>
         <div class="tb" id="gChk"></div></div>
       <div class="sec" id="site-cal"><h3>월 투입 달력 <span class="cnt" id="calN"></span><span class="r"><span class="chipgrp" id="calChips"><span class="chip on" onclick="calMode('all',this)">전체</span><span class="chip" onclick="calMode('site',this)">현장별 색</span></span> <button class="btn sm" onclick="calAdd()">+ 투입 추가</button></span></h3>
@@ -586,7 +586,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.11';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.12';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1095,7 +1095,7 @@ function chkSev(v){var m={1:['차단','x'],2:['주의','w'],3:['정리','']};var
 function renderChk(){if(!el('gChk'))return;var rows=(D.chk||[]).slice();
   el('chkN').textContent=rows.length?rows.length+'건':'';
   var hard=rows.filter(function(r){return +r.severity===1}).length;
-  var ch=[['','전체'],['청구처 미지정','청구처 미지정'],['같은 날 중복 투입','중복 투입'],['퇴근 미등록','퇴근 미등록'],['작업내용 없음','작업내용 없음']];
+  var ch=[['','전체'],['청구처 미지정','청구처 미지정'],['내부 근무가 청구 대상','내부가 매출로'],['같은 날 중복 투입','중복 투입'],['퇴근 미등록','퇴근 미등록'],['작업내용 없음','작업내용 없음']];
   grid('gChk',[{k:'severity',t:'등급',l:1,f:function(v){return chkSev(v)}},
     {k:'issue_kind',t:'점검 항목',l:1},
     {k:'work_date',t:'일자',l:1},
@@ -1108,6 +1108,14 @@ function renderChk(){if(!el('gChk'))return;var rows=(D.chk||[]).slice();
      sort:{k:'severity'},
      onRow:function(r){var sel=el('daysel');if(sel){sel.value=r.work_date;renderSite()}go('site');window.scrollTo(0,0)},
      empty:hard?'':'점검에 걸린 것이 없습니다 — 이번 달 마감을 막는 것은 없습니다'});}
+async function fillPartner(){
+  var n=(D.chk||[]).filter(function(r){return r.issue_kind==='청구처 미지정'}).length;
+  if(!n){toast('자동으로 채울 것이 없습니다','g');return}
+  var ok=await ask('청구처 자동 채우기','청구처가 비어 있는 투입 '+n+'건에, 그 현장에 등록된 매출처를 넣습니다.\n현장 마스터에 매출처가 없는 곳은 건드리지 않습니다.\n마감된 실적도 건드리지 않습니다.',{ok:'채우기'});
+  if(!ok)return;
+  var r=await sb.rpc('ceo_op_fill_partner');
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||'실패','e');return}
+  toast(r.data.filled+'건 채웠습니다','g');loadAll()}
 async function approveRange(){
   var ds=Object.keys(by(D.att,'work_date')).sort();if(!ds.length){toast('투입 기록이 없습니다','e');return}
   var f=await ask('기간 일괄 승인','승인할 시작일을 넣으세요. 임시(draft) 상태 투입이 승인으로 바뀝니다.\n마감과는 다릅니다 — 승인 후에도 마감 전까지는 수정할 수 있습니다.',{input:true,placeholder:'YYYY-MM-DD',value:ds[0],ok:'다음'});
