@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.09</title>
+<title>BVS ERP v1.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -369,7 +369,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.09</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.10</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -583,7 +583,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.09';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.10';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -610,6 +610,7 @@ function incPill(v){var k=String(v||'');
 function etypePill(v){return String(v)==='regular'?'<span class="pill b">정규직</span>':String(v)==='service'?'<span class="pill y">용역</span>':(v?'<span class="pill">'+esc(v)+'</span>':'<span class="dim">–</span>')}
 /* 교육 이수일 유효기간 — 과정별 설정(core.settings edu_validity_months). 0이면 만료 없음.
    산안법 기초·특별교육은 1회성이라 일괄 12개월 경고는 오경보가 된다. */
+function setgNum(k,dflt){var r=(D.setg||[]).filter(function(x){return x.setting_key===k})[0];return r&&r.value_num!=null?+r.value_num:dflt}
 function eduMap(){try{var r=(D.setg||[]).filter(function(x){return x.setting_key==='edu_validity_months'})[0];
   return r&&r.value_text?JSON.parse(r.value_text):{}}catch(e){return {}}}
 function eduMonths(col){var m=eduMap();if(m[col]!=null)return +m[col]||0;
@@ -940,6 +941,7 @@ async function loadAll(){
     ['ctr',sb.from('ceo_contracts').select('*').order('signed_on',{ascending:false}).limit(2000)],
     ['dlog',sb.from('ceo_disclosure_log').select('*').order('disclosed_on',{ascending:false}).limit(500)],
     ['setg',sb.from('ceo_settings').select('*').order('setting_key')],
+    ['pipe',sb.from('ceo_sd_pipeline').select('*')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -1442,17 +1444,24 @@ function renderSales(){
   var p=cur.filter(function(r){return r.trade_side==='purchase'&&r.doc_kind==='tax'});
   var noinv=D.sd.filter(function(r){return r.trade_side==='sales'&&!r.has_invoice&&r.status!=='void'&&r.doc_kind==='tax'}).length;
   var drafts=D.sd.filter(function(r){return r.status==='draft'}).length;
-  var qAll=D.sd.filter(function(d){return d.doc_kind==='quote'&&d.status!=='void'});
-  var chained={};D.sd.forEach(function(d){if(d.prev_doc_no)chained[d.prev_doc_no]=1});
-  var qWon=qAll.filter(function(d){return chained[d.doc_no]}),qOpen=qAll.filter(function(d){return !chained[d.doc_no]});
-  var wonAmt=sum(qWon,'supply_amt'),allAmt=sum(qAll,'supply_amt');
+  var pipe=D.pipe||[];
+  var pOpen=pipe.filter(function(d){return d.pipe_status==='open'});
+  var pWon=pipe.filter(function(d){return d.pipe_status==='won'});
+  var pLost=pipe.filter(function(d){return d.pipe_status==='lost'});
+  var wonAmt=sum(pWon,'supply_amt'),allAmt=sum(pipe,'supply_amt');
   var rate=allAmt?Math.round(wonAmt/allAmt*1000)/10:0;
+  var vd=setgNum('quote_valid_days',30);
+  var soon=pOpen.filter(function(d){return (+d.d_day)<=7}).length;
   el('pipeKpi').innerHTML=kpi(m+' 견적 발행',won(sum(q,'supply_amt')),sum(q,'doc_cnt')+'건')
-    +kpi('미전환 견적',won(sum(qOpen,'supply_amt')),qOpen.length+'건 · 눌러서 그 건만 보기','click',' onclick="sdQuoteOnly()"')
-    +kpi('수주 전환',won(wonAmt),qWon.length+'건 · 다음 문서로 이어짐')
+    +kpi('유효 견적',won(sum(pOpen,'supply_amt')),pOpen.length+'건 · 유효기간 '+vd+'일'+(soon?' · <span class="wn">'+soon+'건 만료임박</span>':''),'click',' onclick="sdQuoteOnly()"')
+    +kpi('수주 전환',won(wonAmt),pWon.length+'건 · 다음 문서로 이어짐')
+    +kpi('실주',pLost.length?'<span class="dim">'+won(sum(pLost,'supply_amt'))+'</span>':'0',pLost.length+'건 · 유효기간 경과·미전환')
     +kpi('수주율',rate+'<small>%</small>','전환액 ÷ 견적 발행액 (누적)');
   el('salesKpi').innerHTML=kpi(m+' 매출 발행',won(sum(s,'supply_amt')),sum(s,'doc_cnt')+'건 · 세금계산서','hl')+kpi(m+' 매입',won(sum(p,'supply_amt')),sum(p,'doc_cnt')+'건')+kpi('문서 총계',D.sd.length+'<small>건</small>','최근 1,500건 조회')+kpi('임시 문서',drafts?'<span class="wn">'+drafts+'</span>':'0','확정 대기')+kpi('계산서 승인번호 없음',noinv?'<span class="wn">'+noinv+'</span>':'0','매출 계산서 중 · 눌러서 그 건만 보기',(noinv?'warn ':'')+'click',' onclick="sdNoInv()"');
-  grid('gSd',[{k:'doc_date',t:'일자',l:1},{k:'doc_no',t:'번호',l:1,cls:'dim'},{k:'doc_kind',t:'종류',l:1,f:pillKind},{k:'trade_side',t:'구분',l:1,f:function(v){return v==='sales'?'매출':'매입'}},{k:'partner_name',t:'거래처',l:1},{k:'title',t:'건명',l:1,f:function(v){return esc((v||'').slice(0,40))}},{k:'line_cnt',t:'라인',f:'int'},{k:'supply_amt',t:'공급가',f:sdAmt,sum:1},{k:'tax_amt',t:'세액',f:sdAmt,sum:1},{k:'total_amt',t:'합계',f:sdAmt,sum:1},{k:'status',t:'상태',l:1,f:pillSt},{k:'has_invoice',t:'계산서',l:1,f:function(v,r){return r.doc_kind==='tax'?(v?'<span class="pill g">발행</span>':'<span class="pill y">미발행</span>'):''}}],
+  grid('gSd',[{k:'doc_date',t:'일자',l:1},{k:'doc_no',t:'번호',l:1,cls:'dim'},{k:'doc_kind',t:'종류',l:1,f:pillKind},{k:'trade_side',t:'구분',l:1,f:function(v){return v==='sales'?'매출':'매입'}},{k:'partner_name',t:'거래처',l:1},{k:'title',t:'건명',l:1,f:function(v){return esc((v||'').slice(0,40))}},{k:'line_cnt',t:'라인',f:'int'},{k:'supply_amt',t:'공급가',f:sdAmt,sum:1},{k:'tax_amt',t:'세액',f:sdAmt,sum:1},{k:'total_amt',t:'합계',f:sdAmt,sum:1},{k:'status',t:'상태',l:1,f:pillSt},{k:'_pipe',t:'견적 상태',l:1,f:function(v,r){if(r.doc_kind!=='quote')return '';var x=(D.pipe||[]).filter(function(z){return z.doc_no===r.doc_no})[0];if(!x)return '';
+      if(x.pipe_status==='won')return '<span class="pill g">수주</span>';
+      if(x.pipe_status==='lost')return '<span class="pill" title="유효기간 '+esc(x.valid_until)+' 경과">실주</span>';
+      return '<span class="pill b" title="만료 '+esc(x.valid_until)+'">유효 D'+((+x.d_day)>=0?'-'+x.d_day:'+'+Math.abs(+x.d_day))+'</span>'}},{k:'has_invoice',t:'계산서',l:1,f:function(v,r){return r.doc_kind==='tax'?(v?'<span class="pill g">발행</span>':'<span class="pill y">미발행</span>'):''}}],
     {rows:D.sd,q:['partner_name','title','doc_no'],qph:'거래처·건명·번호',chips:[{k:'trade_side',vals:[['','전체'],['sales','매출'],['purchase','매입']]},{k:'doc_kind',vals:[['','종류 전체'],['tax','계산서'],['quote','견적'],['order','발주'],['contract','계약']]},{k:'status',vals:[['','상태 전체'],['draft','임시'],['approved','확정'],['settled','정산완료'],['void','취소']]},{k:'_noinv',vals:[['','승인번호 전체'],['1','승인번호 없음']]}],foot:true,onRow:openDoc,page:50});
   edHint('gSd','아래 합계는 지금 표시된 행을 그대로 더한 값입니다 · 회색 금액(견적·취소)은 매출·매입 KPI와 손익에 들어가지 않습니다');
   var t={};D.sdm.forEach(function(r){var k=r.period_ym;t[k]=t[k]||{period_ym:k,sc:0,sa:0,st:0,pc:0,pa:0,qc:0,qa:0};
@@ -1573,7 +1582,7 @@ function newDoc(pid){WL=[{item_name:'',spec:'',qty:1,unit:'EA',unit_price:0}];
     +'<div class="f"><label>거래처</label><select id="w_ptn" class="sel" style="width:100%"><option value="">(선택)</option>'+D.ptn.map(function(p){return '<option value="'+esc(p.partner_id)+'"'+(p.partner_id===pid?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select></div></div>'
     +'<div class="fr"><div class="f"><label>건명</label><input id="w_title" class="in" placeholder="예: P3 라인 셋업 9월분"></div><div class="f"><label>담당 (수신처)</label><input id="w_contact" class="in" placeholder="예: 서미현"></div></div><input type="hidden" id="w_prev">'
     +'<div class="fr"><div class="f"><label>결제조건</label><input id="w_terms" class="in" placeholder="익월 말 현금"></div><div class="f"><label>&nbsp;</label><label class="tiny"><input type="checkbox" id="w_free" onchange="wRenderSum()"> 면세 (세액 0)</label></div></div>'
-    +'<div class="fr"><div class="f"><label>견적 유효일수</label><input id="w_valid" class="in" type="number" value="30" min="1"></div><div class="f"><label>납기 (비우면 협의된 납기)</label><input id="w_deliv" class="in" type="date"></div></div>'
+    +'<div class="fr"><div class="f"><label>견적 유효일수</label><input id="w_valid" class="in" type="number" value="'+setgNum('quote_valid_days',30)+'" min="1"></div><div class="f"><label>납기 (비우면 협의된 납기)</label><input id="w_deliv" class="in" type="date"></div></div>'
     +'<div class="f"><label>문서 비고 — 인쇄물에 그대로 나갑니다 (내부 메모 아님)</label><textarea id="w_note" class="in" rows="2" placeholder="예: 상기 금액은 자재비 포함 · 설치 후 시운전 별도"></textarea></div>'
     +'<div style="display:flex;align-items:center;margin:8px 0 4px;gap:6px"><b class="tiny">품목</b><span class="tiny dim">품명에 등록 품목을 고르면 규격·단위·판매가가 채워집니다</span><button class="btn sm" style="margin-left:auto" onclick="itemForm(true)">품목 등록</button><button class="btn sm" onclick="wAddLine()">+ 줄 추가</button></div>'
     +'<div class="lwrap"><table class="lines"><thead><tr><th class="l">품명</th><th class="l">규격</th><th>수량</th><th class="l">단위</th><th>단가</th><th>금액</th><th>매입가</th><th>마진</th><th></th></tr></thead><tbody id="wline"></tbody></table></div>'
@@ -1606,7 +1615,7 @@ async function wSave(st){var m=el('w_msg');
   if(!lines.length){m.innerHTML='<span class="neg">품목을 한 줄 이상 넣으십시오</span>';return}
   if(!el('w_ptn').value){m.innerHTML='<span class="neg">거래처를 선택하십시오</span>';return}
   m.textContent='저장 중…';
-  var p={doc_kind:el('w_kind').value,doc_date:el('w_date').value||null,partner_id:el('w_ptn').value,title:el('w_title').value||null,contact_name:el('w_contact').value||null,payment_terms:el('w_terms').value||null,tax_free:el('w_free').checked,status:st,trade_side:el('w_side').value,entity:'BVS',lines:lines,memo:el('w_prev').value?'이전 문서 '+el('w_prev').value+'의 새 버전':null,extra:{valid_days:+el('w_valid').value||30,delivery_on:el('w_deliv').value||null,note:el('w_note').value.trim()||null}};
+  var p={doc_kind:el('w_kind').value,doc_date:el('w_date').value||null,partner_id:el('w_ptn').value,title:el('w_title').value||null,contact_name:el('w_contact').value||null,payment_terms:el('w_terms').value||null,tax_free:el('w_free').checked,status:st,trade_side:el('w_side').value,entity:'BVS',lines:lines,memo:el('w_prev').value?'이전 문서 '+el('w_prev').value+'의 새 버전':null,extra:{valid_days:+el('w_valid').value||setgNum('quote_valid_days',30),delivery_on:el('w_deliv').value||null,note:el('w_note').value.trim()||null}};
   var r=await sb.rpc('sd_save_doc',{p:p});
   if(r.error){m.innerHTML='<span class="neg">'+esc(r.error.message)+'</span>';return}
   var d=r.data;if(!d||!d.ok){m.innerHTML='<span class="neg">'+esc(d&&d.error||'실패')+'</span>';return}
