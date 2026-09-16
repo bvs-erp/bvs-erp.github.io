@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.12</title>
+<title>BVS ERP v1.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -369,7 +369,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.12</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.13</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -554,7 +554,10 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     <section class="page" id="p-settle">
       <div class="ph"><h2>채권 · 채무 관리 <span class="tiny dim" style="font-weight:400">(AR / AP 정산 대사)</span></h2><div class="desc">받을 돈과 줄 돈을 계산서 단위로 봅니다</div></div>
       <div class="kpis" id="stKpi"></div>
-      <div class="sec"><h3>거래처별 잔액 <span class="cnt" id="stPtnN"></span><button class="btn sm p" style="margin-left:10px" onclick="stRun()">자동 대사 실행</button><button class="hbtn" onclick="helpSettle()">?</button></h3><div class="tb" id="gStPtn"></div></div>
+      <div class="sec" id="st-cash"><h3>거래처 총액 대조 <span class="cnt" id="pcN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">세금계산서 합계와 통장 합계를 <b>거래처 단위로 통째로</b> 맞춘 표입니다. 건별 대사가 어긋나도 이 차액이 진실입니다 — 상대가 여러 건을 합산해 한 번에 보내면 건별로는 미수로 남지만 총액은 0이 됩니다. <b>받은 차액</b>이 양수면 실제 못 받은 돈, <b>줄 차액</b>이 양수면 실제 안 준 돈입니다. 음수는 계산서 없이 오간 돈이라 증빙을 봐야 합니다.</div>
+        <div class="tb" id="gPcash"></div></div>
+      <div class="sec"><h3>거래처별 잔액 (계산서 건별) <span class="cnt" id="stPtnN"></span><button class="btn sm p" style="margin-left:10px" onclick="stRun()">자동 대사 실행</button><button class="hbtn" onclick="helpSettle()">?</button></h3><div class="tb" id="gStPtn"></div></div>
       <div class="sec"><h3>계산서별 원장 <span class="cnt" id="stLedN"></span></h3><div class="desc" style="margin-bottom:8px">행을 누르면 후보 입출금(같은 거래처·같은 금액)을 보여주고 바로 대사할 수 있습니다. 매입 계산서는 발주서 연결도 여기서.</div><div class="tb" id="gStLed"></div></div>
       <div class="sec"><h3>발주서 현황 <span class="cnt" id="stPoN"></span></h3><div class="desc" style="margin-bottom:8px">계산서가 아직 안 온 발주서는 "미도착". 60일 넘으면 경보.</div><div class="tb" id="gStPo"></div></div>
       <div class="sec"><h3>대사 이력 (최근 500건)</h3><div class="tb" id="gStMatch"></div></div>
@@ -586,7 +589,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.12';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.13';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -946,6 +949,7 @@ async function loadAll(){
     ['setg',sb.from('ceo_settings').select('*').order('setting_key')],
     ['pipe',sb.from('ceo_sd_pipeline').select('*')],
     ['chk',sb.from('ceo_op_check').select('*')],
+    ['pcash',sb.from('ceo_partner_cash').select('*')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -1696,7 +1700,26 @@ function stAct(no){var r=(D.stl||[]).filter(function(x){return x.doc_no===no})[0
   if(r.side==='sales'){var d=(D.sd||[]).filter(function(x){return x.doc_no===no})[0];
     if(d){openDoc(d);return}toast('원 문서가 SD에 없습니다 — 계산서별 원장에서 대사하십시오','e')}
   stOpen(r)}
-function renderSettle(){if(!el('stKpi'))return;
+function pcGap(v){v=+v||0;if(!v)return '<span class="dim">0</span>';
+  return '<span class="'+(v>0?'bad':'dim')+'">'+won(v)+'</span>'}
+function renderPcash(){if(!el('gPcash'))return;
+  var rows=(D.pcash||[]).filter(function(r){return !/비브이에스|BVS/.test(r.partner_name||'')});
+  rows.forEach(function(r){var a=+r.ar_gap||0,b=+r.ap_gap||0;
+    r._mx=Math.max(Math.abs(a),Math.abs(b));
+    r._f = a>0 ? 'ar' : (b>0 ? 'ap' : ((a<0||b<0) ? 'neg' : ''));});
+  rows=rows.filter(function(r){return r._mx>0}).sort(function(a,b){return b._mx-a._mx});
+  el('pcN').textContent=rows.length?rows.length+'곳':'';
+  grid('gPcash',[{k:'partner_name',t:'거래처',l:1,f:function(v,r){return esc(v)+(r.is_related_party?' <span class="stbtn x">특수관계</span>':'')}},
+    {k:'inv_sales',t:'매출 계산서',f:'won',sum:1},
+    {k:'bank_in',t:'통장 입금',f:'won',sum:1},
+    {k:'ar_gap',t:'받을 차액',f:function(v){return pcGap(v)},sum:1},
+    {k:'inv_purchase',t:'매입 계산서',f:'won',sum:1},
+    {k:'bank_out',t:'통장 출금',f:'won',sum:1},
+    {k:'ap_gap',t:'줄 차액',f:function(v){return pcGap(v)},sum:1}],
+    {rows:rows,q:['partner_name'],csv:true,page:30,
+     chips:[{k:'_f',vals:[['','전체'],['ar','못 받은 돈'],['ap','안 준 돈'],['neg','계산서 없는 돈']]}],
+     empty:'계산서와 통장이 거래처별로 전부 맞습니다'});}
+function renderSettle(){renderPcash();if(!el('stKpi'))return;
   var led=D.stl||[],cur=led.filter(function(r){return !r.is_legacy}),ptn=D.stp||[],po=D.po||[],stm=D.stm||[];
   var ar=cur.filter(function(r){return r.side==='sales'}),ap=cur.filter(function(r){return r.side==='purchase'});
   var arBal=sum(ar,'balance_amt'),apBal=sum(ap,'balance_amt');
