@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.07</title>
+<title>BVS ERP v1.08</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -367,7 +367,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.07</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.08</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -578,7 +578,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.07';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.08';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2048,7 +2048,7 @@ function today(){return new Date().toISOString().slice(0,10)}
 function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(function(x){return x.employment_no===emp}),ph=(D.perh||[]).filter(function(x){return x.employment_no===emp}),th=(D.teamh||[]).filter(function(x){return x.employment_no===emp}),tr=(D.trn||[]).filter(function(x){return x.employment_no===emp});
   var inf=function(v){return v==='infinity'||!v?'현재':esc(v)};
   var body=kv([['사번',esc(emp)+' · '+esc(ETYPE[r.employment_type]||r.employment_type)+' · '+(r.resigned_on?'<span class="neg">퇴사 '+esc(r.resigned_on)+'</span>':'재직 (입사 '+esc(r.hired_on)+')')],['연락처',esc(r.phone||'–')+(r.email?' · '+esc(r.email):'')],['주소',esc(r.address||'–')],['비상연락처',esc(r.emergency_contact||'–')],['생년월일',esc(r.birth_ymd||'–')],['혈액형 / 차량',esc(r.blood_type||'–')+' / '+esc(r.vehicle_no||'없음')],['매출처',esc(r.bill_partner_name||'현장 기준')],['출입 자료','SK ID '+esc(r.sk_id||'–')+' · SS ID '+esc(r.ss_id||'–')+' · 배치 '+esc(r.primary_area||'–')+' · 기본교육 '+esc(r.edu_basic||'–')+' <a href="#" onclick="event.preventDefault();drClose();go(\'crew\')">배치표에서 수정</a>']])
-   +'<div class="fr" style="margin-top:10px"><div class="f"><label>주소</label><input id="sf_addr" class="in" value="'+esc(r.address||'')+'"></div><div class="f"><label>비상연락처</label><input id="sf_emg" class="in" value="'+esc(r.emergency_contact||'')+'"></div></div><div class="fr"><div class="f"><label>이메일</label><input id="sf_email" class="in" value="'+esc(r.email||'')+'"></div><div class="f"><label>매출처</label>'+ptnSel('sf_ptn',r.bill_partner_id)+'</div></div><div class="fr"><div class="f"><label>생년월일</label><input id="sf_birth" class="in" type="date" value="'+esc(r.birth_ymd||'')+'"></div><div class="f"><label>고용형태</label><select id="sf_etype" class="sel" style="width:100%">'+Object.keys(ETYPE).map(function(k){return '<option value="'+k+'"'+(r.employment_type===k?' selected':'')+'>'+ETYPE[k]+'</option>'}).join('')+'</select></div></div><button class="btn sm" onclick="staffSaveBasic(\''+esc(emp)+'\')">인적사항 저장</button>';
+   +'<div class="fr" style="margin-top:10px"><div class="f"><label>주소</label><input id="sf_addr" class="in" value="'+esc(r.address||'')+'"></div><div class="f"><label>비상연락처</label><input id="sf_emg" class="in" value="'+esc(r.emergency_contact||'')+'"></div></div><div class="fr"><div class="f"><label>이메일</label><input id="sf_email" class="in" value="'+esc(r.email||'')+'"></div><div class="f"><label>매출처</label>'+ptnSel('sf_ptn',r.bill_partner_id)+'</div></div><div class="fr"><div class="f"><label>생년월일</label><input id="sf_birth" class="in" type="date" value="'+esc(r.birth_ymd||'')+'"></div><div class="f"><label>고용형태</label><select id="sf_etype" class="sel" style="width:100%">'+Object.keys(ETYPE).map(function(k){return '<option value="'+k+'"'+(r.employment_type===k?' selected':'')+'>'+ETYPE[k]+'</option>'}).join('')+'</select></div></div><div class="fr"><div class="f"><label>혈액형</label><input id="sf_blood" class="in" placeholder="A / B / O / AB (+/-)" value="'+esc(r.blood_type||'')+'"></div><div class="f"><label>차량번호</label><input id="sf_veh" class="in" placeholder="비우면 차량 없음" value="'+esc(r.vehicle_no||'')+'"></div></div><div class="tiny dim" style="margin:-2px 0 8px">혈액형은 민감정보입니다. 고객사 안전·출입 제출 목적으로만 쓰고, 개인정보 동의서 별도 동의 항목에 포함해야 합니다.</div><button class="btn sm" onclick="staffSaveBasic(\''+esc(emp)+'\')">인적사항 저장</button>';
   // 단가
   body+='<h4 style="margin:16px 0 6px">단가 이력 <span class="tiny dim">적용일부터 새 단가, 이전 단가는 전날까지</span></h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>방식</th><th>일급</th><th>잔업</th><th>야간</th><th>월급</th><th>팀단가</th><th class="l">메모</th></tr></thead><tbody>'+(rh.length?rh.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td>'+esc(PT[x.payroll_type]||x.payroll_type)+'</td><td>'+won(x.daily_amt)+'</td><td>'+won(x.ot_hourly_amt)+'</td><td>'+won(x.night_hourly_amt)+'</td><td>'+won(x.monthly_amt)+'</td><td>'+(x.team_contract_daily_amt?won(x.team_contract_daily_amt):'<span class="dim">기본</span>')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">단가 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="rt_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>급여 방식</label><select id="rt_pt" class="sel" style="width:100%">'+Object.keys(PT).map(function(k){return '<option value="'+k+'"'+((r.payroll_type||'daily')===k?' selected':'')+'>'+PT[k]+'</option>'}).join('')+'</select></div></div>'
@@ -2076,7 +2076,7 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   drOpen(r.name+' · 인력 마스터',body,'<button class="btn" onclick="drClose()">닫기</button>');
 }
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
-async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value]];
+async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
 async function rateSave(emp){var p={employment_no:emp,valid_from:el('rt_from').value,payroll_type:el('rt_pt').value,daily_amt:el('rt_d').value,ot_hourly_amt:el('rt_ot').value,night_hourly_amt:el('rt_nt').value,monthly_amt:el('rt_m').value,team_contract_daily_amt:el('rt_tc').value,memo:el('rt_memo').value};
   if(!p.valid_from){toast('적용일을 넣으세요','e');return}if(p.payroll_type==='daily'&&!(+p.daily_amt)){toast('일급을 넣으세요','e');return}
