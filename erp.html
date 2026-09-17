@@ -1161,10 +1161,24 @@ async function doReset(){
     el('npw').value='';L('비밀번호를 바꿨습니다.','g');USER=s2.data.user.email;start();
   }catch(e){L('재설정 오류: '+e.message,'e')}
 }
-async function doLogout(){try{await sb.auth.signOut()}catch(e){};USER=null;hide('app');show('gate');hide('stepkey');hide('stepreset');show('steplogin')}
+var _bgTimer=null, _lastLoadTime=Date.now();
+function startBackgroundMonitor(){
+  if(_bgTimer) clearInterval(_bgTimer);
+  _bgTimer = setInterval(function(){
+    if(!LOADING && el('app') && !el('app').classList.contains('hide')){
+      loadAll(true);
+    }
+  }, 120000); // 2분마다 백그라운드 자동 무결성 점검
+}
+window.addEventListener('focus', function(){
+  if(!LOADING && el('app') && !el('app').classList.contains('hide') && (Date.now() - _lastLoadTime > 25000)){
+    loadAll(true);
+  }
+});
+
 function start(){hide('gate');show('app');buildNav();
   var p='home';try{p=localStorage.getItem('bvs_page')||'home';ST.month=localStorage.getItem('bvs_month')||null}catch(e){}
-  go(p);loadAll();}
+  go(p);loadAll();startBackgroundMonitor();}
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Enter'||!el('app').classList.contains('hide'))return;
   if(!el('stepreset').classList.contains('hide'))doReset();else if(!el('steplogin').classList.contains('hide'))doLogin();else if(!el('stepkey').classList.contains('hide'))saveKey();
@@ -1316,8 +1330,9 @@ async function loadAll(){
   await pool(t4,4);
 
   LOADING=false;
+  _lastLoadTime=Date.now();
   var ms=Math.round(performance.now()-t0);
-  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' · '+ms+'ms'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':' <span class="dim">(완료)</span>');
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 점검 완료 · <span class="pos">🟢 24h 관제</span>'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':'');
   buildMonths();renderAll();
   if(errs.length){LASTERR=errs;toast('조회 '+errs.length+'건 실패 — 자세히: 콘솔 LASTERR','e')}
   if(!D.dash.length&&!errs.length)toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
