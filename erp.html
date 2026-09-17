@@ -1098,6 +1098,15 @@ function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.in
 
 /* ═══════════ 홈 ═══════════ */
 var HOME_DAY = null;
+function addDays(ymd, n){
+  if(!ymd) return ymd;
+  var p = ymd.split('-');
+  var d = new Date(+p[0], +p[1]-1, +p[2] + n);
+  var yr = d.getFullYear();
+  var mo = String(d.getMonth()+1).padStart(2,'0');
+  var dy = String(d.getDate()).padStart(2,'0');
+  return yr + '-' + mo + '-' + dy;
+}
 function getSysToday(){
   var now = new Date();
   var yr = now.getFullYear();
@@ -2229,15 +2238,19 @@ async function esgApply(emp){
   if(row)esgPreview(row);
 }
 async function esgPreview(r){
-  ESG.emp=r.employment_no;
-  var isFixed = (r.person_name==='최성완' || r.is_fixed || (r.tech_grade===1 && r.pkg_amt>0 && r.position_title==='없음' && r.person_name!=='박준서' && r.person_name!=='원동진' && r.person_name!=='이경준'));
+  if(typeof r === 'string'){
+    var empNo = r;
+    r = (D.esgt || []).filter(function(x){ return x.employment_no === empNo; })[0] || { employment_no: empNo };
+  }
+  ESG.emp = r.employment_no;
+  var isFixed = (r.person_name==='최성완' || r.is_fixed || (r.tech_grade===1 && r.pkg_amt>0 && r.position_title==='없음' && r.person_name!=='박준서' && r.person_name!=='원동진' && r.person_name!=='이경준') || r.employment_no==='P000142-01');
   var code = isFixed ? 'BVS-F-32-01-FIXED' : 'BVS-F-32-01';
-  var res=await sb.rpc('ceo_doc_preview',{p_employment_no:r.employment_no, p_doc_code:code});
+  var res = await sb.rpc('ceo_doc_preview', {p_employment_no: r.employment_no, p_doc_code: code});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
-  var v=res.data.vars||{};
-  var warn='';
-  if(!r.ready_person)warn+='<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
-  drOpen('계약서 미리보기 · '+(v.name||r.person_name)+(isFixed?' (고정급·별지2 제외)':''),
+  var v = res.data.vars||{};
+  var warn = '';
+  if(!r.ready_person) warn += '<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
+  drOpen('계약서 미리보기 · '+(v.name||r.person_name||r.employment_no)+(isFixed?' (고정급·별지2 제외)':''),
     warn+(isFixed?'':esgAdjBar(r,v))
     +kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',isFixed?'고정급 대상 (기술등급 비적용)':(v.grade+' 등급 · '+esc(v.grade_name||'')+' <span class="tierbadge">'+esc(v.grade_tier||'')+'</span>')],['직책',v.position],['월 지급총액','<b>'+v.amt_total+'</b>'],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
     +'<div class="docpaper" style="margin-top:12px">'+res.data.html+'</div>',
@@ -2492,25 +2505,133 @@ function helpStaff(){help('인력 마스터 — 쓰는 법',
  +'<p>월급제의 월급은 이 화면이 아니라 아래 <b>급여 기준표</b>에서 등급·직책·수당으로 계산됩니다.</p>'
  +'<p>주민등록번호와 계좌번호는 화면에 두지 않습니다. 시트→DB 통로로만 들어가고 세무사 제출 인쇄·CSV에만 나옵니다.</p>')}
 function staffConsOnly(){go('hr');setTimeout(function(){gSetChip('gStaff','_cons','1')},80)}
-function renderStaff(){if(!el('gStaff'))return;var st=(D.staff||[]).slice();var cs={};(D.cons||[]).forEach(function(c){cs[c.employment_no]=1});
-  var ros={};(D.roster||[]).forEach(function(x){ros[x.employment_no]=x});
-  st.forEach(function(r){r._st=r.resigned_on?'out':'in';r._rate=r.payroll_type==='monthly'?(+r.monthly_amt||0):(+r.daily_amt||0);r._cons=cs[r.employment_no]?'1':'0';
-    var x=ros[r.employment_no]||{};r._rank=x.rank_title||'';r._grade=x.job_grade||r.job_title||'';r._legacy=!!x.rank_legacy});
-  var act=st.filter(function(r){return !r.resigned_on});el('staffN').innerHTML=act.length+'명 재직'+(act.filter(function(r){return !r.rate_from}).length?' · <span class="wn">단가 없음 '+act.filter(function(r){return !r.rate_from}).length+'명</span>':'');
-  grid('gStaff',[{k:'name',t:'이름',l:1,f:function(v,r){return '<b>'+esc(v)+'</b>'+(r.payroll_type==='monthly'?' <span class="pill tiny">월급</span>':'')+(r.contract_mode==='full'?' <span class="pill y tiny">도급</span>':'')+(+r.team_size?' <span class="pill b tiny">팀장 '+r.team_size+'</span>':'')+(r.payroll_excluded?' <span class="pill tiny">ERP제외</span>':'')}},
-    {k:'employment_no',t:'사번',l:1,cls:'dim tiny'},{k:'employment_type',t:'고용',l:1,f:function(v){return etypePill(v)}},
-    {k:'_grade',t:'직급',l:1,f:function(v){return v?'<span class="pill">'+esc(v)+'</span>':'<span class="dim">–</span>'},e:{field:'job_title',ph:'프로 (직급은 전원 프로, 대표만 예외)'}},
-    {k:'_rank',t:'직책',l:1,e:{field:'_rank',ph:'파트리드·팀리드·그룹리드·총괄리드 (비우면 직책 없음)',apply:function(r,v){r._rank=v}},
-      f:function(v,r){if(!v)return '<span class="dim">–</span>';
-        return (r._legacy&&['파트리드','팀리드','그룹리드','총괄리드'].indexOf(v)<0)?'<span class="pill y" title="구 직책 체계 — 리드 4단계로 바꾸십시오">'+esc(v)+'</span>':'<span class="pill b">'+esc(v)+'</span>'}},
-    {k:'income_type',t:'소득',l:1,f:function(v){return v?'<span class="pill">'+esc(INC[v]||v)+'</span>':'<span class="wn">미설정</span>'}},
-    {k:'_rate',t:'단가',f:function(v,r){return r.rate_from?(r.payroll_type==='monthly'?'월 '+won(r.monthly_amt):won(r.daily_amt)+'/일'):'<span class="wn">없음</span>'}},{k:'ot_hourly_amt',t:'잔업시급',f:function(v,r){return r.rate_from?won(v):'–'}},{k:'team_contract_daily_amt',t:'팀단가',f:function(v){return v?won(v):'<span class="dim">기본</span>'}},{k:'rate_from',t:'적용일',l:1,cls:'tiny'},
-    {k:'leader_name',t:'팀장',l:1,f:function(v,r){return v?esc(v)+(r.contract_mode==='full'?' <span class="pill y tiny">도급</span>':''):'<span class="dim">–</span>'}},{k:'bill_partner_name',t:'매출처',l:1,f:function(v){return v?esc(v):'<span class="dim">현장 기준</span>'}},
-    {k:'phone',t:'연락처',l:1,e:{field:'phone',ph:'010-0000-0000'}},{k:'blood_type',t:'혈액형',l:1,e:{field:'blood_type',ph:'A / B / O / AB (+/-)'}},{k:'vehicle_no',t:'차량번호',l:1,e:{field:'vehicle_no',ph:'비우면 차량 없음'}},
-    {k:'hired_on',t:'입사',l:1,e:{field:'hired_on',ph:'YYYY-MM-DD'}},{k:'resigned_on',t:'퇴사',l:1,f:function(v){return v?'<span class="neg">'+esc(v)+'</span>':''},e:{field:'resigned_on',ph:'YYYY-MM-DD (비우면 재직)'}},
-    {k:'md_this_month',t:'이달공수',f:'num'},{k:'last_work_date',t:'최근투입',l:1,cls:'tiny'},{k:'training_cnt',t:'교육',f:function(v,r){return +v?v+'회 <span class="tiny dim">'+esc(r.last_training_on||'')+'</span>':'<span class="dim">0</span>'}},{k:'sk_id',t:'SK ID',l:1,cls:'tiny dim'}],
-    {rows:st,q:['name','employment_no','phone','job_title','leader_name'],qph:'이름·사번·연락처',chips:[{k:'_st',vals:[['in','재직'],['out','퇴사'],['','전체']]},{k:'employment_type',vals:[['','고용 전체'],['regular','정규직'],['service','용역']]},{k:'_cons',vals:[['','계약 전체'],['1','계약·동의 미비']]}],page:100,sort:{k:'name',d:1},onRow:staffOpen,save:staffSave,afterSave:function(){loadAll()}});
-  (function(){var grp=el('gStaff').querySelector('.chipgrp[data-k="_st"]');if(grp&&!G.gStaff._init){G.gStaff._init=1;G.gStaff.chip._st='in';Array.prototype.forEach.call(grp.children,function(c){c.classList.toggle('on',c.textContent==='재직')});gRender('gStaff')}})();
+function renderStaff(){
+  if(!el('gStaff')) return;
+  var st = (D.staff || []).slice();
+  var cs = {}; (D.cons || []).forEach(function(c){ cs[c.employment_no] = 1; });
+  var ros = {}; (D.roster || []).forEach(function(x){ ros[x.employment_no] = x; });
+  var payMap = {}; (D.payp || []).forEach(function(p){ payMap[p.employment_no] = p; });
+
+  st.forEach(function(r){
+    r._st = r.resigned_on ? 'out' : 'in';
+    r._cons = cs[r.employment_no] ? '1' : '0';
+    var x = ros[r.employment_no] || {};
+    r._rank = x.rank_title || '';
+    r._grade = x.job_grade || r.job_title || '';
+    r._legacy = !!x.rank_legacy;
+
+    var isReg = (r.employment_type === 'regular' || r.payroll_type === 'monthly');
+    var pp = payMap[r.employment_no] || {};
+    var ord = pp.ordinary_amt != null ? (+pp.ordinary_amt) : (r.payroll_type === 'monthly' ? (+r.monthly_amt || 0) : 0);
+
+    if (isReg && ord > 0) {
+      r._is_regular = true;
+      r._ordinary_amt = ord;
+      r._calc_hourly = Math.round(ord / 209);
+      r._calc_ot = Math.round(r._calc_hourly * 1.5);
+      r._calc_daily = r._calc_hourly * 8;
+    } else {
+      r._is_regular = false;
+      r._calc_hourly = +r.ot_hourly_amt || 0;
+      r._calc_ot = +r.ot_hourly_amt || 0;
+      r._calc_daily = +r.daily_amt || 0;
+    }
+
+    r._rate = r.payroll_type === 'monthly' ? (+r.monthly_amt || 0) : (+r.daily_amt || 0);
+
+    // 대표, 리드, 정규직, 용역직 순 경영 위계 정렬
+    var isCeo = (r.employment_no === 'P000001-01' || r.name === '황병승' || /대표/.test(r.job_title||'') || /대표/.test(r._rank||''));
+    var isLead = (!isCeo && (/리드|팀장|총괄/.test(r._rank||'') || /리드|팀장|총괄/.test(r.job_title||'')));
+    var isContract = (r.contract_mode === 'full' || +r.team_size > 0);
+
+    var rank = 50;
+    if (isCeo) rank = 10;
+    else if (isLead && isReg) rank = 20;
+    else if (isReg) rank = 30;
+    else if (isContract || isLead) rank = 40;
+    else rank = 50;
+
+    if (r.resigned_on) rank += 100;
+    r._sortRank = rank;
+    r._sortKey = String(rank).padStart(3, '0') + '_' + (r.hired_on || '9999-99-99') + '_' + r.name;
+  });
+
+  var act = st.filter(function(r){ return !r.resigned_on; });
+  el('staffN').innerHTML = act.length + '명 재직' + (act.filter(function(r){ return !r.rate_from; }).length ? ' · <span class="wn">단가 없음 ' + act.filter(function(r){ return !r.rate_from; }).length + '명</span>' : '');
+
+  grid('gStaff', [
+    {k:'name', t:'이름', l:1, f:function(v,r){
+      return '<b>'+esc(v)+'</b>'
+        + (r.employment_no==='P000001-01' || r.name==='황병승' ? ' <span class="pill" style="background:var(--ac);color:#fff;font-weight:700">대표</span>' : '')
+        + (r.payroll_type==='monthly' || r._is_regular ? ' <span class="pill tiny">월급</span>' : '')
+        + (r.contract_mode==='full' ? ' <span class="pill y tiny">도급</span>' : '')
+        + (+r.team_size ? ' <span class="pill b tiny">팀장 '+r.team_size+'</span>' : '')
+        + (r.payroll_excluded ? ' <span class="pill tiny">ERP제외</span>' : '');
+    }},
+    {k:'employment_no', t:'사번', l:1, cls:'dim tiny'},
+    {k:'employment_type', t:'고용', l:1, f:function(v){ return etypePill(v); }},
+    {k:'_grade', t:'직급', l:1, f:function(v){ return v ? '<span class="pill">'+esc(v)+'</span>' : '<span class="dim">–</span>'; }, e:{field:'job_title', ph:'프로 (직급은 전원 프로, 대표만 예외)'}},
+    {k:'_rank', t:'직책', l:1, e:{field:'_rank', ph:'파트리드·팀리드·그룹리드·총괄리드 (비우면 직책 없음)', apply:function(r,v){ r._rank = v; }},
+      f:function(v,r){
+        if(!v) return '<span class="dim">–</span>';
+        return (r._legacy && ['파트리드','팀리드','그룹리드','총괄리드'].indexOf(v)<0) ? '<span class="pill y" title="구 직책 체계 — 리드 4단계로 바꾸십시오">'+esc(v)+'</span>' : '<span class="pill b">'+esc(v)+'</span>';
+      }},
+    {k:'income_type', t:'소득', l:1, f:function(v){ return v ? '<span class="pill">'+esc(INC[v]||v)+'</span>' : '<span class="wn">미설정</span>'; }},
+    {k:'_rate', t:'단가', f:function(v,r){
+      if(!r.rate_from && !r._is_regular) return '<span class="wn">없음</span>';
+      if(r.payroll_type==='monthly' || r._is_regular){
+        var mWon = won(r.monthly_amt || r._ordinary_amt);
+        var dWon = r._calc_daily ? won(r._calc_daily) : '';
+        return '<b>월 ' + mWon + '</b>' + (dWon ? '<br><span class="tiny dim" title="통상시급×8h 환산일당">일 ' + dWon + '</span>' : '');
+      }
+      return '<b>' + won(r.daily_amt) + '</b>/일';
+    }},
+    {k:'ot_hourly_amt', t:'시급 / 잔업', f:function(v,r){
+      if(r._is_regular && r._calc_hourly){
+        return '<b>' + won(r._calc_hourly) + '</b><br><span class="tiny dim" title="법정 연장시급 1.5배">연장 ' + won(r._calc_ot) + '</span>';
+      }
+      return r.rate_from ? won(v) : '–';
+    }},
+    {k:'team_contract_daily_amt', t:'팀단가', f:function(v){ return v ? won(v) : '<span class="dim">기본</span>'; }},
+    {k:'rate_from', t:'적용일', l:1, cls:'tiny'},
+    {k:'leader_name', t:'팀장', l:1, f:function(v,r){ return v ? esc(v)+(r.contract_mode==='full'?' <span class="pill y tiny">도급</span>':'') : '<span class="dim">–</span>'; }},
+    {k:'bill_partner_name', t:'매출처', l:1, f:function(v){ return v ? esc(v) : '<span class="dim">현장 기준</span>'; }},
+    {k:'phone', t:'연락처', l:1, e:{field:'phone', ph:'010-0000-0000'}},
+    {k:'blood_type', t:'혈액형', l:1, e:{field:'blood_type', ph:'A / B / O / AB (+/-)'}},
+    {k:'vehicle_no', t:'차량번호', l:1, e:{field:'vehicle_no', ph:'비우면 차량 없음'}},
+    {k:'hired_on', t:'입사', l:1, e:{field:'hired_on', ph:'YYYY-MM-DD'}},
+    {k:'resigned_on', t:'퇴사', l:1, f:function(v){ return v ? '<span class="neg">'+esc(v)+'</span>' : ''; }, e:{field:'resigned_on', ph:'YYYY-MM-DD (비우면 재직)'}},
+    {k:'md_this_month', t:'이달공수', f:'num'},
+    {k:'last_work_date', t:'최근투입', l:1, cls:'tiny'},
+    {k:'training_cnt', t:'교육', f:function(v,r){ return +v ? v+'회 <span class="tiny dim">'+esc(r.last_training_on||'')+'</span>' : '<span class="dim">0</span>'; }},
+    {k:'sk_id', t:'SK ID', l:1, cls:'tiny dim'}
+  ], {
+    rows: st,
+    q: ['name','employment_no','phone','job_title','leader_name'],
+    qph: '이름·사번·연락처',
+    chips: [
+      {k:'_st', vals:[['in','재직'],['out','퇴사'],['','전체']]},
+      {k:'employment_type', vals:[['','고용 전체'],['regular','정규직'],['service','용역']]},
+      {k:'_cons', vals:[['','계약 전체'],['1','계약·동의 미비']]}
+    ],
+    page: 100,
+    sort: { k: '_sortKey', d: 1 },
+    onRow: staffOpen,
+    save: staffSave,
+    afterSave: function(){ loadAll(); }
+  });
+
+  (function(){
+    var grp = el('gStaff').querySelector('.chipgrp[data-k="_st"]');
+    if(grp && !G.gStaff._init){
+      G.gStaff._init = 1;
+      G.gStaff.chip._st = 'in';
+      Array.prototype.forEach.call(grp.children, function(c){
+        c.classList.toggle('on', c.textContent === '재직');
+      });
+      gRender('gStaff');
+    }
+  })();
   edHint('gStaff');
 }
 function staffSel(id,cur,excl){var opts=(D.staff||[]).filter(function(s){return !s.resigned_on&&s.employment_no!==excl}).map(function(s){return '<option value="'+esc(s.employment_no)+'"'+(s.employment_no===cur?' selected':'')+'>'+esc(s.name)+' ('+esc(s.employment_no)+')</option>'}).join('');return '<select id="'+id+'" class="sel" style="width:100%"><option value="">(없음)</option>'+opts+'</select>'}
@@ -2647,13 +2768,13 @@ var CREW_ED={
 
 /* ═══════════ 금일 투입 지도 ═══════════ */
 var PLACES=[
-  {c:'HS',n:'삼성화성',sub:'화성',x:140,y:150},
-  {c:'TE',n:'TES용인',sub:'용인',x:262,y:118},
-  {c:'PT',n:'삼성평택',sub:'평택',x:168,y:268},
-  {c:'IC',n:'SK이천',sub:'이천',x:412,y:96},
   {c:'BV',n:'BVS이천',sub:'본사',x:338,y:206,hq:true},
-  {c:'UO',n:'우주이천',sub:'이천',x:452,y:190},
+  {c:'IC',n:'SK이천',sub:'이천',x:412,y:96},
   {c:'CJ',n:'SK청주',sub:'청주',x:392,y:338},
+  {c:'TE',n:'TES용인',sub:'용인',x:262,y:118},
+  {c:'UO',n:'우주이천',sub:'이천',x:452,y:190},
+  {c:'HS',n:'삼성화성',sub:'화성',x:140,y:150},
+  {c:'PT',n:'삼성평택',sub:'평택',x:168,y:268},
   {c:'ED',n:'교육',sub:'',x:590,y:300,side:true},
   {c:'OFF',n:'휴무·병가',sub:'',x:590,y:370,side:true}
 ];
@@ -2682,9 +2803,7 @@ function renderMap(day, rows){
 
   // 내일(다음날) 배치 계획 또는 사전 등록 확인
   var sysToday = getSysToday();
-  var dNext = new Date((day || sysToday) + 'T00:00:00');
-  dNext.setDate(dNext.getDate() + 1);
-  var nextYmd = dNext.toISOString().slice(0, 10);
+  var nextYmd = addDays(day || sysToday, 1);
   
   var attNext = (D.att || []).filter(function(r){ return r.work_date === nextYmd; });
   var planNext = (D.plans || []).filter(function(r){ return r.plan_date === nextYmd; });
