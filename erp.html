@@ -1952,12 +1952,19 @@ function renderSdMon(){
     }).join('');
   }
 
-  // 2. 당월 세금계산서 실적 문서 추출
+  // 2. 당월 세금계산서 실적 문서 추출 (견적서는 매출 실적 랭킹에서 엄격 배제)
   var curDocs = (D.sd||[]).filter(function(d){
     return d.period_ym === curYm && d.status !== 'void';
   });
 
-  var salesDocs = curDocs.filter(function(d){ return d.trade_side==='sales' && d.doc_kind==='tax'; });
+  // 당월 견적서 (매출 실적과 분리 집계)
+  var quoteDocs = curDocs.filter(function(d){ return d.trade_side==='sales' && d.doc_kind==='quote'; });
+  var totalQuoteSupply = sum(quoteDocs, 'supply_amt');
+
+  // 당월 세금계산서 실적 (견적서 배제, 홈택스 실발행 승인번호 또는 확정 계산서만 엄격 집계)
+  var salesDocs = curDocs.filter(function(d){
+    return d.trade_side==='sales' && d.doc_kind==='tax' && (d.has_invoice || d.approval_no);
+  });
   var purDocs = curDocs.filter(function(d){ return d.trade_side==='purchase' && d.doc_kind==='tax'; });
 
   var totalSalesSupply = sum(salesDocs, 'supply_amt');
@@ -2021,16 +2028,17 @@ function renderSdMon(){
   if(el('sdMonAiBrief')){
     var topS = sRows[0] ? '최대 매출처는 <b>['+esc(sRows[0].partner_name)+']</b> ('+won(sRows[0].supply_amt)+', 당월 매출의 '+sRows[0].share+'% 집중)' : '당월 발행된 매출이 없습니다';
     var topP = pRows[0] ? '최대 매입처는 <b>['+esc(pRows[0].partner_name)+']</b> ('+won(pRows[0].supply_amt)+', 당월 매입의 '+pRows[0].share+'% 점유)' : '당월 등록된 매입이 없습니다';
+    var qNote = quoteDocs.length ? ' · <span style="color:var(--tx2)">진행 견적 <b>'+quoteDocs.length+'건</b> ('+won(totalQuoteSupply)+')</span>' : '';
     el('sdMonAiBrief').innerHTML =
       '<div style="display:flex;align-items:flex-start;gap:10px">'
       + '<span style="font-size:18px">🤖</span>'
       + '<div>'
       + '<div style="font-weight:700;color:var(--tx);margin-bottom:3px">2026 AI 수석 비서 브리핑 · '+curYm+' 귀속 실적 진단</div>'
       + '<div style="color:var(--tx2);font-size:12.5px">'
-      + curYm+' 총 매출은 <b>'+won(totalSalesSupply)+'</b> ('+sRows.length+'개사), 매입 원가는 <b>'+won(totalPurSupply)+'</b> ('+pRows.length+'개사)로 '
+      + curYm+' 국세청 확정 매출은 <b>'+won(totalSalesSupply)+'</b> ('+sRows.length+'개사), 매입 원가는 <b>'+won(totalPurSupply)+'</b> ('+pRows.length+'개사)로 '
       + '<b>'+(grossMargin>=0 ? '<span class="pos">매출총이익 '+won(grossMargin)+' (마진율 '+marginRate+'%)</span>' : '<span class="neg">적자 '+won(Math.abs(grossMargin))+'</span>')+'</b>을 달성했습니다. '
-      + topS+'이며, '+topP+'입니다. '
-      + '<span class="dim">행을 클릭하면 해당 거래처의 세부 영업·계산서 원장으로 즉시 이동합니다.</span>'
+      + topS+'이며, '+topP+'입니다.' + qNote
+      + '<br><span class="dim">※ 견적서(에스와이이엔씨 등)는 매출 실적에 합산되지 않으며 수주 파이프라인으로 별도 관리됩니다. 행 클릭 시 세부 원장으로 이동합니다.</span>'
       + '</div>'
       + '</div>'
       + '</div>';
