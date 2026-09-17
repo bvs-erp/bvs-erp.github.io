@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.15</title>
+<title>BVS ERP v1.16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -352,6 +352,11 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .docpaper img.sg{max-height:44px;vertical-align:middle}
 .docpaper .sgd{display:block;font-size:11px;color:var(--tx3)}
 .docpaper .sgbox{display:inline-block;min-width:76px;border-bottom:1px dashed var(--tx3);color:var(--tx3);font-size:11px;text-align:center}
+.ladder{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.ladder th,.ladder td{border-bottom:1px solid var(--ln);padding:6px 6px;text-align:left;vertical-align:top}
+.ladder th{color:var(--tx3);font-weight:500;font-size:11.5px;white-space:nowrap}
+.ladder td.c{text-align:center}.ladder td.r{text-align:right;font-variant-numeric:tabular-nums}
+.ladder tr.me{background:var(--ac2)}.ladder tr.me td{font-weight:700;color:var(--ac)}
 </style>
 </head>
 <body>
@@ -389,7 +394,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.15</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.16</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -516,6 +521,10 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="tb" id="gEsgTodo"></div>
         <div style="height:10px"></div>
         <div class="tb" id="gEsg"></div></div>
+      <div class="sec" id="hr-grade"><h3>기술등급 · 승급 심사 <span class="cnt" id="grdN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">등급 정본은 취업규칙 별표 2이고, ERP·계약서 별지 2·현장앱이 전부 <b>같은 표 하나</b>(hr.tech_grades)를 봅니다. 판정 기준은 근속연수가 아니라 <b>작업일보에 실제로 찍힌 현장 투입일</b>입니다. 등급 조정으로 낮아진 사람은 그 등급의 투입일을 보유한 것으로 봅니다(제43조의2 제6항).<br><b>「심사 대상」이 뜬 사람이 신청하면 회사는 거절할 수 없습니다</b>(제43조의2 제3항). 승급하지 않으려면 사유와 보완 과제를 서면으로 통지해야 하고, 사유 없는 불승급은 효력이 없습니다(제7항).</div>
+        <div class="kpis" id="grdKpi"></div>
+        <div class="tb" id="gGrade"></div></div>
       <div class="sec"><h3>수당 마스터</h3><div class="tb" id="gAlw"></div></div>
       <div class="sec"><h3>펌프실 수량제 (일 단위 MAX 보전)</h3><div class="tb" id="gPump"></div></div>
       <div class="sec"><h3>기준값 설정 <span class="cnt" id="setgN"></span></h3>
@@ -617,8 +626,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <script>
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
-var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.15';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
+var APPVER='1.16';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -982,6 +991,8 @@ async function loadAll(){
     ['bunm',sb.from('ceo_bank_unmatched').select('*')],
     ['esg',sb.from('ceo_esign').select('*').order('issued_at',{ascending:false})],
     ['esgt',sb.from('ceo_esign_todo').select('*').order('hired_on')],
+    ['grd',sb.from('ceo_grade_eligible').select('*')],
+    ['tgr',sb.from('my_tech_grades').select('*').order('grade')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -2145,7 +2156,60 @@ function renderEsign(){
      empty:'발행된 계약서가 없습니다 — 위 표에서 사람을 눌러 미리보기 후 발행하십시오'});
 }
 
-function renderHr(){renderAcct();renderEsign();
+
+/* ═══════════ 기술등급 · 승급 심사 ═══════════ */
+function grdJudge(v){var m={'심사 대상':['심사 대상','w'],'체류기간 미충족':['체류기간',''],'투입일 부족':['투입일',''],'최고등급':['최고등급','']};
+  var a=m[v]||[v,''];return '<span class="stbtn '+a[1]+'">'+a[0]+'</span>'}
+function grdOpen(r){
+  var lad=(D.tgr||[]).map(function(t){
+    return '<tr'+(t.grade===r.grade?' class="me"':'')+'><td class="c">'+t.grade+'</td><td>'+esc(t.grade_name)+'</td>'
+      +'<td class="r">'+won(t.monthly_amt)+'</td><td class="c">'+(t.min_months?t.min_months+'개월':'—')+'</td>'
+      +'<td class="r">'+(+t.min_days).toLocaleString('ko-KR')+'</td>'
+      +'<td class="tiny">'+esc(t.req_solo||'')+'</td><td class="tiny">'+esc(t.req_guide||'')+'</td></tr>'}).join('');
+  var nx=(D.tgr||[]).filter(function(t){return t.grade===r.next_grade})[0]||{};
+  var cu=(D.tgr||[]).filter(function(t){return t.grade===r.grade})[0]||{};
+  var need=Math.max((+r.next_min_days||0)-(+r.deemed_days||0),0);
+  var body=kv([['현재 등급',r.grade+'등급 · '+esc(cu.grade_name||'')+' · '+won(r.monthly_amt)],
+    ['등급 부여일',r.granted_on],
+    ['인정 누적일',(+r.total_days).toLocaleString('ko-KR')+'일 <span class="dim tiny">(간주 '+(+r.deemed_days).toLocaleString('ko-KR')+' + 부여 후 '+(+r.days_after).toLocaleString('ko-KR')+')</span>'],
+    ['DB 실제 투입일',(+r.db_days).toLocaleString('ko-KR')+'일 <span class="dim tiny">2026-06 이전 기록 없음</span>'],
+    ['다음 등급',r.next_grade?(r.next_grade+'등급 · '+esc(nx.grade_name||'')+' · '+won(r.next_amt)+' <span class="pos">(+'+won(r.amt_up)+')</span>'):'<span class="dim">최고 등급</span>'],
+    ['체류기간 요건',r.next_grade?(r.next_min_months+'개월 → '+r.stay_ok_on+((+r.stay_left_days||0)>0?' <span class="wn">('+r.stay_left_days+'일 남음)</span>':' <span class="pos">(충족)</span>')):'—'],
+    ['투입일 요건',r.next_grade?((+r.next_min_days).toLocaleString('ko-KR')+'일 · 부여 후 '+need.toLocaleString('ko-KR')+'일 필요 → 현재 '+(+r.days_after).toLocaleString('ko-KR')+'일'+((+r.short_days||0)>0?' <span class="wn">('+(+r.short_days).toLocaleString('ko-KR')+'일 부족)</span>':' <span class="pos">(충족)</span>')):'—'],
+    ['판정',grdJudge(r.judge)]]);
+  if(r.next_grade)body+='<div class="hlp" style="margin-top:12px"><b>'+r.next_grade+'등급 실증 심사 항목</b><br>출입·자격 — '+esc(nx.req_access||'—')+'<br>단독 수행 — '+esc(nx.req_solo||'—')+'<br>지도·안전 — '+esc(nx.req_guide||'—')+'</div>';
+  body+='<h4 style="margin:16px 0 6px;font-size:14px">등급 사다리</h4><table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>체류</th><th>투입일</th><th>단독 수행 능력</th><th>지도 · 안전</th></tr>'+lad+'</table>';
+  drOpen(r.person_name+' · 기술등급', body, '<button class="btn" onclick="drClose()">닫기</button>');
+}
+function renderGrade(){
+  if(!el('gGrade'))return;
+  var rows=(D.grd||[]).slice();
+  rows.sort(function(a,b){return (b.grade-a.grade)||String(a.person_name).localeCompare(String(b.person_name),'ko')});
+  var elig=rows.filter(function(r){return r.judge==='심사 대상'});
+  var soon=rows.filter(function(r){return r.judge!=='심사 대상'&&r.judge!=='최고등급'&&(+r.stay_left_days||0)<=90});
+  var cost=elig.reduce(function(a,r){return a+(+r.amt_up||0)},0);
+  el('grdN').textContent=rows.length?rows.length+'명':'';
+  el('grdKpi').innerHTML=kpi('심사 대상',elig.length?'<span class="wn">'+elig.length+'</span>':'0','명 · 신청 시 심사 의무',(elig.length?'warn':''))
+    +kpi('90일 내 체류 충족',soon.length+'','명')
+    +kpi('승급 시 월 증가',cost?won(cost):'0','심사 대상 전원 승급 가정')
+    +kpi('연 환산',cost?won(cost*12):'0','');
+  grid('gGrade',[{k:'person_name',t:'이름',l:1},
+    {k:'grade',t:'등급',f:function(v,r){return v+'<span class="tiny dim"> '+esc(r.grade_name||'')+'</span>'}},
+    {k:'monthly_amt',t:'현 수당',f:'won'},
+    {k:'granted_on',t:'부여일',l:1},
+    {k:'total_days',t:'인정 누적일',f:function(v,r){return (+v).toLocaleString('ko-KR')+'<span class="tiny dim"> ('+(+r.deemed_days).toLocaleString('ko-KR')+'+'+(+r.days_after).toLocaleString('ko-KR')+')</span>'}},
+    {k:'next_grade',t:'다음',f:function(v){return v?String(v):'<span class="dim">—</span>'}},
+    {k:'next_min_days',t:'요건일',f:function(v){return v?(+v).toLocaleString('ko-KR'):'<span class="dim">—</span>'}},
+    {k:'short_days',t:'부족일',f:function(v,r){return r.next_grade?((+v||0)?'<span class="bad">'+(+v).toLocaleString('ko-KR')+'</span>':'<span class="pos">0</span>'):'<span class="dim">—</span>'}},
+    {k:'stay_ok_on',t:'체류 충족일',l:1,f:function(v,r){return v?esc(String(v))+((+r.stay_left_days||0)>0?'<span class="tiny dim"> '+r.stay_left_days+'일</span>':'<span class="tiny pos"> 충족</span>'):'<span class="dim">—</span>'}},
+    {k:'amt_up',t:'승급 시 증가',f:function(v,r){return r.next_grade?won(v):'<span class="dim">—</span>'}},
+    {k:'judge',t:'판정',l:1,f:grdJudge}],
+    {rows:rows,q:['person_name'],csv:true,page:40,onRow:grdOpen,
+     chips:[{k:'judge',vals:[['','전체'],['심사 대상','심사 대상'],['체류기간 미충족','체류기간'],['투입일 부족','투입일']]}],
+     empty:'기술등급이 부여된 사람이 없습니다'});
+}
+
+function renderHr(){renderAcct();renderEsign();renderGrade();
   var retro=sum(D.retro,'ot_shortfall_amt');
   el('hrKpi').innerHTML=kpi('계약·동의 미비',D.cons.length?'<span class="wn">'+D.cons.length+'</span>':'0','명 · 눌러서 그 사람만 보기',(D.cons.length?'warn ':'')+'click',' onclick="staffConsOnly()"')+kpi('연장수당 소급',retro?'<span class="wn">'+won(retro)+'</span>':'0',D.retro.length+'건')+kpi('수당 마스터',D.alw.length+'<small>종</small>','비과세 '+D.alw.filter(function(r){return !r.is_taxable}).length+'종')+kpi('펌프실 청구',won(sum(D.pump,'billed_amt')),D.pump.length+'개월');
   el('consN').textContent=D.cons.length?D.cons.length+'명':'';
