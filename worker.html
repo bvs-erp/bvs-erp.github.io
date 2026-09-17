@@ -109,6 +109,30 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
 .docfoot{flex:0 0 auto;border-top:1px solid var(--ln);background:var(--sf);padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
 .sigpad{width:100%;height:150px;border:1px dashed var(--ln);border-radius:12px;background:var(--sf2);touch-action:none;display:block}
 .readmore{position:sticky;bottom:0;text-align:center;padding:8px;font-size:13px;color:var(--ac);background:linear-gradient(transparent,var(--bg) 40%)}
+/* ── 내 기술등급 ── */
+.gnow{display:flex;align-items:baseline;gap:10px;padding:14px;border-radius:12px;background:var(--ac2);margin-bottom:10px}
+.gnow b{font-size:22px;color:var(--ac)}
+.gnow .gn{font-size:15px;font-weight:600}
+.gnow .ga{margin-left:auto;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.gbar{margin-bottom:12px}
+.gbar .gl{display:flex;justify-content:space-between;font-size:13px;color:var(--tx2);margin-bottom:5px}
+.gbar .gl b{color:var(--tx);font-variant-numeric:tabular-nums}
+.gtrack{height:10px;border-radius:6px;background:var(--sf2);overflow:hidden}
+.gtrack span{display:block;height:100%;background:var(--ac);border-radius:6px}
+.gtrack.ok span{background:var(--good)}
+.gjudge{padding:11px 13px;border-radius:12px;font-size:14px;margin:4px 0 12px}
+.gjudge.w{background:var(--warnbg);color:var(--warn)}
+.gjudge.g{background:var(--goodbg);color:var(--good);font-weight:600}
+.ladder{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.ladder th,.ladder td{border-bottom:1px solid var(--ln);padding:6px 5px;text-align:left}
+.ladder th{color:var(--tx3);font-weight:500;font-size:12px}
+.ladder td.c{text-align:center}.ladder td.r{text-align:right;font-variant-numeric:tabular-nums}
+.ladder tr.me{background:var(--ac2)}.ladder tr.me td{font-weight:700;color:var(--ac)}
+.greq{font-size:13px;line-height:1.55;margin-top:8px}
+.greq div{padding:7px 0;border-bottom:1px solid var(--ln)}
+.greq div:last-child{border-bottom:0}
+.greq b{display:block;color:var(--tx3);font-size:12px;font-weight:500;margin-bottom:2px}
+details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;color:var(--ac);padding:8px 0}
 </style>
 </head>
 <body>
@@ -270,6 +294,7 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
       </div>
     </section>
     <section class="page" id="p-pay">
+      <div class="card" id="gradeCard"></div>
       <div id="comp"></div>
       <div class="card"><h2>월별 정산</h2><div id="pay"></div><p class="tiny dim" style="margin:12px 0 0">지급액은 대표 확정 후 다음 달 10일에 지급됩니다. 확정 전 금액은 바뀔 수 있습니다.</p></div>
     </section>
@@ -636,7 +661,7 @@ async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')
 /* ══════ 내 보상 (월급제 본인 행만) ══════ */
 var CP={ten:null,grade:null};
 function cf(R,k,d){var v=parseFloat(R[k]);return isNaN(v)?d:v}
-async function compLoad(){try{var r=await Promise.all([sb.from('my_comp').select('*'),sb.from('my_pay_rules').select('*')]);D.comp=((r[0]&&r[0].data)||[])[0]||null;D.rules=(((r[1]&&r[1].data)||[])[0]||{}).rules||{};}catch(e){D.comp=null}renderComp()}
+async function compLoad(){try{var r=await Promise.all([sb.from('my_comp').select('*'),sb.from('my_pay_rules').select('*'),sb.rpc('my_grade')]);D.comp=((r[0]&&r[0].data)||[])[0]||null;D.rules=(((r[1]&&r[1].data)||[])[0]||{}).rules||{};D.grade=(r[2]&&r[2].data)||null;}catch(e){D.comp=null}renderGrade();renderComp()}
 function compOrd(c,R,tenY,grade){if(c.base_override)return +c.ordinary_amt;var skill=Math.min(Math.max(grade-1,0)*cf(R,'pay_skill_unit',40000),cf(R,'pay_skill_cap',400000));var car=Math.min((+c.career_amt||0)+((+c.tenure_years||0)+tenY)*cf(R,'pay_tenure_unit',40000),cf(R,'pay_career_tenure_cap',400000));return (+c.base_amt||0)+(+c.meal_amt||0)+skill+(+c.position_amt||0)+car}
 function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.innerHTML='';return}
   if(CP.ten==null)CP.ten=0;if(CP.grade==null)CP.grade=+c.tech_grade||1;
@@ -666,6 +691,51 @@ function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.inner
   box.innerHTML=h}
 function cpTen(v){CP.ten=+v;var c=D.comp,R=D.rules||{};el('cpTen').textContent=CP.ten;el('cpTenV').textContent=won(compOrd(c,R,CP.ten,+c.tech_grade))}
 function cpGrade(v){CP.grade=+v;var c=D.comp,R=D.rules||{};var now=compOrd(c,R,0,+c.tech_grade),g=compOrd(c,R,0,CP.grade);el('cpGradeV').textContent=won(g);el('cpGradeD').textContent=CP.grade!==+c.tech_grade?'(현재 대비 '+(g-now>=0?'+':'')+won(g-now)+')':''}
+
+/* ── 내 기술등급 ── */
+function gpct(a,b){if(!b||b<=0)return 100;return Math.max(0,Math.min(100,Math.round(a/b*100)))}
+function renderGrade(){
+  var box=el('gradeCard');if(!box)return;var g=D.grade;
+  if(!g||!g.ok){box.innerHTML='<h2>내 기술등급</h2><div class="empty">'+esc((g&&g.error)||'기술등급이 아직 부여되지 않았습니다')+'</div>';return}
+  var lad=(g.ladder||[]).map(function(t){
+    return '<tr'+(t.grade===g.grade?' class="me"':'')+'><td class="c">'+t.grade+'</td><td>'+esc(t.grade_name)+'</td>'
+      +'<td class="r">'+won(t.monthly_amt)+'</td><td class="c">'+(t.min_months?t.min_months+'개월':'—')+'</td>'
+      +'<td class="r">'+(+t.min_days).toLocaleString('ko-KR')+'</td></tr>'}).join('');
+  var h='<h2>내 기술등급</h2>';
+  h+='<div class="gnow"><b>'+g.grade+'</b><span class="gn">'+esc(g.grade_name)+'</span><span class="ga">'+won(g.monthly_amt)+'</span></div>';
+  if(g.next_grade){
+    var needD=Math.max((+g.next_min_days||0)-(+g.deemed_days||0),0), gotD=+g.days_after||0;
+    var totM=(+g.next_min_months||0)*30.4, leftM=+g.stay_left_days||0, gotM=Math.max(totM-leftM,0);
+    var stayOk=leftM<=0, dayOk=gotD>=needD;
+    h+='<p class="tiny dim" style="margin:0 0 12px">다음은 <b>'+g.next_grade+'등급 '+esc(g.next_name)+'</b> · 월 '+won(g.next_amt)+' (+'+won((+g.next_amt||0)-(+g.monthly_amt||0))+')</p>';
+    h+='<div class="gbar"><div class="gl"><span>최소 체류기간 '+g.next_min_months+'개월</span><b>'+(stayOk?'충족':String(leftM)+'일 남음')+'</b></div>'
+      +'<div class="gtrack'+(stayOk?' ok':'')+'"><span style="width:'+gpct(gotM,totM)+'%"></span></div>'
+      +'<div class="tiny dim" style="margin-top:4px">'+esc(String(g.granted_on))+' 부여 → '+esc(String(g.stay_ok_on))+' 충족</div></div>';
+    h+='<div class="gbar"><div class="gl"><span>누적 현장투입일</span><b>'+gotD.toLocaleString('ko-KR')+' / '+needD.toLocaleString('ko-KR')+'일</b></div>'
+      +'<div class="gtrack'+(dayOk?' ok':'')+'"><span style="width:'+gpct(gotD,needD)+'%"></span></div>'
+      +'<div class="tiny dim" style="margin-top:4px">현 등급 간주분 '+(+g.deemed_days).toLocaleString('ko-KR')+'일 + 부여 후 실제 '+gotD.toLocaleString('ko-KR')+'일 = 인정 '+(+g.total_days).toLocaleString('ko-KR')+'일 · 요건 '+(+g.next_min_days).toLocaleString('ko-KR')+'일</div></div>';
+    if(g.judge==='심사 대상')
+      h+='<div class="gjudge g">승급 요건을 충족했습니다. 신청하면 <b>회사는 반드시 심사를 실시합니다</b>(취업규칙 제43조의2 제3항). 리드 또는 대표에게 승급 신청서(F-32-13)를 내십시오.</div>';
+    else
+      h+='<div class="gjudge w">'+esc(g.judge)+' — '+(stayOk?'':'체류기간 '+leftM+'일')+((!stayOk&&!dayOk)?' · ':'')+(dayOk?'':'투입일 '+Math.max(needD-gotD,0)+'일')+' 더 필요합니다.</div>';
+    h+='<details class="gd"><summary>'+g.next_grade+'등급에서 요구하는 것</summary><div class="greq">'
+      +'<div><b>출입 · 자격</b>'+esc(g.next_access||'—')+'</div>'
+      +'<div><b>단독 수행 능력</b>'+esc(g.next_solo||'—')+'</div>'
+      +'<div><b>지도 · 안전</b>'+esc(g.next_guide||'—')+'</div></div></details>';
+  } else {
+    h+='<div class="gjudge g">최고 등급입니다.</div>';
+  }
+  h+='<details class="gd"><summary>현재 등급에서 요구되는 것</summary><div class="greq">'
+    +'<div><b>출입 · 자격</b>'+esc(g.req_access||'—')+'</div>'
+    +'<div><b>단독 수행 능력</b>'+esc(g.req_solo||'—')+'</div>'
+    +'<div><b>지도 · 안전</b>'+esc(g.req_guide||'—')+'</div></div></details>';
+  h+='<details class="gd"><summary>등급 사다리 전체 보기 (1 ~ 11등급)</summary>'
+    +'<table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>최소 체류</th><th>누적 투입일</th></tr>'+lad+'</table>'
+    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한. 승급하려면 최소 체류기간과 누적 현장투입일을 <b>모두</b> 충족해야 합니다. 누적 현장투입일에 교육·휴무·연차는 들어가지 않습니다. 등급은 내려가지 않습니다.</p></details>';
+  h+='<p class="tiny dim" style="margin:12px 0 0">상세 요건은 취업규칙 별표 2에 따릅니다. 승급 심사는 매년 12월 정기로 실시하며, 자격 취득 등으로 요건이 새로 충족되면 수시로 신청할 수 있습니다. 승급하지 않기로 하는 경우 회사는 그 사유와 보완 과제를 서면으로 알려드립니다.</p>';
+  box.innerHTML=h;
+}
+
 function renderPay(){
   el('pay').innerHTML=D.pay.length?D.pay.map(function(r){return '<div class="item"><div class="d"><b>'+String(r.period_ym).slice(5)+'</b><small>'+String(r.period_ym).slice(0,4)+'</small></div><div class="m"><div class="s">공수 '+(+r.work_md_sum).toFixed(1)+' · 잔업 '+(+r.ot_hours_sum||0)+'h <span class="pill '+(r.is_closed?'g':'y')+'">'+(r.is_closed?'확정':'집계 중')+'</span></div><div class="t">기본 '+won(r.base_amt)+' · 연장 '+won(r.ot_amt)+' · 수당 '+won(r.allowance_amt)+'</div></div><div class="r"><b>'+won(r.payable_amt)+'</b><small class="dim">원</small></div></div>'}).join(''):'<div class="empty">정산 자료 없음</div>';
 }
