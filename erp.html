@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.19</title>
+<title>BVS ERP v1.20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -428,7 +428,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.19</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.20</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -604,11 +604,11 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 
     <!-- 돈·정산 -->
     <section class="page" id="p-money">
-      <div class="ph"><h2>노무비 · 급여 정산 <span class="tiny dim" style="font-weight:400">(인건비 및 팀장몫)</span></h2><div class="desc">이달 지급 예정 · 누적 미지급 · 팀장 정산</div></div>
+      <div class="ph"><h2>노무비 · 급여 정산 <span class="tiny dim" style="font-weight:400">(인건비 및 팀장몫)</span></h2><div class="desc">이달 지급 예정 (익월 10일 정기지급) · 기한 경과 실제 미지급 관리 · 팀장 정산</div></div>
       <div class="kpis" id="moneyKpi"></div>
       <div class="sec"><h3>이달 정산 <span class="cnt" id="setN"></span></h3><div class="tb" id="gSet"></div></div>
       <div class="grid2">
-        <div class="sec"><h3>누적 미지급 잔액</h3><div class="tb" id="gPay"></div></div>
+        <div class="sec"><h3>급여·노무비 정산 잔액 <span class="tiny dim" style="font-weight:400">(당월 정기 예정 vs 기한 경과 분리)</span></h3><div class="tb" id="gPay"></div></div>
         <div class="sec"><h3>팀장 정산 <span class="cnt" id="ldrN"></span></h3><div class="desc" style="margin-bottom:8px">팀도급(full) 팀은 팀단가×공수 전액이 팀장 청구액 · 팀원은 회사 지급 0 · 행을 누르면 팀원별 공수·청구 내역</div><div class="tb" id="gLdr"></div></div>
       </div>
       <div class="sec"><h3>지급기록 자동 생성 (통장 출금) <span class="cnt" id="apayN"></span><button class="btn sm p" style="margin-left:10px" onclick="apRun()">통장 출금 → 지급기록 생성</button></h3><div class="desc" style="margin-bottom:8px">은행 드롭·수집기 뒤 자동으로 돕니다. 상대 계좌번호 또는 예금주명이 재직자와 맞는 출금을 지급기록으로 만듭니다(15일 이전 지급은 전월분). 사업소득은 3.3% 역산 총액, 근로소득은 정산표 총액을 씁니다. 대표 송금은 자동 생성하지 않습니다(급여·가수금 구분 필요). 귀속월·총액·소득구분은 더블클릭으로 고치고, 맞으면 확정, 아니면 삭제(자동 생성분만).</div><div class="tb" id="gApay"></div></div>
@@ -1261,15 +1261,20 @@ function attOpen(r){var f=(D.att||[]).filter(function(x){return x.entry_id===r.e
 function trRows(){return (D.tr||[]).filter(function(r){return !r.is_cancelled})}
 function trNet(k){var t=0;trRows().forEach(function(r){t+=(+r[k]||0)});return t}
 var TRTITLE='Tax-Risk 엔티티 간 거래 (전 기간)';
-function realGapRows(){return (D.gap||[]).filter(function(r){return (+r.supply_gap||0)!==0})}
+function realGapRows(){return (D.gap||[]).filter(function(r){return (r.sd_status!==r.fi_status)||((+r.supply_gap||0)!==0)})}
 function hotCount(){
+  var mDueMap={};(D.set||[]).filter(function(s){return s.period_ym===M()}).forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
+  var deemedPayCount = (D.pay||[]).filter(function(r){return ((+r.balance_amt||0)-(mDueMap[r.employment_no]||0))>1000}).length;
+  var apOverdueCount = (D.stl||[]).filter(function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)}).length;
   var alCnt = (D.al||[]).filter(function(r){
     if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)) return realGapRows().length > 0;
+    if(/지급의제/.test(r.title)) return deemedPayCount > 0;
+    if(/미지급 기한 경과/.test(r.title)) return apOverdueCount > 0;
     return +r.cnt > 0;
   }).length;
   var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
   return alCnt
-    + D.intg.filter(function(r){return +r.cnt>0}).length
+    + D.intg.filter(function(r){return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name) && +r.cnt>0}).length
     + (!hasGapInAl && realGapRows().length ? 1 : 0)
     + (trRows().length?1:0)
     + (sfMiss().length?1:0)
@@ -1409,6 +1414,14 @@ function renderHome(){
 
   function grp(label,inner){return '<div class="kgrp"><div class="gl">'+label+'</div><div class="gi">'+inner+'</div></div>'}
 
+  var mDueMap={};
+  set.forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
+  var pastOverdue = 0;
+  (D.pay||[]).forEach(function(r){
+    var od = (+r.balance_amt||0) - (mDueMap[r.employment_no]||0);
+    if(od > 1000) pastOverdue += od;
+  });
+
   el('homeKpi').innerHTML=
     grp('현장 · ' + curDay + (isToday ? ' (오늘)' : ''),
         kpi('현장 투입', targetRows.length+'<small>명</small>', curSites+'개 현장 · '+curMd+' M/D', 'hl click', ' onclick="go(\'site\')"')
@@ -1416,15 +1429,28 @@ function renderHome(){
    +grp(m+' 손익 & 자금',
         kpi('영업이익', sgn(dm.operating_profit), dm.is_closed ? '마감' : '진행 중', 'click', ' onclick="go(\'pl\')"')
        +kpi('확정 매출', won(sum(sales,'supply_amt')), sum(sales,'doc_cnt')+'건 (세금계산서)', 'click', ' onclick="go(\'sales\')"')
-       +kpi('지급 예정액', '<span class="wn">'+won(due)+'</span>', set.length+'명 · 다음 달 10일', 'click', ' onclick="go(\'money\')"')
-       +kpi('미지급 누계', won(bal), '이전 달분 포함', 'click', ' onclick="go(\'money\')"'))
+       +kpi(m+' 지급 예정', '<span class="wn">'+won(due)+'</span>', set.length+'명 · 익월 10일 정기지급', 'click', ' onclick="go(\'money\')"')
+       +(pastOverdue > 0
+         ? kpi('기한 경과 미지급', '<span class="neg">'+won(pastOverdue)+'</span>', '이전 달분 확인 필요', 'warn click', ' onclick="go(\'money\')"')
+         : kpi('기한 경과 미지급', '<span class="pos">0원</span>', '체불 없음 (정상)', 'click', ' onclick="go(\'money\')"')))
    +grp('리스크',
         kpi('긴급 경보', hot ? '<span class="neg">'+hot+'</span>' : '<span class="pos">0</span>', hot ? '조치 필요' : '특이사항 없음', (hot?'crit ':'')+'click', ' onclick="go(\'alerts\')"'));
 
   var last=D.dash.slice(-12);
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
-  var als=D.al.filter(function(r){return +r.cnt>0}).concat(D.intg.filter(function(r){return +r.cnt>0}).map(function(r){return {title:r.check_name,cnt:r.cnt}}));
+  var intgClean = (D.intg||[]).filter(function(r){
+    return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name) && +r.cnt>0;
+  });
+  var als=D.al.filter(function(r){
+    if(/지급의제/.test(r.title)) return pastOverdue > 0;
+    if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)) return realGapRows().length > 0;
+    return +r.cnt>0;
+  }).map(function(r){
+    var c = +r.cnt||0;
+    if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)) c = realGapRows().length;
+    return {title:r.title,cnt:c};
+  }).concat(intgClean.map(function(r){return {title:r.check_name,cnt:r.cnt}}));
   if(sfMiss().length)als=als.concat([{title:SFT,cnt:sfMiss().length}]);
   if(edUnsigned().length)als=als.concat([{title:EDT,cnt:edUnsigned().length}]);
   if(pendRows().length)als=[{title:PENDT,cnt:pendRows().length}].concat(als);
@@ -2603,7 +2629,30 @@ function renderMoney(){
   var m=M(),set=D.set.filter(function(r){return r.period_ym===m});
   var due=sum(set,'payable_amt'),bal=sum(D.pay,'balance_amt'),mar=sum(set,'company_margin'),rev=sum(set,'revenue_sum');
   var dm=D.dash.filter(function(r){return r.period_ym===m})[0]||{};
-  el('moneyKpi').innerHTML=kpi(m+' 줘야 할 돈','<span class="wn">'+won(due)+'</span>',set.filter(function(r){return r.team_mode!=='full'}).length+'명 · 다음 달 10일 지급'+(sum(set,'team_claim_amt')?' · 팀도급 청구 '+won(sum(set,'team_claim_amt'))+' 별도':''),'hl')+kpi('누적 미지급',won(bal),'이전 달분 포함')+kpi(m+' 현장매출',won(rev))+kpi(m+' 회사마진',sgn(mar),'매출 − 지급 − 팀장몫')+kpi(m+' 영업이익',sgn(dm.operating_profit),(dm.is_closed?'마감':'진행'));
+
+  var mDueMap={};
+  set.forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
+  var totalPastOverdue = 0, totalDueScheduled = 0;
+  (D.pay||[]).forEach(function(r){
+    var curDue = mDueMap[r.employment_no] || 0;
+    var pastOd = (+r.balance_amt||0) - curDue;
+    if(Math.abs(pastOd) < 1000) pastOd = 0;
+    r._cur_due = curDue;
+    r._past_overdue = pastOd;
+    r._status_tag = pastOd > 1000 ? 'overdue' : (curDue > 0 ? 'scheduled' : 'settled');
+    if(pastOd > 0) totalPastOverdue += pastOd;
+    totalDueScheduled += curDue;
+  });
+
+  var nextMonthNum = (parseInt(m.slice(5), 10) % 12) + 1;
+  el('moneyKpi').innerHTML=
+    kpi(m+' 지급 예정 (익월 10일)','<span class="wn">'+won(due)+'</span>',set.filter(function(r){return r.team_mode!=='full'}).length+'명 · '+nextMonthNum+'월 10일 정기지급 정상분'+(sum(set,'team_claim_amt')?' · 팀도급 '+won(sum(set,'team_claim_amt')):''),'hl')
+    +kpi('기한 경과 미지급 잔액',totalPastOverdue>0?'<span class="neg">'+won(totalPastOverdue)+'</span>':'<span class="pos">0원</span>',totalPastOverdue>0?'이전 귀속월 잔액 (확인 필요)':'🎉 기한 경과 체불 없음 (정상)',totalPastOverdue>0?'warn':'')
+    +kpi('총 잔액 (예정+이월)',won(bal),'당월 예정 '+won(totalDueScheduled)+' 포함')
+    +kpi(m+' 현장매출',won(rev))
+    +kpi(m+' 회사마진',sgn(mar),'매출 − 지급 − 팀장몫')
+    +kpi(m+' 영업이익',sgn(dm.operating_profit),(dm.is_closed?'마감':'진행'));
+
   var balBy={};D.pay.forEach(function(r){balBy[r.employment_no]=+r.balance_amt||0});
   set.forEach(function(r){r.balance=balBy[r.employment_no]||0});
   el('setN').textContent=set.length+'명';
@@ -2611,7 +2660,28 @@ function renderMoney(){
     {rows:set,q:['person_name'],qph:'이름',foot:true,sort:{k:'payable_amt',d:-1},page:60,
      chips:[{k:'_inc',vals:[['','소속 전체'],['wage','정규직(4대보험)'],['business','도급(3.3%)']]},{k:'_neg',vals:[['','마진 전체'],['1','적자만']]}]});
   (function(){var b=el('gSet').querySelector('.tbar');if(b&&!b.querySelector('.negsort'))b.insertAdjacentHTML('beforeend','<button class="btn sm negsort" style="margin-left:6px" onclick="gSort(\'gSet\',\'company_margin\');if(G.gSet.sort.d!==1){G.gSet.sort.d=1;gRender(\'gSet\')}">적자순 정렬</button>')})();
-  grid('gPay',[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'ID',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],{rows:D.pay.filter(function(r){return Math.abs(+r.balance_amt||0)>=1000}),q:['person_name'],foot:true,sort:{k:'balance_amt',d:-1},empty:'미지급 잔액 없음 (1,000원 미만 단수 차이는 숨김)'});
+
+  grid('gPay',[
+    {k:'person_name',t:'이름',l:1},
+    {k:'employment_no',t:'ID',l:1,cls:'dim'},
+    {k:'accrued_amt',t:'발생누계',f:'won',sum:1},
+    {k:'paid_amt',t:'지급누계',f:'won',sum:1},
+    {k:'_cur_due',t:m+' 정기예정 ('+nextMonthNum+'/10)',f:function(v){return (+v||0)>0?'<span class="pill b">'+won(v)+'</span>':'<span class="dim">–</span>'},sum:1},
+    {k:'_past_overdue',t:'기한 경과 미지급',f:function(v){
+      var n = +v || 0;
+      if(n > 1000) return '<span class="pill r">'+won(n)+'</span>';
+      if(n < -1000) return '<span class="pill y">초과지급 '+won(-n)+'</span>';
+      return '<span class="pill g">정상(0)</span>';
+    },sum:1},
+    {k:'balance_amt',t:'총 정산잔액',f:'sgn',sum:1}
+  ],{
+    rows:D.pay.filter(function(r){return Math.abs(+r.balance_amt||0)>=1000 || (+r._cur_due||0)>=1000 || Math.abs(+r._past_overdue||0)>=1000}),
+    q:['person_name','employment_no'],
+    chips:[{k:'_status_tag',vals:[['','전체 보기'],['scheduled','📅 당월 정기예정 ('+nextMonthNum+'/10 지급)'],['overdue','🚨 기한 경과만'],['settled','정상 완제']]}],
+    foot:true,
+    sort:{k:'_past_overdue',d:-1},
+    empty:'미지급 잔액 없음 (정상)'
+  });
   var tc=D.tclaim||[];el('ldrN').textContent=D.ldr.length?D.ldr.length+'행':'';
   grid('gLdr',[{k:'leader_name',t:'팀장',l:1},{k:'period_ym',t:'월',l:1},{k:'self_pay_amt',t:'본인급여',f:'won'},{k:'team_margin_amt',t:'팀몫',f:function(v,r){var f=tc.filter(function(x){return x.leader_no===r.leader_no&&x.period_ym===r.period_ym});return won(v)+(f.length?' <span class="pill y tiny">도급 '+f.length+'명</span>':'')}},{k:'earned_amt',t:'귀속',f:'won'},{k:'taken_amt',t:'수령',f:'won'},{k:'month_net_amt',t:'당월',f:'sgn'},{k:'balance_amt',t:'누적',f:'sgn'}],{rows:D.ldr,csv:false,page:24,onRow:ldrOpen});
   var ap=D.apay||[],apAuto=ap.filter(function(r){return r.is_auto});el('apayN').innerHTML=apAuto.length?'<span class="wn">확인 대기 '+apAuto.length+'건</span>':'';
@@ -3489,16 +3559,58 @@ function alDetail(t){t=String(t||'');
    mrev:[{k:'period_ym',t:'월',l:1},{k:'partner_name',t:'거래처',l:1},{k:'billing_amt',t:'청구기준',f:'won',sum:1},{k:'sd_supply',t:'계산서',f:'won',sum:1},{k:'diff_amt',t:'차이',f:'sgn',sum:1}],
    po:[{k:'doc_date',t:'발주일',l:1},{k:'po_no',t:'발주서',l:1,cls:'tiny'},{k:'partner_name',t:'공급사',l:1},{k:'title',t:'건명',l:1},{k:'total_amt',t:'합계',f:'won',sum:1},{k:'age_days',t:'경과일',f:'int'}],
    ht:[{k:'issue_date',t:'작성일',l:1},{k:'side',t:'구분',l:1,f:function(v){return v==='sales'?'매출':'매입'}},{k:'counterparty',t:'상대방',l:1},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'matched_doc_no',t:'SD 문서',l:1,cls:'tiny'}],
-   gap:[{k:'doc_no',t:'문서',l:1},{k:'doc_kind',t:'종류',l:1},{k:'sd_supply',t:'업무 공급가',f:'won'},{k:'fi_supply',t:'회계 공급가',f:'won'},{k:'supply_gap',t:'차이',f:'sgn'}],
+   gap:[
+     {k:'doc_no',t:'문서번호',l:1},
+     {k:'doc_kind',t:'종류',l:1,f:pillKind},
+     {k:'sd_status',t:'SD상태',l:1,f:pillSt},
+     {k:'fi_status',t:'FI상태',l:1,f:pillSt},
+     {k:'sd_supply',t:'SD공급가',f:'won',sum:1},
+     {k:'fi_supply',t:'FI공급가',f:'won',sum:1},
+     {k:'supply_gap',t:'금액차이',f:'sgn',sum:1},
+     {k:'_mismatch',t:'불일치 분석',l:1,f:function(v,r){
+       if(r.sd_status!==r.fi_status) return '<span class="pill y">상태 불일치 (SD:'+esc(r.sd_status)+' ↔ FI:'+esc(r.fi_status)+')</span>';
+       return '<span class="pill r">금액차이 '+won(r.supply_gap)+'</span>';
+     }}
+   ],
    pay:[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'accrued_amt',t:'발생',f:'won'},{k:'paid_amt',t:'지급',f:'won'},{k:'balance_amt',t:'잔액',f:'sgn',sum:1}],
    lm:[{k:'work_date',t:'일자',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1},{k:'cost_amt',t:'회사부담',f:'won',sum:1}],
-   staff:[{k:'name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'employment_type',t:'고용',l:1},{k:'hired_on',t:'입사',l:1},{k:'work_site_id',t:'상주현장',l:1}],
+   staff:[{k:'name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'employment_type',t:'고용',l:1},{k:'hired_on',t:'입사',l:1},{k:'work_site_id',t:'상주현장',l:1,f:function(v){return v?esc(v):'<span class="pill y">미지정</span>'}}],
    sfk:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'ng_note',t:'비고',l:1,cls:'tiny dim'}],
    edg:[{k:'held_on',t:'실시일',l:1},{k:'course_name',t:'교육명',l:1},{k:'person_name',t:'이름',l:1}],
    noout:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_start',t:'출근',l:1,f:function(v){return hhmm(v)}},{k:'work_end',t:'퇴근',l:1,f:function(){return '<span class="neg">미등록</span>'}},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1}],
    pend:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'연장h',f:'num',sum:1},{k:'cost_amt',t:'회사부담',f:'won',sum:1},{k:'work_desc',t:'메모',l:1,cls:'tiny dim'}],
-   tr:[{k:'voucher_date',t:'일자',l:1},{k:'counter_entity',t:'상대 엔티티',l:1},{k:'flow',t:'방향',l:1},{k:'risk_kind',t:'명목',l:1},{k:'evidence_name',t:'증빙',l:1,cls:'tiny'},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'title',t:'적요',l:1},{k:'flag',t:'점검',l:1,cls:'tiny wn'}],
-   htr:[{k:'ran_at',t:'실행',l:1,f:function(v){return esc(String(v||'').slice(0,19).replace('T',' '))}},{k:'host',t:'PC',l:1},{k:'fetched',t:'수집',f:'int'},{k:'error',t:'오류',l:1,cls:'tiny'}]
+   tr:[{k:'voucher_date',t:'일자',l:1},{k:'counter_entity',t:'상대 엔티티',l:1,f:function(v){return '<span class="pill '+(v==='SSJG'?'o':v==='PYRO'?'r':'g')+'">'+esc(v)+'</span>'}},{k:'flow',t:'방향',l:1},{k:'risk_kind',t:'명목',l:1},{k:'evidence_name',t:'증빙',l:1,cls:'tiny'},{k:'supply_amt',t:'공급가액',f:'won',sum:1},{k:'tax_amt',t:'세액',f:'won',sum:1},{k:'title',t:'적요',l:1},{k:'flag',t:'점검',l:1,cls:'tiny wn'}],
+   htr:[{k:'ran_at',t:'실행',l:1,f:function(v){return esc(String(v||'').slice(0,19).replace('T',' '))}},{k:'host',t:'PC',l:1},{k:'fetched',t:'수집',f:'int'},{k:'error',t:'오류',l:1,cls:'tiny'}],
+   stl_ap:[
+     {k:'doc_date',t:'작성일자',l:1},
+     {k:'doc_no',t:'문서번호',l:1,cls:'tiny dim'},
+     {k:'partner_name',t:'공급처(거래처)',l:1},
+     {k:'supply_amt',t:'공급가액',f:'won',sum:1},
+     {k:'tax_amt',t:'세액',f:'won',sum:1},
+     {k:'total_amt',t:'계산서합계',f:'won',sum:1},
+     {k:'balance_amt',t:'미지급 잔액',f:function(v){return '<span class="wn">'+won(v)+'</span>'},sum:1},
+     {k:'due_date',t:'지급기일',l:1,f:function(v){return v?esc(v):'<span class="dim">말일정산</span>'}}
+   ],
+   pumpd:[
+     {k:'work_date',t:'작업일자',l:1},
+     {k:'site_name',t:'현장',l:1,f:function(v){return v?esc(v):'펌프실'}},
+     {k:'claim_status',t:'청구상태',l:1,f:function(v){return v?'<span class="pill g">'+esc(v)+'</span>':'<span class="pill y">확인필요</span>'}},
+     {k:'memo',t:'비고/메모',l:1,f:function(v){return v?esc(v):'<span class="dim">청구 여부 확인 필요</span>'}}
+   ],
+   tr_unconf:[
+     {k:'voucher_date',t:'전표일자',l:1},
+     {k:'counter_entity',t:'상대 엔티티',l:1,f:function(v){return '<span class="pill '+(v==='SSJG'?'o':v==='PYRO'?'r':'g')+'">'+esc(v)+'</span>'}},
+     {k:'flow',t:'구분',l:1},
+     {k:'risk_kind',t:'명목',l:1},
+     {k:'supply_amt',t:'공급가액',f:'won',sum:1},
+     {k:'tax_amt',t:'세액',f:'won',sum:1},
+     {k:'title',t:'적요/전표내용',l:1},
+     {k:'_guide',t:'세무 리스크 및 소명 가이드',l:1,f:function(v,r){
+       if((+r.supply_amt||0)===77000000) return '<span class="pill r"><b>설계비 지출증빙</b>: 세액 0원(부가세 분리 확인) · 용역산출물/도면 구비 필수</span>';
+       if((+r.supply_amt||0)===-15000000) return '<span class="pill y"><b>(-) 감액 수정전표</b>: t301 감액 · 수정계산서 대사 및 사유서 구비</span>';
+       return '<span class="wn">'+esc(r.flag||'특수관계인 거래 소명자료 구비')+'</span>';
+     }}
+   ]
   };
   function d(ds,cols,filt,note,go){return {rows:(D[ds]||[]).filter(filt||function(){return true}),cols:cols,note:note,go:go}}
   if(/개인정보|계약·동의|계약서교부|계약.동의 미비/.test(t))return d('cons',C.cons,null,'인력 마스터에서 이름을 눌러 「서류·동의」에 서명일과 동의 여부를 기록하면 사라집니다.','hr');
@@ -3507,24 +3619,30 @@ function alDetail(t){t=String(t||'');
   if(/가지급금/.test(t))return d('di',C.di,function(r){return (+r.deemed_interest||0)>0},'법인세법상 인정이자 대상입니다. 세무사 확인이 필요합니다.','pl');
   if(/인박스|계정 미분류/.test(t))return d('inbox',C.inbox,null,'행을 누르면 계정을 지정할 수 있습니다.','ht');
   if(/청구기준/.test(t))return d('mrev',C.mrev,function(r){return Math.abs(+r.diff_amt||0)>=1},'청구 기준 금액과 발행한 계산서 금액이 다릅니다.','close');
-  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>60},'발주는 나갔는데 계산서가 오지 않았습니다.','settle');
+  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>60},'발주는 나갔는데 60일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
   if(/거래처 미등록/.test(t))return d('ht',C.ht,function(r){return !r.partner_id},'거래처 마스터에 등록하면 자동으로 연결됩니다.','ht');
   if(/SD 문서 미연결/.test(t))return d('ht',C.ht,function(r){return !r.matched_doc_no},'홈택스 계산서와 업무 문서가 연결되지 않았습니다.','ht');
   if(/안전점검 미제출/.test(t))return {rows:sfMiss(),cols:C.sfk,note:'투입 기록은 있는데 그날 작업 전 안전점검 제출이 없는 사람입니다. 현장앱 「안전」 탭에서 본인이 제출합니다 — 대표가 대신 넣지 않는 편이 증빙으로서 낫습니다.',go:'safety'};
   if(/교육 서명 미완료/.test(t))return {rows:edUnsigned(),cols:C.edg,note:'진행 중인 교육의 대상자 가운데 아직 서명하지 않은 사람입니다. 교육을 마감하면 더는 서명할 수 없습니다.',go:'safety'};
   if(/승인 대기/.test(t))return {rows:pendRows(),cols:C.pend,note:'현장앱에서 제출됐지만 아직 승인 전입니다. 현장 화면에서 날짜별로 일괄 승인하거나, 줄을 눌러 내용을 고친 뒤 승인하십시오.',go:'site',onRow:attOpen};
+  if(/Tax-Risk 미확인/.test(t))return d('tr',C.tr_unconf,function(r){return r.flag||(+r.supply_amt||0)===77000000||(+r.supply_amt||0)===-15000000||String(r.title).includes('감액')},'4대 엔티티 간 거래 중 세무 소명 증빙이 필요한 미확인 거래입니다. 법인세법 제52조 부당행위계산부인 대비 계약서 및 거래 증빙을 구비하십시오.','tax');
   if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
   if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
-  if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,function(r){return (+r.supply_gap||0)!==0},'업무 문서와 회계 전표의 금액이 어긋났습니다.','money');
-  if(/지급의제/.test(t))return d('pay',C.pay,function(r){return (+r.balance_amt||0)>0},'미지급 잔액이 남은 사람입니다.','money');
+  if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,function(r){return (r.sd_status!==r.fi_status)||((+r.supply_gap||0)!==0)},'SD 업무 문서 상태·금액과 FI 회계 전표가 일치하지 않는 전표 내역입니다 (예: SD 승인이나 회계 취소 전표 등 44건).','money');
+  if(/지급의제/.test(t)){
+    var mDueMap={};(D.set||[]).filter(function(s){return s.period_ym===M()}).forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
+    return d('pay',C.pay,function(r){return ((+r.balance_amt||0)-(mDueMap[r.employment_no]||0))>1000},'소득세법 제135조 지급시기 의제 검토 대상자입니다. 당월(9월) 정상 예정분을 제외한 이전 귀속월 미지급 대상자입니다.','money');
+  }
   if(/휴일·토요일|휴일 근무/.test(t))return d('lm',C.lm,function(r){var w=new Date(r.work_date+'T00:00:00').getDay();return w===0||w===6},'휴일·토요일 투입은 가산임금 대상입니다.','site');
   if(/상주현장 미지정/.test(t))return d('staff',C.staff,function(r){return !r.resigned_on&&!r.work_site_id},'인력 마스터에서 상주 현장을 지정하십시오.','hr');
-  if(/주민번호·계좌/.test(t))return {rows:[],cols:C.staff,note:'주민번호·계좌는 화면에 두지 않습니다. 시트→DB 통로(Apps Script syncHrSecrets)로 넣으십시오.',go:'hr'};
+  if(/주민번호·계좌/.test(t))return d('staff',C.staff,function(r){return !r.resigned_on&&(!r.resident_reg_no||!r.bank_account)},'급여 지급을 위한 주민번호·계좌 정보가 미등록된 재직자입니다. 시트 연동(syncHrSecrets)으로 등록하십시오.','hr');
   if(/퇴근 미등록/.test(t))return {rows:noOutRows(),cols:C.noout,note:'현장앱에서 출근만 찍고 퇴근을 누르지 않은 날입니다. 줄을 누르면 그 기록의 출퇴근 시각을 바로 고칠 수 있습니다. 오늘 날짜는 아직 근무 중일 수 있어 빠져 있습니다.',go:'site',onRow:attOpen};
+  if(/펌프실/.test(t))return d('pumpd',C.pumpd,function(r){return !r.claim_status||r.claim_status==='pending'||!r.site_name},'현장 공수 중 펌프실 청구 확인이 필요한 일자 목록입니다.','site');
+  if(/미지급 기한/.test(t))return d('stl',C.stl_ap,function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)},'대사 원장상 기한 경과 미지급 매입 계산서 목록입니다. 통장 거래처 매칭 또는 지급 완료 처리가 필요합니다.','settle');
+  if(/미수금 기한/.test(t))return d('stl',C.stl_ap,function(r){return r.side==='sales'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)},'대사 원장상 기한 경과 미수 매출 계산서 목록입니다.','settle');
   if(/비과세 요건/.test(t))return {rows:[],cols:C.cons,note:'인사·노무 화면의 수당 마스터에서 비과세 한도와 요건을 확인하십시오.',go:'hr'};
   if(/RLS/.test(t))return {rows:[],cols:C.cons,note:'DB 접근 정책 문제입니다. 화면 목록이 아니라 Supabase에서 정책을 걸어야 합니다.',go:null};
-  if(/미지급 기한|미수금 기한|발주서 미연결/.test(t))return {rows:[],cols:C.cons,note:'미수·미지급 대사 화면에서 확인합니다.',go:'settle'};
   return {rows:[],cols:C.cons,note:'이 경보는 아직 상세 목록이 연결되지 않았습니다.',go:null}}
 
 var ALF={domain:'',tier:'',zero:false,sel:null};
@@ -3557,16 +3675,37 @@ function renderAlerts(){
   var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}var nm=el('alertNm');if(nm){nm.textContent=hot;nm.classList.toggle('hide',!hot)}
   if(!el('alerts'))return;
 
+  var mDueMap={};(D.set||[]).filter(function(s){return s.period_ym===M()}).forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
+  var deemedPayCount = (D.pay||[]).filter(function(r){return ((+r.balance_amt||0)-(mDueMap[r.employment_no]||0))>1000}).length;
+  var apOverdueCount = (D.stl||[]).filter(function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)}).length;
+  var poOverdueCount = (D.po||[]).filter(function(r){return (+r.age_days||0)>60}).length;
+  var trUnconfCount = (D.tr||[]).filter(function(r){return r.flag||(+r.supply_amt||0)===77000000||(+r.supply_amt||0)===-15000000||String(r.title).includes('감액')}).length;
+
   var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
   var all=(D.al||[]).map(function(r){
     var c = +r.cnt||0;
     if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)){
       c = realGapRows().length;
+    } else if(/지급의제/.test(r.title)){
+      c = deemedPayCount;
+    } else if(/미지급 기한 경과/.test(r.title)){
+      c = apOverdueCount;
+    } else if(/발주서 · 계산서 미도착 60일/.test(r.title)){
+      c = poOverdueCount;
+    } else if(/Tax-Risk 미확인/.test(r.title)){
+      c = trUnconfCount;
+    } else if(/퇴근 미등록/.test(r.title)){
+      c = noOutRows().length;
     }
     return {title:r.title,cnt:c,tier:alTier(r.title),domain:alDomain(r.title),action:alActionNote(r.title)};
   })
-    .concat((D.intg||[]).map(function(r){return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),domain:alDomain(r.check_name),action:alActionNote(r.check_name),intg:1}}))
-    .concat(!hasGapInAl && realGapRows().length ? [{title:'업무문서 ↔ 회계전표 금액 불일치',cnt:realGapRows().length,tier:2,domain:'FI',action:alActionNote('업무문서 ↔ 회계전표 금액 불일치')}] : [])
+    .concat((D.intg||[]).filter(function(r){
+      // 중복 무결성 항목 제거 (D.al에 이미 존재하는 항목 필터링)
+      return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name);
+    }).map(function(r){
+      return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),domain:alDomain(r.check_name),action:alActionNote(r.check_name),intg:1};
+    }))
+    .concat(!hasGapInAl && realGapRows().length ? [{title:'업무문서 ↔ 회계전표 상태·금액 불일치',cnt:realGapRows().length,tier:2,domain:'FI',action:alActionNote('업무문서 ↔ 회계전표 금액 불일치')}] : [])
     .concat([{title:TRTITLE,cnt:trRows().length,tier:1,domain:'TAX',action:alActionNote(TRTITLE)},{title:PENDT,cnt:pendRows().length,tier:2,domain:'OP',action:alActionNote(PENDT)}])
     .concat((D.al||[]).some(function(r){return /퇴근 미등록/.test(r.title)})?[]:[{title:NOOUTT,cnt:noOutRows().length,tier:2,domain:'OP',action:alActionNote(NOOUTT)}])
     .concat([{title:SFT,cnt:sfMiss().length,tier:2,domain:'OP',action:alActionNote(SFT)},{title:EDT,cnt:edUnsigned().length,tier:2,domain:'OP',action:alActionNote(EDT)}]);
