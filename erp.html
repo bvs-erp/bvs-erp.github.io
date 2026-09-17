@@ -461,6 +461,36 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .tax-tab.on{background:var(--ac);color:#fff}
 .tax-panel{display:none}.tax-panel.on{display:block}
 .vat-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+
+/* ── 월간 공휴일 & 투입·휴무 관제 달력 ── */
+.mcal-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mcal-box{min-width:760px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
+.mcal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px;text-align:center;font-size:12px;font-weight:700;color:var(--tx2)}
+.mcal-head .sun{color:var(--crit)}
+.mcal-head .sat{color:#2563eb}
+.mcal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.mcal-cell{background:var(--sf);border:1px solid var(--ln);border-radius:10px;min-height:112px;padding:8px 6px;display:flex;flex-direction:column;transition:all .15s ease;cursor:pointer;position:relative}
+.mcal-cell:hover{border-color:var(--ac);box-shadow:var(--sh);transform:translateY(-1px);z-index:2}
+.mcal-cell.empty{background:var(--sf2);opacity:.4;cursor:default;border-style:dashed}
+.mcal-cell.empty:hover{transform:none;box-shadow:none;border-color:var(--ln)}
+.mcal-cell.sun{background:color-mix(in srgb,var(--critbg) 40%,var(--sf))}
+.mcal-cell.sat{background:color-mix(in srgb,var(--ac2) 35%,var(--sf))}
+.mcal-cell.holiday{background:color-mix(in srgb,#fef2f2 80%,var(--sf));border-color:#fca5a5}
+.mcal-cell.today{outline:2.5px solid var(--ac);outline-offset:-1px;box-shadow:0 0 0 3px rgba(42,120,214,0.2)}
+.mcal-date-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.mcal-date-num{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.mcal-cell.sun .mcal-date-num,.mcal-cell.holiday .mcal-date-num{color:var(--crit)}
+.mcal-cell.sat .mcal-date-num{color:#2563eb}
+.mcal-badge-today{font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;background:var(--ac);color:#fff}
+.mcal-hol-tag{font-size:10.5px;font-weight:700;color:#dc2626;background:#fee2e2;border:1px solid #fecaca;border-radius:6px;padding:2px 4px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:3px}
+.mcal-work-tag{font-size:10.5px;font-weight:700;color:#047857;background:#d1fae5;border:1px solid #a7f3d0;border-radius:6px;padding:2px 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcal-ev-tag{font-size:10px;color:var(--tx2);background:var(--sf2);border:1px solid var(--ln);border-radius:5px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcal-ev-tag.off{color:#b45309;background:#fef3c7;border-color:#fde68a}
+.mcal-ev-tag.edu{color:#1d4ed8;background:#dbeafe;border-color:#bfdbfe}
+.mcal-ev-tag.join{color:#047857;background:#d1fae5;border-color:#a7f3d0;font-weight:600}
+.mcal-ev-tag.pay{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe;font-weight:600}
+.mcal-ev-tag.hol{color:#dc2626;background:#fee2e2;border-color:#fecaca;font-weight:600}
+.mcal-ev-tag.work{color:#0369a1;background:#e0f2fe;border-color:#bae6fd}
 </style>
 </head>
 <body>
@@ -526,6 +556,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           <select id="homeDateSel" class="sel" onchange="setHomeDate(this.value)" style="font-weight:700"></select>
           <button class="btn sm" onclick="homeDateStep(1)" title="다음 일자 (▶)">▶</button>
           <button class="btn sm" id="btnHomeToday" onclick="setHomeToday()">오늘</button>
+          <button class="btn sm" onclick="openMonthlyCalView()" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700">🗓️ 9월 공휴일·추석 관제 달력</button>
         </div>
       </div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
@@ -781,6 +812,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="subtabs-bar" id="subnav-crew">
         <button class="subtab-chip on" onclick="crewSubNav('crewKpi', this)">📊 인력 KPI</button>
         <button class="subtab-chip" onclick="crewSubNav('sec-crewTalent', this)">🚗 모빌리티 맵 &amp; 인재 카드</button>
+        <button class="subtab-chip" onclick="crewSubNav('sec-crewCal', this)">🗓️ 월간 공휴일·투입 관제 달력</button>
         <button class="subtab-chip" onclick="crewSubNav('sec-crewAbsence', this)">📅 9월 부재·교육 타임라인</button>
         <button class="subtab-chip" onclick="crewSubNav('sec-crewCarpool', this)">🚙 카풀 계획</button>
         <button class="subtab-chip" onclick="crewSubNav('sec-crewAll', this)">👥 전체 가용 인력표</button>
@@ -790,6 +822,36 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="desc" style="margin-bottom:8px">엔지니어별 거주지, 자차 보유 유무 및 투입 가능 거점(SK이천, SK청주, 용인TES 등) 현황입니다.</div>
         <div id="mobilitySvgMap" style="background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px;margin-bottom:14px;overflow-x:auto"></div>
         <div class="talent-grid" id="talentCards"></div>
+      </div>
+      <div class="sec" id="sec-crewCal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0;display:inline-block">🗓️ 2026 대한민국 법정공휴일 &amp; 현장 투입·휴무 월간 종합 달력</h3>
+            <span class="cnt" id="calMonthBadge">2026년 9월</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="btn sm" onclick="changeCalMonth(-1)">◀ 이전 달</button>
+            <button class="btn sm" id="calChuseokBtn" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="setCalMonth('2026-09')">🌕 9월 추석 황금연휴</button>
+            <button class="btn sm" onclick="changeCalMonth(1)">다음 달 ▶</button>
+            <button class="btn sm p" onclick="setCalToday()">오늘</button>
+          </div>
+        </div>
+        <div class="kpis" id="calKpis"></div>
+        <div class="mcal-wrap">
+          <div class="mcal-box">
+            <div class="mcal-head">
+              <div class="sun">일 (SUN)</div>
+              <div>월 (MON)</div>
+              <div>화 (TUE)</div>
+              <div>수 (WED)</div>
+              <div>목 (THU)</div>
+              <div>금 (FRI)</div>
+              <div class="sat">토 (SAT)</div>
+            </div>
+            <div class="mcal-grid" id="mcalGridBox"></div>
+          </div>
+        </div>
+        <div id="calDayDetail" class="hide" style="margin-top:14px;background:var(--sf2);border:1px solid var(--ln);border-radius:12px;padding:14px"></div>
       </div>
       <div class="sec" id="sec-crewAbsence"><h3>9월 현장 휴무 · 부재 · 교육 일정 타임라인 <span class="cnt">공수 사전 배치 완료</span></h3>
         <div class="timeline-wrap" id="absenceWrap"></div>
@@ -4115,6 +4177,7 @@ function renderCrew(){
     +Object.keys(areas).sort().map(function(a){return kpi(a,areas[a].length+'<small>명</small>','','click',' onclick="if(G.gCrew){G.gCrew.chip={\'배치(우선지역)\':\''+a+'\'};gRender(\'gCrew\');}crewSubNav(\'sec-crewAll\');"')}).join('')
     +kpi('카풀조',D.carpool.length+'<small>조</small>','','click',' onclick="crewSubNav(\'sec-crewCarpool\')"');
   renderTalentCards();
+  renderMonthlyCal();
   renderAbsenceTimeline();
   renderCarCards();
   var EDCOL=/교육|A-D|중량물|신규PJT|작업지휘자|급소|유해물질|안전|출입신청|이수/;
@@ -4232,6 +4295,371 @@ function renderTalentCards(){
       + '<div class="tc-row" style="margin-top:4px"><span class="tc-lbl">가용 상태</span><span class="pill g">🟢 ' + esc(t.status) + '</span></div>'
       + '</div>';
   }).join('');
+}
+
+/* ── 월간 공휴일 & 투입·휴무 관제 달력 로직 ── */
+var CAL_CUR_YM = '2026-09';
+
+var HOLIDAYS_KR = {
+  '2026-01-01': '신정 (새해 첫날)',
+  '2026-02-16': '설날 연휴 (1일차)',
+  '2026-02-17': '설날 당일 (구정)',
+  '2026-02-18': '설날 연휴 (3일차)',
+  '2026-03-01': '3·1절',
+  '2026-03-02': '3·1절 대체공휴일',
+  '2026-05-05': '어린이날',
+  '2026-05-24': '부처님오신날',
+  '2026-05-25': '부처님오신날 대체공휴일',
+  '2026-06-06': '현충일',
+  '2026-08-15': '광복절',
+  '2026-08-17': '광복절 대체공휴일',
+  '2026-09-24': '추석 연휴 (황금연휴 1/5)',
+  '2026-09-25': '추석 당일 (한가위 2/5)',
+  '2026-09-26': '추석 연휴 (토요연휴 3/5)',
+  '2026-09-27': '일요일 / 추석 연휴 (4/5)',
+  '2026-09-28': '추석 대체공휴일 (5/5 황금연휴)',
+  '2026-10-03': '개천절',
+  '2026-10-05': '개천절 대체공휴일',
+  '2026-10-09': '한글날',
+  '2026-12-25': '성탄절'
+};
+
+var BVS_SCHEDULE_EVENTS = {
+  '2026-08-31': [
+    { who: '박준서', type: 'join', text: '8/31 1일 첫 근무 투입 (청주 M15 라인, 급여 산정 기산점 +83,333원)' }
+  ],
+  '2026-09-04': [
+    { who: '원동진', type: 'join', text: '첫 출근 투입 (일반 현장)' },
+    { who: '박준서', type: 'off', text: '사전 협의 휴무 (급여 일할 공제 1일)' }
+  ],
+  '2026-09-07': [
+    { who: '박준서', type: 'off', text: '사전 협의 휴무 (월요 휴무, 급여 일할 공제 1일)' },
+    { who: '원동진', type: 'off', text: '사전 협의 휴무 (1/4일, 급여 일할 공제)' }
+  ],
+  '2026-09-08': [
+    { who: '원동진', type: 'off', text: '사전 협의 휴무 (2/4일)' }
+  ],
+  '2026-09-09': [
+    { who: '원동진', type: 'off', text: '사전 협의 휴무 (3/4일)' }
+  ],
+  '2026-09-10': [
+    { who: '원동진', type: 'off', text: '사전 협의 휴무 (4/4일 종료)' }
+  ],
+  '2026-09-12': [
+    { who: '이경준', type: 'join', text: '토요 첫 출근 투입 (CEO 특별 승인: 주40시간 미만이나 1.5배 연장특근 인정, +48,000원 가산)' }
+  ],
+  '2026-09-16': [
+    { who: '박준서', type: 'off', text: '병가 결근 (급여 일할 공제 1일)' },
+    { who: '원동진', type: 'off', text: '현장 미투입 (급여 일할 공제 1일)' }
+  ],
+  '2026-09-17': [
+    { who: '원동진', type: 'edu', text: 'SK이천 중량물 취급 안전교육 (13:30)' },
+    { who: '박정우', type: 'off', text: '연차 휴가 (전승진 엔지니어 커버)' }
+  ],
+  '2026-09-18': [
+    { who: '이경준', type: 'work', text: 'SK이천 현장 긴급 기동 투입 지원' },
+    { who: '박정우', type: 'off', text: '연차 휴가 2일차' }
+  ],
+  '2026-09-21': [
+    { who: '최원·이세영', type: 'off', text: '일요 정기 휴무 (라인 사전 협의)' }
+  ],
+  '2026-09-22': [
+    { who: '조영훈', type: 'edu', text: 'SK청주 중량물 안전교육 (이경준 라인 대기)' }
+  ],
+  '2026-09-23': [
+    { who: '김현수', type: 'off', text: '연차 휴가 시작 (청주 주력조 정상 가동)' }
+  ],
+  '2026-09-24': [
+    { who: '전사', type: 'hol', text: '🌕 2026 추석 황금연휴 시작 (현장 휴무 관제)' }
+  ],
+  '2026-09-25': [
+    { who: '전사', type: 'hol', text: '🌕 2026 한가위 추석 당일 (전사 휴무)' }
+  ],
+  '2026-09-26': [
+    { who: '전사', type: 'hol', text: '🌕 추석 연휴 3일차 (토요 휴무)' }
+  ],
+  '2026-09-27': [
+    { who: '전사', type: 'hol', text: '🌕 추석 연휴 4일차 (일요 주휴일)' }
+  ],
+  '2026-09-28': [
+    { who: '전사', type: 'hol', text: '🌕 추석 대체공휴일 (5일 전사 황금연휴 마감)' }
+  ],
+  '2026-09-29': [
+    { who: '전사', type: 'work', text: '연휴 후 반도체 셋업 현장 전원 정상 복귀' }
+  ],
+  '2026-09-30': [
+    { who: '재무', type: 'pay', text: '9월 급여 정산 확정 (박준서 2,333,000 / 원동진 1,833,000 / 이경준 1,760,000)' }
+  ]
+};
+
+function openMonthlyCalView(){
+  tab('crew');
+  setTimeout(function(){
+    var btn = document.querySelector('#subnav-crew [onclick*="sec-crewCal"]');
+    crewSubNav('sec-crewCal', btn);
+    setCalMonth('2026-09');
+  }, 100);
+}
+
+function setCalMonth(ym){
+  CAL_CUR_YM = ym;
+  renderMonthlyCal(ym);
+}
+
+function changeCalMonth(delta){
+  var parts = CAL_CUR_YM.split('-');
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10) + delta;
+  if(m < 1){ y--; m = 12; }
+  else if(m > 12){ y++; m = 1; }
+  CAL_CUR_YM = y + '-' + (m < 10 ? '0' + m : m);
+  renderMonthlyCal(CAL_CUR_YM);
+}
+
+function setCalToday(){
+  var td = (typeof getSysToday === 'function' ? getSysToday() : new Date().toISOString().slice(0, 10));
+  var ym = td.slice(0, 7);
+  CAL_CUR_YM = ym;
+  renderMonthlyCal(ym);
+  setTimeout(function(){
+    showCalDayDetail(td);
+  }, 50);
+}
+
+function renderMonthlyCal(ym){
+  if(!ym) ym = CAL_CUR_YM || '2026-09';
+  CAL_CUR_YM = ym;
+  var gridBox = el('mcalGridBox');
+  if(!gridBox) return;
+
+  var parts = ym.split('-');
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10);
+
+  var badge = el('calMonthBadge');
+  if(badge) badge.textContent = y + '년 ' + m + '월';
+
+  // Chuseok highlight button status
+  var chuseokBtn = el('calChuseokBtn');
+  if(chuseokBtn){
+    if(ym === '2026-09'){
+      chuseokBtn.style.background = '#f59e0b';
+      chuseokBtn.style.color = '#ffffff';
+    } else {
+      chuseokBtn.style.background = '#fef3c7';
+      chuseokBtn.style.color = '#92400e';
+    }
+  }
+
+  var firstDay = new Date(y, m - 1, 1).getDay(); // 0(Sun) ~ 6(Sat)
+  var totalDays = new Date(y, m, 0).getDate();
+  var todayStr = (typeof getSysToday === 'function' ? getSysToday() : new Date().toISOString().slice(0, 10));
+
+  // Count holidays and workdays
+  var holCount = 0;
+  var sunCount = 0;
+  var workDayCount = 0;
+  for(var d = 1; d <= totalDays; d++){
+    var dStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+    var dayOfWeek = new Date(y, m - 1, d).getDay();
+    if(dayOfWeek === 0){
+      sunCount++;
+    }
+    if(HOLIDAYS_KR[dStr]){
+      holCount++;
+    } else if(dayOfWeek !== 0 && dayOfWeek !== 6){
+      workDayCount++;
+    }
+  }
+
+  // Render KPI
+  var kpiBox = el('calKpis');
+  if(kpiBox){
+    var kpiHtml = '';
+    kpiHtml += kpi('월간 총 일수', totalDays + '<small>일</small>', ym + '월 기준', 'hl');
+    if(ym === '2026-09'){
+      kpiHtml += kpi('법정공휴일·주휴일', '11<small>일</small>', '추석 황금연휴 5일 (9/24~28)', 'crit');
+      kpiHtml += kpi('평일 소정근로일', '19<small>일</small>', '일반 근무 19일 관제', 'good');
+      kpiHtml += kpi('9월 3인 급여 확정안', '592.6<small>만원</small>', '박준서233.3 원동진183.3 이경준176(토1.5배)', 'click', ' onclick="crewSubNav(\'sec-crewAbsence\')"');
+    } else {
+      kpiHtml += kpi('법정 공휴일', holCount + '<small>일</small>', '공휴일 지정 기준');
+      kpiHtml += kpi('평일 소정근로일', workDayCount + '<small>일</small>', '주 5일 기준 소정근로');
+    }
+    kpiBox.innerHTML = kpiHtml;
+  }
+
+  // Attendance lookup map
+  var attMap = {};
+  if(D && D.att && Array.isArray(D.att)){
+    D.att.forEach(function(r){
+      var dt = r.work_date;
+      if(dt && dt.indexOf(ym) === 0){
+        if(!attMap[dt]) attMap[dt] = [];
+        attMap[dt].push(r);
+      }
+    });
+  }
+
+  var cellsHtml = '';
+
+  // Leading blanks
+  for(var b = 0; b < firstDay; b++){
+    cellsHtml += '<div class="mcal-cell empty"></div>';
+  }
+
+  // Days
+  for(var d = 1; d <= totalDays; d++){
+    var dStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+    var dayOfWeek = (firstDay + d - 1) % 7;
+    var isSun = (dayOfWeek === 0);
+    var isSat = (dayOfWeek === 6);
+    var holName = HOLIDAYS_KR[dStr];
+    var isToday = (dStr === todayStr);
+    var evList = BVS_SCHEDULE_EVENTS[dStr] || [];
+    var attList = attMap[dStr] || [];
+
+    var cellClasses = ['mcal-cell'];
+    if(isSun) cellClasses.push('sun');
+    if(isSat) cellClasses.push('sat');
+    if(holName) cellClasses.push('holiday');
+    if(isToday) cellClasses.push('today');
+
+    cellsHtml += '<div class="' + cellClasses.join(' ') + '" onclick="showCalDayDetail(\'' + dStr + '\')">';
+    cellsHtml += '<div class="mcal-date-row">';
+    cellsHtml += '<span class="mcal-date-num">' + d + '</span>';
+    if(isToday) cellsHtml += '<span class="mcal-badge-today">오늘</span>';
+    cellsHtml += '</div>';
+
+    if(holName){
+      cellsHtml += '<div class="mcal-hol-tag" title="' + esc(holName) + '">🎌 ' + esc(holName.length > 9 ? holName.slice(0, 8) + '…' : holName) + '</div>';
+    }
+
+    if(attList.length > 0){
+      cellsHtml += '<div class="mcal-work-tag">👷 출근 ' + attList.length + '명</div>';
+    }
+
+    evList.forEach(function(ev){
+      var cls = 'mcal-ev-tag ' + (ev.type || '');
+      cellsHtml += '<div class="' + cls + '" title="' + esc(ev.text) + '">';
+      if(ev.who && ev.who !== '전사') cellsHtml += '<b>[' + esc(ev.who) + ']</b> ';
+      cellsHtml += esc(ev.text) + '</div>';
+    });
+
+    cellsHtml += '</div>';
+  }
+
+  // Trailing blanks to complete 7-day row
+  var totalRendered = firstDay + totalDays;
+  var remainder = totalRendered % 7;
+  if(remainder > 0){
+    for(var t = 0; t < (7 - remainder); t++){
+      cellsHtml += '<div class="mcal-cell empty"></div>';
+    }
+  }
+
+  gridBox.innerHTML = cellsHtml;
+}
+
+function showCalDayDetail(dateStr){
+  var detailBox = el('calDayDetail');
+  if(!detailBox) return;
+
+  var daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+  var dObj = new Date(dateStr + 'T00:00:00');
+  var dayName = daysOfWeek[dObj.getDay()];
+  var holName = HOLIDAYS_KR[dateStr];
+  var evList = BVS_SCHEDULE_EVENTS[dateStr] || [];
+
+  var attList = [];
+  if(D && D.att && Array.isArray(D.att)){
+    attList = D.att.filter(function(r){ return r.work_date === dateStr; });
+  }
+
+  var html = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;border-bottom:1px solid var(--ln);padding-bottom:8px">';
+  html += '<div>';
+  html += '<h4 style="margin:0;font-size:16px;display:inline-block">📅 ' + dateStr + ' (' + dayName + '요일) 관제 리포트</h4>';
+  if(holName){
+    html += '<span class="pill crit" style="margin-left:8px;font-weight:700">🎌 법정공휴일: ' + esc(holName) + '</span>';
+  } else if(dayName === '일'){
+    html += '<span class="pill b" style="margin-left:8px">주휴일 (일요일)</span>';
+  } else if(dayName === '토'){
+    html += '<span class="pill" style="margin-left:8px">토요 무급 휴무일</span>';
+  } else {
+    html += '<span class="pill g" style="margin-left:8px">평일 소정근로일</span>';
+  }
+  html += '</div>';
+  html += '<button class="btn sm" onclick="el(\'calDayDetail\').classList.add(\'hide\')" title="닫기">✕ 닫기</button>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
+
+  // Section 1: Events & Notes
+  html += '<div style="background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px">';
+  html += '<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--ac)">📌 주요 인력·현장 스케줄 &amp; 사전 협의 이력</div>';
+  if(evList.length === 0){
+    html += '<div class="tiny dim">등록된 특별 현장 스케줄이 없습니다. (정상 가동 일정)</div>';
+  } else {
+    html += '<ul style="margin:0;padding-left:18px;font-size:12.5px;display:flex;flex-direction:column;gap:6px">';
+    evList.forEach(function(ev){
+      html += '<li>';
+      if(ev.who) html += '<b style="color:var(--tx)">[' + esc(ev.who) + ']</b> ';
+      html += esc(ev.text);
+      html += '</li>';
+    });
+    html += '</ul>';
+  }
+  html += '</div>';
+
+  // Section 2: 3인 급여 및 법적 기준 안내
+  html += '<div style="background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px">';
+  html += '<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#059669">💰 9월 3인 급여 일할 정산 &amp; 법적 기준</div>';
+  html += '<div style="font-size:12px;line-height:1.6;color:var(--tx2)">';
+  if(dateStr === '2026-08-31'){
+    html += '<b>박준서</b>: 8/31 1일 첫 근무 투입으로 급여 기산점 발생 (+83,333원 환산 가산).<br>8월 급여 또는 9월 합산 지급 대상.';
+  } else if(dateStr >= '2026-09-01' && dateStr <= '2026-09-03'){
+    html += '<b>원동진</b>: 9/4 첫 출근 이전 기간(9/1~9/3, 3일) 미발생 일할 공제 대상 (-250,000원).<br><b>이경준</b>: 9/12 첫 출근 이전 기간(9/1~9/11) 미발생.';
+  } else if(dateStr === '2026-09-04'){
+    html += '<b>원동진</b>: 9/4 첫 출근 투입 시작.<br><b>박준서</b>: 사전협의 휴무로 일할 공제 1일 적용.';
+  } else if(dateStr >= '2026-09-07' && dateStr <= '2026-09-10'){
+    html += '<b>원동진</b>: 사전보고 휴무 4일(9/7~9/10) 일할 공제 적용 기간.<br><b>박준서</b>: 9/7(월) 사전보고 휴무 일할 공제 적용.';
+  } else if(dateStr === '2026-09-12'){
+    html += '<b>이경준</b>: 토요일 첫 출근 투입일. 근로기준법상 주 40시간 미충족 시 1.0배이나, <b>CEO 특별 승인으로 1.5배 연장특근 인정 (+48,000원 상당 가산)</b> 반영.';
+  } else if(dateStr === '2026-09-16'){
+    html += '<b>박준서</b>: 병가 결근 1일 일할 공제.<br><b>원동진</b>: 현장 미투입 1일 일할 공제.';
+  } else if(dateStr >= '2026-09-24' && dateStr <= '2026-09-28'){
+    html += '<b>추석 황금연휴 (5일간)</b>: 법정 유급 공휴일(관공서 공휴일에 관한 규정 제2조 및 근로기준법 제55조 제2항)로서 정규 월급여 전액 보장.';
+  } else if(dateStr === '2026-09-30'){
+    html += '<b>9월 급여 확정</b>:<br>'
+      + '• <b>박준서</b>: 2,333,000원 (8/31 1일 +8.3만, 9/4·9/7·9/16 공제 -25만)<br>'
+      + '• <b>원동진</b>: 1,833,000원 (입사전 3일 + 사전4일 + 미투입1일 = 총 8일 공제)<br>'
+      + '• <b>이경준</b>: 1,760,000원 (19일 일할 171만 + 9/12 토요 1.5배 가산 +5만)';
+  } else {
+    html += '표준 일할계산 원칙: <code>월급여 ÷ 30일 = 83,333원/일</code> (역일수 기준 일할 룰 적용).';
+  }
+  html += '</div></div>';
+
+  // Section 3: 현장 출근 현황
+  html += '<div style="background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px">';
+  html += '<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--tx)">👷 현장 출근 인원 (' + attList.length + '명)</div>';
+  if(attList.length === 0){
+    html += '<div class="tiny dim">해당 일자의 현장 출퇴근 등록 데이터가 없거나 휴무일입니다.</div>';
+  } else {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;max-height:120px;overflow-y:auto">';
+    attList.forEach(function(a){
+      html += '<span class="pill" style="font-size:11px">' + esc(a.name || a.worker_name || '작업자') + (a.site_name ? ' (' + esc(a.site_name) + ')' : '') + '</span>';
+    });
+    html += '</div>';
+  }
+  html += '<div style="margin-top:10px;display:flex;gap:6px">';
+  html += '<button class="btn sm p" onclick="setHomeDate(\'' + dateStr + '\');tab(\'home\');">🏠 ' + dateStr + ' 현장 관제로 이동</button>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  detailBox.innerHTML = html;
+  detailBox.classList.remove('hide');
+  detailBox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function renderAbsenceTimeline(){
