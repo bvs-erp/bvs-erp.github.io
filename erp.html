@@ -727,6 +727,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="kpis" id="crewKpi"></div>
       <div class="sec"><h3>핵심 인재 모빌리티 &amp; 역량 맵 <span class="cnt">고객사 제시용</span></h3>
         <div class="desc" style="margin-bottom:8px">엔지니어별 거주지, 자차 보유 유무 및 투입 가능 거점(SK이천, SK청주, 용인TES 등) 현황입니다.</div>
+        <div id="mobilitySvgMap" style="background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px;margin-bottom:14px;overflow-x:auto"></div>
         <div class="talent-grid" id="talentCards"></div>
       </div>
       <div class="sec"><h3>9월 현장 휴무 · 부재 · 교육 일정 타임라인 <span class="cnt">공수 사전 배치 완료</span></h3>
@@ -3831,41 +3832,98 @@ function renderCrew(){
 }
 
 function renderTalentCards(){
+  var mapBox = el('mobilitySvgMap');
+  if(mapBox){
+    mapBox.innerHTML = '<div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="font-size:12px;font-weight:700;color:var(--tx)">🗺️ 수도권·충청 반도체 셋업 벨트 엔지니어 모빌리티 기동 노선도</span>'
+      + '<span class="tiny dim">자차 보유 인력의 신속 교차 투입(청주↔이천 45분 / 용인↔이천 30분) 현황</span></div>'
+      + '<svg viewBox="0 0 780 150" style="width:100%;min-width:620px;height:auto;display:block">'
+      + '<defs>'
+      + '<filter id="mShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/></filter>'
+      + '</defs>'
+      + '<path d="M 140 75 Q 265 25 390 75" fill="none" stroke="#3b82f6" stroke-width="3.5" stroke-dasharray="6,4"/>'
+      + '<path d="M 390 75 Q 515 25 640 75" fill="none" stroke="#10b981" stroke-width="3.5" stroke-dasharray="6,4"/>'
+      + '<path d="M 140 75 Q 390 145 640 75" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4"/>'
+      + '<g transform="translate(265, 38)">'
+      + '<rect x="-65" y="-11" width="130" height="22" rx="11" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>'
+      + '<text x="0" y="4" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">🚗 영동고속 30분</text>'
+      + '</g>'
+      + '<g transform="translate(515, 38)">'
+      + '<rect x="-70" y="-11" width="140" height="22" rx="11" fill="#ecfdf5" stroke="#10b981" stroke-width="1.2"/>'
+      + '<text x="0" y="4" text-anchor="middle" font-size="11" font-weight="700" fill="#047857">🚗 중부고속 45분 즉시출장</text>'
+      + '</g>'
+      + '<g transform="translate(390, 130)">'
+      + '<rect x="-75" y="-10" width="150" height="20" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>'
+      + '<text x="0" y="4" text-anchor="middle" font-size="10" fill="#64748b">🚗 비상 교차지원 55분</text>'
+      + '</g>'
+      + '<g transform="translate(140, 75)" filter="url(#mShadow)">'
+      + '<circle r="34" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>'
+      + '<circle r="5" fill="#3b82f6"/>'
+      + '<text y="-7" text-anchor="middle" font-size="12" font-weight="800" fill="#1e3a8a">용인 TES</text>'
+      + '<text y="8" text-anchor="middle" font-size="9.5" fill="#64748b">클린룸 제조</text>'
+      + '<rect x="-58" y="38" width="116" height="20" rx="4" fill="#eff6ff" stroke="#bfdbfe"/>'
+      + '<text x="0" y="52" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1e40af">이세영 거주 · 박정우</text>'
+      + '</g>'
+      + '<g transform="translate(390, 75)" filter="url(#mShadow)">'
+      + '<circle r="38" fill="#ffffff" stroke="#1e3a8a" stroke-width="3.5"/>'
+      + '<circle r="6" fill="#1e3a8a"/>'
+      + '<text y="-8" text-anchor="middle" font-size="13" font-weight="800" fill="#1e3a8a">이천 SK / HQ</text>'
+      + '<text y="8" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3b82f6">셋업 메인 거점</text>'
+      + '<rect x="-65" y="42" width="130" height="22" rx="4" fill="#1e3a8a"/>'
+      + '<text x="0" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">이세영(리드) · 원동진</text>'
+      + '</g>'
+      + '<g transform="translate(640, 75)" filter="url(#mShadow)">'
+      + '<circle r="34" fill="#ffffff" stroke="#10b981" stroke-width="3"/>'
+      + '<circle r="5" fill="#10b981"/>'
+      + '<text y="-7" text-anchor="middle" font-size="12" font-weight="800" fill="#065f46">청주 SK</text>'
+      + '<text y="8" text-anchor="middle" font-size="9.5" fill="#64748b">M15/M16 셋업</text>'
+      + '<rect x="-60" y="38" width="120" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0"/>'
+      + '<text x="0" y="52" text-anchor="middle" font-size="9.5" font-weight="700" fill="#047857">이경준(자차) · 조영훈</text>'
+      + '</g>'
+      + '</svg>';
+  }
+
   var box=el('talentCards');if(!box)return;
   var talents = [
     {
       name: '이경준', rank: '엔지니어 (기구조립 특화)', resident: '충북 청주시', car: true,
-      bases: ['SK청주 M15/M16 (주 거점)', 'SK이천 M14/M16 (즉시 출장)'],
+      bases: ['SK청주 M15/M16 (주 거점)', 'SK이천 M14/M16 (즉시 출장 가능)'],
+      mobility: '청주 거주 · 🚗 자차 보유 (이천 고속도로 45분 즉시 출장 투입)',
       specialty: '반도체 기구조립 및 클린룸 셋업 전문 · 자차 기동 긴급 출장 전담',
       status: '투입 가용 (전역 기동)', badge: '핵심 전력'
     },
     {
       name: '이세영', rank: '셋업 리드 엔지니어', resident: '경기 용인시', car: true,
-      bases: ['SK이천 (메인 거점)', 'SK청주 긴급 지원'],
+      bases: ['SK이천 (메인 거점)', 'SK청주 긴급 지원 투입'],
+      mobility: '용인 거주 · 🚗 자차 보유 (이천 메인 30분 + 청주 긴급 교차지원 가능)',
       specialty: '반도체 셋업 총괄 디렉팅 · 라인 안정화 PM · 안전/품질 책임자',
       status: '투입 중 (이천)', badge: '현장 리드'
     },
     {
       name: '최성완', rank: '총괄 현장소장', resident: '경기 화성시', car: true,
       bases: ['삼성전자 화성/평택', 'SK하이닉스 이천'],
+      mobility: '화성 거주 · 🚗 자차 보유 (삼성 화성·평택 및 SK이천 총괄 기동)',
       specialty: '대형 셋업 총괄 디렉팅 · 에이블테크 및 직영팀 통합 노무 관제',
       status: '총괄 관제', badge: '현장 소장'
     },
     {
       name: '원동진', rank: '시니어 테크니션', resident: '경기 이천시', car: true,
       bases: ['SK하이닉스 이천 M16', '우주엔지니어링 협력 라인'],
+      mobility: '이천 거주 · 이천 SK하이닉스 15분 즉시 출동',
       specialty: '장비 반입 및 중량물 핸들링 공정 리드',
       status: '투입 중 (이천)', badge: '기술 전문'
     },
     {
       name: '박정우', rank: 'TES 전담 엔지니어', resident: '경기 용인시', car: false,
       bases: ['TES 용인 클린룸 공장 (전담)'],
+      mobility: '용인 거주 · TES 용인 클린룸 밀착 전담 제조',
       specialty: '반도체 PECVD/에처 정밀 제조 및 파트 조립',
       status: '투입 중 (용인)', badge: 'TES 전담'
     },
     {
       name: '조영훈', rank: '테크니션', resident: '충북 청주시', car: true,
       bases: ['SK하이닉스 청주 M15', 'SK이천 지원'],
+      mobility: '청주 거주 · 🚗 자차 보유 (청주 주력 및 이천 지원)',
       specialty: '클린룸 유틸리티 및 기구 파트 결합',
       status: '투입 중 (청주)', badge: '기술 전문'
     }
@@ -3874,7 +3932,8 @@ function renderTalentCards(){
   box.innerHTML = talents.map(function(t){
     return '<div class="talent-card">'
       + '<div class="tc-hdr"><div><b>' + esc(t.name) + '</b> <span class="tiny dim">' + esc(t.rank) + '</span></div><span class="pill b">' + esc(t.badge) + '</span></div>'
-      + '<div class="tc-row"><span class="tc-lbl">거주/차량</span><span>📍 ' + esc(t.resident) + ' · ' + (t.car ? '<b class="pos">🚗 자차 보유(출장 상시)</b>' : '<span class="dim">카풀/통근</span>') + '</span></div>'
+      + '<div class="tc-row"><span class="tc-lbl">거주/차량</span><span>📍 ' + esc(t.resident) + ' · ' + (t.car ? '<b class="pos">🚗 자차 보유(출장 상시 가능)</b>' : '<span class="dim">카풀/통근</span>') + '</span></div>'
+      + '<div class="tc-row"><span class="tc-lbl">모빌리티</span><span class="tiny" style="color:var(--ac);font-weight:600">' + esc(t.mobility) + '</span></div>'
       + '<div class="tc-row"><span class="tc-lbl">투입 거점</span><div>' + t.bases.map(function(b){ return '<span class="pill ' + (b.indexOf('주 거점') >= 0 || b.indexOf('메인') >= 0 ? 'g' : '') + '" style="margin:1px 2px">' + esc(b) + '</span>'; }).join('') + '</div></div>'
       + '<div class="tc-row"><span class="tc-lbl">전문 역량</span><span class="tiny">' + esc(t.specialty) + '</span></div>'
       + '<div class="tc-row" style="margin-top:4px"><span class="tc-lbl">가용 상태</span><span class="pill g">🟢 ' + esc(t.status) + '</span></div>'
@@ -3885,15 +3944,15 @@ function renderTalentCards(){
 function renderAbsenceTimeline(){
   var box = el('absenceWrap'); if(!box) return;
   var schedules = [
-    { date: '09/17 (수) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', status: '확정 (공수 사전대체)' },
-    { date: '09/17 (수) ~ 09/18 (목)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', status: '승인 완료' },
-    { date: '09/21 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', status: '계획 휴무' },
-    { date: '09/22 (월) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', status: '확정 (라인 사전조율)' },
-    { date: '09/23 (화) ~ 09/28 (일)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간)', status: '승인 완료' },
-    { date: '09/28 (일) ~ 10/02 (목)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', status: '승인 완료' }
+    { date: '09/17 (수) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
+    { date: '09/17 (수) ~ 09/18 (목)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
+    { date: '09/21 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
+    { date: '09/22 (월) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
+    { date: '09/23 (화) ~ 09/28 (일)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
+    { date: '09/28 (일) ~ 10/02 (목)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
   ];
 
-  box.innerHTML = schedules.map(function(s){
+  var timelineHtml = schedules.map(function(s){
     var isEdu = s.type === '교육';
     var isHol = s.type === '휴가';
     return '<div class="timeline-item">'
@@ -3901,28 +3960,47 @@ function renderAbsenceTimeline(){
       + '<div class="ti-date">' + esc(s.date) + '</div>'
       + '<div class="ti-cnt">'
       + '<div class="ti-title"><span class="pill ' + (isEdu ? 'y' : isHol ? 'r' : '') + '">' + esc(s.type) + '</span> <b>' + esc(s.who) + '</b> <span class="tiny dim">(' + esc(s.site) + ')</span></div>'
-      + '<div class="ti-desc">' + esc(s.desc) + '</div>'
+      + '<div class="ti-desc">' + esc(s.desc) + ' <span class="tiny pos">· ' + esc(s.backup) + '</span></div>'
       + '</div>'
       + '<div class="ti-badge"><span class="pill g">' + esc(s.status) + '</span></div>'
       + '</div>';
   }).join('');
+
+  var kakaoNotice = getAbsenceNoticeText();
+  var previewBoxHtml = '<div style="background:#fef9c3;border:1.5px solid #facc15;border-radius:12px;padding:16px;margin-top:16px;box-shadow:var(--sh)">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
+    + '<div style="display:flex;align-items:center;gap:6px">'
+    + '<span style="font-size:18px">💬</span>'
+    + '<b style="font-size:13.5px;color:#854d0e">고객사 PM 전달용 정제 카톡 서식 (혼선 제로·신뢰 제고 양식)</b>'
+    + '</div>'
+    + '<button class="btn sm p" style="background:#eab308;border-color:#ca8a04;color:#713f12;font-weight:700" onclick="copyAbsenceNotice()">📋 이 서식 카톡 복사</button>'
+    + '</div>'
+    + '<pre style="background:#ffffff;border:1px solid #fef08a;border-radius:8px;padding:14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.7;color:#1e293b;white-space:pre-wrap;margin:0">'
+    + esc(kakaoNotice)
+    + '</pre>'
+    + '</div>';
+
+  box.innerHTML = timelineHtml + previewBoxHtml;
 }
 
-function copyAbsenceNotice(){
-  var txt = "[BVS 주식회사] 9월 현장 인력 부재 및 법정교육 일정 안내\n\n"
+function getAbsenceNoticeText(){
+  return "[BVS 주식회사] 9월 현장 인력 부재 및 법정교육 일정 안내\n\n"
     + "원청사 및 고객사 프로젝트 매니저님께 공유드립니다.\n"
     + "사전 공수 및 라인 일정 조율이 완료된 현황입니다.\n\n"
     + "■ 일반 현장 (SK이천 / SK청주)\n"
-    + "· 09/17(수) 13:30 : 원동진 [이천 SK하이닉스 중량물 안전교육]\n"
-    + "· 09/21(일)       : 최원, 이세영 [정기 휴무]\n"
-    + "· 09/22(월) 13:30 : 조영훈 [청주 SK하이닉스 중량물 안전교육]\n"
-    + "· 09/23(화)~09/28(일) : 김현수 [연차 휴가]\n\n"
+    + "· 09/17(수) 13:30 : 원동진 [이천 SK하이닉스 중량물 안전교육] (사전대체 완료)\n"
+    + "· 09/21(일)       : 최원, 이세영 [정기 계획 휴무]\n"
+    + "· 09/22(월) 13:30 : 조영훈 [청주 SK하이닉스 중량물 안전교육] (라인 조율완료)\n"
+    + "· 09/23(화)~09/28(일) : 김현수 [연차 휴가] (이경준/조영훈 백업 투입)\n\n"
     + "■ TES 용인 제조 현장\n"
-    + "· 09/17(수)~09/18(목) : 박정우 [연차 휴가]\n"
-    + "· 09/28(일)~10/02(목) : 전승진 [연차 휴가]\n\n"
+    + "· 09/17(수)~09/18(목) : 박정우 [연차 휴가] (전승진 엔지니어 100% 밀착 커버)\n"
+    + "· 09/28(일)~10/02(목) : 전승진 [연차 휴가] (박정우 엔지니어 전담 가동)\n\n"
     + "※ 상기 엔지니어 외 모든 인력은 정상 투입 중이며, 비상 지원 및 교차 투입(이경준/이세영 자차 기동) 준비가 상시 완비되어 있습니다.\n"
-    + "(주식회사 비브이에스 경영지원팀 드림)";
+    + "(주식회사 비브이에스 경영지원팀 / 현장관리팀 드림)";
+}
 
+function copyAbsenceNotice(){
+  var txt = getAbsenceNoticeText();
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(function(){
       toast('📋 고객사용 9월 일정 카톡 서식이 클립보드에 복사되었습니다!', 'g');
