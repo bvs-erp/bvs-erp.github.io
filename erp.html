@@ -531,11 +531,73 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         </div>
       </div>
 
-      <!-- 3. 월별 실적 추이 서브 탭 -->
+      <!-- 3. 월별 실적 추이 서브 탭 (2026 AI Twin Matrix Cockpit) -->
       <div id="sdPane_mon" class="hide">
         <div class="sec">
-          <h3>월별 실적 추이 (귀속월별 발행액 및 세액)</h3>
-          <div class="tb" id="gSdMon"></div>
+          <!-- 상단 콕핏 헤더 & 타임라인 셀렉터 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px 18px;box-shadow:var(--sh)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--ac),#0ea5e9);color:#fff;display:grid;place-items:center;font-size:16px;box-shadow:0 2px 6px rgba(30,58,138,0.25)">📊</div>
+              <div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <h3 style="margin:0;font-size:16px;letter-spacing:-.01em">월별 실적 AI 듀얼 콕핏</h3>
+                  <span class="vbadge" style="background:var(--ac2);color:var(--ac);font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700">2026 AI Twin Matrix</span>
+                </div>
+                <div class="desc" style="font-size:12px;color:var(--tx3);margin-top:2px">매출 거래처와 매입 공급사를 듀얼 매트릭스로 실시간 비교 분석 · 마진율 드릴다운</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:600;color:var(--tx2)">귀속월 선택:</span>
+              <div id="sdMonTimeline" style="display:flex;gap:4px;overflow-x:auto;padding:2px;max-width:520px;align-items:center"></div>
+            </div>
+          </div>
+
+          <!-- 당월 핵심 4대 마진 & 성과 KPI 카드 -->
+          <div class="kpis" id="sdMonKpis" style="margin-bottom:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"></div>
+
+          <!-- AI 실적 진단 & 코멘트 바 -->
+          <div id="sdMonAiBrief" style="background:var(--sf);border:1px solid var(--ln);border-left:4px solid var(--ac);border-radius:var(--r);padding:12px 16px;margin-bottom:18px;font-size:13px;line-height:1.55;box-shadow:var(--sh)"></div>
+
+          <!-- 중앙 듀얼 스플릿 매트릭스: [좌측 매출 거래처 TOP] vs [우측 매입 공급사 TOP] -->
+          <div class="grid2" id="sdMonSplitBoard" style="gap:16px;margin-bottom:24px">
+            <!-- 좌측: 매출 거래처 실적 (TOP) -->
+            <div class="tb" style="border-top:3px solid var(--info);box-shadow:var(--sh)">
+              <div class="tbar" style="background:var(--infobg);border-bottom:1px solid var(--ln);padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--info)"></span>
+                  <span style="font-size:14px;font-weight:700;color:var(--tx)">당월 매출 거래처 실적</span>
+                  <span class="cnt" id="sdSalesPtnCnt" style="font-size:12px;font-weight:600;color:var(--info);background:var(--sf);padding:1px 7px;border-radius:10px;border:1px solid var(--ln)"></span>
+                </div>
+                <span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">💡 행 클릭 시 세부 문서 필터</span>
+              </div>
+              <div class="tw" style="max-height:480px" id="gSdSalesPtn"></div>
+            </div>
+
+            <!-- 우측: 매입 공급사 실적 (TOP) -->
+            <div class="tb" style="border-top:3px solid var(--warn);box-shadow:var(--sh)">
+              <div class="tbar" style="background:var(--warnbg);border-bottom:1px solid var(--ln);padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn)"></span>
+                  <span style="font-size:14px;font-weight:700;color:var(--tx)">당월 매입 공급사 실적</span>
+                  <span class="cnt" id="sdPurPtnCnt" style="font-size:12px;font-weight:600;color:var(--warn);background:var(--sf);padding:1px 7px;border-radius:10px;border:1px solid var(--ln)"></span>
+                </div>
+                <span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">원가 점유율 순</span>
+              </div>
+              <div class="tw" style="max-height:480px" id="gSdPurPtn"></div>
+            </div>
+          </div>
+
+          <!-- 하단: 연간 귀속월별 종합 실적 추이 (드릴다운 연동 테이블) -->
+          <div class="sec">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+              <h3 style="margin:0;font-size:14px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                <span>📅 연간 귀속월별 종합 실적 추이</span>
+                <span class="cnt" id="sdMonHistCnt"></span>
+              </h3>
+              <span class="tiny dim">월 행을 클릭하면 상단 듀얼 콕핏이 해당 월로 즉시 전환됩니다</span>
+            </div>
+            <div class="tb" id="gSdMon"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1802,6 +1864,7 @@ function sdTab(t){
     if(tabEl) tabEl.classList.toggle('on', k===t);
     if(paneEl) paneEl.classList.toggle('hide', k!==t);
   });
+  if(t==='mon') renderSdMon();
 }
 function sdNoInv(){sdTab('docs');setTimeout(function(){gSetChip('gSd','_noinv','1')},80)}
 function sdQuoteOnly(){sdTab('docs');setTimeout(function(){gSetChip('gSd','doc_kind','quote')},80)}
@@ -1810,7 +1873,20 @@ function renderSales(){
   var m=M(),cur=(D.sdm||[]).filter(function(r){return r.period_ym===m});
   if(el('gPtn')){
     el('ptnN').textContent=(D.ptn||[]).length+'곳';
-    grid('gPtn',[{k:'name',t:'거래처명',l:1,e:'name'},{k:'biz_no',t:'사업자번호',l:1,e:{field:'biz_no',ph:'000-00-00000'}},{k:'ceo_name',t:'대표자',l:1,e:'ceo_name'},{k:'address',t:'주소',l:1,e:'address'},{k:'biz_type',t:'업태',l:1,e:'biz_type'},{k:'biz_item',t:'종목',l:1,e:'biz_item'},{k:'contact_name',t:'담당',l:1,e:'contact_name'},{k:'contact_phone',t:'연락처',l:1,e:'contact_phone'},{k:'contact_email',t:'이메일',l:1,e:'contact_email'},{k:'doc_cnt',t:'문서',f:'int'},{k:'last_doc_on',t:'최근',l:1},{k:'partner_id',t:'코드',l:1,cls:'tiny dim'}],
+    grid('gPtn',[
+      {k:'name',t:'거래처명',l:1,e:'name',f:function(v){return '<b>'+esc(v||'')+'</b>'}},
+      {k:'biz_no',t:'사업자번호',l:1,e:{field:'biz_no',ph:'000-00-00000'},f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'ceo_name',t:'대표자',l:1,e:'ceo_name',f:function(v){return v?'<span style="font-weight:600">'+esc(v)+'</span>':'<span class="dim" title="더블클릭하여 입력">-</span>'}},
+      {k:'biz_type',t:'업태',l:1,e:'biz_type',f:function(v){return v?'<span class="pill b" style="font-size:10.5px">'+esc(v)+'</span>':'<span class="dim">-</span>'}},
+      {k:'biz_item',t:'종목',l:1,e:'biz_item',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'address',t:'주소',l:1,e:'address',f:function(v){return v?'<span class="tiny" title="'+esc(v)+'">'+esc(v.slice(0,25))+(v.length>25?'…':'')+'</span>':'<span class="dim">-</span>'}},
+      {k:'contact_name',t:'담당자',l:1,e:'contact_name',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'contact_phone',t:'연락처',l:1,e:'contact_phone',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'contact_email',t:'이메일',l:1,e:'contact_email',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'doc_cnt',t:'문서',f:'int'},
+      {k:'last_doc_on',t:'최근거래',l:1,f:function(v){return v?'<span class="tiny dim">'+esc(v)+'</span>':'<span class="dim">-</span>'}},
+      {k:'partner_id',t:'코드',l:1,cls:'tiny dim'}
+    ],
       {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:ptnSave,empty:'거래처 없음'});
   }
   var s=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='tax'});
@@ -1842,12 +1918,235 @@ function renderSales(){
     {rows:D.sd,q:['partner_name','title','doc_no'],qph:'거래처·건명·번호',chips:[{k:'trade_side',vals:[['','구분 전체'],['sales','매출'],['purchase','매입']]},{k:'doc_kind',vals:[['','종류 전체'],['tax','계산서'],['quote','견적'],['order','발주'],['contract','계약']]},{k:'status',vals:[['','상태 전체'],['draft','임시'],['approved','확정'],['settled','정산완료'],['void','취소']]},{k:'_noinv',vals:[['','승인번호 전체'],['1','승인번호 미입력']]}],foot:true,onRow:openDoc,page:50});
   edHint('gSd','아래 합계는 지금 표시된 행을 그대로 더한 값입니다 · 회색 금액(견적·취소)은 매출·매입 KPI와 손익에 들어가지 않습니다');
 
+  renderSdMon();
+}
+
+var SD_MON_TARGET = '';
+function setSdMonTarget(ym){
+  SD_MON_TARGET = ym;
+  renderSdMon();
+}
+
+function renderSdMon(){
+  if(!el('sdPane_mon')) return;
+  var ymSet = {};
+  (D.sd||[]).forEach(function(d){ if(d.period_ym) ymSet[d.period_ym]=true; });
+  (D.sdm||[]).forEach(function(d){ if(d.period_ym) ymSet[d.period_ym]=true; });
+  var allYm = Object.keys(ymSet).sort().reverse();
+  if(!allYm.length) allYm = [M()];
+
+  if(!SD_MON_TARGET || allYm.indexOf(SD_MON_TARGET)<0){
+    SD_MON_TARGET = (allYm.indexOf(M())>=0) ? M() : allYm[0];
+  }
+  var curYm = SD_MON_TARGET;
+
+  if(el('sdMonCurMonthLabel')){
+    el('sdMonCurMonthLabel').textContent = curYm + ' 귀속월';
+  }
+
+  // 1. 타임라인 칩 바
+  if(el('sdMonTimeline')){
+    el('sdMonTimeline').innerHTML = allYm.slice(0, 14).map(function(ym){
+      var isCur = (ym === curYm);
+      return '<span class="chip'+(isCur?' on':'')+'" onclick="setSdMonTarget(\''+ym+'\')" style="font-size:12px;padding:3px 9px">'+ym+'</span>';
+    }).join('');
+  }
+
+  // 2. 당월 세금계산서 실적 문서 추출
+  var curDocs = (D.sd||[]).filter(function(d){
+    return d.period_ym === curYm && d.status !== 'void';
+  });
+
+  var salesDocs = curDocs.filter(function(d){ return d.trade_side==='sales' && d.doc_kind==='tax'; });
+  var purDocs = curDocs.filter(function(d){ return d.trade_side==='purchase' && d.doc_kind==='tax'; });
+
+  var totalSalesSupply = sum(salesDocs, 'supply_amt');
+  var totalSalesTax = sum(salesDocs, 'tax_amt');
+  var totalSalesSum = sum(salesDocs, 'total_amt');
+
+  var totalPurSupply = sum(purDocs, 'supply_amt');
+  var totalPurTax = sum(purDocs, 'tax_amt');
+  var totalPurSum = sum(purDocs, 'total_amt');
+
+  var grossMargin = totalSalesSupply - totalPurSupply;
+  var marginRate = totalSalesSupply ? (Math.round((grossMargin / totalSalesSupply) * 1000) / 10) : 0;
+
+  // 3. 매출 거래처별 그룹화
+  var sMap = {};
+  salesDocs.forEach(function(d){
+    var key = d.partner_name || d.partner_id || '미지정 거래처';
+    if(!sMap[key]){
+      sMap[key] = { partner_name: key, partner_id: d.partner_id||'', doc_cnt: 0, supply_amt: 0, tax_amt: 0, total_amt: 0 };
+    }
+    sMap[key].doc_cnt += 1;
+    sMap[key].supply_amt += (+d.supply_amt||0);
+    sMap[key].tax_amt += (+d.tax_amt||0);
+    sMap[key].total_amt += (+d.total_amt||0);
+  });
+  var sRows = Object.values(sMap).sort(function(a,b){ return b.supply_amt - a.supply_amt; });
+  sRows.forEach(function(r, idx){
+    r.rank = idx + 1;
+    r.share = totalSalesSupply ? Math.round((r.supply_amt / totalSalesSupply) * 1000) / 10 : 0;
+  });
+
+  // 4. 매입 공급사별 그룹화
+  var pMap = {};
+  purDocs.forEach(function(d){
+    var key = d.partner_name || d.partner_id || '미지정 공급사';
+    if(!pMap[key]){
+      pMap[key] = { partner_name: key, partner_id: d.partner_id||'', doc_cnt: 0, supply_amt: 0, tax_amt: 0, total_amt: 0 };
+    }
+    pMap[key].doc_cnt += 1;
+    pMap[key].supply_amt += (+d.supply_amt||0);
+    pMap[key].tax_amt += (+d.tax_amt||0);
+    pMap[key].total_amt += (+d.total_amt||0);
+  });
+  var pRows = Object.values(pMap).sort(function(a,b){ return b.supply_amt - a.supply_amt; });
+  pRows.forEach(function(r, idx){
+    r.rank = idx + 1;
+    r.share = totalPurSupply ? Math.round((r.supply_amt / totalPurSupply) * 1000) / 10 : 0;
+  });
+
+  // 5. 상단 4대 핵심 마진 KPI
+  if(el('sdMonKpis')){
+    var marginColor = grossMargin >= 0 ? 'pos' : 'neg';
+    el('sdMonKpis').innerHTML =
+      kpi('당월 매출 총액', won(totalSalesSupply), '<span style="color:var(--info);font-weight:700">'+sRows.length+'개사</span> · '+salesDocs.length+'건 세금계산서', 'hl')
+      + kpi('당월 매입 총액', won(totalPurSupply), '<span style="color:var(--warn);font-weight:700">'+pRows.length+'개사</span> · '+purDocs.length+'건 매입계산서')
+      + kpi('매출총이익 (Gross Margin)', '<span class="'+marginColor+'">'+won(grossMargin)+'</span>', '공급가액 기준 차액 (매출 - 매입)')
+      + kpi('매출총이익률 (마진율)', '<span class="'+marginColor+'">'+marginRate+'%</span>', totalSalesSupply ? '원가 회수 후 마진 건전성' : '당월 매출 실적 없음');
+  }
+
+  // 6. 2026 AI 지능형 실적 브리핑 바
+  if(el('sdMonAiBrief')){
+    var topS = sRows[0] ? '최대 매출처는 <b>['+esc(sRows[0].partner_name)+']</b> ('+won(sRows[0].supply_amt)+', 당월 매출의 '+sRows[0].share+'% 집중)' : '당월 발행된 매출이 없습니다';
+    var topP = pRows[0] ? '최대 매입처는 <b>['+esc(pRows[0].partner_name)+']</b> ('+won(pRows[0].supply_amt)+', 당월 매입의 '+pRows[0].share+'% 점유)' : '당월 등록된 매입이 없습니다';
+    el('sdMonAiBrief').innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:10px">'
+      + '<span style="font-size:18px">🤖</span>'
+      + '<div>'
+      + '<div style="font-weight:700;color:var(--tx);margin-bottom:3px">2026 AI 수석 비서 브리핑 · '+curYm+' 귀속 실적 진단</div>'
+      + '<div style="color:var(--tx2);font-size:12.5px">'
+      + curYm+' 총 매출은 <b>'+won(totalSalesSupply)+'</b> ('+sRows.length+'개사), 매입 원가는 <b>'+won(totalPurSupply)+'</b> ('+pRows.length+'개사)로 '
+      + '<b>'+(grossMargin>=0 ? '<span class="pos">매출총이익 '+won(grossMargin)+' (마진율 '+marginRate+'%)</span>' : '<span class="neg">적자 '+won(Math.abs(grossMargin))+'</span>')+'</b>을 달성했습니다. '
+      + topS+'이며, '+topP+'입니다. '
+      + '<span class="dim">행을 클릭하면 해당 거래처의 세부 영업·계산서 원장으로 즉시 이동합니다.</span>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // 7. 듀얼 보드 건수 및 합계 배지
+  if(el('sdSalesPtnCnt')) el('sdSalesPtnCnt').textContent = sRows.length+'개사 · 공급가 '+won(totalSalesSupply);
+  if(el('sdPurPtnCnt')) el('sdPurPtnCnt').textContent = pRows.length+'개사 · 공급가 '+won(totalPurSupply);
+
+  function barFormat(color){
+    return function(v){
+      var n = Math.min(100, Math.max(0, +v||0));
+      return '<div style="display:flex;align-items:center;gap:6px;min-width:85px">'
+        + '<div style="flex:1;background:var(--ln);height:6px;border-radius:3px;overflow:hidden">'
+        + '<div style="width:'+n+'%;background:'+color+';height:100%;border-radius:3px"></div>'
+        + '</div>'
+        + '<span class="tiny mono" style="min-width:32px;text-align:right">'+n+'%</span>'
+        + '</div>';
+    };
+  }
+
+  // 좌측: 매출 거래처 TOP
+  if(el('gSdSalesPtn')){
+    grid('gSdSalesPtn', [
+      { k:'rank', t:'#', cls:'tiny dim', f:'int' },
+      { k:'partner_name', t:'매출 거래처명', l:1, f:function(v, r){ return '<b>'+esc(v)+'</b>'+(r.partner_id ? ' <span class="tiny dim">'+esc(r.partner_id)+'</span>' : ''); } },
+      { k:'doc_cnt', t:'건수', f:'int' },
+      { k:'supply_amt', t:'공급가액', f:'won' },
+      { k:'tax_amt', t:'세액', f:'won' },
+      { k:'total_amt', t:'합계금액', f:'won' },
+      { k:'share', t:'매출비중', f:barFormat('var(--info)') }
+    ], {
+      rows: sRows,
+      empty: curYm + ' 귀속 매출 거래처가 없습니다',
+      page: 30,
+      onRow: function(row){
+        sdTab('docs');
+        setTimeout(function(){
+          var qEl = el('q_gSd');
+          if(qEl){
+            qEl.value = row.partner_name;
+            qEl.dispatchEvent(new Event('input'));
+          }
+        }, 80);
+      }
+    });
+  }
+
+  // 우측: 매입 공급사 TOP
+  if(el('gSdPurPtn')){
+    grid('gSdPurPtn', [
+      { k:'rank', t:'#', cls:'tiny dim', f:'int' },
+      { k:'partner_name', t:'매입 공급사명', l:1, f:function(v, r){ return '<b>'+esc(v)+'</b>'+(r.partner_id ? ' <span class="tiny dim">'+esc(r.partner_id)+'</span>' : ''); } },
+      { k:'doc_cnt', t:'건수', f:'int' },
+      { k:'supply_amt', t:'공급가액', f:'won' },
+      { k:'tax_amt', t:'세액', f:'won' },
+      { k:'total_amt', t:'합계금액', f:'won' },
+      { k:'share', t:'원가비중', f:barFormat('var(--warn)') }
+    ], {
+      rows: pRows,
+      empty: curYm + ' 귀속 매입 공급사가 없습니다',
+      page: 30,
+      onRow: function(row){
+        sdTab('docs');
+        setTimeout(function(){
+          var qEl = el('q_gSd');
+          if(qEl){
+            qEl.value = row.partner_name;
+            qEl.dispatchEvent(new Event('input'));
+          }
+        }, 80);
+      }
+    });
+  }
+
+  // 8. 하단 연간 종합 추이표 (드릴다운 연동)
   if(el('gSdMon')){
-    var t={};(D.sdm||[]).forEach(function(r){var k=r.period_ym;t[k]=t[k]||{period_ym:k,sc:0,sa:0,st:0,pc:0,pa:0,qc:0,qa:0};
-      if(r.trade_side==='sales'&&r.doc_kind==='tax'){t[k].sc+=+r.doc_cnt||0;t[k].sa+=+r.supply_amt||0;t[k].st+=+r.tax_amt||0}
-      else if(r.trade_side==='sales'&&r.doc_kind==='quote'){t[k].qc+=+r.doc_cnt||0;t[k].qa+=+r.supply_amt||0}
-      else if(r.trade_side==='purchase'&&r.doc_kind==='tax'){t[k].pc+=+r.doc_cnt||0;t[k].pa+=+r.supply_amt||0}});
-    grid('gSdMon',[{k:'period_ym',t:'귀속월',l:1},{k:'sc',t:'매출건',f:'int'},{k:'sa',t:'매출 공급가',f:'won'},{k:'st',t:'세액',f:'won'},{k:'pc',t:'매입건',f:'int'},{k:'pa',t:'매입 공급가',f:'won'},{k:'qc',t:'견적건',f:'int'},{k:'qa',t:'견적 발행액',f:function(v){return '<span class="dim">'+won(v)+'</span>'}}],{rows:Object.keys(t).sort().reverse().map(function(k){return t[k]}),csv:false,page:18});
+    var t = {};
+    (D.sdm||[]).forEach(function(r){
+      var k = r.period_ym;
+      t[k] = t[k] || { period_ym: k, sc: 0, sa: 0, st: 0, pc: 0, pa: 0, qc: 0, qa: 0 };
+      if(r.trade_side==='sales' && r.doc_kind==='tax'){ t[k].sc += +r.doc_cnt||0; t[k].sa += +r.supply_amt||0; t[k].st += +r.tax_amt||0; }
+      else if(r.trade_side==='sales' && r.doc_kind==='quote'){ t[k].qc += +r.doc_cnt||0; t[k].qa += +r.supply_amt||0; }
+      else if(r.trade_side==='purchase' && r.doc_kind==='tax'){ t[k].pc += +r.doc_cnt||0; t[k].pa += +r.supply_amt||0; }
+    });
+    (D.sd||[]).forEach(function(r){
+      var k = r.period_ym;
+      if(!k || r.status==='void') return;
+      t[k] = t[k] || { period_ym: k, sc: 0, sa: 0, st: 0, pc: 0, pa: 0, qc: 0, qa: 0 };
+    });
+    var monRows = Object.keys(t).sort().reverse().map(function(k){
+      var row = t[k];
+      row.margin = (row.sa||0) - (row.pa||0);
+      row.margin_rate = row.sa ? Math.round((row.margin / row.sa) * 1000) / 10 : 0;
+      return row;
+    });
+    if(el('sdMonHistCnt')) el('sdMonHistCnt').textContent = monRows.length + '개 귀속월 집계';
+    grid('gSdMon', [
+      { k:'period_ym', t:'귀속월', l:1, f:function(v){ return (v===curYm) ? '<b>'+esc(v)+' <span class="pill b" style="font-size:10px">현재 선택</span></b>' : esc(v); } },
+      { k:'sc', t:'매출건', f:'int' },
+      { k:'sa', t:'매출 공급가', f:'won' },
+      { k:'st', t:'세액', f:'won' },
+      { k:'pc', t:'매입건', f:'int' },
+      { k:'pa', t:'매입 공급가', f:'won' },
+      { k:'margin', t:'매출총이익', f:function(v){ return (+v>=0) ? '<span class="pos" style="font-weight:700">'+won(v)+'</span>' : '<span class="neg" style="font-weight:700">'+won(v)+'</span>'; } },
+      { k:'margin_rate', t:'마진율', f:function(v){ return (+v>=0) ? '<span class="pos mono">'+v+'%</span>' : '<span class="neg mono">'+v+'%</span>'; } },
+      { k:'qc', t:'견적건', f:'int' },
+      { k:'qa', t:'견적 발행액', f:function(v){ return '<span class="dim">'+won(v)+'</span>'; } }
+    ], {
+      rows: monRows,
+      csv: false,
+      page: 24,
+      onRow: function(row){
+        setSdMonTarget(row.period_ym);
+      }
+    });
   }
 }
 async function setDocAppNo(no){
