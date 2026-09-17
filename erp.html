@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.16</title>
+<title>BVS ERP v1.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -357,6 +357,10 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .ladder th{color:var(--tx3);font-weight:500;font-size:11.5px;white-space:nowrap}
 .ladder td.c{text-align:center}.ladder td.r{text-align:right;font-variant-numeric:tabular-nums}
 .ladder tr.me{background:var(--ac2)}.ladder tr.me td{font-weight:700;color:var(--ac)}
+.adjbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:12px;border:1px solid var(--ac);border-radius:var(--r2);background:var(--ac2);margin-bottom:12px}
+.adjbar label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--tx2)}
+.adjbar select,.adjbar input{padding:7px 9px;border:1px solid var(--ln);border-radius:8px;background:var(--sf);color:var(--tx);font-size:13px}
+.adjbar .sp{flex:1}
 </style>
 </head>
 <body>
@@ -394,7 +398,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.16</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.17</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -627,7 +631,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.16';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.17';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2070,14 +2074,47 @@ function openSupplier(s){var its=D.items.filter(function(r){return r.best_suppli
 
 /* ═══════════ 근로계약 전자서명 ═══════════ */
 function esgStat(v){var m={issued:['서명 대기','w'],signed:['날인 대기','w'],countersigned:['완료',''],void:['무효','x']};var a=m[v]||['',''];return '<span class="stbtn '+a[1]+'">'+a[0]+'</span>'}
+var ESG={emp:null};
+var POSOPT=['','파트리드','팀리드','그룹리드','총괄리드'];
+function esgAdjBar(r,v){
+  var tg=(D.tgr||[]);
+  var g=+v.grade||1;
+  var gs='<select id="esg_g">'+tg.map(function(t){return '<option value="'+t.grade+'"'+(t.grade===g?' selected':'')+'>'+t.grade+' · '+esc(t.grade_name)+' · '+(+t.monthly_amt).toLocaleString('ko-KR')+'원</option>'}).join('')+'</select>';
+  var cur=(r.position_title||'없음').replace(/\s/g,'');
+  var ps='<select id="esg_p">'+POSOPT.map(function(o){var lbl=o||'없음';return '<option value="'+o+'"'+((o||'없음')===cur||(o===''&&cur==='없음')?' selected':'')+'>'+lbl+'</option>'}).join('')+'</select>';
+  return '<div class="adjbar">'
+    +'<label>기술등급 '+gs+'</label>'
+    +'<label>직책 '+ps+'</label>'
+    +'<label>인정경력 <input id="esg_c" type="number" min="0" max="8" step="0.5" style="width:74px" value="'+(v.career_y||0)+'"></label>'
+    +'<label>차량 <select id="esg_v"><option value="1"'+(/■ 유/.test(v.vehicle||'')?' selected':'')+'>유</option><option value="0"'+(/■ 무/.test(v.vehicle||'')?' selected':'')+'>무</option></select></label>'
+    +'<span class="sp"></span>'
+    +'<button class="btn sm p" onclick="esgApply(\''+r.employment_no+'\')">적용하고 다시 보기</button>'
+    +'<div class="tiny dim" style="flex-basis:100%;margin-top:2px">여기서 고치면 <b>ERP 급여기준이 실제로 바뀝니다</b>. 계약서와 ERP가 어긋나지 않도록 한 곳에서만 값을 잡습니다. 발행 전에 확정하십시오.</div></div>';
+}
+async function esgApply(emp){
+  var g=el('esg_g')?el('esg_g').value:null, p=el('esg_p')?el('esg_p').value:null,
+      c=el('esg_c')?el('esg_c').value:null, v=el('esg_v')?el('esg_v').value:null;
+  var jobs=[['tech_grade',g],['position_title',p],['career_years',c],['has_vehicle',v==='1'?'유':'무']];
+  for(var i=0;i<jobs.length;i++){
+    if(jobs[i][1]==null)continue;
+    var res=await sb.rpc('ceo_set_pay_profile',{p_employment_no:emp,p_field:jobs[i][0],p_value:String(jobs[i][1])});
+    if(res.error||!res.data||!res.data.ok){toast(jobs[i][0]+' — '+((res.error&&res.error.message)||(res.data&&res.data.error)||'실패'),'e');return}
+  }
+  toast('급여기준 반영','g');
+  await loadAll();
+  var row=(D.esgt||[]).filter(function(x){return x.employment_no===emp})[0];
+  if(row)esgPreview(row);
+}
 async function esgPreview(r){
+  ESG.emp=r.employment_no;
   var res=await sb.rpc('ceo_doc_preview',{p_employment_no:r.employment_no});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
   var v=res.data.vars||{};
   var warn='';
   if(!r.ready_person)warn+='<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
   drOpen('계약서 미리보기 · '+(v.name||r.person_name),
-    warn+kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',v.grade+' 등급'],['직책',v.position],['월 지급총액',v.amt_total],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
+    warn+esgAdjBar(r,v)
+    +kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',v.grade+' 등급 · '+esc(v.grade_name||'')],['직책',v.position],['월 지급총액','<b>'+v.amt_total+'</b>'],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
     +'<div class="docpaper" style="margin-top:12px">'+res.data.html+'</div>',
     '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="esgIssue(\''+r.employment_no+'\')">이 내용으로 발행</button>');
 }
@@ -2165,7 +2202,7 @@ function grdOpen(r){
     return '<tr'+(t.grade===r.grade?' class="me"':'')+'><td class="c">'+t.grade+'</td><td>'+esc(t.grade_name)+'</td>'
       +'<td class="r">'+won(t.monthly_amt)+'</td><td class="c">'+(t.min_months?t.min_months+'개월':'—')+'</td>'
       +'<td class="r">'+(+t.min_days).toLocaleString('ko-KR')+'</td>'
-      +'<td class="tiny">'+esc(t.req_solo||'')+'</td><td class="tiny">'+esc(t.req_guide||'')+'</td></tr>'}).join('');
+      +'<td class="tiny">'+esc(t.req_scope||'')+'</td><td class="tiny">'+esc(t.req_solo||'')+'</td><td class="tiny">'+esc(t.req_guide||'')+'</td></tr>'}).join('');
   var nx=(D.tgr||[]).filter(function(t){return t.grade===r.next_grade})[0]||{};
   var cu=(D.tgr||[]).filter(function(t){return t.grade===r.grade})[0]||{};
   var need=Math.max((+r.next_min_days||0)-(+r.deemed_days||0),0);
@@ -2177,8 +2214,8 @@ function grdOpen(r){
     ['체류기간 요건',r.next_grade?(r.next_min_months+'개월 → '+r.stay_ok_on+((+r.stay_left_days||0)>0?' <span class="wn">('+r.stay_left_days+'일 남음)</span>':' <span class="pos">(충족)</span>')):'—'],
     ['투입일 요건',r.next_grade?((+r.next_min_days).toLocaleString('ko-KR')+'일 · 부여 후 '+need.toLocaleString('ko-KR')+'일 필요 → 현재 '+(+r.days_after).toLocaleString('ko-KR')+'일'+((+r.short_days||0)>0?' <span class="wn">('+(+r.short_days).toLocaleString('ko-KR')+'일 부족)</span>':' <span class="pos">(충족)</span>')):'—'],
     ['판정',grdJudge(r.judge)]]);
-  if(r.next_grade)body+='<div class="hlp" style="margin-top:12px"><b>'+r.next_grade+'등급 실증 심사 항목</b><br>출입·자격 — '+esc(nx.req_access||'—')+'<br>단독 수행 — '+esc(nx.req_solo||'—')+'<br>지도·안전 — '+esc(nx.req_guide||'—')+'</div>';
-  body+='<h4 style="margin:16px 0 6px;font-size:14px">등급 사다리</h4><table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>체류</th><th>투입일</th><th>단독 수행 능력</th><th>지도 · 안전</th></tr>'+lad+'</table>';
+  if(r.next_grade)body+='<div class="hlp" style="margin-top:12px"><b>'+r.next_grade+'등급 실증 심사 항목</b><br>기술 범위 — '+esc(nx.req_scope||'—')+'<br>단독 수행 — '+esc(nx.req_solo||'—')+'<br>지도·안전 — '+esc(nx.req_guide||'—')+'</div>';
+  body+='<h4 style="margin:16px 0 6px;font-size:14px">등급 사다리</h4><table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>체류</th><th>투입일</th><th>기술 범위</th><th>단독 수행 능력</th><th>지도 · 안전</th></tr>'+lad+'</table>';
   drOpen(r.person_name+' · 기술등급', body, '<button class="btn" onclick="drClose()">닫기</button>');
 }
 function renderGrade(){
