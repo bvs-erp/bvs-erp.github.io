@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.21</title>
+<title>BVS ERP v1.26 (Speed Optimized)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1275,6 +1275,10 @@ function go(p){
   document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});
   el('ttl').textContent=TITLE[p]||p;el('crumb').textContent=TITLE[p]||p;el('main').scrollTop=0;
   try{localStorage.setItem('bvs_page',p)}catch(e){}
+  // ⚡ LAZY TAB RENDERING: 아직 렌더링되지 않았거나 데이터 변경으로 더티(dirty)인 경우 1회만 정밀 렌더링
+  if(!_renderedPages[p] || _dirtyPages[p]){
+    renderPage(p);
+  }
 }
 /* 모바일 전체 메뉴 드로어 및 퀵 점프 */
 function openMobMenu(){
@@ -1538,10 +1542,11 @@ function startBackgroundMonitor(){
     if(!LOADING && el('app') && !el('app').classList.contains('hide')){
       loadAll(true);
     }
-  }, 120000); // 2분마다 백그라운드 자동 무결성 점검
+  }, 600000); // 10분마다 백그라운드 자동 무결성 점검 (기존 2분 -> 10분 안정화)
 }
 window.addEventListener('focus', function(){
-  if(!LOADING && el('app') && !el('app').classList.contains('hide') && (Date.now() - _lastLoadTime > 25000)){
+  // 포커스 복귀 시 10분(600초) 이상 비활성 상태였을 때만 백그라운드 갱신 (기존 25초 창 전환 폭격 차단)
+  if(!LOADING && el('app') && !el('app').classList.contains('hide') && (Date.now() - _lastLoadTime > 600000)){
     loadAll(true);
   }
 });
@@ -1736,43 +1741,96 @@ async function loadAll(){
     Q = Q.filter(function(q){ return LEAD_ALLOW[q[0]]; });
   }
 
-  // 1단계: 첫 화면 골격(Shell) 즉시 렌더링 (병렬 4)
+  // 1단계: 첫 화면 골격(Shell) 즉시 렌더링 (병렬 6)
   var T1={dash:1,sites:1,staff:1,co:1,ptn:1,sdm:1,pipe:1,plans:1,setg:1,chk:1,esgt:1,grd:1};
   var t1=Q.filter(function(q){return T1[q[0]]});
-  await pool(t1,4);
-  buildMonths();try{renderAll()}catch(e){}
+  await pool(t1,6);
+  buildMonths();
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
   el('stamp').textContent='1차 '+Math.round(performance.now()-t0)+'ms · 현장 투입 로딩 중…';
 
-  // 2단계: 현장 출퇴근 및 영업·계약 실황 (병렬 3)
+  // 2단계: 현장 출퇴근 및 영업·계약 실황 (병렬 6)
   var T2={att:1,attk:1,sd:1,gap:1,di:1,tr:1,uacc:1,uorp:1,sfk:1,eds:1,edg:1,alw:1,cons:1};
   var t2=Q.filter(function(q){return T2[q[0]]});
-  await pool(t2,3);
-  try{renderAll()}catch(e){}
+  await pool(t2,6);
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
   el('stamp').textContent='2차 '+Math.round(performance.now()-t0)+'ms · 손익 분석 집계 중…';
 
-  // 3단계: 무거운 분석 뷰 (전용 슬롯 병렬 2 - DB CPU 보호 및 타임아웃 방지)
+  // 3단계: 무거운 분석 뷰 (전용 슬롯 병렬 3 - DB 타임아웃 방지 및 안전 실행)
   var T3={set:1,pay:1,al:1,retro:1,lm:1,ldr:1};
   var t3=Q.filter(function(q){return T3[q[0]]});
-  await pool(t3,2);
-  try{renderAll()}catch(e){}
+  await pool(t3,3);
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
   el('stamp').textContent='3차 '+Math.round(performance.now()-t0)+'ms · 세부 원장 보강 중…';
 
-  // 4단계: 백그라운드 원장 및 과거 아카이브 (병렬 4)
+  // 4단계: 백그라운드 원장 및 과거 아카이브 (병렬 6)
   var doneKeys={};
   [t1,t2,t3].forEach(function(arr){arr.forEach(function(x){doneKeys[x[0]]=1})});
   var t4=Q.filter(function(q){return !doneKeys[q[0]]});
-  await pool(t4,4);
+  await pool(t4,6);
 
   LOADING=false;
   _lastLoadTime=Date.now();
   var ms=Math.round(performance.now()-t0);
-  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 점검 완료 · <span class="pos">🟢 24h 관제</span>'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':'');
-  buildMonths();renderAll();
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 점검 완료 · <span class="pos">🟢 24h 관제</span> ('+ms+'ms)'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':'');
+  buildMonths();
+  renderAll();
   if(errs.length){LASTERR=errs;toast('조회 '+errs.length+'건 실패 — 자세히: 콘솔 LASTERR','e')}
   if(!D.dash.length&&!errs.length)toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
 }
 var LASTERR=[];
-function renderAll(){CAL.loadedFor=CAL.loadedFor||null;renderHome();renderSite();renderPlans();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt();renderSettle();renderSafety()}
+
+/* ⚡ LAZY TAB RENDERING SYSTEM ⚡ */
+var _renderedPages = {};
+var _dirtyPages = {
+  home: true, site: true, sales: true, money: true, pl: true, pm: true,
+  hr: true, safety: true, crew: true, close: true, tax: true, ht: true,
+  settle: true, alerts: true
+};
+
+function updateAlertBadge(){
+  try {
+    var hot = hotCount();
+    var n = el('alertN'); if(n){ n.textContent = hot; n.classList.toggle('hide', !hot); }
+    var nm = el('alertNm'); if(nm){ nm.textContent = hot; nm.classList.toggle('hide', !hot); }
+  } catch(e){}
+}
+
+function renderPage(p){
+  p = p || ST.page || 'home';
+  try {
+    if(p === 'home') { renderHome(); }
+    else if(p === 'site') { renderSite(); renderPlans(); }
+    else if(p === 'sales') { renderSales(); }
+    else if(p === 'money') { renderMoney(); }
+    else if(p === 'pl') { renderPl(); }
+    else if(p === 'pm') { renderPm(); }
+    else if(p === 'hr') { renderHr(); }
+    else if(p === 'safety') { renderSafety(); }
+    else if(p === 'crew') { renderCrew(); }
+    else if(p === 'close') { renderClose(); }
+    else if(p === 'tax') { renderTax(); }
+    else if(p === 'ht') { renderHt(); }
+    else if(p === 'settle') { renderSettle(); }
+    else if(p === 'alerts') { renderAlerts(); }
+    _renderedPages[p] = true;
+    _dirtyPages[p] = false;
+  } catch(e) {
+    console.error('renderPage error [' + p + ']:', e);
+  }
+}
+
+function renderAll(forceAll){
+  CAL.loadedFor = CAL.loadedFor || null;
+  for(var k in _dirtyPages){ _dirtyPages[k] = true; }
+  updateAlertBadge();
+  if(forceAll){
+    renderHome();renderSite();renderPlans();renderSales();renderMoney();renderPl();renderPm();renderHr();renderCrew();renderClose();renderAlerts();renderTax();renderHt();renderSettle();renderSafety();
+    for(var k in _dirtyPages){ _dirtyPages[k] = false; _renderedPages[k] = true; }
+    return;
+  }
+  renderPage(ST.page || 'home');
+}
 
 /* ═══════════ 공통 상수 ═══════════ */
 var KIND={quote:'견적',order:'발주',contract:'계약',tax:'계산서',settle:'정산',report:'일보',receipt:'인수증',cert:'증명',invoice:'청구서',statement:'명세표',worklog:'작업내역서'};
