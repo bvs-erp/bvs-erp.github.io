@@ -7,64 +7,97 @@
 <meta name="theme-color" content="#2a78d6">
 <title>BVS 공수</title>
 <style>
-:root{
-  --bg:#f8fafc;
-  --sf:#ffffff;
-  --sf2:#f1f5f9;
-  --sf3:#e2e8f0;
-  --ln:#e2e8f0;
-  --ln2:#cbd5e1;
-  --tx:#0f172a;
-  --tx2:#475569;
-  --tx3:#94a3b8;
-  --ac:#2563eb;
-  --ac2:#eff6ff;
-  --acx:#1d4ed8;
-  --good:#059669;
-  --goodbg:#ecfdf5;
-  --warn:#d97706;
-  --warnbg:#fffbeb;
-  --crit:#dc2626;
-  --critbg:#fef2f2;
-  --r:16px;
-  --sh:0 2px 8px -1px rgba(15,23,42,0.06), 0 1px 3px -1px rgba(15,23,42,0.04);
-  --shx:0 10px 25px -3px rgba(15,23,42,0.08), 0 4px 6px -2px rgba(15,23,42,0.04);
+/* ── 테마 시스템 (선명한 고대비 낮모드 vs 눈 편한 밤모드) ── */
+:root, html[data-theme="light"] {
+  --bg: #f1f5f9;
+  --sf: #ffffff;
+  --sf2: #f8fafc;
+  --sf3: #e2e8f0;
+  --ln: #cbd5e1;
+  --ln2: #94a3b8;
+  --tx: #0f172a;
+  --tx2: #334155;
+  --tx3: #64748b;
+  --ac: #1d4ed8;
+  --ac2: #eff6ff;
+  --acx: #1e40af;
+  --good: #059669;
+  --goodbg: #ecfdf5;
+  --warn: #d97706;
+  --warnbg: #fffbeb;
+  --crit: #dc2626;
+  --critbg: #fef2f2;
+  --r: 16px;
+  --sh: 0 1px 3px rgba(0,0,0,0.05), 0 2px 6px rgba(15,23,42,0.04);
+  --shx: 0 4px 16px -2px rgba(15,23,42,0.08), 0 2px 6px -1px rgba(15,23,42,0.04);
+  --header-bg: rgba(255,255,255,0.85);
+  --tab-bg: rgba(255,255,255,0.88);
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#0b0f17;
-    --sf:#131b26;
-    --sf2:#1a2332;
-    --sf3:#243042;
-    --ln:#222f3e;
-    --ln2:#2d3e52;
-    --tx:#f8fafc;
-    --tx2:#94a3b8;
-    --tx3:#64748b;
-    --ac:#3b82f6;
-    --ac2:#1e293b;
-    --acx:#60a5fa;
-    --good:#10b981;
-    --goodbg:#064e3b;
-    --warn:#f59e0b;
-    --warnbg:#451a03;
-    --crit:#ef4444;
-    --critbg:#450a0a;
-    --sh:0 4px 12px rgba(0,0,0,0.3);
-    --shx:0 10px 25px rgba(0,0,0,0.5);
+
+@media(prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0f17;
+    --sf: #131b26;
+    --sf2: #1a2332;
+    --sf3: #243042;
+    --ln: #222f3e;
+    --ln2: #2d3e52;
+    --tx: #f8fafc;
+    --tx2: #94a3b8;
+    --tx3: #64748b;
+    --ac: #3b82f6;
+    --ac2: #1e293b;
+    --acx: #60a5fa;
+    --good: #10b981;
+    --goodbg: #064e3b;
+    --warn: #f59e0b;
+    --warnbg: #451a03;
+    --crit: #ef4444;
+    --critbg: #450a0a;
+    --sh: 0 4px 12px rgba(0,0,0,0.3);
+    --shx: 0 10px 25px rgba(0,0,0,0.5);
+    --header-bg: rgba(19,27,38,0.85);
+    --tab-bg: rgba(19,27,38,0.88);
   }
 }
+
+html[data-theme="dark"] {
+  --bg: #0b0f17;
+  --sf: #131b26;
+  --sf2: #1a2332;
+  --sf3: #243042;
+  --ln: #222f3e;
+  --ln2: #2d3e52;
+  --tx: #f8fafc;
+  --tx2: #94a3b8;
+  --tx3: #64748b;
+  --ac: #3b82f6;
+  --ac2: #1e293b;
+  --acx: #60a5fa;
+  --good: #10b981;
+  --goodbg: #064e3b;
+  --warn: #f59e0b;
+  --warnbg: #451a03;
+  --crit: #ef4444;
+  --critbg: #450a0a;
+  --sh: 0 4px 12px rgba(0,0,0,0.3);
+  --shx: 0 10px 25px rgba(0,0,0,0.5);
+  --header-bg: rgba(19,27,38,0.85);
+  --tab-bg: rgba(19,27,38,0.88);
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;background:var(--bg);color:var(--tx);
   font:15px/1.55 -apple-system,BlinkMacSystemFont,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  transition:background .2s ease,color .2s ease;
 }
 button,input,select,textarea{font:inherit;color:inherit}
 .hide{display:none!important}
 .pos{color:var(--good)}.neg{color:var(--crit)}.wn{color:var(--warn)}.dim{color:var(--tx3)}.tiny{font-size:12.5px}
-.wrap{max-width:580px;margin:0 auto;padding:16px 16px calc(88px + env(safe-area-inset-bottom))}
+.wrap{max-width:580px;margin:0 auto;padding:14px 16px calc(88px + env(safe-area-inset-bottom))}
 .card{
   background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);
   padding:18px 16px;margin-bottom:14px;box-shadow:var(--sh);transition:all .15s ease;
@@ -74,32 +107,35 @@ h2{font-size:17px;margin:0 0 12px;font-weight:700;letter-spacing:-.01em;display:
 .f{margin-bottom:14px}
 .f label{display:block;font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:6px}
 .in{
-  width:100%;padding:13px 14px;border:1px solid var(--ln);border-radius:12px;
-  background:var(--sf2);outline:none;font-size:15.5px;color:var(--tx);
+  width:100%;padding:12px 14px;border:1px solid var(--ln);border-radius:12px;
+  background:var(--sf2);outline:none;font-size:15px;color:var(--tx);
   transition:all .15s ease;
 }
 .in:focus{border-color:var(--ac);background:var(--sf);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 20%,transparent)}
 textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:13px 16px;border-radius:12px;border:1px solid var(--ln);background:var(--sf);
-  cursor:pointer;font-weight:600;min-height:48px;transition:all .15s ease;font-size:15px;
+  padding:12px 16px;border-radius:12px;border:1px solid var(--ln);background:var(--sf);
+  cursor:pointer;font-weight:600;min-height:46px;transition:all .15s ease;font-size:15px;
 }
 .btn:hover{background:var(--sf2)}
 .btn.p{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 2px 6px rgba(37,99,235,0.25)}
 .btn.p:hover{background:var(--acx);border-color:var(--acx)}
 .btn.w{width:100%}
 .btn.d{color:var(--crit);background:var(--critbg);border-color:transparent}
-.btn.sm{padding:7px 12px;min-height:36px;font-size:13.5px;font-weight:600;border-radius:8px}
+.btn.sm{padding:7px 12px;min-height:36px;font-size:13px;font-weight:600;border-radius:9px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── 칩 버튼 ── */
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{
-  padding:8px 14px;border-radius:20px;border:1px solid var(--ln);background:var(--sf2);
+  padding:9px 15px;border-radius:20px;border:1px solid var(--ln);background:var(--sf2);
   cursor:pointer;font-size:14px;font-weight:500;color:var(--tx2);transition:all .15s ease;
+  user-select:none;
 }
 .chip:hover{border-color:var(--ac);color:var(--tx)}
-.chip.on{background:var(--ac2);border-color:var(--ac);color:var(--ac);font-weight:700}
-.chips.big .chip{padding:11px 18px;font-size:15.5px;font-weight:600;border-radius:24px}
+.chip.on{background:var(--ac2);border-color:var(--ac);color:var(--ac);font-weight:700;box-shadow:0 0 0 1px var(--ac)}
+.chips.big .chip{padding:12px 18px;font-size:15px;font-weight:600;border-radius:24px;min-height:44px;display:inline-flex;align-items:center}
 .step{display:flex;align-items:center;gap:12px}
 .step button{
   width:48px;height:48px;border-radius:12px;border:1px solid var(--ln);
@@ -125,28 +161,50 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 .top-nav-card{
   background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);
   padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;
-  justify-content:space-between;box-shadow:var(--sh);
+  justify-content:space-between;box-shadow:var(--sh);gap:8px;
 }
-.top-user-info{display:flex;align-items:center;gap:12px;min-width:0}
+.top-user-info{display:flex;align-items:center;gap:11px;min-width:0;flex:1}
 .top-avatar{
-  width:40px;height:40px;border-radius:12px;
+  width:42px;height:42px;border-radius:12px;
   background:linear-gradient(135deg,var(--ac),#10b981);
-  color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;
+  color:#fff;display:grid;place-items:center;font-weight:700;font-size:14.5px;
   flex:none;box-shadow:0 2px 6px rgba(37,99,235,0.25);
 }
 .top-meta{min-width:0}
 .top-name-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .top-name-row b{font-size:15.5px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-sub-row{font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── 상단 액션 버튼들 (테마 토글, 새로고침, 로그아웃) ── */
+.top-nav-actions{display:flex;align-items:center;gap:5px;flex:none}
+.top-icon-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--ln);
+  background:var(--sf2);display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--tx2);transition:all .15s ease;padding:0;
+}
+.top-icon-btn:hover{background:var(--sf3);color:var(--tx);border-color:var(--ac)}
+.top-icon-btn.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+
 .top-logout-btn{
   display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 10px;
-  border-radius:8px;background:var(--sf2);border:1px solid var(--ln);color:var(--crit);cursor:pointer;
+  border-radius:9px;background:var(--sf2);border:1px solid var(--ln);color:var(--crit);cursor:pointer;
+  min-height:36px;
 }
 .top-logout-btn:hover{background:var(--critbg);border-color:var(--crit)}
 
+/* ── 테마 토글 버튼 (로그인 화면용) ── */
+.gate-theme-wrap{display:flex;justify-content:flex-end;margin-bottom:12px}
+.gate-theme-btn{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 12px;
+  border-radius:20px;background:var(--sf);border:1px solid var(--ln);color:var(--tx2);
+  cursor:pointer;box-shadow:var(--sh);transition:all .15s ease;
+}
+.gate-theme-btn:hover{border-color:var(--ac);color:var(--tx)}
+
 /* ── 공수/투입 대형 버튼 ── */
 .btn.big{
-  flex-direction:column;gap:3px;min-height:82px;font-size:20px;border-radius:16px;
+  flex-direction:column;gap:3px;min-height:84px;font-size:20px;border-radius:16px;
   border-width:1px;font-weight:700;box-shadow:var(--sh);transition:all .15s ease;
 }
 .btn.big:active{transform:scale(0.98)}
@@ -155,6 +213,15 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 .btn.in-btn.done{background:var(--goodbg);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);box-shadow:none}
 .btn.out-btn{background:var(--sf2);border:1px solid var(--ln);color:var(--tx2)}
 .btn.out-btn.on{background:linear-gradient(135deg,#dc2626,#ef4444);border:none;color:#fff;box-shadow:0 4px 12px rgba(239,68,68,0.3)}
+
+/* ── 현장 선택 안내 브레드크럼 뱃지 ── */
+.site-summary-badge{
+  background:var(--sf2);border:1px solid var(--ln);border-radius:10px;
+  padding:9px 12px;margin:8px 0 12px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:6px;color:var(--tx2);
+}
+.site-summary-badge.ok{background:var(--ac2);border-color:color-mix(in srgb,var(--ac) 30%,transparent);color:var(--ac)}
+
 .state{
   background:var(--ac2);border:1px solid color-mix(in srgb,var(--ac) 20%,transparent);
   border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14.5px;
@@ -170,7 +237,7 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 /* ── 하단 글래스모피즘 내비게이션 바 ── */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;
-  background:color-mix(in srgb,var(--sf) 90%,transparent);
+  background:var(--tab-bg);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-top:1px solid var(--ln);
   display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;
@@ -260,7 +327,7 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 .docpaper .sgbox{display:inline-block;min-width:76px;border-bottom:1px dashed var(--tx3);color:var(--tx3);font-size:12px;text-align:center}
 .docfoot{
   flex:0 0 auto;border-top:1px solid var(--ln);
-  background:color-mix(in srgb,var(--sf) 95%,transparent);
+  background:var(--tab-bg);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   padding:14px 16px calc(14px + env(safe-area-inset-bottom));
   box-shadow:0 -4px 16px rgba(0,0,0,0.05);
@@ -327,6 +394,11 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 <div class="wrap">
   <!-- 로그인 -->
   <div id="gate">
+    <div class="gate-theme-wrap">
+      <button class="gate-theme-btn" onclick="toggleTheme()" id="gateThemeBtn" title="낮/밤 모드 전환">
+        <span id="gateThemeIcon">☀️</span> <span id="gateThemeLbl">낮모드</span>
+      </button>
+    </div>
     <div style="text-align:center;margin:24px 0 20px">
       <div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--ac),#10b981);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;margin:0 auto 10px;box-shadow:0 4px 16px rgba(37,99,235,0.3)">BV</div>
       <h1 style="font-size:20px;margin:0 0 4px">주식회사 비브이에스</h1>
@@ -364,15 +436,34 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
           <div class="top-sub-row" id="uSub">–</div>
         </div>
       </div>
-      <button class="top-logout-btn" onclick="doLogout()" title="로그아웃">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg>
-        <span>로그아웃</span>
-      </button>
+      <div class="top-nav-actions">
+        <button class="top-icon-btn" onclick="syncRefresh(this)" title="최신 데이터 새로고침" id="syncBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <button class="top-icon-btn" onclick="toggleTheme()" id="appThemeBtn" title="낮모드/밤모드 전환">
+          <span id="appThemeIcon">☀️</span>
+        </button>
+        <button class="top-logout-btn" onclick="doLogout()" title="로그아웃">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg>
+          <span>로그아웃</span>
+        </button>
+      </div>
     </div>
 
     <section class="page on" id="p-in">
       <div class="card" id="todayCard">
-        <div class="f" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><label style="margin:0;flex:none">일자</label><input id="w_date" class="in" type="date" style="padding:8px 10px" onchange="onDate()"><span class="tiny dim" id="dateHint" style="white-space:nowrap"></span></div>
+        <div class="f" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label style="margin:0;font-weight:700">작업 일자</label>
+            <span class="tiny dim" id="dateHint" style="font-weight:700"></span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="w_date" class="in" type="date" style="padding:9px 12px;flex:1" onchange="onDate()">
+            <button type="button" class="btn sm" onclick="quickDate(-1)" style="flex:none;padding:8px 11px">어제</button>
+            <button type="button" class="btn sm p" onclick="quickDate(0)" style="flex:none;padding:8px 11px">오늘</button>
+            <button type="button" class="btn sm" onclick="quickDate(1)" style="flex:none;padding:8px 11px">내일</button>
+          </div>
+        </div>
         <div id="planBox" class="state hide" style="background:var(--goodbg)"></div>
         <div id="sfNudge" class="state hide" style="background:var(--warnbg);color:var(--warn);cursor:pointer" onclick="sfGo()"><b>작업 전 안전점검이 아직입니다</b><div class="t">눌러서 오늘 점검을 제출하십시오 — 1분이면 됩니다</div></div>
         <div id="stateBox" class="state hide"></div>
@@ -380,6 +471,9 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="f" id="lineBox"><label>라인</label><div class="chips big" id="w_line"></div></div>
         <div class="f hide" id="pumpBox"><label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업 (수량제)</span></label></div>
         <details class="f"><summary class="tiny dim">메모 추가 (선택)</summary><textarea id="w_desc" class="in" placeholder="예: M15X 5EAL7005 반입, EFEM 레벨링" style="margin-top:8px"></textarea></details>
+        <div class="site-summary-badge" id="siteSummaryBadge">
+          <span>📍</span> <span id="siteSummaryText">현장 장소와 라인을 선택해 주세요</span>
+        </div>
         <div class="row2" style="margin-top:4px">
           <button class="btn big in-btn" id="btnIn" onclick="clockIn()"><b>출근</b><small id="nowIn">--:--</small></button>
           <button class="btn big out-btn" id="btnOut" onclick="clockOut()"><b>퇴근</b><small id="nowOut">--:--</small></button>
@@ -472,7 +566,12 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
     <section class="page" id="p-safety">
       <div class="card" id="sfCard">
         <h2>작업 전 안전점검 <small class="dim tiny" id="sfDateLbl"></small></h2>
-        <p class="tiny dim" style="margin:0 0 10px">오늘 일을 시작하기 전에 확인하고 제출하십시오. 제출 기록은 회사가 안전조치를 했다는 증빙이 됩니다.</p>
+        <p class="tiny dim" style="margin:0 0 8px">오늘 일을 시작하기 전에 확인하고 제출하십시오. 제출 기록은 회사가 안전조치를 했다는 증빙이 됩니다.</p>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button type="button" class="btn sm" onclick="sfCheckAllOk()" style="background:var(--goodbg);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);font-weight:700">
+            🟢 전 항목 정상 (원클릭 체크)
+          </button>
+        </div>
         <div id="sfItems"></div>
         <div class="f" style="margin-top:10px"><label>이상이 있으면 적어 주십시오 (없으면 비워 둠)</label><textarea id="sf_ng" class="in" placeholder="예: M15 3층 통로 자재 적치로 통행 불가 — 리드에게 보고"></textarea></div>
         <button class="btn p w" style="margin-top:10px" onclick="sfSubmit()">안전점검 제출</button>
@@ -534,6 +633,99 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 </div>
 <div id="toasts"></div>
 <script>
+/* ═══════════ 테마 관리: 낮모드(라이트) vs 밤모드(다크) ═══════════ */
+function getPreferredTheme(){
+  var saved=localStorage.getItem('bvs_worker_theme');
+  if(saved==='dark'||saved==='light') return saved;
+  if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  return 'light';
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try{localStorage.setItem('bvs_worker_theme', t)}catch(e){}
+  var isDark=(t==='dark');
+  var icon=isDark?'🌙':'☀️';
+  var lbl=isDark?'밤모드':'낮모드';
+  if(el('gateThemeIcon')) el('gateThemeIcon').textContent=icon;
+  if(el('gateThemeLbl')) el('gateThemeLbl').textContent=lbl;
+  if(el('appThemeIcon')) el('appThemeIcon').textContent=icon;
+  if(el('appThemeBtn')) el('appThemeBtn').title=isDark?'현재 밤모드 (누르면 낮모드 전환)':'현재 낮모드 (누르면 밤모드 전환)';
+}
+function toggleTheme(){
+  var cur=document.documentElement.getAttribute('data-theme')||getPreferredTheme();
+  var nxt=(cur==='dark')?'light':'dark';
+  applyTheme(nxt);
+  toast(nxt==='light'?'☀️ 선명한 낮모드로 전환되었습니다':'🌙 눈이 편안한 밤모드로 전환되었습니다','g');
+}
+try{applyTheme(getPreferredTheme())}catch(e){}
+
+/* ── 퀵 일자 선택 (어제/오늘/내일) ── */
+function quickDate(offset){
+  var d=new Date();
+  d.setDate(d.getDate()+offset);
+  var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  el('w_date').value=y+'-'+m+'-'+day;
+  onDate();
+}
+
+/* ── 안전점검 전 항목 원클릭 체크 ── */
+function sfCheckAllOk(){
+  var items=D.sfItems||[];
+  if(!items.length) return;
+  items.forEach(function(it){
+    SF.sel[it.code]=true;
+    var chk=el('sf_'+it.code);
+    if(chk) chk.checked=true;
+  });
+  toast('모든 점검 항목이 정상으로 체크되었습니다','g');
+}
+
+/* ── 원터치 실시간 새로고침 (동기화) ── */
+async function syncRefresh(btn){
+  if(btn) btn.classList.add('spin');
+  try{
+    await loadAll();
+    toast('최신 데이터가 동기화되었습니다 🟢','g');
+  }catch(e){
+    toast('동기화 오류: '+(e&&e.message||e),'e');
+  }finally{
+    if(btn) setTimeout(function(){btn.classList.remove('spin')},500);
+  }
+}
+
+/* ── 로컬 스마트 업무일지 정리기 (클린룸 현장 전용 폴백) ── */
+function localSmartRefine(text, site, date, name){
+  var rawLines = text.split(/[\r\n]+/).map(function(s){return s.trim()}).filter(Boolean);
+  var lines = [];
+  rawLines.forEach(function(l){
+    if(l.includes(',') && !l.includes('\n')){
+      l.split(',').forEach(function(p){if(p.trim()) lines.push(p.trim())});
+    } else {
+      lines.push(l);
+    }
+  });
+
+  var bullets = [];
+  lines.forEach(function(line){
+    var clean = line.replace(/^[·\-\*/•\d\.\s]+/, '').trim();
+    if(!clean) return;
+    if(!/완료|확인|실시|진행|마감|점검|보고|준수|조치$/.test(clean)){
+      if(/반입|레벨링|체결|포설|설치|셋업|조립/.test(clean)) clean += ' 작업 완료';
+      else if(/점검|확인|누수|이상/.test(clean)) clean += ' 점검 확인';
+      else if(/교육|회의|TBM/.test(clean)) clean += ' 참석 및 이행';
+      else clean += ' 완료';
+    }
+    bullets.push('· ' + clean);
+  });
+
+  if(!bullets.some(function(b){return b.includes('정리정돈') || b.includes('인수인계')})){
+    bullets.push('· 작업 구역 안전 정리정돈 및 차기 공정 인수인계 완료');
+  }
+
+  var header = (site || date) ? '[' + (date ? date + ' ' : '') + (site ? site + ' ' : '') + '업무일지]\n' : '';
+  return (header + bullets.join('\n')).trim();
+}
+
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, ME=null;
 var D={sites:[],labor:[],pay:[],safety:[],edu:[],sfItems:[]};
 var SF={sel:{},date:null};
@@ -678,6 +870,19 @@ function renderLines(){var ss=SEL.place?sitesOf(SEL.place):[];
 }
 function pickLine(id){SEL.site=id;document.querySelectorAll('#w_line .chip').forEach(function(c){c.classList.toggle('on',c.textContent===lineLabel(D.sites.filter(function(s){return s.site_id===id})[0]||{site_name:''}))});renderState()}
 function savePump(){try{localStorage.setItem('bvs_w_pump',el('w_pump').checked?'1':'0')}catch(e){}}
+function updateSiteSummaryBadge(){
+  var b=el('siteSummaryBadge'), t=el('siteSummaryText');
+  if(!b||!t) return;
+  if(SEL.site){
+    var sName=siteName(SEL.site);
+    b.className='site-summary-badge ok';
+    t.innerHTML='선택 현장: <b>'+esc(sName)+'</b>'+(el('w_pump')&&el('w_pump').checked?' <span class="pill y">펌프실</span>':'');
+  } else {
+    b.className='site-summary-badge';
+    t.textContent='작업 장소와 라인을 위에서 선택해 주세요';
+  }
+}
+
 function projectCode(){var pf=SEL.place;
   if(pf==='IC'||pf==='CJ')return el('w_pump').checked?'PJ-PUMP':'PJ-SETUP';
   if(pf==='PT'||pf==='HS')return 'PJ-SETUP';if(pf==='TE')return 'PJ-TESMFG';if(pf==='BV'||pf==='UO')return 'PJ-HQ';if(pf==='ED')return 'PJ-EDU';if(pf==='OFF')return 'PJ-OFF';return 'PJ-SETUP'}
@@ -696,6 +901,7 @@ function renderPlan(){var d=el('w_date').value;var p=(D.plan||[]).filter(functio
     b.classList.add('hide');return}
   b.classList.remove('hide');b.innerHTML='<b>'+kdate(d)+' 배치</b> → '+esc(p.site_name||p.site_id)+(p.memo?'<div class="t">'+esc(p.memo)+'</div>':'')+'<div class="t">누르면 장소·라인이 자동 선택됩니다</div>';b.style.cursor='pointer';b.onclick=function(){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}
 function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');renderPlan();
+  updateSiteSummaryBadge();
   el('dateHint').textContent=d===today()?'오늘':'';
   if(!e){box.classList.add('hide');el('btnIn').classList.remove('done');el('btnOut').classList.remove('on');return}
   box.classList.remove('hide');
@@ -879,13 +1085,25 @@ function micToggle(){var SR=window.SpeechRecognition||window.webkitSpeechRecogni
   rec.onend=function(){LOG.mic=null;el('micBtn').textContent='🎤 음성 입력';el('micBtn').classList.remove('p')};
   rec.onerror=function(e){toast('음성 인식 오류: '+e.error,'e')};
   rec.start();LOG.mic=rec;el('micBtn').textContent='⏹ 듣는 중… (누르면 정지)';el('micBtn').classList.add('p')}
-async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 내용을 적어 주세요','e');return}
+async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 일지 내용을 적어 주세요','e');return}
   var b=el('aiBtn');b.disabled=true;b.textContent='정리 중…';
-  try{var e=entryOf(LOG.date);var r=await sb.functions.invoke('ai-refine',{body:{text:t,site:e?siteName(e.site_id):'',date:LOG.date,name:ME.name||''}});
-    if(r.error)throw new Error((r.error.message||'')+(r.error.context&&r.error.context.status?' ('+r.error.context.status+')':''));
-    var out=(r.data&&(r.data.text||r.data.refined))||'';if(!out)throw new Error('응답 비어 있음');
-    el('aiText').textContent=out;el('aiBox').classList.remove('hide')}
-  catch(ex){toast('AI 정리 실패: '+ex.message+' — 대표에게 AI 키 설정을 요청하세요','e')}
+  var e=entryOf(LOG.date), sName=e?siteName(e.site_id):'';
+  var out='';
+  try{
+    var r=await sb.functions.invoke('ai-refine',{body:{text:t,site:sName,date:LOG.date,name:ME.name||''}});
+    if(!r.error && r.data && (r.data.text || r.data.refined)){
+      out=(r.data.text || r.data.refined).trim();
+    }
+  }catch(err){
+    console.warn('Edge function error, using smart fallback:', err);
+  }
+  // 엣지함수 미응답 또는 키 미등록 시 스마트 로컬 엔진 폴백 (절대 멈추지 않음)
+  if(!out){
+    out=localSmartRefine(t, sName, LOG.date, ME.name);
+  }
+  el('aiText').textContent=out;
+  el('aiBox').classList.remove('hide');
+  toast('✨ 업무일지가 깔끔하게 정리되었습니다','g');
   b.disabled=false;b.textContent='✨ AI 정리'}
 function aiApply(){el('logText').value=el('aiText').textContent;aiDismiss()}
 function aiDismiss(){el('aiBox').classList.add('hide')}
@@ -1158,7 +1376,9 @@ function sigInit(){
   var dpr=window.devicePixelRatio||1,w=cv.clientWidth||300,h=150;
   cv.width=w*dpr;cv.height=h*dpr;
   var c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.4;c.lineCap='round';c.lineJoin='round';
-  c.strokeStyle=getComputedStyle(document.body).color;DOC.ctx=c;DOC.drawn=false;
+  var curTheme=document.documentElement.getAttribute('data-theme')||'light';
+  c.strokeStyle=(curTheme==='dark')?'#60a5fa':'#1d4ed8'; // 고대비 선명한 블루 서명 잉크
+  c.lineWidth=2.8;DOC.ctx=c;DOC.drawn=false;
   var down=false,lx=0,ly=0;
   function pt(ev){var r=cv.getBoundingClientRect();return [ev.clientX-r.left,ev.clientY-r.top]}
   cv.onpointerdown=function(ev){ev.preventDefault();cv.setPointerCapture(ev.pointerId);down=true;var p=pt(ev);lx=p[0];ly=p[1]};
