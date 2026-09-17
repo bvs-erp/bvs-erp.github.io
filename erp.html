@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.14</title>
+<title>BVS ERP v1.15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -332,6 +332,26 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
   .lwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}table.lines{min-width:760px}
   #pr .sheet{padding:14px 12px 40px}#pr .hd{grid-template-columns:1fr}
 }
+/* ── 계약서 인쇄·표시 ── */
+.docpaper{background:var(--sf);color:var(--tx);font-size:13px;line-height:1.6}
+.docpaper h1{font-size:19px;text-align:center;margin:6px 0 2px}
+.docpaper h2{font-size:14.5px;margin:16px 0 6px;color:var(--ac)}
+.docpaper h3{font-size:13.5px;margin:14px 0 6px}
+.docpaper p{margin:0 0 6px}
+.docpaper p.code{font-size:11px;color:var(--tx3);text-align:right;margin:0}
+.docpaper p.sub{text-align:center;color:var(--tx3);font-size:12px;margin:0 0 12px}
+.docpaper p.note{font-size:11.5px;color:var(--tx3);margin:2px 0}
+.docpaper p.i1{padding-left:12px}.docpaper p.i2{padding-left:26px}
+.docpaper p.sigdate{text-align:center;margin:20px 0 10px;font-weight:600}
+.docpaper table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12px}
+.docpaper th,.docpaper td{border:1px solid var(--ln);padding:5px 7px;vertical-align:top;text-align:left}
+.docpaper th{background:var(--sf2);font-weight:600;white-space:nowrap}
+.docpaper td.r{text-align:right;font-variant-numeric:tabular-nums}
+.docpaper tr.tot td{font-weight:700;background:var(--sf2)}
+.docpaper .pagebreak{height:1px;background:var(--ln);margin:24px 0}
+.docpaper img.sg{max-height:44px;vertical-align:middle}
+.docpaper .sgd{display:block;font-size:11px;color:var(--tx3)}
+.docpaper .sgbox{display:inline-block;min-width:76px;border-bottom:1px dashed var(--tx3);color:var(--tx3);font-size:11px;text-align:center}
 </style>
 </head>
 <body>
@@ -369,7 +389,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.14</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.15</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -490,6 +510,12 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="sec"><h3>계약·동의 미비 <span class="cnt" id="consN"></span></h3><div class="tb" id="gCons"></div></div>
         <div class="sec"><h3>법정 연장수당 소급 대상</h3><div class="tb" id="gRetro"></div></div>
       </div>
+      <div class="sec" id="hr-esign"><h3>근로계약 전자서명 <span class="cnt" id="esgN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">계약서를 <b>발행</b>하면 그 사람의 현장앱 「계약」 탭에 뜹니다. 본인이 끝까지 읽고 손으로 서명하면 여기 상태가 바뀌고, 대표가 <b>날인</b>하면 교부까지 끝납니다. 계약일(근로개시일)은 입사일이고, 전자서명 시각은 실제 서명한 시각으로 따로 남습니다 — 소급 기재하지 않습니다.<br>별지 1의 금액은 <b>ERP 급여기준에서 그대로 계산</b>됩니다. 발행 전에 미리보기로 등급·직책·금액을 확인하십시오. 여기서 틀리면 계약서가 틀립니다.</div>
+        <div class="kpis" id="esgKpi"></div>
+        <div class="tb" id="gEsgTodo"></div>
+        <div style="height:10px"></div>
+        <div class="tb" id="gEsg"></div></div>
       <div class="sec"><h3>수당 마스터</h3><div class="tb" id="gAlw"></div></div>
       <div class="sec"><h3>펌프실 수량제 (일 단위 MAX 보전)</h3><div class="tb" id="gPump"></div></div>
       <div class="sec"><h3>기준값 설정 <span class="cnt" id="setgN"></span></h3>
@@ -591,8 +617,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <script>
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
-var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.14';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt'.split(' ').forEach(function(k){D[k]=[]});
+var APPVER='1.15';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -954,6 +980,8 @@ async function loadAll(){
     ['chk',sb.from('ceo_op_check').select('*')],
     ['pcash',sb.from('ceo_partner_cash').select('*')],
     ['bunm',sb.from('ceo_bank_unmatched').select('*')],
+    ['esg',sb.from('ceo_esign').select('*').order('issued_at',{ascending:false})],
+    ['esgt',sb.from('ceo_esign_todo').select('*').order('hired_on')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -2028,7 +2056,96 @@ function openSupplier(s){var its=D.items.filter(function(r){return r.best_suppli
     +(its.length?'<h4 style="margin:16px 0 8px;font-size:13px">이 공급사가 최저가인 품목</h4><table>'+its.slice(0,20).map(function(r){return '<tr><td class="l">'+esc(r.name_ko)+'</td><td>'+won(r.best_price)+'</td></tr>'}).join('')+'</table>':''))}
 
 /* ═══════════ 인사 ═══════════ */
-function renderHr(){renderAcct();
+
+/* ═══════════ 근로계약 전자서명 ═══════════ */
+function esgStat(v){var m={issued:['서명 대기','w'],signed:['날인 대기','w'],countersigned:['완료',''],void:['무효','x']};var a=m[v]||['',''];return '<span class="stbtn '+a[1]+'">'+a[0]+'</span>'}
+async function esgPreview(r){
+  var res=await sb.rpc('ceo_doc_preview',{p_employment_no:r.employment_no});
+  if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
+  var v=res.data.vars||{};
+  var warn='';
+  if(!r.ready_person)warn+='<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
+  drOpen('계약서 미리보기 · '+(v.name||r.person_name),
+    warn+kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',v.grade+' 등급'],['직책',v.position],['월 지급총액',v.amt_total],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
+    +'<div class="docpaper" style="margin-top:12px">'+res.data.html+'</div>',
+    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="esgIssue(\''+r.employment_no+'\')">이 내용으로 발행</button>');
+}
+async function esgIssue(emp){
+  var ok=await ask('계약서 발행','발행하면 본인 현장앱에 뜨고, 본문은 그 시점 내용으로 고정됩니다. 고치려면 무효화 후 다시 발행해야 합니다.\n\n발행할까요?',{ok:'발행'});
+  if(!ok)return;
+  var r=await sb.rpc('ceo_doc_issue',{p_employment_no:emp});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  drClose();toast(r.data.doc_no+' 발행','g');loadAll();
+}
+async function esgOpen(r){
+  var res=await sb.rpc('my_doc_body',{p_issue_id:r.issue_id});
+  if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
+  var f='<button class="btn" onclick="drClose()">닫기</button><button class="btn" onclick="esgPrint()">인쇄</button>';
+  if(r.status==='signed')f+='<button class="btn p" onclick="esgSeal('+r.issue_id+')">대표 날인 · 교부</button>';
+  if(r.status!=='void'&&r.status!=='countersigned')f+='<button class="btn d" onclick="esgVoid('+r.issue_id+')">무효화</button>';
+  var meta=kv([['문서번호',r.doc_no],['대상',r.person_name+' · '+r.employment_no],['근로개시일(계약일)',r.contract_on],['별지 1 적용일',r.apply_from],
+    ['근로자 전자서명',r.employee_signed_at?String(r.employee_signed_at).replace('T',' ').slice(0,16):'<span class="dim">미서명</span>'],
+    ['회사 날인',r.company_signed_at?String(r.company_signed_at).replace('T',' ').slice(0,16):'<span class="dim">미날인</span>'],
+    ['본문 해시','<span class="tiny dim">'+String(res.data.body_sha).slice(0,24)+'…</span>'],
+    ['변조 검출',(+r.tamper_cnt||0)?'<span class="bad">'+r.tamper_cnt+'건</span>':'없음']]);
+  drOpen(r.doc_no+' · '+r.person_name, meta+'<div class="docpaper" id="docPrint" style="margin-top:12px">'+res.data.html+'</div>', f);
+}
+function esgPrint(){
+  var h=el('docPrint');if(!h)return;
+  var w=window.open('','_blank');if(!w){toast('팝업이 차단되었습니다','e');return}
+  var css=Array.from(document.querySelectorAll('style')).map(function(x){return x.textContent}).join('\n');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+esc(el('drT').textContent)+'</title><style>'+css+'\n@page{size:A4;margin:16mm}body{background:#fff;color:#000}.docpaper{font-size:11pt}.docpaper .pagebreak{page-break-after:always;height:0;background:none;margin:0}</style></head><body><div class="docpaper">'+h.innerHTML+'</div></body></html>');
+  w.document.close();setTimeout(function(){w.print()},400);
+}
+async function esgSeal(id){
+  var ok=await ask('대표 날인 · 교부','사용인감을 찍고 교부일을 기록합니다. 되돌릴 수 없습니다.',{ok:'날인'});
+  if(!ok)return;
+  var r=await sb.rpc('ceo_doc_countersign',{p_issue_id:id});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  drClose();toast('날인·교부 완료','g');loadAll();
+}
+async function esgVoid(id){
+  var why=await ask('계약서 무효화','무효 사유를 적으십시오. 기록은 남고 새로 발행할 수 있게 됩니다.',{input:true,placeholder:'예: 직책 오기재',danger:true,ok:'무효화'});
+  if(!why)return;
+  var r=await sb.rpc('ceo_doc_void',{p_issue_id:id,p_reason:why});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  drClose();toast('무효 처리','g');loadAll();
+}
+function renderEsign(){
+  if(!el('gEsg'))return;
+  var rows=(D.esg||[]).slice(),todo=(D.esgt||[]).slice();
+  var need=rows.filter(function(r){return r.status==='issued'}).length;
+  var seal=rows.filter(function(r){return r.status==='signed'}).length;
+  var done=rows.filter(function(r){return r.status==='countersigned'}).length;
+  var live={};rows.forEach(function(r){if(r.status!=='void')live[r.employment_no]=1});
+  var noissue=todo.filter(function(r){return !live[r.employment_no]});
+  el('esgN').textContent=rows.length?rows.length+'건':'';
+  el('esgKpi').innerHTML=kpi('미발행',noissue.length?'<span class="wn">'+noissue.length+'</span>':'0','명 · 정규직 기준')
+    +kpi('근로자 서명 대기',need?'<span class="wn">'+need+'</span>':'0','건')
+    +kpi('대표 날인 대기',seal?'<span class="wn">'+seal+'</span>':'0','건')
+    +kpi('교부 완료',done+'','건');
+  todo.forEach(function(r){r._live=live[r.employment_no]?'발행됨':'미발행'});
+  grid('gEsgTodo',[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim tiny'},
+    {k:'hired_on',t:'입사일(계약일)',l:1},
+    {k:'tech_grade',t:'등급',f:function(v){return String(+v||0)}},
+    {k:'position_title',t:'직책',l:1},
+    {k:'ordinary_amt',t:'통상임금',f:'won'},{k:'pkg_amt',t:'월 지급',f:'won'},
+    {k:'ready_person',t:'인적사항',l:1,f:function(v){return v?'<span class="dim">완비</span>':'<span class="bad">누락</span>'}},
+    {k:'_live',t:'상태',l:1,f:function(v){return v==='미발행'?'<span class="stbtn w">미발행</span>':'<span class="dim">발행됨</span>'}}],
+    {rows:todo,q:['person_name'],csv:false,page:30,onRow:esgPreview,
+     empty:'정규직 인원이 없습니다'});
+  grid('gEsg',[{k:'doc_no',t:'문서번호',l:1},{k:'person_name',t:'이름',l:1},
+    {k:'doc_kind',t:'종류',l:1,cls:'tiny dim'},{k:'contract_on',t:'계약일',l:1},
+    {k:'status',t:'상태',l:1,f:esgStat},
+    {k:'employee_signed_at',t:'근로자 서명',l:1,f:function(v){return v?String(v).replace('T',' ').slice(0,16):'<span class="dim">–</span>'}},
+    {k:'company_signed_at',t:'대표 날인',l:1,f:function(v){return v?String(v).replace('T',' ').slice(0,16):'<span class="dim">–</span>'}},
+    {k:'tamper_cnt',t:'변조',f:function(v){return (+v||0)?'<span class="bad">'+v+'</span>':'<span class="dim">0</span>'}}],
+    {rows:rows,q:['doc_no','person_name'],csv:true,page:30,onRow:esgOpen,
+     chips:[{k:'status',vals:[['','전체'],['issued','서명 대기'],['signed','날인 대기'],['countersigned','완료']]}],
+     empty:'발행된 계약서가 없습니다 — 위 표에서 사람을 눌러 미리보기 후 발행하십시오'});
+}
+
+function renderHr(){renderAcct();renderEsign();
   var retro=sum(D.retro,'ot_shortfall_amt');
   el('hrKpi').innerHTML=kpi('계약·동의 미비',D.cons.length?'<span class="wn">'+D.cons.length+'</span>':'0','명 · 눌러서 그 사람만 보기',(D.cons.length?'warn ':'')+'click',' onclick="staffConsOnly()"')+kpi('연장수당 소급',retro?'<span class="wn">'+won(retro)+'</span>':'0',D.retro.length+'건')+kpi('수당 마스터',D.alw.length+'<small>종</small>','비과세 '+D.alw.filter(function(r){return !r.is_taxable}).length+'종')+kpi('펌프실 청구',won(sum(D.pump,'billed_amt')),D.pump.length+'개월');
   el('consN').textContent=D.cons.length?D.cons.length+'명':'';
