@@ -719,19 +719,19 @@ function renderGrade(){
     else
       h+='<div class="gjudge w">'+esc(g.judge)+' — '+(stayOk?'':'체류기간 '+leftM+'일')+((!stayOk&&!dayOk)?' · ':'')+(dayOk?'':'투입일 '+Math.max(needD-gotD,0)+'일')+' 더 필요합니다.</div>';
     h+='<details class="gd"><summary>'+g.next_grade+'등급에서 요구하는 것</summary><div class="greq">'
-      +'<div><b>출입 · 자격</b>'+esc(g.next_access||'—')+'</div>'
+      +'<div><b>기술 범위</b>'+esc(g.next_scope||'—')+'</div>'
       +'<div><b>단독 수행 능력</b>'+esc(g.next_solo||'—')+'</div>'
       +'<div><b>지도 · 안전</b>'+esc(g.next_guide||'—')+'</div></div></details>';
   } else {
     h+='<div class="gjudge g">최고 등급입니다.</div>';
   }
   h+='<details class="gd"><summary>현재 등급에서 요구되는 것</summary><div class="greq">'
-    +'<div><b>출입 · 자격</b>'+esc(g.req_access||'—')+'</div>'
+    +'<div><b>기술 범위</b>'+esc(g.req_scope||'—')+'</div>'
     +'<div><b>단독 수행 능력</b>'+esc(g.req_solo||'—')+'</div>'
     +'<div><b>지도 · 안전</b>'+esc(g.req_guide||'—')+'</div></div></details>';
   h+='<details class="gd"><summary>등급 사다리 전체 보기 (1 ~ 11등급)</summary>'
     +'<table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>최소 체류</th><th>누적 투입일</th></tr>'+lad+'</table>'
-    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한. 승급하려면 최소 체류기간과 누적 현장투입일을 <b>모두</b> 충족해야 합니다. 누적 현장투입일에 교육·휴무·연차는 들어가지 않습니다. 등급은 내려가지 않습니다.</p></details>';
+    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한. 승급하려면 최소 체류기간과 누적 현장투입일을 <b>모두</b> 충족해야 합니다. 누적 현장투입일에 교육·휴무·연차는 들어가지 않습니다. 등급은 내려가지 않습니다.<br>승급은 <b>본인의 기술과 실적으로만</b> 판정합니다. 고객사 출입 승인처럼 본인이 채울 수 없는 사정은 요건이 아닙니다.</p></details>';
   h+='<p class="tiny dim" style="margin:12px 0 0">상세 요건은 취업규칙 별표 2에 따릅니다. 승급 심사는 매년 12월 정기로 실시하며, 자격 취득 등으로 요건이 새로 충족되면 수시로 신청할 수 있습니다. 승급하지 않기로 하는 경우 회사는 그 사유와 보완 과제를 서면으로 알려드립니다.</p>';
   box.innerHTML=h;
 }
