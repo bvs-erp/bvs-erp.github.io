@@ -503,18 +503,41 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 
     <!-- 매출·문서 -->
     <section class="page" id="p-sales">
-      <div class="ph"><h2>영업 · 계약 문서</h2><div class="desc">견적 · 발주 · 계약 · 계산서 · 정산 문서 원장</div>
-        <div class="act"><button class="btn p" onclick="newDoc()">+ 새 문서 (N)</button></div></div>
-      <div class="blkl">영업 파이프라인 <span>— 견적·수주. 매출에 들어가지 않습니다</span></div>
-      <div class="kpis" id="pipeKpi"></div>
-      <div class="blkl">매출 <span>— 세금계산서 발행분만</span></div>
-      <div class="kpis" id="salesKpi"></div>
-      <div class="sec"><div class="tb" id="gSd"></div></div>
-      <div class="grid2">
-        <div class="sec"><h3>월별 발행</h3><div class="tb" id="gSdMon"></div></div>
-        <div class="sec"><h3>업무문서 ↔ 회계전표 불일치 <span class="cnt" id="gapN"></span></h3><div class="tb" id="gGap"></div></div>
+      <div class="ph">
+        <h2>영업 · 계약 문서</h2>
+        <div class="desc">견적 · 수주 · 계약서 · 세금계산서 청구 통합 관제</div>
+        <div class="act" style="display:flex;align-items:center;gap:6px">
+          <span class="chip on" id="sdTab_docs" onclick="sdTab('docs')">📑 문서 원장</span>
+          <span class="chip" id="sdTab_ptn" onclick="sdTab('ptn')">🏢 거래처 마스터</span>
+          <span class="chip" id="sdTab_mon" onclick="sdTab('mon')">📊 월별 실적 추이</span>
+          <button class="btn p" onclick="newDoc()">+ 새 문서 (N)</button>
+        </div>
       </div>
-      <div class="sec"><h3>거래처 마스터 <span class="cnt" id="ptnN"></span><button class="btn sm" style="margin-left:10px" onclick="ptnNew()">+ 거래처 추가</button></h3><div class="desc" style="margin-bottom:8px">셀을 더블클릭하면 바로 수정됩니다. 인쇄 서식(공급받는자)과 홈택스 자동 연결(사업자번호)에 그대로 쓰입니다.</div><div class="tb" id="gPtn"></div></div>
+
+      <!-- 4대 핵심 관제 KPI (1줄 슬림 배치) -->
+      <div class="kpis" id="salesTopKpi" style="margin-bottom:16px"></div>
+
+      <!-- 1. 문서 원장 서브 탭 (기본 표출) -->
+      <div id="sdPane_docs">
+        <div class="sec"><div class="tb" id="gSd"></div></div>
+      </div>
+
+      <!-- 2. 거래처 마스터 서브 탭 -->
+      <div id="sdPane_ptn" class="hide">
+        <div class="sec">
+          <h3>거래처 마스터 <span class="cnt" id="ptnN"></span><button class="btn sm p" style="margin-left:10px" onclick="ptnNew()">+ 거래처 추가</button></h3>
+          <div class="desc" style="margin-bottom:8px">셀을 더블클릭하면 바로 수정됩니다. 인쇄 서식(공급받는자)과 홈택스 자동 연결(사업자번호)에 그대로 쓰입니다.</div>
+          <div class="tb" id="gPtn"></div>
+        </div>
+      </div>
+
+      <!-- 3. 월별 실적 추이 서브 탭 -->
+      <div id="sdPane_mon" class="hide">
+        <div class="sec">
+          <h3>월별 실적 추이 (귀속월별 발행액 및 세액)</h3>
+          <div class="tb" id="gSdMon"></div>
+        </div>
+      </div>
     </section>
 
     <!-- 돈·정산 -->
@@ -1009,101 +1032,147 @@ async function loadAll(){
   if(LOADING)return;LOADING=true;
   var t0=performance.now();el('stamp').textContent='불러오는 중…';if(el('errbox'))el('errbox').innerHTML='';
   var Q=[
-    ['att',sb.from('ceo_attendance').select('*').order('work_date',{ascending:false}).limit(3000)],
-    ['attk',sb.from('ceo_attendance_keys').select('*').order('work_date',{ascending:false}).limit(3000)],
-    ['set',sb.from('ceo_settlement').select('*').limit(5000)],
-    ['dash',sb.from('ceo_dashboard').select('*').order('period_ym')],
-    ['pay',sb.from('ceo_pay_balance').select('*')],
-    ['ldr',sb.from('ceo_leader_balance').select('*').order('period_ym',{ascending:false}).limit(48)],
-    ['al',sb.from('ceo_alerts').select('*').order('sort_ord')],
-    ['sd',sb.from('ceo_sd_docs').select('*').order('doc_date',{ascending:false}).limit(1500)],
-    ['sdm',sb.from('ceo_sd_month').select('*')],
-    ['gap',sb.from('ceo_sd_fi_gap').select('*').limit(300)],
-    ['di',sb.from('ceo_deemed_interest').select('*').order('yr')],
-    ['tr',sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)],
-    ['uacc',sb.rpc('ceo_erp_accounts')],
-    ['uorp',sb.rpc('ceo_erp_orphans')],
-    ['sfk',sb.from('ceo_safety').select('*').order('work_date',{ascending:false}).limit(4000)],
-    ['eds',sb.from('ceo_training_sessions').select('*').order('held_on',{ascending:false}).limit(300)],
-    ['edg',sb.from('ceo_training_signs').select('*').limit(4000)],
-    ['alw',sb.from('ceo_allowance_master').select('*').order('sort_ord')],
-    ['cons',sb.from('ceo_consent_missing').select('*')],
-    ['retro',sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})],
-    ['pump',sb.from('ceo_pump').select('*').order('period_ym')],
-    ['lm',sb.from('ceo_labor_month').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').limit(4000)],
-    ['sites',sb.from('ceo_sites').select('*').order('site_name')],
-    ['staff',sb.from('ceo_staff').select('*').order('name')],
-    ['rateh',sb.from('ceo_rate_history').select('*').order('valid_from',{ascending:false}).limit(2000)],
-    ['perh',sb.from('ceo_period_history').select('*').order('valid_from',{ascending:false}).limit(2000)],
-    ['teamh',sb.from('ceo_team_history').select('*').order('valid_from',{ascending:false}).limit(2000)],
-    ['trn',sb.from('ceo_trainings').select('*').order('trained_on',{ascending:false}).limit(3000)],
-    ['roster',sb.from('ceo_access_roster').select('*').order('name')],
-    ['ctr',sb.from('ceo_contracts').select('*').order('signed_on',{ascending:false}).limit(2000)],
-    ['dlog',sb.from('ceo_disclosure_log').select('*').order('disclosed_on',{ascending:false}).limit(500)],
-    ['setg',sb.from('ceo_settings').select('*').order('setting_key')],
-    ['pipe',sb.from('ceo_sd_pipeline').select('*')],
-    ['chk',sb.from('ceo_op_check').select('*')],
-    ['pcash',sb.from('ceo_partner_cash').select('*')],
-    ['bunm',sb.from('ceo_bank_unmatched').select('*')],
-    ['esg',sb.from('ceo_esign').select('*').order('issued_at',{ascending:false})],
-    ['esgt',sb.from('ceo_esign_todo').select('*').order('hired_on')],
-    ['grd',sb.from('ceo_grade_eligible').select('*')],
-    ['tgr',sb.from('my_tech_grades').select('*').order('grade')],
-    ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
-    ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
-    ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
-    ['intg',sb.from('ceo_integrity').select('*').order('sort_ord')],
-    ['ptn',sb.from('ceo_partners').select('*').order('name')],
-    ['close',sb.from('ceo_month_close').select('*').order('period_ym',{ascending:false}).limit(24)],
-    ['items',sb.from('ceo_items').select('*').order('item_code').limit(2000)],
-    ['pgap',sb.from('ceo_price_gap').select('*').order('spread_pct',{ascending:false}).limit(1000)],
-    ['sup',sb.from('ceo_suppliers').select('*').order('name')],
-    ['crew',sb.from('ceo_crew_roster').select('*')],
-    ['carpool',sb.from('ceo_carpool').select('*')],
-    ['mrev',sb.from('ceo_month_revenue').select('*').order('period_ym',{ascending:false}).limit(600)],
-    ['mrevl',sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)],
-    ['disp',sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)],
-    ['payp',sb.from('ceo_pay_profiles').select('*').order('person_name')],
-    ['co',sb.from('ceo_company').select('*')],
-    ['ht',sb.from('ceo_hometax_invoices').select('*').order('issue_date',{ascending:false}).limit(3000)],
-    ['htm',sb.from('ceo_hometax_month').select('*').order('period_ym',{ascending:false})],
-    ['htv',sb.from('ceo_hometax_vs_sd').select('*').order('period_ym',{ascending:false}).limit(2000)],
-    ['htr',sb.from('ceo_hometax_runs').select('*').limit(30)],
-    ['inbox',sb.from('ceo_fi_inbox').select('*').order('on_date',{ascending:false}).limit(500)],
-    ['bank',sb.from('ceo_bank_txns').select('*').order('txn_at',{ascending:false}).limit(1500)],
-    ['card',sb.from('ceo_card_txns').select('*').order('approved_at',{ascending:false}).limit(1500)],
-    ['cash',sb.from('ceo_cash_receipts').select('*').order('txn_at',{ascending:false}).limit(500)],
-    ['acct',sb.from('ceo_accounts').select('*')],
-    ['stl',sb.from('ceo_settle_ledger').select('*').order('doc_date',{ascending:false}).limit(4000)],
-    ['stp',sb.from('ceo_settle_partner').select('*')],
-    ['stm',sb.from('ceo_settle_matches').select('*').order('matched_at',{ascending:false}).limit(500)],
-    ['po',sb.from('ceo_po_open').select('*').order('doc_date',{ascending:false})],
-    ['pick',sb.from('ceo_item_pick').select('*').order('name_ko').limit(3000)],
-    ['plans',sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')]
+    ['att',function(){return sb.from('ceo_attendance').select('*').order('work_date',{ascending:false}).limit(3000)}],
+    ['attk',function(){return sb.from('ceo_attendance_keys').select('*').order('work_date',{ascending:false}).limit(3000)}],
+    ['set',function(){return sb.from('ceo_settlement').select('*').limit(5000)}],
+    ['dash',function(){return sb.from('ceo_dashboard').select('*').order('period_ym')}],
+    ['pay',function(){return sb.from('ceo_pay_balance').select('*')}],
+    ['ldr',function(){return sb.from('ceo_leader_balance').select('*').order('period_ym',{ascending:false}).limit(48)}],
+    ['al',function(){return sb.from('ceo_alerts').select('*').order('sort_ord')}],
+    ['sd',function(){return sb.from('ceo_sd_docs').select('*').order('doc_date',{ascending:false}).limit(1500)}],
+    ['sdm',function(){return sb.from('ceo_sd_month').select('*')}],
+    ['gap',function(){return sb.from('ceo_sd_fi_gap').select('*').limit(300)}],
+    ['di',function(){return sb.from('ceo_deemed_interest').select('*').order('yr')}],
+    ['tr',function(){return sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)}],
+    ['uacc',function(){return sb.rpc('ceo_erp_accounts')}],
+    ['uorp',function(){return sb.rpc('ceo_erp_orphans')}],
+    ['sfk',function(){return sb.from('ceo_safety').select('*').order('work_date',{ascending:false}).limit(4000)}],
+    ['eds',function(){return sb.from('ceo_training_sessions').select('*').order('held_on',{ascending:false}).limit(300)}],
+    ['edg',function(){return sb.from('ceo_training_signs').select('*').limit(4000)}],
+    ['alw',function(){return sb.from('ceo_allowance_master').select('*').order('sort_ord')}],
+    ['cons',function(){return sb.from('ceo_consent_missing').select('*')}],
+    ['retro',function(){return sb.from('ceo_ot_retro').select('*').order('period_ym',{ascending:false})}],
+    ['pump',function(){return sb.from('ceo_pump').select('*').order('period_ym')}],
+    ['lm',function(){return sb.from('ceo_labor_month').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').limit(4000)}],
+    ['sites',function(){return sb.from('ceo_sites').select('*').order('site_name')}],
+    ['staff',function(){return sb.from('ceo_staff').select('*').order('name')}],
+    ['rateh',function(){return sb.from('ceo_rate_history').select('*').order('valid_from',{ascending:false}).limit(2000)}],
+    ['perh',function(){return sb.from('ceo_period_history').select('*').order('valid_from',{ascending:false}).limit(2000)}],
+    ['teamh',function(){return sb.from('ceo_team_history').select('*').order('valid_from',{ascending:false}).limit(2000)}],
+    ['trn',function(){return sb.from('ceo_trainings').select('*').order('trained_on',{ascending:false}).limit(3000)}],
+    ['roster',function(){return sb.from('ceo_access_roster').select('*').order('name')}],
+    ['ctr',function(){return sb.from('ceo_contracts').select('*').order('signed_on',{ascending:false}).limit(2000)}],
+    ['dlog',function(){return sb.from('ceo_disclosure_log').select('*').order('disclosed_on',{ascending:false}).limit(500)}],
+    ['setg',function(){return sb.from('ceo_settings').select('*').order('setting_key')}],
+    ['pipe',function(){return sb.from('ceo_sd_pipeline').select('*')}],
+    ['chk',function(){return sb.from('ceo_op_check').select('*')}],
+    ['pcash',function(){return sb.from('ceo_partner_cash').select('*')}],
+    ['bunm',function(){return sb.from('ceo_bank_unmatched').select('*')}],
+    ['esg',function(){return sb.from('ceo_esign').select('*').order('issued_at',{ascending:false})}],
+    ['esgt',function(){return sb.from('ceo_esign_todo').select('*').order('hired_on')}],
+    ['grd',function(){return sb.from('ceo_grade_eligible').select('*')}],
+    ['tgr',function(){return sb.from('my_tech_grades').select('*').order('grade')}],
+    ['pumpd',function(){return sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)}],
+    ['apay',function(){return sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)}],
+    ['tclaim',function(){return sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)}],
+    ['intg',function(){return sb.from('ceo_integrity').select('*').order('sort_ord')}],
+    ['ptn',function(){return sb.from('ceo_partners').select('*').order('name')}],
+    ['close',function(){return sb.from('ceo_month_close').select('*').order('period_ym',{ascending:false}).limit(24)}],
+    ['items',function(){return sb.from('ceo_items').select('*').order('item_code').limit(2000)}],
+    ['pgap',function(){return sb.from('ceo_price_gap').select('*').order('spread_pct',{ascending:false}).limit(1000)}],
+    ['sup',function(){return sb.from('ceo_suppliers').select('*').order('name')}],
+    ['crew',function(){return sb.from('ceo_crew_roster').select('*')}],
+    ['carpool',function(){return sb.from('ceo_carpool').select('*')}],
+    ['mrev',function(){return sb.from('ceo_month_revenue').select('*').order('period_ym',{ascending:false}).limit(600)}],
+    ['mrevl',function(){return sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)}],
+    ['disp',function(){return sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)}],
+    ['payp',function(){return sb.from('ceo_pay_profiles').select('*').order('person_name')}],
+    ['co',function(){return sb.from('ceo_company').select('*')}],
+    ['ht',function(){return sb.from('ceo_hometax_invoices').select('*').order('issue_date',{ascending:false}).limit(3000)}],
+    ['htm',function(){return sb.from('ceo_hometax_month').select('*').order('period_ym',{ascending:false})}],
+    ['htv',function(){return sb.from('ceo_hometax_vs_sd').select('*').order('period_ym',{ascending:false}).limit(2000)}],
+    ['htr',function(){return sb.from('ceo_hometax_runs').select('*').limit(30)}],
+    ['inbox',function(){return sb.from('ceo_fi_inbox').select('*').order('on_date',{ascending:false}).limit(500)}],
+    ['bank',function(){return sb.from('ceo_bank_txns').select('*').order('txn_at',{ascending:false}).limit(1500)}],
+    ['card',function(){return sb.from('ceo_card_txns').select('*').order('approved_at',{ascending:false}).limit(1500)}],
+    ['cash',function(){return sb.from('ceo_cash_receipts').select('*').order('txn_at',{ascending:false}).limit(500)}],
+    ['acct',function(){return sb.from('ceo_accounts').select('*')}],
+    ['stl',function(){return sb.from('ceo_settle_ledger').select('*').order('doc_date',{ascending:false}).limit(4000)}],
+    ['stp',function(){return sb.from('ceo_settle_partner').select('*')}],
+    ['stm',function(){return sb.from('ceo_settle_matches').select('*').order('matched_at',{ascending:false}).limit(500)}],
+    ['po',function(){return sb.from('ceo_po_open').select('*').order('doc_date',{ascending:false})}],
+    ['pick',function(){return sb.from('ceo_item_pick').select('*').order('name_ko').limit(3000)}],
+    ['plans',function(){return sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')}]
   ];
-  /* 한 번에 50여 개를 동시에 던지면 커넥션이 밀려 statement timeout이 난다.
-     6개씩 흘려보내고, 먼저 필요한 것만 1차로 받아 화면을 띄운 뒤 나머지를 뒤에서 채운다. */
-  var CORE={dash:1,att:1,attk:1,set:1,al:1,intg:1,pay:1,sdm:1,lm:1,sites:1,cons:1,retro:1};
+
   var errs=[];
-  async function runOne(q){
-    try{var r=await q[1];
-      if(r&&r.error){errs.push(q[0]+': '+r.error.message);return}
+  async function runOne(q, retries){
+    retries = retries || 0;
+    try{
+      var p = typeof q[1] === 'function' ? q[1]() : q[1];
+      var r = await p;
+      if(r && r.error){
+        if(retries < 2 && (r.error.code === '57014' || /timeout|canceled|canceling/i.test(r.error.message||''))){
+          await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
+          return runOne(q, retries + 1);
+        }
+        errs.push(q[0]+': '+r.error.message);
+        return;
+      }
       D[q[0]]=(r&&r.data)||[];
-    }catch(e){errs.push(q[0]+': '+(e&&e.message||e))}
+    }catch(e){
+      if(retries < 2){
+        await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
+        return runOne(q, retries + 1);
+      }
+      errs.push(q[0]+': '+(e&&e.message||e));
+    }
   }
-  function pool(list,n){var i=0;
+
+  function pool(list,n){
+    var i=0;
     return Promise.all(Array.apply(null,{length:Math.min(n,list.length)}).map(function(){
-      return (async function(){while(i<list.length){await runOne(list[i++])}})()}))}
-  var core=Q.filter(function(q){return CORE[q[0]]}),rest=Q.filter(function(q){return !CORE[q[0]]});
-  await pool(core,6);
+      return (async function(){
+        while(i<list.length){
+          var item=list[i++];
+          if(item) await runOne(item);
+        }
+      })();
+    }));
+  }
+
+  // 1단계: 첫 화면 골격(Shell) 즉시 렌더링 (병렬 4)
+  var T1={dash:1,sites:1,staff:1,co:1,ptn:1,sdm:1,pipe:1,plans:1,setg:1,chk:1,esgt:1,grd:1};
+  var t1=Q.filter(function(q){return T1[q[0]]});
+  await pool(t1,4);
   buildMonths();try{renderAll()}catch(e){}
-  el('stamp').textContent='1차 '+Math.round(performance.now()-t0)+'ms · 나머지 불러오는 중…';
-  await pool(rest,6);
+  el('stamp').textContent='1차 '+Math.round(performance.now()-t0)+'ms · 현장 투입 로딩 중…';
+
+  // 2단계: 현장 출퇴근 및 영업·계약 실황 (병렬 3)
+  var T2={att:1,attk:1,sd:1,gap:1,di:1,tr:1,uacc:1,uorp:1,sfk:1,eds:1,edg:1,alw:1,cons:1};
+  var t2=Q.filter(function(q){return T2[q[0]]});
+  await pool(t2,3);
+  try{renderAll()}catch(e){}
+  el('stamp').textContent='2차 '+Math.round(performance.now()-t0)+'ms · 손익 분석 집계 중…';
+
+  // 3단계: 무거운 분석 뷰 (전용 슬롯 병렬 2 - DB CPU 보호 및 타임아웃 방지)
+  var T3={set:1,pay:1,al:1,retro:1,lm:1,ldr:1};
+  var t3=Q.filter(function(q){return T3[q[0]]});
+  await pool(t3,2);
+  try{renderAll()}catch(e){}
+  el('stamp').textContent='3차 '+Math.round(performance.now()-t0)+'ms · 세부 원장 보강 중…';
+
+  // 4단계: 백그라운드 원장 및 과거 아카이브 (병렬 4)
+  var doneKeys={};
+  [t1,t2,t3].forEach(function(arr){arr.forEach(function(x){doneKeys[x[0]]=1})});
+  var t4=Q.filter(function(q){return !doneKeys[q[0]]});
+  await pool(t4,4);
+
   LOADING=false;
   var ms=Math.round(performance.now()-t0);
-  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' · '+ms+'ms'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':'');
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' · '+ms+'ms'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':' <span class="dim">(완료)</span>');
   buildMonths();renderAll();
-  if(errs.length){LASTERR=errs;toast('조회 '+errs.length+'건 실패 — 새로고침(R)을 눌러 주십시오. 자세히: 콘솔 LASTERR','e')}
+  if(errs.length){LASTERR=errs;toast('조회 '+errs.length+'건 실패 — 자세히: 콘솔 LASTERR','e')}
   if(!D.dash.length&&!errs.length)toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
 }
 var LASTERR=[];
@@ -1710,15 +1779,26 @@ async function ptnCreate(){var nm=el('pn_name').value.trim();if(!nm){toast('거�
   if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('거래처 등록 '+r.data.partner_id,'g');drClose();loadAll();}
 function sdAmt(v,r){var t=won(v);return (r.doc_kind!=='tax'||r.status==='void')?'<span class="dim" title="매출·매입 집계에 들어가지 않습니다">'+t+'</span>':t}
-function sdNoInv(){go('sales');setTimeout(function(){gSetChip('gSd','_noinv','1')},80)}
-function sdQuoteOnly(){go('sales');setTimeout(function(){gSetChip('gSd','doc_kind','quote')},80)}
+var SD_TAB='docs';
+function sdTab(t){
+  SD_TAB=t;
+  ['docs','ptn','mon'].forEach(function(k){
+    var tabEl=el('sdTab_'+k),paneEl=el('sdPane_'+k);
+    if(tabEl) tabEl.classList.toggle('on', k===t);
+    if(paneEl) paneEl.classList.toggle('hide', k!==t);
+  });
+}
+function sdNoInv(){sdTab('docs');setTimeout(function(){gSetChip('gSd','_noinv','1')},80)}
+function sdQuoteOnly(){sdTab('docs');setTimeout(function(){gSetChip('gSd','doc_kind','quote')},80)}
+function sdDraftOnly(){sdTab('docs');setTimeout(function(){gSetChip('gSd','status','draft')},80)}
 function renderSales(){
-  var m=M(),cur=D.sdm.filter(function(r){return r.period_ym===m});
-  if(el('gPtn')){el('ptnN').textContent=(D.ptn||[]).length+'곳';
+  var m=M(),cur=(D.sdm||[]).filter(function(r){return r.period_ym===m});
+  if(el('gPtn')){
+    el('ptnN').textContent=(D.ptn||[]).length+'곳';
     grid('gPtn',[{k:'name',t:'거래처명',l:1,e:'name'},{k:'biz_no',t:'사업자번호',l:1,e:{field:'biz_no',ph:'000-00-00000'}},{k:'ceo_name',t:'대표자',l:1,e:'ceo_name'},{k:'address',t:'주소',l:1,e:'address'},{k:'biz_type',t:'업태',l:1,e:'biz_type'},{k:'biz_item',t:'종목',l:1,e:'biz_item'},{k:'contact_name',t:'담당',l:1,e:'contact_name'},{k:'contact_phone',t:'연락처',l:1,e:'contact_phone'},{k:'contact_email',t:'이메일',l:1,e:'contact_email'},{k:'doc_cnt',t:'문서',f:'int'},{k:'last_doc_on',t:'최근',l:1},{k:'partner_id',t:'코드',l:1,cls:'tiny dim'}],
-      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:ptnSave,empty:'거래처 없음'});}
+      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:ptnSave,empty:'거래처 없음'});
+  }
   var s=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='tax'});
-  var q=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='quote'});
   var p=cur.filter(function(r){return r.trade_side==='purchase'&&r.doc_kind==='tax'});
   (D.sd||[]).forEach(function(r){
     r._noinv=(r.trade_side==='sales'&&!r.has_invoice&&r.status!=='void'&&r.doc_kind==='tax')?'1':'0';
@@ -1728,30 +1808,32 @@ function renderSales(){
   var pipe=D.pipe||[];
   var pOpen=pipe.filter(function(d){return d.pipe_status==='open'});
   var pWon=pipe.filter(function(d){return d.pipe_status==='won'});
-  var pLost=pipe.filter(function(d){return d.pipe_status==='lost'});
   var wonAmt=sum(pWon,'supply_amt'),allAmt=sum(pipe,'supply_amt');
   var rate=allAmt?Math.round(wonAmt/allAmt*1000)/10:0;
-  var vd=setgNum('quote_valid_days',30);
-  var soon=pOpen.filter(function(d){return (+d.d_day)<=7}).length;
-  el('pipeKpi').innerHTML=kpi(m+' 견적 발행',won(sum(q,'supply_amt')),sum(q,'doc_cnt')+'건')
-    +kpi('유효 견적',won(sum(pOpen,'supply_amt')),pOpen.length+'건 · 유효기간 '+vd+'일'+(soon?' · <span class="wn">'+soon+'건 만료임박</span>':''),'click',' onclick="sdQuoteOnly()"')
-    +kpi('수주 전환',won(wonAmt),pWon.length+'건 · 다음 문서로 이어짐')
-    +kpi('실주',pLost.length?'<span class="dim">'+won(sum(pLost,'supply_amt'))+'</span>':'0',pLost.length+'건 · 유효기간 경과·미전환')
-    +kpi('수주율',rate+'<small>%</small>','전환액 ÷ 견적 발행액 (누적)');
-  el('salesKpi').innerHTML=kpi(m+' 매출 발행',won(sum(s,'supply_amt')),sum(s,'doc_cnt')+'건 · 세금계산서','hl')+kpi(m+' 매입',won(sum(p,'supply_amt')),sum(p,'doc_cnt')+'건')+kpi('문서 총계',D.sd.length+'<small>건</small>','최근 1,500건 조회')+kpi('임시 문서',drafts?'<span class="wn">'+drafts+'</span>':'0','확정 대기')+kpi('계산서 승인번호 없음',noinv?'<span class="wn">'+noinv+'</span>':'0','매출 계산서 중 · 눌러서 그 건만 보기',(noinv?'warn ':'')+'click',' onclick="sdNoInv()"');
+  var salesAmt=sum(s,'supply_amt'),salesCnt=sum(s,'doc_cnt');
+
+  if(el('salesTopKpi')){
+    el('salesTopKpi').innerHTML=
+      kpi(m+' 청구 매출',won(salesAmt),salesCnt+'건 · 세금계산서 발행','hl')
+      +kpi('진행 중 견적 · 수주',won(sum(pOpen,'supply_amt')),pOpen.length+'건 진행중 · 누적 수주율 '+rate+'%','click',' onclick="sdQuoteOnly()"')
+      +kpi('계산서 승인번호 미입력',noinv?'<span class="wn">'+noinv+'건</span>':'<span class="pos">0건</span>',noinv?'매출 계산서 중 · 클릭하여 조회':'전건 홈택스 승인 완료',(noinv?'warn ':'')+'click',' onclick="sdNoInv()"')
+      +kpi('작성 중 임시 문서',drafts?'<span class="wn">'+drafts+'건</span>':'<span class="dim">0건</span>',drafts?'확정 대기 · 클릭하여 조회':'확정 대기 없음',(drafts?'warn ':'')+'click',' onclick="sdDraftOnly()"');
+  }
+
   grid('gSd',[{k:'doc_date',t:'일자',l:1},{k:'doc_no',t:'번호',l:1,cls:'dim'},{k:'doc_kind',t:'종류',l:1,f:pillKind},{k:'trade_side',t:'구분',l:1,f:function(v){return v==='sales'?'매출':'매입'}},{k:'partner_name',t:'거래처',l:1},{k:'title',t:'건명',l:1,f:function(v){return esc((v||'').slice(0,40))}},{k:'line_cnt',t:'라인',f:'int'},{k:'supply_amt',t:'공급가',f:sdAmt,sum:1},{k:'tax_amt',t:'세액',f:sdAmt,sum:1},{k:'total_amt',t:'합계',f:sdAmt,sum:1},{k:'status',t:'상태',l:1,f:pillSt},{k:'_pipe',t:'견적 상태',l:1,f:function(v,r){if(r.doc_kind!=='quote')return '';var x=(D.pipe||[]).filter(function(z){return z.doc_no===r.doc_no})[0];if(!x)return '';
       if(x.pipe_status==='won')return '<span class="pill g">수주</span>';
       if(x.pipe_status==='lost')return '<span class="pill" title="유효기간 '+esc(x.valid_until)+' 경과">실주</span>';
       return '<span class="pill b" title="만료 '+esc(x.valid_until)+'">유효 D'+((+x.d_day)>=0?'-'+x.d_day:'+'+Math.abs(+x.d_day))+'</span>'}},{k:'has_invoice',t:'계산서',l:1,f:function(v,r){return r.doc_kind==='tax'?(v?'<span class="pill g">발행</span>':'<span class="pill y">미발행</span>'):''}}],
-    {rows:D.sd,q:['partner_name','title','doc_no'],qph:'거래처·건명·번호',chips:[{k:'trade_side',vals:[['','전체'],['sales','매출'],['purchase','매입']]},{k:'doc_kind',vals:[['','종류 전체'],['tax','계산서'],['quote','견적'],['order','발주'],['contract','계약']]},{k:'status',vals:[['','상태 전체'],['draft','임시'],['approved','확정'],['settled','정산완료'],['void','취소']]},{k:'_noinv',vals:[['','승인번호 전체'],['1','승인번호 없음']]}],foot:true,onRow:openDoc,page:50});
+    {rows:D.sd,q:['partner_name','title','doc_no'],qph:'거래처·건명·번호',chips:[{k:'trade_side',vals:[['','구분 전체'],['sales','매출'],['purchase','매입']]},{k:'doc_kind',vals:[['','종류 전체'],['tax','계산서'],['quote','견적'],['order','발주'],['contract','계약']]},{k:'status',vals:[['','상태 전체'],['draft','임시'],['approved','확정'],['settled','정산완료'],['void','취소']]},{k:'_noinv',vals:[['','승인번호 전체'],['1','승인번호 미입력']]}],foot:true,onRow:openDoc,page:50});
   edHint('gSd','아래 합계는 지금 표시된 행을 그대로 더한 값입니다 · 회색 금액(견적·취소)은 매출·매입 KPI와 손익에 들어가지 않습니다');
-  var t={};D.sdm.forEach(function(r){var k=r.period_ym;t[k]=t[k]||{period_ym:k,sc:0,sa:0,st:0,pc:0,pa:0,qc:0,qa:0};
-    if(r.trade_side==='sales'&&r.doc_kind==='tax'){t[k].sc+=+r.doc_cnt||0;t[k].sa+=+r.supply_amt||0;t[k].st+=+r.tax_amt||0}
-    else if(r.trade_side==='sales'&&r.doc_kind==='quote'){t[k].qc+=+r.doc_cnt||0;t[k].qa+=+r.supply_amt||0}
-    else if(r.trade_side==='purchase'&&r.doc_kind==='tax'){t[k].pc+=+r.doc_cnt||0;t[k].pa+=+r.supply_amt||0}});
-  grid('gSdMon',[{k:'period_ym',t:'귀속월',l:1},{k:'sc',t:'매출건',f:'int'},{k:'sa',t:'매출 공급가',f:'won'},{k:'st',t:'세액',f:'won'},{k:'pc',t:'매입건',f:'int'},{k:'pa',t:'매입 공급가',f:'won'},{k:'qc',t:'견적건',f:'int'},{k:'qa',t:'견적 발행액',f:function(v){return '<span class="dim">'+won(v)+'</span>'}}],{rows:Object.keys(t).sort().reverse().map(function(k){return t[k]}),csv:false,page:18});
-  el('gapN').textContent=D.gap.length?D.gap.length+'건':'';
-  grid('gGap',[{k:'doc_no',t:'문서',l:1},{k:'doc_kind',t:'종류',l:1,f:function(v){return esc(KIND[v]||v)}},{k:'sd_status',t:'업무',l:1},{k:'fi_status',t:'회계',l:1},{k:'sd_supply',t:'업무 공급가',f:'won'},{k:'fi_supply',t:'회계 공급가',f:'won'},{k:'supply_gap',t:'차이',f:'sgn'}],{rows:D.gap,csv:false,empty:'업무문서와 회계전표가 전부 일치합니다'});
+
+  if(el('gSdMon')){
+    var t={};(D.sdm||[]).forEach(function(r){var k=r.period_ym;t[k]=t[k]||{period_ym:k,sc:0,sa:0,st:0,pc:0,pa:0,qc:0,qa:0};
+      if(r.trade_side==='sales'&&r.doc_kind==='tax'){t[k].sc+=+r.doc_cnt||0;t[k].sa+=+r.supply_amt||0;t[k].st+=+r.tax_amt||0}
+      else if(r.trade_side==='sales'&&r.doc_kind==='quote'){t[k].qc+=+r.doc_cnt||0;t[k].qa+=+r.supply_amt||0}
+      else if(r.trade_side==='purchase'&&r.doc_kind==='tax'){t[k].pc+=+r.doc_cnt||0;t[k].pa+=+r.supply_amt||0}});
+    grid('gSdMon',[{k:'period_ym',t:'귀속월',l:1},{k:'sc',t:'매출건',f:'int'},{k:'sa',t:'매출 공급가',f:'won'},{k:'st',t:'세액',f:'won'},{k:'pc',t:'매입건',f:'int'},{k:'pa',t:'매입 공급가',f:'won'},{k:'qc',t:'견적건',f:'int'},{k:'qa',t:'견적 발행액',f:function(v){return '<span class="dim">'+won(v)+'</span>'}}],{rows:Object.keys(t).sort().reverse().map(function(k){return t[k]}),csv:false,page:18});
+  }
 }
 async function setDocAppNo(no){
   var d=(D.sd||[]).filter(function(x){return x.doc_no===no})[0]||{};
