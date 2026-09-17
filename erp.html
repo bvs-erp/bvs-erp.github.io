@@ -2110,21 +2110,23 @@ async function esgApply(emp){
 }
 async function esgPreview(r){
   ESG.emp=r.employment_no;
-  var res=await sb.rpc('ceo_doc_preview',{p_employment_no:r.employment_no});
+  var isFixed = (r.person_name==='최성완' || r.is_fixed || (r.tech_grade===1 && r.pkg_amt>0 && r.position_title==='없음' && r.person_name!=='박준서' && r.person_name!=='원동진' && r.person_name!=='이경준'));
+  var code = isFixed ? 'BVS-F-32-01-FIXED' : 'BVS-F-32-01';
+  var res=await sb.rpc('ceo_doc_preview',{p_employment_no:r.employment_no, p_doc_code:code});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
   var v=res.data.vars||{};
   var warn='';
   if(!r.ready_person)warn+='<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
-  drOpen('계약서 미리보기 · '+(v.name||r.person_name),
-    warn+esgAdjBar(r,v)
-    +kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',v.grade+' 등급 · '+esc(v.grade_name||'')+' <span class="tierbadge">'+esc(v.grade_tier||'')+'</span>'],['직책',v.position],['월 지급총액','<b>'+v.amt_total+'</b>'],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
+  drOpen('계약서 미리보기 · '+(v.name||r.person_name)+(isFixed?' (고정급·별지2 제외)':''),
+    warn+(isFixed?'':esgAdjBar(r,v))
+    +kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',isFixed?'고정급 대상 (기술등급 비적용)':(v.grade+' 등급 · '+esc(v.grade_name||'')+' <span class="tierbadge">'+esc(v.grade_tier||'')+'</span>')],['직책',v.position],['월 지급총액','<b>'+v.amt_total+'</b>'],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
     +'<div class="docpaper" style="margin-top:12px">'+res.data.html+'</div>',
-    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="esgIssue(\''+r.employment_no+'\')">이 내용으로 발행</button>');
+    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="esgIssue(\''+r.employment_no+'\',\''+code+'\')">이 내용으로 발행</button>');
 }
-async function esgIssue(emp){
+async function esgIssue(emp, code){
   var ok=await ask('계약서 발행','발행하면 본인 현장앱에 뜨고, 본문은 그 시점 내용으로 고정됩니다. 고치려면 무효화 후 다시 발행해야 합니다.\n\n발행할까요?',{ok:'발행'});
   if(!ok)return;
-  var r=await sb.rpc('ceo_doc_issue',{p_employment_no:emp});
+  var r=await sb.rpc('ceo_doc_issue',{p_employment_no:emp, p_doc_code:code||'BVS-F-32-01'});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   drClose();toast(r.data.doc_no+' 발행','g');loadAll();
 }
