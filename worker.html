@@ -114,6 +114,9 @@ details summary{cursor:pointer;list-style:none;padding:6px 0}details summary::-w
 .gnow b{font-size:22px;color:var(--ac)}
 .gnow .gn{font-size:15px;font-weight:600}
 .gnow .ga{margin-left:auto;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.tierbadge{display:inline-block;padding:1px 8px;border-radius:20px;background:var(--sf);border:1px solid var(--ln);font-size:11px;color:var(--tx2)}
+.gskill{font-size:13.5px;line-height:1.55;padding:11px 13px;border-radius:12px;background:var(--sf2);margin-bottom:12px}
+.ladder td.sk{font-size:11.5px;line-height:1.45;color:var(--tx2);padding-top:0;padding-bottom:9px}
 .gbar{margin-bottom:12px}
 .gbar .gl{display:flex;justify-content:space-between;font-size:13px;color:var(--tx2);margin-bottom:5px}
 .gbar .gl b{color:var(--tx);font-variant-numeric:tabular-nums}
@@ -699,43 +702,35 @@ function renderGrade(){
   if(!g||!g.ok){box.innerHTML='<h2>내 기술등급</h2><div class="empty">'+esc((g&&g.error)||'기술등급이 아직 부여되지 않았습니다')+'</div>';return}
   var lad=(g.ladder||[]).map(function(t){
     return '<tr'+(t.grade===g.grade?' class="me"':'')+'><td class="c">'+t.grade+'</td><td>'+esc(t.grade_name)+'</td>'
-      +'<td class="r">'+won(t.monthly_amt)+'</td><td class="c">'+(t.min_months?t.min_months+'개월':'—')+'</td>'
-      +'<td class="r">'+(+t.min_days).toLocaleString('ko-KR')+'</td></tr>'}).join('');
+      +'<td class="r">'+won(t.monthly_amt)+'</td><td class="c">'+(t.min_months?t.min_months+'개월':'—')+'</td></tr>'
+      +'<tr'+(t.grade===g.grade?' class="me"':'')+'><td colspan="4" class="sk">'+esc(t.req_skill||'')+'</td></tr>'}).join('');
   var h='<h2>내 기술등급</h2>';
-  h+='<div class="gnow"><b>'+g.grade+'</b><span class="gn">'+esc(g.grade_name)+'</span><span class="ga">'+won(g.monthly_amt)+'</span></div>';
+  h+='<div class="gnow"><b>'+g.grade+'</b><span class="gn">'+esc(g.grade_name)+'</span><span class="tierbadge">'+esc(g.tier||'')+'</span><span class="ga">'+won(g.monthly_amt)+'</span></div>';
+  h+='<div class="gskill">'+esc(g.req_skill||'')+'</div>';
   if(g.next_grade){
-    var needD=Math.max((+g.next_min_days||0)-(+g.deemed_days||0),0), gotD=+g.days_after||0;
-    var totM=(+g.next_min_months||0)*30.4, leftM=+g.stay_left_days||0, gotM=Math.max(totM-leftM,0);
-    var stayOk=leftM<=0, dayOk=gotD>=needD;
+    var leftM=+g.stay_left_days||0, totM=(+g.next_min_months||0)*30.4, gotM=Math.max(totM-leftM,0);
+    var stayOk=leftM<=0;
     h+='<p class="tiny dim" style="margin:0 0 12px">다음은 <b>'+g.next_grade+'등급 '+esc(g.next_name)+'</b> · 월 '+won(g.next_amt)+' (+'+won((+g.next_amt||0)-(+g.monthly_amt||0))+')</p>';
     h+='<div class="gbar"><div class="gl"><span>최소 체류기간 '+g.next_min_months+'개월</span><b>'+(stayOk?'충족':String(leftM)+'일 남음')+'</b></div>'
       +'<div class="gtrack'+(stayOk?' ok':'')+'"><span style="width:'+gpct(gotM,totM)+'%"></span></div>'
       +'<div class="tiny dim" style="margin-top:4px">'+esc(String(g.granted_on))+' 부여 → '+esc(String(g.stay_ok_on))+' 충족</div></div>';
-    h+='<div class="gbar"><div class="gl"><span>누적 현장투입일</span><b>'+gotD.toLocaleString('ko-KR')+' / '+needD.toLocaleString('ko-KR')+'일</b></div>'
-      +'<div class="gtrack'+(dayOk?' ok':'')+'"><span style="width:'+gpct(gotD,needD)+'%"></span></div>'
-      +'<div class="tiny dim" style="margin-top:4px">현 등급 간주분 '+(+g.deemed_days).toLocaleString('ko-KR')+'일 + 부여 후 실제 '+gotD.toLocaleString('ko-KR')+'일 = 인정 '+(+g.total_days).toLocaleString('ko-KR')+'일 · 요건 '+(+g.next_min_days).toLocaleString('ko-KR')+'일</div></div>';
     if(g.judge==='심사 대상')
-      h+='<div class="gjudge g">승급 요건을 충족했습니다. 신청하면 <b>회사는 반드시 심사를 실시합니다</b>(취업규칙 제43조의2 제3항). 리드 또는 대표에게 승급 신청서(F-32-13)를 내십시오.</div>';
+      h+='<div class="gjudge g">신청 자격이 열렸습니다. 신청하면 <b>회사는 반드시 심사를 실시합니다</b>(취업규칙 제43조의2 제3항). 리드 또는 대표에게 승급 신청서(F-32-13)를 내십시오.</div>';
     else
-      h+='<div class="gjudge w">'+esc(g.judge)+' — '+(stayOk?'':'체류기간 '+leftM+'일')+((!stayOk&&!dayOk)?' · ':'')+(dayOk?'':'투입일 '+Math.max(needD-gotD,0)+'일')+' 더 필요합니다.</div>';
-    h+='<details class="gd"><summary>'+g.next_grade+'등급에서 요구하는 것</summary><div class="greq">'
-      +'<div><b>기술 범위</b>'+esc(g.next_scope||'—')+'</div>'
-      +'<div><b>단독 수행 능력</b>'+esc(g.next_solo||'—')+'</div>'
-      +'<div><b>지도 · 안전</b>'+esc(g.next_guide||'—')+'</div></div></details>';
+      h+='<div class="gjudge w">최소 체류기간까지 '+leftM+'일 남았습니다. 그 이후 신청할 수 있습니다.</div>';
+    h+='<details class="gd"><summary>'+g.next_grade+'등급에서 요구하는 기술</summary><div class="greq">'
+      +'<div><b>기술 자립도</b>'+esc(g.next_skill||'—')+'</div>'
+      +'<div><b>심사 4항목</b>① 도면 자력 독해 &nbsp; ② 단독 시공 여부 &nbsp; ③ 오차·간섭 발생 시 자력 대안 수립 &nbsp; ④ 트러블슈팅 및 고객사 검수 통과</div>'
+      +'</div></details>';
   } else {
     h+='<div class="gjudge g">최고 등급입니다.</div>';
   }
-  h+='<details class="gd"><summary>현재 등급에서 요구되는 것</summary><div class="greq">'
-    +'<div><b>기술 범위</b>'+esc(g.req_scope||'—')+'</div>'
-    +'<div><b>단독 수행 능력</b>'+esc(g.req_solo||'—')+'</div>'
-    +'<div><b>지도 · 안전</b>'+esc(g.req_guide||'—')+'</div></div></details>';
   h+='<details class="gd"><summary>등급 사다리 전체 보기 (1 ~ 11등급)</summary>'
-    +'<table class="ladder"><tr><th>등급</th><th>명칭</th><th>월 수당</th><th>최소 체류</th><th>누적 투입일</th></tr>'+lad+'</table>'
-    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한. 승급하려면 최소 체류기간과 누적 현장투입일을 <b>모두</b> 충족해야 합니다. 누적 현장투입일에 교육·휴무·연차는 들어가지 않습니다. 등급은 내려가지 않습니다.<br>승급은 <b>본인의 기술과 실적으로만</b> 판정합니다. 고객사 출입 승인처럼 본인이 채울 수 없는 사정은 요건이 아닙니다.</p></details>';
-  h+='<p class="tiny dim" style="margin:12px 0 0">상세 요건은 취업규칙 별표 2에 따릅니다. 승급 심사는 매년 12월 정기로 실시하며, 자격 취득 등으로 요건이 새로 충족되면 수시로 신청할 수 있습니다. 승급하지 않기로 하는 경우 회사는 그 사유와 보완 과제를 서면으로 알려드립니다.</p>';
+    +'<table class="ladder"><tr><th>등급</th><th>현장 호칭</th><th>월 수당</th><th>최소 체류</th></tr>'+lad+'</table>'
+    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한.<br><b>승급의 판정 기준은 기술 자립도입니다.</b> 최소 체류기간은 신청 자격을 여는 문턱일 뿐이고, 체류기간이 찼다고 자동으로 오르지 않습니다. 누적 출근일수나 현장 투입일수는 요건이 아닙니다. 등급은 내려가지 않습니다.<br>최근 6개월 내 중대 안전수칙 위반은 결격 사유입니다.</p></details>';
+  h+='<p class="tiny dim" style="margin:12px 0 0">부여 후 현장 투입 '+(+g.days_after||0).toLocaleString('ko-KR')+'일 (참고 · 승급 요건 아님). 상세 요건은 취업규칙 별표 2에 따릅니다. 정기심사는 매년 12월, 요건이 새로 충족되면 수시로 신청할 수 있습니다. 승급하지 않기로 하는 경우 회사는 그 사유와 보완 과제를 서면으로 알려드립니다.</p>';
   box.innerHTML=h;
 }
-
 function renderPay(){
   el('pay').innerHTML=D.pay.length?D.pay.map(function(r){return '<div class="item"><div class="d"><b>'+String(r.period_ym).slice(5)+'</b><small>'+String(r.period_ym).slice(0,4)+'</small></div><div class="m"><div class="s">공수 '+(+r.work_md_sum).toFixed(1)+' · 잔업 '+(+r.ot_hours_sum||0)+'h <span class="pill '+(r.is_closed?'g':'y')+'">'+(r.is_closed?'확정':'집계 중')+'</span></div><div class="t">기본 '+won(r.base_amt)+' · 연장 '+won(r.ot_amt)+' · 수당 '+won(r.allowance_amt)+'</div></div><div class="r"><b>'+won(r.payable_amt)+'</b><small class="dim">원</small></div></div>'}).join(''):'<div class="empty">정산 자료 없음</div>';
 }
