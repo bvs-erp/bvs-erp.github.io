@@ -1199,7 +1199,22 @@ function attOpen(r){var f=(D.att||[]).filter(function(x){return x.entry_id===r.e
 function trRows(){return (D.tr||[]).filter(function(r){return !r.is_cancelled})}
 function trNet(k){var t=0;trRows().forEach(function(r){t+=(+r[k]||0)});return t}
 var TRTITLE='Tax-Risk 엔티티 간 거래 (전 기간)';
-function hotCount(){return D.al.filter(function(r){return +r.cnt>0}).length+D.intg.filter(function(r){return +r.cnt>0}).length+(D.gap.length?1:0)+(trRows().length?1:0)+(sfMiss().length?1:0)+(edUnsigned().length?1:0)+(pendRows().length?1:0)+(noOutRows().length&&!D.al.some(function(r){return /퇴근 미등록/.test(r.title)&&+r.cnt>0})?1:0)}
+function realGapRows(){return (D.gap||[]).filter(function(r){return (+r.supply_gap||0)!==0})}
+function hotCount(){
+  var alCnt = (D.al||[]).filter(function(r){
+    if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)) return realGapRows().length > 0;
+    return +r.cnt > 0;
+  }).length;
+  var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
+  return alCnt
+    + D.intg.filter(function(r){return +r.cnt>0}).length
+    + (!hasGapInAl && realGapRows().length ? 1 : 0)
+    + (trRows().length?1:0)
+    + (sfMiss().length?1:0)
+    + (edUnsigned().length?1:0)
+    + (pendRows().length?1:0)
+    + (noOutRows().length&&!D.al.some(function(r){return /퇴근 미등록/.test(r.title)&&+r.cnt>0})?1:0);
+}
 
 /* ═══════════ 홈 ═══════════ */
 var HOME_DAY = null;
@@ -3194,7 +3209,7 @@ function alDetail(t){t=String(t||'');
   if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
   if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
-  if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,null,'업무 문서와 회계 전표의 금액이 어긋났습니다.','money');
+  if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,function(r){return (+r.supply_gap||0)!==0},'업무 문서와 회계 전표의 금액이 어긋났습니다.','money');
   if(/지급의제/.test(t))return d('pay',C.pay,function(r){return (+r.balance_amt||0)>0},'미지급 잔액이 남은 사람입니다.','money');
   if(/휴일·토요일|휴일 근무/.test(t))return d('lm',C.lm,function(r){var w=new Date(r.work_date+'T00:00:00').getDay();return w===0||w===6},'휴일·토요일 투입은 가산임금 대상입니다.','site');
   if(/상주현장 미지정/.test(t))return d('staff',C.staff,function(r){return !r.resigned_on&&!r.work_site_id},'인력 마스터에서 상주 현장을 지정하십시오.','hr');
@@ -3235,8 +3250,16 @@ function renderAlerts(){
   var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}var nm=el('alertNm');if(nm){nm.textContent=hot;nm.classList.toggle('hide',!hot)}
   if(!el('alerts'))return;
 
-  var all=(D.al||[]).map(function(r){return {title:r.title,cnt:+r.cnt||0,tier:alTier(r.title),domain:alDomain(r.title),action:alActionNote(r.title)}})
+  var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
+  var all=(D.al||[]).map(function(r){
+    var c = +r.cnt||0;
+    if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)){
+      c = realGapRows().length;
+    }
+    return {title:r.title,cnt:c,tier:alTier(r.title),domain:alDomain(r.title),action:alActionNote(r.title)};
+  })
     .concat((D.intg||[]).map(function(r){return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),domain:alDomain(r.check_name),action:alActionNote(r.check_name),intg:1}}))
+    .concat(!hasGapInAl && realGapRows().length ? [{title:'업무문서 ↔ 회계전표 금액 불일치',cnt:realGapRows().length,tier:2,domain:'FI',action:alActionNote('업무문서 ↔ 회계전표 금액 불일치')}] : [])
     .concat([{title:TRTITLE,cnt:trRows().length,tier:1,domain:'TAX',action:alActionNote(TRTITLE)},{title:PENDT,cnt:pendRows().length,tier:2,domain:'OP',action:alActionNote(PENDT)}])
     .concat((D.al||[]).some(function(r){return /퇴근 미등록/.test(r.title)})?[]:[{title:NOOUTT,cnt:noOutRows().length,tier:2,domain:'OP',action:alActionNote(NOOUTT)}])
     .concat([{title:SFT,cnt:sfMiss().length,tier:2,domain:'OP',action:alActionNote(SFT)},{title:EDT,cnt:edUnsigned().length,tier:2,domain:'OP',action:alActionNote(EDT)}]);
