@@ -469,7 +469,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div id="stateBox" class="state hide"></div>
         <div class="f"><label>장소</label><div class="chips big" id="w_place"></div></div>
         <div class="f" id="lineBox"><label>라인</label><div class="chips big" id="w_line"></div></div>
-        <div class="f hide" id="pumpBox"><label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업 (수량제)</span></label></div>
+        <div class="f hide" id="pumpBox"><label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업</span></label></div>
         <details class="f"><summary class="tiny dim">메모 추가 (선택)</summary><textarea id="w_desc" class="in" placeholder="예: M15X 5EAL7005 반입, EFEM 레벨링" style="margin-top:8px"></textarea></details>
         <div class="site-summary-badge" id="siteSummaryBadge">
           <span>📍</span> <span id="siteSummaryText">현장 장소와 라인을 선택해 주세요</span>
@@ -669,8 +669,15 @@ function quickDate(offset){
 }
 
 /* ── 안전점검 전 항목 원클릭 체크 ── */
+var DEFAULT_SF_ITEMS=[
+  {code:'ppe',label:'개인 보호구 착용 (안전모·안전화·보안경·장갑)'},
+  {code:'body',label:'건강 및 작업 컨디션 양호 (당일 작업 수행 가능 상태)'},
+  {code:'tbm',label:'작업 전 TBM(안전미팅) 참여 및 작업 절차 숙지'},
+  {code:'tool',label:'작업 공구 및 계측 장비 상태 점검'},
+  {code:'area',label:'작업 구역 정리정돈 및 안전 통로 확보'}
+];
 function sfCheckAllOk(){
-  var items=D.sfItems||[];
+  var items=(D.sfItems&&D.sfItems.length)?D.sfItems:DEFAULT_SF_ITEMS;
   if(!items.length) return;
   items.forEach(function(it){
     SF.sel[it.code]=true;
@@ -798,7 +805,7 @@ function sfToday(){return SF.date||today()}
 function sfRecord(d){return (D.safety||[]).filter(function(x){return String(x.check_date)===d})[0]}
 function renderSafety(){
   if(!el('sfItems'))return;
-  var d=sfToday(),rec=sfRecord(d),items=D.sfItems||[];
+  var d=sfToday(),rec=sfRecord(d),items=(D.sfItems&&D.sfItems.length)?D.sfItems:DEFAULT_SF_ITEMS;
   el('sfDateLbl').textContent=kdate(d)+(d===today()?' · 오늘':'');
   if(!items.length){el('sfItems').innerHTML='<div class="empty">점검 항목이 아직 등록되지 않았습니다. 대표에게 알려 주십시오.</div>';return}
   if(rec&&!Object.keys(SF.sel).length){SF.sel={};items.forEach(function(it){SF.sel[it.code]=(rec.items&&rec.items[it.code]!==false)})}
@@ -815,7 +822,7 @@ function renderSafety(){
 }
 function sfTick(code,on){SF.sel[code]=on}
 async function sfSubmit(){
-  var d=sfToday(),items=D.sfItems||[],m=el('sfMsg');
+  var d=sfToday(),items=(D.sfItems&&D.sfItems.length)?D.sfItems:DEFAULT_SF_ITEMS,m=el('sfMsg');
   if(!items.length){toast('점검 항목이 없습니다','e');return}
   var obj={};items.forEach(function(it){obj[it.code]=SF.sel[it.code]!==false});
   var ng=Object.keys(obj).filter(function(k){return !obj[k]}).length,note=el('sf_ng').value.trim();
@@ -1115,7 +1122,24 @@ async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDay
   if(r.error||!r.data||!r.data.ok){el('dpBlocks').innerHTML='';el('dpMsg').innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
   var d=r.data;var parts=(d.partners&&d.partners.length)?d.partners:[{partner:'전체',partner_id:'all',n:d.total,groups:d.groups||[]}];
   el('dpBlocks').innerHTML=parts.map(function(pt,i){var lines=[kdate(d.date)+' 투입현황 — '+pt.partner];
-    (pt.groups||[]).forEach(function(g){if(g.project==='휴무')return;lines.push('['+g.project+'] '+g.n+'명');(g.sites||[]).forEach(function(s){lines.push('· '+s.place+(s.site&&s.site.split(' ')[1]?' '+s.site.split(' ').slice(1).join(' '):'')+' — '+s.names)})});
+    (pt.groups||[]).forEach(function(g){
+      if(g.project==='휴무')return;
+      lines.push('['+g.project+'] '+g.n+'명');
+      var pMap={};
+      (g.sites||[]).forEach(function(s){
+        var pl=(s.place||'기타').trim();
+        if(!pMap[pl]) pMap[pl]=[];
+        if(s.names){
+          s.names.split(',').forEach(function(nm){
+            var tnm=nm.trim();
+            if(tnm && pMap[pl].indexOf(tnm)<0) pMap[pl].push(tnm);
+          });
+        }
+      });
+      Object.keys(pMap).forEach(function(pl){
+        lines.push('· '+pl+' — '+pMap[pl].join(', '));
+      });
+    });
     lines.push('총 '+pt.n+'명');
     return '<div class="dpblk"><h3>'+esc(pt.partner)+' <span class="pill b">'+pt.n+'명</span></h3><pre id="dpText'+i+'" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0">'+esc(lines.join('\n'))+'</pre><div class="row2" style="margin-top:8px"><button class="btn" onclick="copyText(\'dpText'+i+'\')">복사</button><button class="btn p" onclick="shareText(\'dpText'+i+'\',\'투입현황 '+esc(pt.partner)+'\')">카톡으로 공유</button></div></div>'}).join('');
   el('dpMsg').textContent='';
@@ -1133,9 +1157,25 @@ async function plOpen(d){PL.date=d||PL.date||tomorrow();el('pl_date').value=PL.d
 function plRender(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.site_id)});
   el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows[\''+w.employment_no+'\']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur.site_id?' selected':'')+'>'+esc(s.site_name)+'</option>'}).join('')+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
   plText()}
-function plText(){var g={};PL.staff.forEach(function(w){var c=PL.rows[w.employment_no];if(c&&c.site_id){(g[c.site_id]=g[c.site_id]||[]).push(w.name)}});
+function sitePlaceName(id){
+  var s=D.sites.filter(function(x){return x.site_id===id})[0];
+  if(!s) return id;
+  var code=(s.site_id||'').split('-')[0];
+  var found=PLACES.filter(function(p){return p[0]===code})[0];
+  if(found) return found[1];
+  return (s.site_name||'').split(' ')[0]||s.site_name||id;
+}
+function plText(){
+  var g={};
+  PL.staff.forEach(function(w){
+    var c=PL.rows[w.employment_no];
+    if(c&&c.site_id){
+      var pName=sitePlaceName(c.site_id);
+      (g[pName]=g[pName]||[]).push(w.name);
+    }
+  });
   var ks=Object.keys(g).sort();if(!ks.length){el('plText').classList.add('hide');return}
-  var lines=[kdate(PL.date)+' 배치 계획'];ks.forEach(function(k){lines.push('· '+siteName(k)+' — '+g[k].join(', '))});lines.push('총 '+ks.reduce(function(a,k){return a+g[k].length},0)+'명');
+  var lines=[kdate(PL.date)+' 배치 계획'];ks.forEach(function(k){lines.push('· '+k+' — '+g[k].join(', '))});lines.push('총 '+ks.reduce(function(a,k){return a+g[k].length},0)+'명');
   el('plText').textContent=lines.join('\n');el('plText').classList.remove('hide')}
 function plCopyToday(){PL.staff.forEach(function(w){if(w.last_site)PL.rows[w.employment_no]={site_id:w.last_site,memo:''}});plRender();toast('최근 현장으로 채웠습니다. 저장을 눌러야 반영됩니다')}
 async function plSave(){var m=el('plMsg');m.textContent='저장 중…';var rows=PL.staff.map(function(w){var c=PL.rows[w.employment_no]||{};return {employment_no:w.employment_no,site_id:c.site_id||'',memo:c.memo||''}});
