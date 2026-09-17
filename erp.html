@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.13</title>
+<title>BVS ERP v1.14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -369,7 +369,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.13</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.14</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -544,6 +544,9 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec"><h3>월별 요약 (매출 · 매입)</h3><div class="tb" id="gHtMonth"></div></div>
       <div class="sec"><h3>거래처별 매출 계산서 — SD 등록 vs 홈택스 실발행 <span class="cnt" id="htVsN"></span></h3><div class="desc" style="margin-bottom:8px">차이가 0이 아니면 ERP에 계산서 문서를 안 만들었거나(＋), 홈택스에 발행이 안 된 것(−)입니다. 상단 월 기준.</div><div class="tb" id="gHtVs"></div></div>
       <div class="sec"><h3>계산서 목록</h3><div class="tb" id="gHtInv"></div></div>
+      <div class="sec" id="ht-alias"><h3>통장 상대명 연결 <span class="cnt" id="bunN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">통장에 찍힌 이름과 거래처가 연결되지 않은 것들입니다. 연결이 없으면 미수·미지급이 <b>실제와 다르게</b> 나옵니다 — 파이로 임대료가 「황병승」으로 나가서 미지급으로 잡혔던 것이 이 경우입니다. 거래처를 고르면 그 이름의 모든 거래가 한 번에 연결됩니다. 카드사·국세·건강보험처럼 거래처가 아닌 상대는 그냥 두면 됩니다.</div>
+        <div class="tb" id="gBunm"></div></div>
       <div class="sec"><h3>미분류 인박스 — 계정 지정 필요 <span class="cnt" id="fiInboxN"></span></h3><div class="desc" style="margin-bottom:8px">행을 눌러 계정을 고르면 전표가 바로 고쳐지고, 같은 상대는 다음부터 자동 분류됩니다.</div><div class="tb" id="gFiInbox"></div></div>
       <div class="sec"><h3>은행 거래 (상단 월) <span class="cnt" id="bankN"></span></h3><div class="tb" id="gBank"></div></div>
       <div class="sec"><h3>카드 매입 (상단 월) <span class="cnt" id="cardN"></span></h3><div class="tb" id="gCard"></div></div>
@@ -555,7 +558,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="ph"><h2>채권 · 채무 관리 <span class="tiny dim" style="font-weight:400">(AR / AP 정산 대사)</span></h2><div class="desc">받을 돈과 줄 돈을 계산서 단위로 봅니다</div></div>
       <div class="kpis" id="stKpi"></div>
       <div class="sec" id="st-cash"><h3>거래처 총액 대조 <span class="cnt" id="pcN"></span></h3>
-        <div class="desc" style="margin-bottom:8px">세금계산서 합계와 통장 합계를 <b>거래처 단위로 통째로</b> 맞춘 표입니다. 건별 대사가 어긋나도 이 차액이 진실입니다 — 상대가 여러 건을 합산해 한 번에 보내면 건별로는 미수로 남지만 총액은 0이 됩니다. <b>받은 차액</b>이 양수면 실제 못 받은 돈, <b>줄 차액</b>이 양수면 실제 안 준 돈입니다. 음수는 계산서 없이 오간 돈이라 증빙을 봐야 합니다.</div>
+        <div class="desc" style="margin-bottom:8px">세금계산서 합계와 통장 합계를 <b>거래처 단위로 통째로</b> 맞춘 표입니다. 건별 대사가 어긋나도 이 차액이 진실입니다 — 상대가 여러 건을 합산해 한 번에 보내면 건별로는 미수로 남지만 총액은 0이 됩니다. <b>받을 차액</b>이 양수면 실제 못 받은 돈, <b>줄 차액</b>이 양수면 실제 안 준 돈입니다. 음수는 계산서 없이 오간 돈이라 증빙을 봐야 합니다.</div>
         <div class="tb" id="gPcash"></div></div>
       <div class="sec"><h3>거래처별 잔액 (계산서 건별) <span class="cnt" id="stPtnN"></span><button class="btn sm p" style="margin-left:10px" onclick="stRun()">자동 대사 실행</button><button class="hbtn" onclick="helpSettle()">?</button></h3><div class="tb" id="gStPtn"></div></div>
       <div class="sec"><h3>계산서별 원장 <span class="cnt" id="stLedN"></span></h3><div class="desc" style="margin-bottom:8px">행을 누르면 후보 입출금(같은 거래처·같은 금액)을 보여주고 바로 대사할 수 있습니다. 매입 계산서는 발주서 연결도 여기서.</div><div class="tb" id="gStLed"></div></div>
@@ -589,7 +592,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.13';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.14';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -645,7 +648,7 @@ function kpi(k,v,s,cls,extra){return '<div class="kpi '+(cls||'')+'"'+(extra||''
 function toast(m,c){var t=document.createElement('div');t.className='toast '+(c||'');t.innerHTML=esc(m);el('toasts').appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},c==='e'?6000:3200)}
 function ask(title,msg,opt){opt=opt||{};return new Promise(function(res){
   el('mdT').textContent=title;el('mdM').textContent=msg||'';
-  el('mdI').innerHTML=opt.input?'<input id="mdIn" class="in" placeholder="'+esc(opt.placeholder||'')+'">':'';
+  el('mdI').innerHTML=opt.input?'<input id="mdIn" class="in" placeholder="'+esc(opt.placeholder||'')+'">':(opt.html||'');
   el('mdOk').textContent=opt.ok||'확인';el('mdOk').className='btn '+(opt.danger?'d':'p');
   el('md').classList.add('on');
   if(opt.input)setTimeout(function(){el('mdIn').focus()},50);
@@ -950,6 +953,7 @@ async function loadAll(){
     ['pipe',sb.from('ceo_sd_pipeline').select('*')],
     ['chk',sb.from('ceo_op_check').select('*')],
     ['pcash',sb.from('ceo_partner_cash').select('*')],
+    ['bunm',sb.from('ceo_bank_unmatched').select('*')],
     ['pumpd',sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)],
     ['apay',sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)],
     ['tclaim',sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)],
@@ -1793,7 +1797,35 @@ function htRisk(){var risk=trRows();
         return '<tr><td class="l">'+esc(r.voucher_date)+'</td><td class="l tiny">'+esc(r.flow||'')+'</td><td class="l tiny">'+esc(r.evidence_name||'')+'</td><td>'+won(r.supply_amt)+'</td><td>'+won(r.tax_amt)+'</td><td class="l tiny">'+esc(r.title||'')+'</td><td class="l tiny wn">'+esc(r.flag||'')+'</td></tr>'}).join('')
       +'</tbody></table>'}).join('');
   drOpen('Tax-Risk 거래 소명 (전 기간)',body,'<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="drClose();go(\'alerts\')">경보 화면에서 보기 →</button>')}
-function renderHt(){if(!el('gHtMonth'))return;var m=M(),ht=D.ht||[],htm=D.htm||[],htv=(D.htv||[]).filter(function(r){return r.period_ym===m});
+async function bunSet(r){
+  var opts=(D.ptn||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'ko')});
+  var sel='<select id="bun_p" class="in"><option value="">— 거래처 선택 —</option>'
+    +opts.map(function(p){return '<option value="'+esc(p.partner_id)+'"'+(r.suggest_id===p.partner_id?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select>';
+  var body='통장 이름 「'+r.raw_name+'」 · '+r.txn_cnt+'건\n출금 '+won(r.out_amt).replace(/<[^>]+>/g,'')+' · 입금 '+won(r.in_amt).replace(/<[^>]+>/g,'')
+    +(r.suggest_name?'\n제안: '+r.suggest_name:'')+'\n\n아래에서 거래처를 고르세요. 비우고 연결하면 기존 연결이 지워집니다.';
+  var ok=await ask('통장 상대명 연결',body,{html:sel,ok:'연결'});
+  if(!ok)return;
+  var pid=el('bun_p')?el('bun_p').value:'';
+  var res=await sb.rpc('ceo_bank_alias_set',{p_alias_key:r.alias_key,p_alias_text:r.raw_name,p_partner_id:pid});
+  if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||'실패','e');return}
+  toast(pid?'연결했습니다':'연결을 지웠습니다','g');loadAll()}
+function renderBunm(){if(!el('gBunm'))return;
+  var rows=(D.bunm||[]).slice();
+  rows.forEach(function(r){r._amt=(+r.out_amt||0)+(+r.in_amt||0);r._s=r.suggest_id?'제안':'없음'});
+  rows.sort(function(a,b){return b._amt-a._amt});
+  el('bunN').textContent=rows.length?rows.length+'개':'';
+  grid('gBunm',[{k:'raw_name',t:'통장 상대명',l:1},
+    {k:'txn_cnt',t:'건수',f:function(v){return String(+v||0)}},
+    {k:'out_amt',t:'출금',f:'won',sum:1},
+    {k:'in_amt',t:'입금',f:'won',sum:1},
+    {k:'acct_codes',t:'계정',l:1,cls:'tiny dim'},
+    {k:'suggest_name',t:'제안 거래처',l:1,f:function(v,r){return v?esc(v)+'<span class="tiny dim"> ('+(r.suggest_score||0)+')</span>':'<span class="dim">—</span>'}},
+    {k:'last_on',t:'최근',l:1}],
+    {rows:rows,q:['raw_name','suggest_name'],csv:true,page:30,
+     chips:[{k:'_s',vals:[['','전체'],['제안','제안 있음'],['없음','제안 없음']]}],
+     onRow:bunSet,
+     empty:'통장 이름이 전부 거래처와 연결돼 있습니다'});}
+function renderHt(){renderBunm();if(!el('gHtMonth'))return;var m=M(),ht=D.ht||[],htm=D.htm||[],htv=(D.htv||[]).filter(function(r){return r.period_ym===m});
   var mm=htm.filter(function(r){return r.period_ym===m}),ms=mm.filter(function(r){return r.side==='sales'})[0]||{},mp=mm.filter(function(r){return r.side==='purchase'})[0]||{};
   var risk=ht.filter(function(r){return r.related_entity}),unm=ht.filter(function(r){return !r.matched_doc_no}),nop=ht.filter(function(r){return !r.partner_id});
   var last=(D.htr||[])[0];
