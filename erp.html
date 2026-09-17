@@ -477,6 +477,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .mcal-cell.sat{background:color-mix(in srgb,var(--ac2) 35%,var(--sf))}
 .mcal-cell.holiday{background:color-mix(in srgb,#fef2f2 80%,var(--sf));border-color:#fca5a5}
 .mcal-cell.today{outline:2.5px solid var(--ac);outline-offset:-1px;box-shadow:0 0 0 3px rgba(42,120,214,0.2)}
+.mcal-cell.chuseok{background:color-mix(in srgb,#fef3c7 75%,var(--sf));border-color:#f59e0b}
+.mcal-cell.chuseok:hover{border-color:#d97706}
 .mcal-date-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .mcal-date-num{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
 .mcal-cell.sun .mcal-date-num,.mcal-cell.holiday .mcal-date-num{color:var(--crit)}
@@ -723,6 +725,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <button class="subtab-chip" onclick="moneySubNav('sec-gApay', this)">📈 통장 지급기록</button>
       </div>
       <div class="kpis" id="moneyKpi"></div>
+      <div id="moneySepBanner" style="margin-bottom:16px"></div>
       <div class="sec" id="sec-gSet"><h3>이달 정산 <span class="cnt" id="setN"></span></h3><div class="tb" id="gSet"></div></div>
       <div class="grid2">
         <div class="sec" id="sec-gPay"><h3>급여·노무비 정산 잔액 <span class="tiny dim" style="font-weight:400">(당월 정기 예정 vs 기한 경과 분리)</span></h3><div class="tb" id="gPay"></div></div>
@@ -776,6 +779,17 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       </div>
       <div class="sec" id="hr-esign"><h3>근로계약 전자서명 <span class="cnt" id="esgN"></span></h3>
         <div class="desc" style="margin-bottom:8px">계약서를 <b>발행</b>하면 그 사람의 현장앱 「계약」 탭에 뜹니다. 본인이 끝까지 읽고 손으로 서명하면 여기 상태가 바뀌고, 대표가 <b>날인</b>하면 교부까지 끝납니다. 계약일(근로개시일)은 입사일이고, 전자서명 시각은 실제 서명한 시각으로 따로 남습니다 — 소급 기재하지 않습니다.<br>별지 1의 금액은 <b>ERP 급여기준에서 그대로 계산</b>됩니다. 발행 전에 미리보기로 등급·직책·금액을 확인하십시오. 여기서 틀리면 계약서가 틀립니다.</div>
+        <div id="workerAppBox" style="background:var(--sf2);border:1.5px solid var(--ac);border-radius:12px;padding:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--ac);margin-bottom:4px">📱 근로자 전용 모바일 현장앱 (계약서 열람 및 전자서명 포털)</div>
+            <div style="font-size:12.5px;color:var(--tx2)">근로자 접속 주소: <code style="font-size:12px;background:var(--sf);padding:2px 6px;border-radius:4px;border:1px solid var(--ln);user-select:all">https://bvs-erp.github.io/worker.html</code></div>
+            <div class="tiny dim" style="margin-top:3px">1. 관리자 계약서 발행 ➡️ 2. 근로자 현장앱 접속 후 [계약서] 탭 서명 ➡️ 3. 관리자 [대표 날인·교부] ➡️ 4. 법정 교부 완료</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn sm p" onclick="copyWorkerAppLink()">📋 현장앱 주소 복사</button>
+            <button class="btn sm" onclick="window.open('worker.html','_blank')">📱 현장앱 새 창 열기</button>
+          </div>
+        </div>
         <div class="kpis" id="esgKpi"></div>
         <div class="tb" id="gEsgTodo"></div>
         <div style="height:10px"></div>
@@ -837,6 +851,12 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           </div>
         </div>
         <div class="kpis" id="calKpis"></div>
+        <div class="chips" id="calFilterChips" style="margin-bottom:12px">
+          <span class="chip on" data-filter="all" onclick="setCalFilter('all', this)">전체 보기</span>
+          <span class="chip" data-filter="hol" onclick="setCalFilter('hol', this)">🎌 공휴일·추석 황금연휴</span>
+          <span class="chip" data-filter="off" onclick="setCalFilter('off', this)">🏖️ 휴무·부재·교육</span>
+          <span class="chip" data-filter="work" onclick="setCalFilter('work', this)">👷 현장 출근일</span>
+        </div>
         <div class="mcal-wrap">
           <div class="mcal-box">
             <div class="mcal-head">
@@ -996,7 +1016,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 /* ═══════════ 기본 ═══════════ */
 var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.19';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.22';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1078,7 +1098,7 @@ function grid(id,cols,opt){
   var box=el(id);
   if(!box.dataset.built){box.dataset.built='1';
     var bar='<div class="tbar">';
-    if(opt.q)bar+='<input class="q" placeholder="'+esc(opt.qph||'검색')+'" oninput="G[\''+id+'\'].q=this.value;G[\''+id+'\'].page=1;gRender(\''+id+'\')">';
+    if(opt.q)bar+='<input id="q_'+id+'" class="q" placeholder="'+esc(opt.qph||'검색')+'" oninput="G[\''+id+'\'].q=this.value;G[\''+id+'\'].page=1;gRender(\''+id+'\')">';
     (opt.chips||[]).forEach(function(c){bar+='<span class="chipgrp" data-k="'+c.k+'">'+c.vals.map(function(v){return '<span class="chip'+(v[0]===''?' on':'')+'" onclick="gChip(\''+id+'\',\''+c.k+'\',\''+esc(v[0])+'\',this)">'+esc(v[1])+'</span>'}).join(' ')+'</span>'});
     bar+='<span class="cnt"></span>'+(opt.csv!==false?'<button class="btn sm" onclick="gCsv(\''+id+'\')">CSV</button>':'')+'</div>';
     box.innerHTML=(opt.q||opt.chips||opt.csv!==false?bar:'')+'<div class="tw"><table><thead></thead><tbody></tbody><tfoot></tfoot></table></div><div class="more hide"></div>';
@@ -1213,6 +1233,7 @@ I.ht=I.ht||'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8
 function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
   return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+(n.kb||'')+'</span>')+'</div>'}).join('');
   var mn=el('mnav');if(mn)mn.innerHTML=NAV.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
+function tab(p){ go(p); }
 function go(p){ST.page=p;
   document.querySelectorAll('.ni,#mnav .mi').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});
   document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});
@@ -1444,6 +1465,20 @@ async function doLogin(){
     if(r.error){L('로그인 실패: '+r.error.message,'e');if(/invalid login credentials/i.test(r.error.message))L('→ 비밀번호가 다릅니다. "비밀번호 보기"로 확인하거나 재설정을 이용하세요.');return}
     el('pw').value='';el('pwlen').textContent='';USER=r.data.user.email;start();
   }catch(e){L('로그인 중 오류: '+e.message,'e')}
+}
+
+/* ── 안전 로그아웃 ── */
+async function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  try{
+    if(sb && sb.auth) await sb.auth.signOut();
+  }catch(e){ console.warn('SignOut error:', e); }
+  try{
+    localStorage.removeItem('sb-tokens');
+    localStorage.removeItem('bvs_page');
+    sessionStorage.clear();
+  }catch(e){}
+  location.reload();
 }
 function parseHash(u){var i=u.indexOf('#');var h=i>=0?u.slice(i+1):u;if(h.indexOf('?')===0)h=h.slice(1);var p=new URLSearchParams(h);
   return {at:p.get('access_token'),rt:p.get('refresh_token'),err:p.get('error_description')||p.get('error')}}
@@ -3420,6 +3455,60 @@ function printPayroll(){var rows=TAX.rows,m=TAX.period;if(!rows.length){toast('�
   el('pr').classList.add('on')}
 
 /* ═══════════ 돈·정산 ═══════════ */
+
+/* ── 근로자 현장앱 링크 복사 ── */
+function copyWorkerAppLink(){
+  var url = 'https://bvs-erp.github.io/worker.html';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      toast('근로자 현장앱 접속 주소가 클립보드에 복사되었습니다.');
+    });
+  } else {
+    prompt('근로자 현장앱 주소를 복사하십시오:', url);
+  }
+}
+
+/* ── 9월 3인 급여 산정 명세 클립보드 복사 ── */
+function copySep3PaySlip(){
+  var text = '👑 [BVS] 2026년 9월 현장 핵심 3인 급여 일할 정산 최종 확정 내역\n'
+    + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+    + '1. 박준서 (월 기본급 250만 원)\n'
+    + '   • 8/31 1일 첫 근무 투입 가산: +83,333원\n'
+    + '   • 9/4(금), 9/7(월) 사전휴무 2일 공제: -166,666원\n'
+    + '   • 9/16(수) 병가 결근 1일 공제: -83,333원\n'
+    + '   ➡️ 9월 최종 지급액: 2,333,000원\n\n'
+    + '2. 원동진 (월 기본급 250만 원)\n'
+    + '   • 9/1~3 입사 전 미발생 3일 공제: -250,000원\n'
+    + '   • 9/7~10 사전보고 휴무 4일 공제: -333,332원\n'
+    + '   • 9/16 현장 미투입 1일 공제: -83,333원\n'
+    + '   ➡️ 9월 최종 지급액: 1,833,000원\n\n'
+    + '3. 이경준 (월 기본급 270만 원)\n'
+    + '   • 9/1~11 입사 전 미발생 (9/12 첫 출근 이후 19일 일할: 1,710,000원)\n'
+    + '   • [CEO 특별 포상] 9/12 토요 첫 출근 1.5배 연장특근 인정 가산: +50,000원\n'
+    + '   ➡️ 9월 최종 지급액: 1,760,000원\n'
+    + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+    + '합계: 3인 총 지급액 5,926,000원 (정기지급일: 10월 10일)';
+  
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      toast('9월 3인 급여 산정 명세서가 클립보드에 복사되었습니다.');
+    });
+  } else {
+    prompt('9월 3인 급여 내역:', text);
+  }
+}
+
+/* ── 달력 필터 상태 ── */
+var CAL_FILTER = 'all';
+function setCalFilter(f, elBtn){
+  CAL_FILTER = f;
+  if(elBtn && elBtn.parentNode){
+    Array.from(elBtn.parentNode.children).forEach(function(c){ c.classList.remove('on'); });
+    elBtn.classList.add('on');
+  }
+  renderMonthlyCal(CAL_CUR_YM);
+}
+
 function renderMoney(){
   var m=M(),set=D.set.filter(function(r){return r.period_ym===m});
   var due=sum(set,'payable_amt'),bal=sum(D.pay,'balance_amt'),mar=sum(set,'company_margin'),rev=sum(set,'revenue_sum');
@@ -3438,6 +3527,36 @@ function renderMoney(){
     if(pastOd > 0) totalPastOverdue += pastOd;
     totalDueScheduled += curDue;
   });
+
+  // 9월 전용 3인 정산 확정 배너 렌더링
+  var banner = el('moneySepBanner');
+  if(banner){
+    if(m === '2026-09'){
+      banner.innerHTML = '<div style="background:var(--sf);border:1.5px solid #059669;border-radius:12px;padding:16px;box-shadow:var(--sh)">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">'
+        + '<div><b style="font-size:15px;color:#059669">👑 [CEO 특별 승인] 2026년 9월 현장 핵심 3인 급여 일할 정산 및 포상 확정</b>'
+        + '<span class="pill g" style="margin-left:8px;font-weight:700">총 5,926,000원 확정</span></div>'
+        + '<button class="btn sm p" onclick="copySep3PaySlip()" style="background:#059669;border-color:#059669">📋 3인 9월 급여 명세 및 산정 내역 복사</button>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">'
+        + '<div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:10px">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><b>박준서</b> <span class="pos" style="font-weight:700">2,333,000원</span></div>'
+        + '<div class="tiny dim">기본급 250만 · 8/31 1일 첫근무 (+8.3만) · 9/4·7 사전휴무 및 9/16 병가 결근 3일 공제 (-25.0만)</div>'
+        + '</div>'
+        + '<div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:10px">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><b>원동진</b> <span class="pos" style="font-weight:700">1,833,000원</span></div>'
+        + '<div class="tiny dim">기본급 250만 · 9/1~3 입사전 3일 공제 (-25.0만) · 9/7~10 사전휴무 4일 + 9/16 미투입 1일 공제 (-41.7만)</div>'
+        + '</div>'
+        + '<div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:10px">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><b>이경준</b> <span class="pos" style="font-weight:700">1,760,000원</span></div>'
+        + '<div class="tiny dim">기본급 270만 · 9/12 첫출근 19일 일할 (171.0만) + <b>CEO 특별 포상 토요특근 1.5배 (+5.0만)</b></div>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+    } else {
+      banner.innerHTML = '';
+    }
+  }
 
   var nextMonthNum = (parseInt(m.slice(5), 10) % 12) + 1;
   el('moneyKpi').innerHTML=
@@ -4393,7 +4512,7 @@ var BVS_SCHEDULE_EVENTS = {
 };
 
 function openMonthlyCalView(){
-  tab('crew');
+  go('crew');
   setTimeout(function(){
     var btn = document.querySelector('#subnav-crew [onclick*="sec-crewCal"]');
     crewSubNav('sec-crewCal', btn);
@@ -4518,11 +4637,27 @@ function renderMonthlyCal(ym){
     var evList = BVS_SCHEDULE_EVENTS[dStr] || [];
     var attList = attMap[dStr] || [];
 
+    var isChuseok = (dStr >= '2026-09-24' && dStr <= '2026-09-28');
     var cellClasses = ['mcal-cell'];
     if(isSun) cellClasses.push('sun');
     if(isSat) cellClasses.push('sat');
     if(holName) cellClasses.push('holiday');
+    if(isChuseok) cellClasses.push('chuseok');
     if(isToday) cellClasses.push('today');
+
+    // 필터링 판정
+    var showHol = (CAL_FILTER === 'all' || CAL_FILTER === 'hol');
+    var showOff = (CAL_FILTER === 'all' || CAL_FILTER === 'off');
+    var showWork = (CAL_FILTER === 'all' || CAL_FILTER === 'work');
+
+    var filterMatch = (CAL_FILTER === 'all')
+      || (CAL_FILTER === 'hol' && holName)
+      || (CAL_FILTER === 'off' && evList.some(function(e){ return e.type === 'off' || e.type === 'edu'; }))
+      || (CAL_FILTER === 'work' && (attList.length > 0 || evList.some(function(e){ return e.type === 'work' || e.type === 'join'; })));
+
+    if(CAL_FILTER !== 'all' && !filterMatch){
+      cellClasses.push('empty');
+    }
 
     cellsHtml += '<div class="' + cellClasses.join(' ') + '" onclick="showCalDayDetail(\'' + dStr + '\')">';
     cellsHtml += '<div class="mcal-date-row">';
@@ -4530,15 +4665,23 @@ function renderMonthlyCal(ym){
     if(isToday) cellsHtml += '<span class="mcal-badge-today">오늘</span>';
     cellsHtml += '</div>';
 
-    if(holName){
+    if(holName && showHol){
       cellsHtml += '<div class="mcal-hol-tag" title="' + esc(holName) + '">🎌 ' + esc(holName.length > 9 ? holName.slice(0, 8) + '…' : holName) + '</div>';
     }
 
-    if(attList.length > 0){
+    if(attList.length > 0 && showWork){
       cellsHtml += '<div class="mcal-work-tag">👷 출근 ' + attList.length + '명</div>';
     }
 
     evList.forEach(function(ev){
+      var isEvOff = (ev.type === 'off' || ev.type === 'edu');
+      var isEvWork = (ev.type === 'work' || ev.type === 'join');
+      var isEvHol = (ev.type === 'hol');
+
+      if(CAL_FILTER === 'hol' && !isEvHol) return;
+      if(CAL_FILTER === 'off' && !isEvOff) return;
+      if(CAL_FILTER === 'work' && !isEvWork) return;
+
       var cls = 'mcal-ev-tag ' + (ev.type || '');
       cellsHtml += '<div class="' + cls + '" title="' + esc(ev.text) + '">';
       if(ev.who && ev.who !== '전사') cellsHtml += '<b>[' + esc(ev.who) + ']</b> ';
@@ -4651,7 +4794,7 @@ function showCalDayDetail(dateStr){
     html += '</div>';
   }
   html += '<div style="margin-top:10px;display:flex;gap:6px">';
-  html += '<button class="btn sm p" onclick="setHomeDate(\'' + dateStr + '\');tab(\'home\');">🏠 ' + dateStr + ' 현장 관제로 이동</button>';
+  html += '<button class="btn sm p" onclick="setHomeDate(\'' + dateStr + '\');go(\'home\');">🏠 ' + dateStr + ' 현장 관제로 이동</button>';
   html += '</div>';
   html += '</div>';
 
