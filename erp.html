@@ -1720,7 +1720,10 @@ function renderSales(){
   var s=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='tax'});
   var q=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='quote'});
   var p=cur.filter(function(r){return r.trade_side==='purchase'&&r.doc_kind==='tax'});
-  var noinv=D.sd.filter(function(r){return r.trade_side==='sales'&&!r.has_invoice&&r.status!=='void'&&r.doc_kind==='tax'}).length;
+  (D.sd||[]).forEach(function(r){
+    r._noinv=(r.trade_side==='sales'&&!r.has_invoice&&r.status!=='void'&&r.doc_kind==='tax')?'1':'0';
+  });
+  var noinv=D.sd.filter(function(r){return r._noinv==='1'}).length;
   var drafts=D.sd.filter(function(r){return r.status==='draft'}).length;
   var pipe=D.pipe||[];
   var pOpen=pipe.filter(function(d){return d.pipe_status==='open'});
@@ -1750,6 +1753,14 @@ function renderSales(){
   el('gapN').textContent=D.gap.length?D.gap.length+'건':'';
   grid('gGap',[{k:'doc_no',t:'문서',l:1},{k:'doc_kind',t:'종류',l:1,f:function(v){return esc(KIND[v]||v)}},{k:'sd_status',t:'업무',l:1},{k:'fi_status',t:'회계',l:1},{k:'sd_supply',t:'업무 공급가',f:'won'},{k:'fi_supply',t:'회계 공급가',f:'won'},{k:'supply_gap',t:'차이',f:'sgn'}],{rows:D.gap,csv:false,empty:'업무문서와 회계전표가 전부 일치합니다'});
 }
+async function setDocAppNo(no){
+  var d=(D.sd||[]).filter(function(x){return x.doc_no===no})[0]||{};
+  var ap=await ask('계산서 승인번호 '+(d.approval_no?'수정':'입력'),no+' 문서에 연결할 국세청 홈택스 전자세금계산서 승인번호(24자리)를 입력하십시오.',{input:true,placeholder:'예: 20260731-10260805-30816526',def:d.approval_no||'',ok:'저장'});
+  if(!ap)return;
+  var r=await sb.rpc('sd_set_approval_no',{p_doc_no:no,p_approval_no:ap.trim()});
+  if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패 — Supabase에 sd_set_approval_no RPC 함수가 배포되어 있는지 확인하십시오.','e');return}
+  toast(no+' 승인번호 저장됨','g');drClose();loadAll();
+}
 async function openDoc(d){
   var acts='';var st=d.status||'';
   var lr=await sb.from('ceo_doc_lines').select('*').eq('doc_no',d.doc_no).order('line_no');var lines=(lr.data||[]);d._lines=lines;
@@ -1764,7 +1775,7 @@ async function openDoc(d){
   if(st==='approved')acts+='<button class="btn p" onclick="setStatus(\''+d.doc_no+'\',\'settled\')">정산완료</button>';
   if(st!=='settled'&&st!=='void')acts+='<button class="btn d" onclick="setStatus(\''+d.doc_no+'\',\'void\')">취소</button>';
   if(st==='void')acts+='<button class="btn d" onclick="delDoc(\''+d.doc_no+'\')">완전 삭제</button>';
-  drOpen(d.doc_no,kv([['종류',pillKind(d.doc_kind)+' '+(d.trade_side==='sales'?'매출':'매입')],['일자',d.doc_date],['귀속월',d.period_ym],['거래처',esc(d.partner_name)],['담당',esc(d.contact_name)],['건명',esc(d.title)],['공급가',won(d.supply_amt)],['세액',won(d.tax_amt)],['합계','<b>'+won(d.total_amt)+'</b>'],['라인',d.line_cnt],['상태',pillSt(d.status)],['계산서 승인번호',d.approval_no?esc(d.approval_no):(d.doc_kind==='tax'?'<span class="wn">미발행</span>':'')],['계정/증빙',esc(d.account_code)+' / '+esc(d.evidence_code)]])
+  drOpen(d.doc_no,kv([['종류',pillKind(d.doc_kind)+' '+(d.trade_side==='sales'?'매출':'매입')],['일자',d.doc_date],['귀속월',d.period_ym],['거래처',esc(d.partner_name)],['담당',esc(d.contact_name)],['건명',esc(d.title)],['공급가',won(d.supply_amt)],['세액',won(d.tax_amt)],['합계','<b>'+won(d.total_amt)+'</b>'],['라인',d.line_cnt],['상태',pillSt(d.status)],['계산서 승인번호',d.approval_no?esc(d.approval_no)+(st!=='void'?' <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">수정</button>':''):(d.doc_kind==='tax'?'<span class="wn">미발행</span> <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">승인번호 입력</button>':'')],['계정/증빙',esc(d.account_code)+' / '+esc(d.evidence_code)]])
     +'<h4 style="margin:14px 0 6px;font-size:13px">품목 '+lines.length+'줄</h4>'+(lines.length?'<div class="lwrap"><table class="lines"><thead><tr><th class="l">품명</th><th class="l">규격</th><th>수량</th><th class="l">단위</th><th>단가</th><th>금액</th></tr></thead><tbody>'+lines.map(function(l){return '<tr><td class="l">'+esc(l.item_name)+'</td><td class="l tiny dim">'+esc(l.spec)+'</td><td class="num">'+num(l.qty)+'</td><td class="l">'+esc(l.unit)+'</td><td class="num">'+won(l.unit_price)+'</td><td class="num">'+won(l.supply_amt)+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="dim tiny">라인 없음</div>')
     +chain+'<p class="tiny dim" style="margin-top:14px">정산완료 문서는 취소 외 상태 변경이 안 됩니다. 라인 수정은 「새 버전」으로 발행하십시오.</p>',acts);
 }
