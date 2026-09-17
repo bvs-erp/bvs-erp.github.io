@@ -1014,7 +1014,15 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <div id="toasts"></div>
 <script>
 /* ═══════════ 기본 ═══════════ */
-var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null;
+var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', LS='bvs_cockpit_anon', EMBED_KEY='sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez', sb=null, USER=null, ME={role:'owner',name:'황병승',is_lead:false};
+function isOwner(){ return (!ME || ME.role === 'owner'); }
+function isPlanning(){ return (ME && (ME.role === 'planning' || ME.role === 'accountant')); }
+function isEngLead(){ return (ME && (ME.role === 'eng_lead' || (ME.is_lead && ME.role === 'staff'))); }
+function getAllowedPages(){
+  if(isEngLead()) return ['site', 'crew', 'pm', 'safety'];
+  if(isPlanning()) return ['sales', 'close', 'site', 'crew', 'pm', 'hr', 'safety', 'tax'];
+  return ['home', 'alerts', 'sales', 'close', 'site', 'crew', 'pm', 'hr', 'money', 'safety', 'ht', 'settle', 'pl', 'tax'];
+}
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
 var APPVER='1.22';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
@@ -1230,11 +1238,39 @@ var NAV=[
 var TITLE={home:'종합 상황실',alerts:'리스크 관제',sales:'영업·계약 문서',close:'월간 청구·마감',site:'현장 공수 현황',crew:'인력 배치 · 모빌리티',pm:'구매·외주·자재',hr:'인사·근로계약',money:'노무비·급여 정산 (인건비 및 팀장몫)',safety:'안전·교육 관리',ht:'자금·통장·카드',settle:'채권·채무 관리 (AR / AP 정산 대사)',pl:'경영 손익 분석',tax:'세무 신고 패키지'};
 I.safety='<path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>';
 I.ht=I.ht||'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/>';I.settle='<path d="M3 6h13M3 12h9M3 18h6"/><circle cx="18" cy="15" r="3.5"/><path d="M18 13v2l1.5 1"/>';
-function buildNav(){el('nav').innerHTML=NAV.map(function(n){if(n.g)return '<div class="grp">'+n.g+'</div>';
+function getFilteredNav(){
+  var allowed = getAllowedPages();
+  var filtered = [];
+  var curGrp = null;
+  var itemsInGrp = [];
+  NAV.forEach(function(n){
+    if(n.g){
+      if(curGrp && itemsInGrp.length){
+        filtered.push(curGrp);
+        itemsInGrp.forEach(function(it){ filtered.push(it); });
+      }
+      curGrp = n;
+      itemsInGrp = [];
+    } else if(allowed.indexOf(n.k) >= 0){
+      itemsInGrp.push(n);
+    }
+  });
+  if(curGrp && itemsInGrp.length){
+    filtered.push(curGrp);
+    itemsInGrp.forEach(function(it){ filtered.push(it); });
+  }
+  return filtered;
+}
+function buildNav(){
+  var fNav = getFilteredNav();
+  el('nav').innerHTML=fNav.map(function(n){if(n.g)return '<div class="grp">'+esc(n.g)+'</div>';
   return '<div class="ni" data-p="'+n.k+'" onclick="go(\''+n.k+'\')" title="'+n.t+'"><span class="ic"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg></span><span>'+n.t+'</span>'+(n.k==='alerts'?'<span class="bd hide" id="alertN"></span>':'<span class="kb">'+(n.kb||'')+'</span>')+'</div>'}).join('');
-  var mn=el('mnav');if(mn)mn.innerHTML=NAV.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
+  var mn=el('mnav');if(mn)mn.innerHTML=fNav.filter(function(n){return n.k}).map(function(n){return '<div class="mi" data-p="'+n.k+'" onclick="go(\''+n.k+'\')"><svg viewBox="0 0 24 24">'+I[n.k]+'</svg>'+n.t.replace('·','·')+(n.k==='alerts'?'<span class="bd hide" id="alertNm"></span>':'')+'</div>'}).join('')}
 function tab(p){ go(p); }
-function go(p){ST.page=p;
+function go(p){
+  var allowed = getAllowedPages();
+  if(allowed.indexOf(p) < 0) p = allowed[0] || 'site';
+  ST.page=p;
   document.querySelectorAll('.ni,#mnav .mi').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});
   document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});
   el('ttl').textContent=TITLE[p]||p;el('crumb').textContent=TITLE[p]||p;el('main').scrollTop=0;
@@ -1245,7 +1281,7 @@ function openMobMenu(){
   var m=el('mobMenuModal');if(!m)return;
   var list=el('mobMenuList');
   if(list){
-    list.innerHTML=NAV.map(function(n){
+    list.innerHTML=getFilteredNav().map(function(n){
       if(n.g) return '<div class="mob-menu-grp">'+esc(n.g)+'</div>';
       var isCur = ST.page === n.k;
       return '<div class="mob-menu-item '+(isCur?'on':'')+'" onclick="goAndClose(\''+n.k+'\')">'
@@ -1392,7 +1428,8 @@ function buildMonths(){var s={};s[ymNow()]=1;D.dash.forEach(function(r){s[r.peri
 /* 명령 팔레트 */
 var CPI=[],cpSel=0;
 function cpItems(q){q=(q||'').toLowerCase();var out=[];
-  NAV.filter(function(n){return n.k}).forEach(function(n){out.push({g:'메뉴',t:n.t,sub:'단축키 '+n.kb,run:function(){go(n.k)}})});
+  var allowedPages = getAllowedPages();
+  NAV.filter(function(n){return n.k && allowedPages.indexOf(n.k) >= 0}).forEach(function(n){out.push({g:'메뉴',t:n.t,sub:'단축키 '+(n.kb||''),run:function(){go(n.k)}})});
   out.push({g:'동작',t:'새 문서 작성',sub:'견적·발주·계산서',run:newDoc});
   out.push({g:'동작',t:'새로고침',sub:'모든 뷰 다시 조회',run:loadAll});
   out.push({g:'동작',t:'자동 대사 실행',sub:'계산서 ↔ 입출금 · 발주서 연결',run:stRun});
@@ -1509,9 +1546,67 @@ window.addEventListener('focus', function(){
   }
 });
 
-function start(){hide('gate');show('app');buildNav();
-  var p='home';try{p=localStorage.getItem('bvs_page')||'home';ST.month=localStorage.getItem('bvs_month')||null}catch(e){}
-  go(p);loadAll();startBackgroundMonitor();}
+async function start(){
+  hide('gate');
+  try {
+    var st = await sb.rpc('my_status');
+    if(st && st.data){
+      ME = st.data;
+      if(ME.status && ME.status !== 'ok' && ME.status !== 'must_change_password'){
+        toast(ME.message || '접근 권한이 없습니다', 'e');
+      }
+      if(ME.role === 'staff' && !ME.is_lead){
+        showWorkerOnlyGate(ME);
+        return;
+      }
+    }
+  } catch(e){ console.warn('my_status fetch error:', e); }
+
+  show('app');
+  updateBrandSubtitle();
+  buildNav();
+  var allowed = getAllowedPages();
+  var p = allowed[0] || 'site';
+  try{
+    var saved = localStorage.getItem('bvs_page');
+    if(saved && allowed.indexOf(saved) >= 0) p = saved;
+    ST.month=localStorage.getItem('bvs_month')||null;
+  }catch(e){}
+  go(p);
+  loadAll();
+  startBackgroundMonitor();
+}
+
+function showWorkerOnlyGate(me){
+  hide('app');
+  show('gate');
+  var b = el('loginCard');
+  if(!b) return;
+  b.classList.remove('hide');
+  b.innerHTML = '<div style="text-align:center;padding:24px 12px">'
+    + '<div style="font-size:52px;margin-bottom:14px">⚠️</div>'
+    + '<h2 style="margin:0 0 10px;font-size:21px;font-weight:800;color:var(--tx)">ERP 접속 권한 안내</h2>'
+    + '<p style="color:var(--tx2);font-size:14px;line-height:1.65;margin-bottom:24px">'
+    + '안녕하세요, <b>' + esc(me.name || '근로자') + '</b> 님.<br>'
+    + 'BVS 대표 ERP는 경영기획팀 및 엔지니어링 리드 전용 관제 시스템입니다.<br>'
+    + '현장 출퇴근 등록 및 업무일지 작성은 <b>모바일 현장앱</b>을 이용해 주십시오.'
+    + '</p>'
+    + '<a href="worker.html" class="btn p w" style="display:block;text-align:center;padding:14px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px;border-radius:12px">📱 모바일 현장앱 바로가기</a>'
+    + '<button class="btn w" onclick="doLogout()" style="padding:12px">로그아웃</button>'
+    + '</div>';
+}
+
+function updateBrandSubtitle(){
+  var brandSub = el('sb') && el('sb').querySelector('.brand small');
+  if(!brandSub) return;
+  if(isOwner()){
+    brandSub.textContent = '비브이에스 · 대표 황병승 👑';
+  } else if(isPlanning()){
+    brandSub.textContent = '비브이에스 · 경영기획팀 📊 (' + (ME.name||'기획') + ')';
+  } else if(isEngLead()){
+    brandSub.textContent = '비브이에스 · 엔지니어링 리드 ⚙️ (' + (ME.name||'리드') + ')';
+  }
+}
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Enter'||!el('app').classList.contains('hide'))return;
   if(!el('stepreset').classList.contains('hide'))doReset();else if(!el('steplogin').classList.contains('hide'))doLogin();else if(!el('stepkey').classList.contains('hide'))saveKey();
@@ -1633,6 +1728,12 @@ async function loadAll(){
         }
       })();
     }));
+  }
+
+  // 엔지니어링 리드 접속 시 재무·세무·급여·계약 등 민감 쿼리 원천 차단
+  if(isEngLead()){
+    var LEAD_ALLOW = {att:1, attk:1, sfk:1, eds:1, edg:1, lm:1, sites:1, staff:1, roster:1, crew:1, carpool:1, plans:1, items:1, pick:1, sup:1, chk:1, disp:1, tgr:1, co:1};
+    Q = Q.filter(function(q){ return LEAD_ALLOW[q[0]]; });
   }
 
   // 1단계: 첫 화면 골격(Shell) 즉시 렌더링 (병렬 4)
@@ -1985,24 +2086,55 @@ function renderSite(){
   /* 오늘이거나 미래 날짜는 퇴근 미등록이 아님 (근무 중이거나 사전 등록) */
   var noout=(cur<td)?rows.filter(function(r){return r.work_start&&!r.work_end&&r.source==='worker_app'}).length:0;
   var attDayTtl=el('attDayTitle');if(attDayTtl)attDayTtl.textContent=cur+(cur===td?' (오늘)':(cur>td?' (사전등록)':''))+' · '+rows.length+'명 투입';
-  el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl click',' onclick="siteKpiClick(\'att\')"')
-    +kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h','click',' onclick="siteKpiClick(\'att\')"')
-    +kpi('회사 부담',won(pay),'본인지급 '+won(sum(rows,'pay_amt'))+' · 팀장몫 '+won(sum(rows,'leader_amt'))+' · 월급 일할 포함','click',' onclick="siteKpiClick(\'att\')"')
-    +kpi('현장매출',won(rev),'현장 공수 기준 청구 과표','click',' onclick="go(\'close\')"')
-    +kpi('일 마진',sgn(rev-pay),'매출 − 회사 부담','click',' onclick="go(\'money\')"')
-    +kpi('승인 대기',pend?'<span class="wn">'+pend+'</span>':'0','제출·임시 상태',(pend?'warn ':'')+'click',' onclick="siteKpiClick(\'check\')"')
-    +kpi('퇴근 미등록',noout?'<span class="neg">'+noout+'</span>':'0',cur>=td?(cur===td?'당일 근무 진행 중':'사전 등록일'):'현장앱 출근 후 퇴근 없음',(noout?'crit ':'')+'click',' onclick="siteKpiClick(\'att\')"')
-    +(function(){var pb=by(rows,'partner_name');return Object.keys(pb).sort().map(function(p){return kpi(p,pb[p].length+'<small>명</small>','공수 '+num(sum(pb[p],'work_md'))+' · 매출 '+won(sum(pb[p],'revenue_amt')),'click',' onclick="if(G.gAtt){G.gAtt.chip={partner_name:\''+p+'\'};gRender(\'gAtt\');}siteKpiClick(\'att\');"')}).join('')})();
+  if(isEngLead()){
+    el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl click',' onclick="siteKpiClick(\'att\')"')
+      +kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h','click',' onclick="siteKpiClick(\'att\')"')
+      +kpi('승인 대기',pend?'<span class="wn">'+pend+'</span>':'0','제출·임시 상태',(pend?'warn ':'')+'click',' onclick="siteKpiClick(\'check\')"')
+      +kpi('퇴근 미등록',noout?'<span class="neg">'+noout+'</span>':'0',cur>=td?(cur===td?'당일 근무 진행 중':'사전 등록일'):'현장앱 출근 후 퇴근 없음',(noout?'crit ':'')+'click',' onclick="siteKpiClick(\'att\')"')
+      +(function(){var pb=by(rows,'partner_name');return Object.keys(pb).sort().map(function(p){return kpi(p,pb[p].length+'<small>명</small>','공수 '+num(sum(pb[p],'work_md')),'click',' onclick="if(G.gAtt){G.gAtt.chip={partner_name:\''+p+'\'};gRender(\'gAtt\');}siteKpiClick(\'att\');"')}).join('')})();
+  } else {
+    el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl click',' onclick="siteKpiClick(\'att\')"')
+      +kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h','click',' onclick="siteKpiClick(\'att\')"')
+      +kpi('회사 부담',won(pay),'본인지급 '+won(sum(rows,'pay_amt'))+' · 팀장몫 '+won(sum(rows,'leader_amt'))+' · 월급 일할 포함','click',' onclick="siteKpiClick(\'att\')"')
+      +kpi('현장매출',won(rev),'현장 공수 기준 청구 과표','click',' onclick="go(\'close\')"')
+      +kpi('일 마진',sgn(rev-pay),'매출 − 회사 부담','click',' onclick="go(\'money\')"')
+      +kpi('승인 대기',pend?'<span class="wn">'+pend+'</span>':'0','제출·임시 상태',(pend?'warn ':'')+'click',' onclick="siteKpiClick(\'check\')"')
+      +kpi('퇴근 미등록',noout?'<span class="neg">'+noout+'</span>':'0',cur>=td?(cur===td?'당일 근무 진행 중':'사전 등록일'):'현장앱 출근 후 퇴근 없음',(noout?'crit ':'')+'click',' onclick="siteKpiClick(\'att\')"')
+      +(function(){var pb=by(rows,'partner_name');return Object.keys(pb).sort().map(function(p){return kpi(p,pb[p].length+'<small>명</small>','공수 '+num(sum(pb[p],'work_md'))+' · 매출 '+won(sum(pb[p],'revenue_amt')),'click',' onclick="if(G.gAtt){G.gAtt.chip={partner_name:\''+p+'\'};gRender(\'gAtt\');}siteKpiClick(\'att\');"')}).join('')})();
+  }
   var ab=el('btnApprove');if(ab){ab.textContent=cur+' 승인 대기 '+pend+'건 일괄 승인';ab.disabled=!pend;ab.dataset.d=cur}
   var tm=function(v){return hhmm(v)}; var tget=function(k){return function(r){return hhmm(r[k])||''}};
-  grid('gAtt',[{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,e:{field:'site_id',ph:'현장명 또는 코드'}},{k:'partner_name',t:'매출처',l:1,f:function(v){return v&&v!=='내부'?esc(v):'<span class="dim">내부</span>'},e:{field:'partner',ph:'거래처명 (비우면 현장 기준)',save:function(r,v){if(!r.entry_id)return Promise.resolve({ok:false,error:'키 없음(새로고침)'});return sb.rpc('ceo_set_labor_partner',{p_entry_id:r.entry_id,p_partner:v}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})},apply:function(r,v){r.partner_name=v||'내부'}}},{k:'work_start',t:'출근',f:tm,e:{field:'work_start',get:tget('work_start'),ph:'HH:MM'}},{k:'work_end',t:'퇴근',f:tm,e:{field:'work_end',get:tget('work_end'),ph:'HH:MM'}},{k:'work_md',t:'공수',f:'num',sum:1,e:'work_md'},{k:'ot_hours',t:'잔업h',f:'num',sum:1,e:'ot_hours'},{k:'night_hours',t:'야간h',f:'num',e:'night_hours'},{k:'cost',t:'회사부담',f:function(v,r){return won(v)+costPill(r.cost_kind)},sum:1},{k:'revenue_amt',t:'매출',f:'won',sum:1},{k:'margin',t:'마진',f:'sgn',sum:1},{k:'status',t:'상태',l:1,f:function(v,r){return (r.settled_ym?'<span class="pill g">마감</span>':pillSt(v))+(r.work_start&&!r.work_end&&r.source==='worker_app'?' <span class="pill r">퇴근 미등록</span>':'')+(r.source==='worker_app'?' <span class="pill">앱</span>':'')}},{k:'_x',t:'',l:1,f:function(v,r){return r.entry_id?(r.settled_ym?'':delBtn('labor',r.entry_id,r.person_name+' '+r.work_date)):''}}],
+  var attCols = [
+    {k:'person_name',t:'이름',l:1},
+    {k:'site_name',t:'현장',l:1,e:{field:'site_id',ph:'현장명 또는 코드'}},
+    {k:'partner_name',t:'매출처',l:1,f:function(v){return v&&v!=='내부'?esc(v):'<span class="dim">내부</span>'},e:{field:'partner',ph:'거래처명 (비우면 현장 기준)',save:function(r,v){if(!r.entry_id)return Promise.resolve({ok:false,error:'키 없음(새로고침)'});return sb.rpc('ceo_set_labor_partner',{p_entry_id:r.entry_id,p_partner:v}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})},apply:function(r,v){r.partner_name=v||'내부'}}},
+    {k:'work_start',t:'출근',f:tm,e:{field:'work_start',get:tget('work_start'),ph:'HH:MM'}},
+    {k:'work_end',t:'퇴근',f:tm,e:{field:'work_end',get:tget('work_end'),ph:'HH:MM'}},
+    {k:'work_md',t:'공수',f:'num',sum:1,e:'work_md'},
+    {k:'ot_hours',t:'잔업h',f:'num',sum:1,e:'ot_hours'},
+    {k:'night_hours',t:'야간h',f:'num',e:'night_hours'}
+  ];
+  if(!isEngLead()){
+    attCols.push({k:'cost',t:'회사부담',f:function(v,r){return won(v)+costPill(r.cost_kind)},sum:1});
+    attCols.push({k:'revenue_amt',t:'매출',f:'won',sum:1});
+    attCols.push({k:'margin',t:'마진',f:'sgn',sum:1});
+  }
+  attCols.push({k:'status',t:'상태',l:1,f:function(v,r){return (r.settled_ym?'<span class="pill g">마감</span>':pillSt(v))+(r.work_start&&!r.work_end&&r.source==='worker_app'?' <span class="pill r">퇴근 미등록</span>':'')+(r.source==='worker_app'?' <span class="pill">앱</span>':'')}});
+  attCols.push({k:'_x',t:'',l:1,f:function(v,r){return r.entry_id?(r.settled_ym?'':delBtn('labor',r.entry_id,r.person_name+' '+r.work_date)):''}});
+  grid('gAtt',attCols,
     {rows:rows,q:['person_name','site_name','partner_name'],qph:'이름·현장·매출처',chips:[{k:'partner_name',vals:[['','전체']].concat(Object.keys(by(rows,'partner_name')).sort().map(function(p){return [p,p]}))}],foot:true,sort:{k:'site_name',d:1},save:function(r,f,v){if(!r.entry_id)return Promise.resolve({ok:false,error:'키 없음(새로고침)'});return ceoSave('labor','entry_id')(r,f,v)},afterSave:function(){loadAll()}});
   edHint('gAtt','셀 더블클릭 → 수정 (회사부담·매출은 자동 재계산) · 회사부담 = 본인 지급 + 팀장 몫, 팀도급 팀원은 팀단가 전액, 월급제는 월급÷소정근로일 일할 · 삭제는 마감 전 기록만');
   renderCal();
   var openD=(D.disp||[]).filter(function(x){return x.status==='open'}).length;el('dispN').textContent=openD?'미처리 '+openD+'건':'';
   grid('gDisp',[{k:'created_at',t:'접수',l:1,f:function(v){return esc(String(v).replace('T',' ').slice(0,16))}},{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num'},{k:'ot_hours',t:'연장h',f:'num'},{k:'message',t:'내용',l:1},{k:'status',t:'상태',l:1,f:function(v){return v==='open'?'<span class="pill y">미처리</span>':'<span class="pill g">처리</span>'}},{k:'resolution',t:'답변',l:1,cls:'tiny dim'},{k:'_a',t:'',l:1,f:function(v,r){return r.status==='open'?'<button class="stbtn" onclick="event.stopPropagation();resolveDisp('+r.dispute_id+')">처리</button>':''}}],{rows:D.disp,csv:false,empty:'이의 신청 없음'});
   var t=by(D.att,'work_date'),tr=Object.keys(t).sort().reverse().map(function(d){var v=t[d];var c=sum(v,function(r){return r.cost_amt==null?r.pay_amt:r.cost_amt});return {work_date:d,n:v.length,md:sum(v,'work_md'),ot:sum(v,'ot_hours'),pay:c,rev:sum(v,'revenue_amt'),margin:sum(v,'revenue_amt')-c}});
-  grid('gTrend',[{k:'work_date',t:'일자',l:1},{k:'n',t:'인원',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot',t:'잔업h',f:'num'},{k:'pay',t:'회사부담',f:'won'},{k:'rev',t:'매출',f:'won'},{k:'margin',t:'마진',f:'sgn'}],{rows:tr,page:40});
+  var trendCols = [{k:'work_date',t:'일자',l:1},{k:'n',t:'인원',f:'int'},{k:'md',t:'공수',f:'num'},{k:'ot',t:'잔업h',f:'num'}];
+  if(!isEngLead()){
+    trendCols.push({k:'pay',t:'회사부담',f:'won'});
+    trendCols.push({k:'rev',t:'매출',f:'won'});
+    trendCols.push({k:'margin',t:'마진',f:'sgn'});
+  }
+  grid('gTrend',trendCols,{rows:tr,page:40});
 }
 
 function costPill(k){return k==='team_full'?' <span class="pill y tiny">팀장청구</span>':k==='monthly'?' <span class="pill tiny">월급 일할</span>':k==='team_margin'?' <span class="pill tiny">팀</span>':''}
@@ -2109,7 +2241,13 @@ function renderAcct(){
     {k:'employment_type',t:'고용',l:1,f:function(v){return v==='regular'?'정규직':v==='service'?'용역':esc(v||'')}},
     {k:'user_id',t:'계정',l:1,f:function(v,r){return acctBadge(r)}},
     {k:'email',t:'로그인 이메일',l:1,f:function(v){return v?esc(v):'<span class="dim">–</span>'}},
-    {k:'is_lead',t:'리드',f:function(v,r){return r.user_id?'<span class="pill '+(v?'b':'')+'">'+(v?'리드':'일반')+'</span>':'–'}},
+    {k:'role',t:'접속 권한 (RBAC)',f:function(v,r){
+      if(!r.user_id) return '<span class="dim">계정 없음</span>';
+      if(v==='owner') return '<span class="pill" style="background:#f3e8ff;color:#7e22ce;font-weight:700">👑 대표이사</span>';
+      if(v==='planning'||v==='accountant') return '<span class="pill b" style="font-weight:700">📊 경영기획</span>';
+      if(v==='eng_lead'||r.is_lead) return '<span class="pill g" style="font-weight:700">⚙️ 현장리드</span>';
+      return '<span class="pill">👷 현장앱</span>';
+    }},
     {k:'last_login_at',t:'최근 로그인',l:1,cls:'tiny',f:function(v){return v?esc(String(v).slice(0,16).replace('T',' ')):'<span class="dim">없음</span>'}},
     {k:'phone',t:'연락처',l:1,cls:'tiny dim'}],
     {rows:rows,q:true,qph:'이름·사번·이메일',page:40,csv:true,
@@ -2128,21 +2266,30 @@ function acctOpen(r){
    +(r.user_id&&!r.has_identity?'<div class="al t1" style="display:block;margin:12px 0"><b>이 계정은 로그인 연결이 빠져 있습니다</b><div class="tiny" style="margin-top:4px;color:var(--tx2)">SQL로 직접 만들어져 <code>auth.identities</code> 행이 없습니다. 로그인이나 비밀번호 재설정이 제대로 안 될 수 있습니다. <b>삭제 후 다시 만드는 것</b>을 권합니다.</div></div>':'')
    +(mk?'<h4 style="margin:14px 0 6px">계정 만들기</h4>'
       +'<div class="f"><label>로그인 이메일</label><input id="ac_mail" class="in" placeholder="실제로 쓰는 메일 주소" value=""></div>'
-      +'<div class="f"><label class="sw2" style="margin:0"><input type="checkbox" id="ac_lead"> 리드 권한 (현장앱 투입·펌프실 탭)</label></div>'
+      +'<div class="f"><label style="font-weight:700">부여할 권한 (RBAC)</label><select id="ac_role_sel" class="sel" style="width:100%;font-weight:600">'
+        +'<option value="staff">👷 모바일 현장앱 전용 (기본)</option>'
+        +'<option value="eng_lead">⚙️ 엔지니어링팀 리드 (현장공수/배치/자재/안전)</option>'
+        +'<option value="planning">📊 경영기획팀 (영업계약/청구마감/자재/세무)</option>'
+        +'<option value="owner">👑 대표이사 (전권)</option></select></div>'
       +'<div class="f"><label>발급 방식</label><select id="ac_mode" class="sel" style="width:100%">'
         +'<option value="pw">임시 비밀번호 — 화면에 한 번만 표시</option>'
         +'<option value="invite">초대 메일 — 본인이 비밀번호를 정함</option></select></div>'
       +'<div class="tiny dim">초대 메일은 실제 메일함이 있어야 갑니다. 무료 플랜은 시간당 발송 수가 적어 여러 명을 한꺼번에 보내면 밀릴 수 있습니다.</div>'
-    :'<h4 style="margin:14px 0 6px">계정 관리</h4>'
-      +'<div class="f"><label>로그인 이메일 변경</label><input id="ac_mail" class="in" value="'+esc(r.email||'')+'"></div>');
+    :'<h4 style="margin:14px 0 6px">계정 관리 및 권한 설정 (RBAC)</h4>'
+      +'<div class="f"><label>로그인 이메일 변경</label><input id="ac_mail" class="in" value="'+esc(r.email||'')+'"></div>'
+      +'<div class="f"><label style="font-weight:700">시스템 접속 권한</label><select id="ac_role_sel" class="sel" style="width:100%;font-weight:600">'
+        +'<option value="staff"'+((r.role==='staff'||!r.role)?' selected':'')+'>👷 모바일 현장앱 전용 (대표 ERP 차단)</option>'
+        +'<option value="eng_lead"'+((r.role==='eng_lead'||r.is_lead)?' selected':'')+'>⚙️ 엔지니어링팀 리드 (현장공수/배치/자재/안전)</option>'
+        +'<option value="planning"'+((r.role==='planning'||r.role==='accountant')?' selected':'')+'>📊 경영기획팀 (영업계약/청구마감/자재/세무)</option>'
+        +'<option value="owner"'+(r.role==='owner'?' selected':'')+'>👑 대표이사 (전사 13개 전 메뉴 전권)</option></select></div>');
   var btns='<button class="btn" onclick="drClose()">닫기</button>';
   if(mk)btns+='<button class="btn p" onclick="acctCreate(\''+esc(r.employment_no)+'\',\''+esc(r.person_name)+'\',\''+esc(r.phone||'')+'\')">계정 만들기</button>';
   else btns='<button class="btn" onclick="drClose()">닫기</button>'
       +'<button class="btn d" onclick="acctDelete(\''+r.user_id+'\',\''+esc(r.person_name)+'\')">삭제</button>'
-      +'<button class="btn" onclick="acctLead(\''+esc(r.employment_no)+'\','+(r.is_lead?'false':'true')+')">'+(r.is_lead?'리드 끄기':'리드 켜기')+'</button>'
       +'<button class="btn" onclick="acctResetPw(\''+r.user_id+'\')">임시 비밀번호</button>'
       +'<button class="btn" onclick="acctMail(\''+esc(r.email||'')+'\')">재설정 메일</button>'
-      +'<button class="btn p" onclick="acctSetEmail(\''+r.user_id+'\')">이메일 저장</button>';
+      +'<button class="btn" onclick="acctSetEmail(\''+r.user_id+'\')">이메일 저장</button>'
+      +'<button class="btn p" onclick="acctSaveRole(\''+r.user_id+'\')">권한 저장</button>';
   drOpen('ERP 계정 · '+esc(r.person_name),body,btns);
   setTimeout(function(){var m=el('ac_mail');if(m&&!m.value)m.focus()},60);
 }
@@ -2156,9 +2303,11 @@ function acctPw(name,pw){
 async function acctCreate(emp,name,phone){
   var mail=(el('ac_mail').value||'').trim();
   if(!mail||mail.indexOf('@')<0){toast('로그인 이메일을 넣으십시오','e');return}
-  var invite=el('ac_mode').value==='invite', lead=el('ac_lead').checked;
+  var invite=el('ac_mode').value==='invite';
+  var selRole = (el('ac_role_sel') && el('ac_role_sel').value) || 'staff';
+  var lead = (selRole === 'eng_lead');
   toast('만드는 중…');
-  var r=await acctCall({action:'create',email:mail,employment_no:emp,name:name,phone:phone,is_lead:lead,invite:invite});
+  var r=await acctCall({action:'create',email:mail,employment_no:emp,name:name,phone:phone,is_lead:lead,invite:invite,role:selRole});
   if(!r.ok){toast(r.error,'e');return}
   if(r.temp_password){acctPw(name,r.temp_password);return}
   toast(name+' 초대 메일을 보냈습니다','g');drClose();loadAll();
@@ -2190,6 +2339,22 @@ async function acctMail(mail){
   if(!r.ok){toast(r.error,'e');return}
   toast(mail+' 로 재설정 메일을 보냈습니다','g');
 }
+async function acctSaveRole(uid){
+  var sel = el('ac_role_sel');
+  if(!sel) return;
+  var role = sel.value;
+  var isLead = (role === 'eng_lead');
+  toast('권한 저장 중…');
+  var r = await sb.rpc('ceo_set_user_role', {p_user_id: uid, p_role: role, p_is_lead: isLead});
+  if(r.error || !(r.data && r.data.ok)){
+    toast((r.error && r.error.message) || (r.data && r.data.error) || '권한 저장 실패', 'e');
+    return;
+  }
+  toast('접속 권한이 성공적으로 저장되었습니다', 'g');
+  drClose();
+  loadAll();
+}
+
 async function acctLead(emp,on){
   var r=await sb.rpc('ceo_set_lead',{p_employment_no:emp,p_is_lead:on});
   if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
