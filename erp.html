@@ -427,20 +427,43 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .docpaper p.note{font-size:11.5px;color:var(--tx3);margin:2px 0}
 .docpaper p.i1{padding-left:12px}.docpaper p.i2{padding-left:26px}
 .docpaper p.sigdate{text-align:center;margin:20px 0 10px;font-weight:600}
-.docpaper table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12px}
+.docpaper table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:12px;table-layout:fixed}
 .docpaper th,.docpaper td{border:1px solid var(--ln);padding:5px 7px;vertical-align:top;text-align:left}
-.docpaper th{background:var(--sf2);font-weight:600;white-space:nowrap}
+.docpaper th{background:var(--sf2);font-weight:600;text-align:center;white-space:nowrap}
 .docpaper td.r{text-align:right;font-variant-numeric:tabular-nums}
+.docpaper td.c{text-align:center}
 .docpaper tr.tot td{font-weight:700;background:var(--sf2)}
 .docpaper .pagebreak{height:1px;background:var(--ln);margin:24px 0}
 .docpaper img.sg{max-height:44px;vertical-align:middle}
 .docpaper .sgd{display:block;font-size:11px;color:var(--tx3)}
 .docpaper .sgbox{display:inline-block;min-width:76px;border-bottom:1px dashed var(--tx3);color:var(--tx3);font-size:11px;text-align:center}
-.ladder{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
-.ladder th,.ladder td{border-bottom:1px solid var(--ln);padding:6px 6px;text-align:left;vertical-align:top}
-.ladder th{color:var(--tx3);font-weight:500;font-size:11.5px;white-space:nowrap}
-.ladder td.c{text-align:center}.ladder td.r{text-align:right;font-variant-numeric:tabular-nums}
-.ladder tr.me{background:var(--ac2)}.ladder tr.me td{font-weight:700;color:var(--ac)}
+
+/* Table.kv (요약 테이블) */
+.docpaper table.kv th{width:18%;text-align:center;font-weight:600;white-space:nowrap}
+.docpaper table.kv td{width:32%}
+
+/* Table.ladder (별지 2 기술등급 사다리 표) */
+.docpaper table.ladder{table-layout:fixed;width:100%;margin-top:6px}
+.docpaper table.ladder th:nth-child(1),.docpaper table.ladder td:nth-child(1){width:6.5%;text-align:center;white-space:nowrap}
+.docpaper table.ladder th:nth-child(2),.docpaper table.ladder td:nth-child(2){width:17%;text-align:center;white-space:nowrap;font-weight:600}
+.docpaper table.ladder th:nth-child(3),.docpaper table.ladder td:nth-child(3){width:14.5%;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:8px}
+.docpaper table.ladder th:nth-child(4),.docpaper table.ladder td:nth-child(4){width:11%;text-align:center;white-space:nowrap}
+.docpaper table.ladder th:nth-child(5),.docpaper table.ladder td:nth-child(5){width:51%;text-align:left;line-height:1.45;word-break:keep-all}
+.docpaper table.ladder tr.me{background:var(--ac2)}.docpaper table.ladder tr.me td{font-weight:700;color:var(--ac)}
+
+/* Table.amt (별지 1 임금 구성항목 표) */
+.docpaper table.amt{table-layout:fixed;width:100%}
+.docpaper table.amt th:nth-child(1),.docpaper table.amt td:nth-child(1){width:6.5%;text-align:center;white-space:nowrap}
+.docpaper table.amt th:nth-child(2),.docpaper table.amt td:nth-child(2){width:17%;text-align:center;white-space:nowrap;font-weight:600}
+.docpaper table.amt th:nth-child(3),.docpaper table.amt td:nth-child(3){width:47%;text-align:left;word-break:keep-all}
+.docpaper table.amt th:nth-child(4),.docpaper table.amt td:nth-child(4){width:16.5%;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:8px}
+.docpaper table.amt th:nth-child(5),.docpaper table.amt td:nth-child(5){width:13%;text-align:center;white-space:nowrap}
+
+/* Table.sig (서명 테이블) */
+.docpaper table.sig{margin-top:12px;table-layout:fixed;width:100%}
+.docpaper table.sig th{text-align:center;font-size:12px;padding:6px;width:50%}
+.docpaper table.sig td{padding:8px 10px;line-height:1.7;font-size:11.5px;vertical-align:top;width:50%}
+
 .adjbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:12px;border:1px solid var(--ac);border-radius:var(--r2);background:var(--ac2);margin-bottom:12px}
 .adjbar label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--tx2)}
 .adjbar select,.adjbar input{padding:7px 9px;border:1px solid var(--ln);border-radius:8px;background:var(--sf);color:var(--tx);font-size:13px}
@@ -4149,15 +4172,32 @@ function esgPrint(){
     + '.docpaper p.i1{padding-left:10pt;margin-bottom:1.5pt}.docpaper p.i2{padding-left:20pt;margin-bottom:1.5pt}'
     + '.docpaper p.note{font-size:7.2pt;color:#475569!important;margin:1pt 0;line-height:1.35}'
     + '.docpaper p.sigdate{text-align:center;margin:10pt 0 6pt;font-size:10pt;font-weight:700;color:#000!important;break-after:avoid!important;page-break-after:avoid!important}'
-    + '.docpaper table{width:100%;border-collapse:collapse;margin:2.5pt 0 4pt;font-size:8pt}'
+    + '.docpaper table{width:100%;border-collapse:collapse;margin:2.5pt 0 4pt;font-size:8pt;table-layout:fixed}'
     + '.docpaper th,.docpaper td{border:1px solid #475569!important;padding:2.5pt 4pt;vertical-align:middle;text-align:left;color:#000!important}'
-    + '.docpaper th{background:#f1f5f9!important;font-weight:700;white-space:nowrap}'
+    + '.docpaper th{background:#f1f5f9!important;font-weight:700;text-align:center!important;white-space:nowrap}'
     + '.docpaper td.r{text-align:right;font-variant-numeric:tabular-nums}'
+    + '.docpaper td.c{text-align:center}'
     + '.docpaper tr.tot td{font-weight:700;background:#f8fafc!important}'
-    + '.docpaper table.sig{margin-top:6pt;break-inside:avoid!important;page-break-inside:avoid!important}'
-    + '.docpaper table.sig th{text-align:center;font-size:8.5pt;padding:2.5pt;background:#f1f5f9!important}'
-    + '.docpaper table.sig td{padding:4.5pt 7pt;line-height:1.6;font-size:8pt;vertical-align:top}'
     + '.docpaper table,.docpaper tr,.docpaper td,.docpaper th{break-inside:avoid!important;page-break-inside:avoid!important}'
+    + '.docpaper table.kv th{width:18%;text-align:center!important;font-weight:700;white-space:nowrap;background:#f1f5f9!important}'
+    + '.docpaper table.kv td{width:32%}'
+    + '.docpaper table.ladder{table-layout:fixed;width:100%}'
+    + '.docpaper table.ladder th:nth-child(1),.docpaper table.ladder td:nth-child(1){width:6.5%;text-align:center;white-space:nowrap}'
+    + '.docpaper table.ladder th:nth-child(2),.docpaper table.ladder td:nth-child(2){width:17%;text-align:center;white-space:nowrap;font-weight:600}'
+    + '.docpaper table.ladder th:nth-child(3),.docpaper table.ladder td:nth-child(3){width:14.5%;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:6pt}'
+    + '.docpaper table.ladder th:nth-child(4),.docpaper table.ladder td:nth-child(4){width:11%;text-align:center;white-space:nowrap}'
+    + '.docpaper table.ladder th:nth-child(5),.docpaper table.ladder td:nth-child(5){width:51%;text-align:left;line-height:1.35;padding:2pt 4pt;word-break:keep-all}'
+    + '.docpaper table.ladder tr.me{background:#eff6ff!important;font-weight:600}'
+    + '.docpaper table.ladder tr.me td{border-color:#2563eb!important}'
+    + '.docpaper table.amt{table-layout:fixed;width:100%}'
+    + '.docpaper table.amt th:nth-child(1),.docpaper table.amt td:nth-child(1){width:6.5%;text-align:center;white-space:nowrap}'
+    + '.docpaper table.amt th:nth-child(2),.docpaper table.amt td:nth-child(2){width:17%;text-align:center;white-space:nowrap;font-weight:600}'
+    + '.docpaper table.amt th:nth-child(3),.docpaper table.amt td:nth-child(3){width:47%;text-align:left;word-break:keep-all}'
+    + '.docpaper table.amt th:nth-child(4),.docpaper table.amt td:nth-child(4){width:16.5%;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:5pt}'
+    + '.docpaper table.amt th:nth-child(5),.docpaper table.amt td:nth-child(5){width:13%;text-align:center;white-space:nowrap}'
+    + '.docpaper table.sig{margin-top:6pt;break-inside:avoid!important;page-break-inside:avoid!important;table-layout:fixed;width:100%}'
+    + '.docpaper table.sig th{text-align:center!important;font-size:8.5pt;padding:2.5pt;background:#f1f5f9!important;width:50%}'
+    + '.docpaper table.sig td{padding:4.5pt 7pt;line-height:1.6;font-size:8pt;vertical-align:top;width:50%}'
     + '.docpaper .pagebreak{page-break-after:always!important;break-after:page!important;height:0;background:none;margin:0;border:none;visibility:hidden}'
     + '.docpaper .sgbox{display:inline-block;min-width:95px;border-bottom:1.2px solid #000!important;color:#475569;font-size:8pt;text-align:center;padding:0 6px;margin:0 4px}'
     + '.docpaper .tier,.tierbadge{display:inline-block;padding:1px 5px;border:1px solid #64748b;border-radius:3px;font-size:7.5pt;color:#0f172a}'
@@ -4176,7 +4216,13 @@ function esgPrint(){
     + '<button onclick="window.close()" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px">닫기</button>'
     + '</div>'
     + '</div>';
-  var cleanHtml = h.innerHTML.replace(/<p class=["']sub["']>v1\.0\s*·\s*2026-09-16\s*정본<\/p>/gi, '');
+  var cleanHtml = h.innerHTML
+    .replace(/<p class=["']sub["']>v1\.0\s*·\s*2026-09-16\s*정본<\/p>/gi, '')
+    .replace(/BVS\s*사내\s*표준\s*작업/g, '회사 사내 표준 작업')
+    .replace(
+      '<p class="sub">취업규칙 제43조 · 제43조의2 및 별표 2에 따른 별지 · 이 별지는 근로계약서의 일부를 이룬다</p>',
+      '<p class="sub">주식회사 비브이에스(이하 “회사”)의 기술등급 사다리는 취업규칙 제43조·제43조의2 및 별표 2에 따라 아래와 같이 정하며, 이 별지는 근로계약서의 일부를 이룬다.</p>'
+    );
   var fullHtml = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>'+style+'</style></head><body>'
     + bar
     + '<div class="print-wrap"><div id="pr" class="docpaper">' + cleanHtml + '</div></div>'
