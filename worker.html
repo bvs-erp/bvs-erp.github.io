@@ -1624,12 +1624,16 @@ async function docOpen(id){
     sigInit();docCheck();
   }
   el('docScroll').scrollTop=0;
-  el('docScroll').onscroll=function(){
-    var e=el('docScroll');
-    if(e.scrollTop+e.clientHeight>=e.scrollHeight-60){
-      DOC.ok=true;el('docMore').classList.add('hide');
-      el('docFoot').style.opacity='';el('docFoot').style.pointerEvents='';docCheck();}
-  };
+  function evalScroll(){
+    var e=el('docScroll');if(!e)return;
+    if(e.scrollTop+e.clientHeight>=e.scrollHeight-60 || e.scrollHeight<=e.clientHeight+60){
+      DOC.ok=true;if(el('docMore'))el('docMore').classList.add('hide');
+      if(el('docFoot')){el('docFoot').style.opacity='';el('docFoot').style.pointerEvents='';}
+      docCheck();
+    }
+  }
+  el('docScroll').onscroll=evalScroll;
+  setTimeout(evalScroll, 150);
 }
 function docClose(){el('docView').classList.add('hide');el('docScroll').onscroll=null}
 function docCheck(){
@@ -1642,8 +1646,7 @@ function sigInit(){
   var dpr=window.devicePixelRatio||1,w=cv.clientWidth||300,h=150;
   cv.width=w*dpr;cv.height=h*dpr;
   var c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.4;c.lineCap='round';c.lineJoin='round';
-  var curTheme=document.documentElement.getAttribute('data-theme')||'light';
-  c.strokeStyle=(curTheme==='dark')?'#60a5fa':'#1d4ed8'; // 고대비 선명한 블루 서명 잉크
+  c.strokeStyle='#1d4ed8'; // 테마 무관 정본 계약서(흰 종이)에 선명한 정격 블루 잉크
   c.lineWidth=2.8;DOC.ctx=c;DOC.drawn=false;
   var down=false,lx=0,ly=0;
   function pt(ev){var r=cv.getBoundingClientRect();return [ev.clientX-r.left,ev.clientY-r.top]}
