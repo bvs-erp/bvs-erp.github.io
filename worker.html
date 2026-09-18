@@ -4,8 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#2a78d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BVS 공수">
+<meta name="theme-color" content="#1d4ed8">
 <title>BVS 공수</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <style>
 /* ── 테마 시스템 (선명한 고대비 낮모드 vs 눈 편한 밤모드) ── */
 :root, html[data-theme="light"] {
@@ -388,6 +393,24 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 .pmrow{display:grid;grid-template-columns:1fr 1fr 70px 32px;gap:6px;margin-bottom:6px;align-items:center}
 .pmrow input,.pmrow select{padding:10px;border:1px solid var(--ln);border-radius:10px;background:var(--sf2);font-size:15px;width:100%}
 .pmrow .x{color:var(--tx3);text-align:center;cursor:pointer;font-size:18px}
+
+/* ── 홈 화면 앱 추가 가이드 UI ── */
+.guide-modal-wrap{
+  position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:80;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.guide-modal-card{
+  width:100%;max-width:540px;background:var(--sf);border-radius:20px 20px 0 0;
+  padding:20px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--shx);
+  border-top:1px solid var(--ln);max-height:86vh;overflow-y:auto;
+  animation:slideUpGuide .22s ease-out;
+}
+@keyframes slideUpGuide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.guide-step-box{background:var(--sf2);padding:11px 13px;border-radius:12px;margin-bottom:9px;border:1px solid var(--ln)}
+.guide-step-box b{color:var(--ac);display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:13.5px}
+.guide-step-box span{color:var(--tx2);font-size:12.5px;line-height:1.55;display:block}
+.guide-tab-btn{border:none;border-radius:10px;padding:9px 0;font-size:13px;font-weight:700;cursor:pointer;background:var(--sf2);color:var(--tx3);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.guide-tab-btn.on{background:var(--ac);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,0.25)}
 </style>
 </head>
 <body>
@@ -420,7 +443,76 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
       <button class="btn p w" onclick="doChangePw()">저장</button>
       <div class="msg" id="pmsg"></div>
     </div>
-    <p class="tiny dim" style="text-align:center">휴대폰 홈 화면에 추가해 두면 앱처럼 열립니다.</p>
+    <!-- 홈 화면 앱 설치 & 추가 가이드 영역 -->
+    <div style="margin-top:14px;text-align:center">
+      <!-- PWA 원클릭 설치 버튼 (안드로이드 크롬/삼성인터넷 등 지원 시 활성화) -->
+      <button id="pwaInstallBtn" type="button" class="btn p w hide" onclick="installPwa()" style="font-size:14.5px;font-weight:700;padding:12px 14px;border-radius:12px;box-shadow:0 3px 10px rgba(29,78,216,0.25);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>스마트폰 홈 화면에 바로 설치하기</span>
+      </button>
+
+      <!-- 아코디언 가이드 토글 버튼 -->
+      <button type="button" class="btn sm" onclick="toggleInstallGuide()" id="btnToggleGuide" style="border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;background:var(--sf);border:1px solid var(--ln);box-shadow:var(--sh);color:var(--tx2);display:inline-flex;align-items:center;gap:6px">
+        <span>📱</span> <span>홈 화면에 앱 추가하는 방법 안내</span> <span id="guideArrow" style="font-size:11px;color:var(--tx3)">▼</span>
+      </button>
+
+      <!-- 아코디언 상세 안내 카드 -->
+      <div id="installGuideCard" class="card hide" style="margin-top:12px;text-align:left;padding:16px;background:var(--sf);border:1.5px solid var(--ln);box-shadow:var(--shx);border-radius:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <b style="font-size:14.5px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:17px">💡</span> 홈 화면 바로가기 추가 안내
+          </b>
+          <button type="button" class="lnk tiny" onclick="toggleInstallGuide(false)" style="color:var(--tx3)">닫기 ✕</button>
+        </div>
+        <p class="tiny dim" style="margin:0 0 12px;line-height:1.5">
+          홈 화면에 추가하시면 매번 링크를 찾을 필요 없이 <b>스마트폰 바탕화면 아이콘</b>을 눌러 바로 출퇴근·작업일보를 열 수 있습니다.
+        </p>
+
+        <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          <button type="button" id="tabGuideAndroid" class="guide-tab-btn on" onclick="switchGuideTab('android')">
+            🤖 삼성 / 갤럭시
+          </button>
+          <button type="button" id="tabGuideIos" class="guide-tab-btn" onclick="switchGuideTab('ios')">
+            🍎 아이폰 (iPhone)
+          </button>
+        </div>
+
+        <!-- 1) 삼성/갤럭시 안내 -->
+        <div id="guideAndroidContent">
+          <div class="guide-step-box">
+            <b><span class="pill b" style="font-size:10.5px">1단계</span> 브라우저 메뉴 열기</b>
+            <span>• <b>크롬:</b> 화면 우측 상단 더보기 <b>(⋮)</b> 터치</span>
+            <span style="margin-top:2px">• <b>삼성 인터넷:</b> 화면 우측 하단 줄 3개 <b>(≡)</b> 터치</span>
+          </div>
+          <div class="guide-step-box">
+            <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
+            <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] ➡️ [홈 화면])를 누릅니다.</span>
+          </div>
+          <div class="guide-step-box" style="margin-bottom:0">
+            <b><span class="pill b" style="font-size:10.5px">3단계</span> [추가] 또는 [설치] 터치</b>
+            <span>팝업창에서 <b>[추가]</b>를 누르면 휴대폰 바탕화면에 <b>BVS 공수</b> 아이콘이 생성됩니다.</span>
+          </div>
+        </div>
+
+        <!-- 2) 아이폰/Safari 안내 -->
+        <div id="guideIosContent" class="hide">
+          <div class="guide-step-box">
+            <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
+            <span>Safari 브라우저 화면 <b>하단 중앙의 네모+위로 화살표(↑) 공유 아이콘</b>을 누릅니다.<br>
+            <small class="dim">* 카톡 등 인앱 브라우저는 우측 하단 점 3개 ➡️ [Safari로 열기] 먼저 실행</small></span>
+          </div>
+          <div class="guide-step-box">
+            <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
+            <span>공유 시트를 아래로 살짝 내려 <b>[홈 화면에 추가] (➕)</b> 항목을 터치합니다.</span>
+          </div>
+          <div class="guide-step-box" style="margin-bottom:0">
+            <b><span class="pill b" style="font-size:10.5px">3단계</span> 우측 상단 [추가] 터치</b>
+            <span>우측 상단의 <b>[추가]</b>를 누르면 아이폰 홈 화면에 전용 앱처럼 등록 완료됩니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 앱 -->
@@ -439,6 +531,9 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
       <div class="top-nav-actions">
         <button class="top-icon-btn" onclick="syncRefresh(this)" title="최신 데이터 새로고침" id="syncBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <button class="top-icon-btn" onclick="openHomeGuideModal()" title="홈 화면 앱 추가 방법 안내" id="topHomeGuideBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
         </button>
         <button class="top-icon-btn" onclick="toggleTheme()" id="appThemeBtn" title="낮모드/밤모드 전환">
           <span id="appThemeIcon">☀️</span>
@@ -620,6 +715,73 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
     <div class="msg" id="docMsg"></div>
   </div>
 </div>
+
+<!-- 스마트폰 홈 화면 추가 안내 모달 (인앱 전용) -->
+<div class="guide-modal-wrap hide" id="homeGuideModal" onclick="if(event.target===this)closeHomeGuideModal()">
+  <div class="guide-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <b style="font-size:16px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:19px">📱</span> 홈 화면에 앱 추가하는 방법
+      </b>
+      <button type="button" class="btn sm" onclick="closeHomeGuideModal()" style="border-radius:8px;padding:4px 10px;font-size:12px">닫기 ✕</button>
+    </div>
+
+    <!-- PWA 원클릭 설치 버튼 (지원 브라우저) -->
+    <button id="pwaModalInstallBtn" type="button" class="btn p w hide" onclick="installPwa()" style="font-size:14.5px;font-weight:700;padding:12px 14px;border-radius:12px;box-shadow:0 3px 10px rgba(29,78,216,0.25);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>스마트폰 홈 화면에 바로 설치하기</span>
+    </button>
+
+    <p class="tiny dim" style="margin:0 0 12px;line-height:1.55">
+      스마트폰 바탕화면에 BVS 공수를 추가해 두시면, 매번 주소창을 열지 않고 <b>바탕화면의 앱 아이콘</b>을 터치하여 바로 이용할 수 있습니다.
+    </p>
+
+    <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+      <button type="button" id="modalTabGuideAndroid" class="guide-tab-btn on" onclick="switchModalGuideTab('android')">
+        🤖 삼성 / 갤럭시
+      </button>
+      <button type="button" id="modalTabGuideIos" class="guide-tab-btn" onclick="switchModalGuideTab('ios')">
+        🍎 아이폰 (iPhone)
+      </button>
+    </div>
+
+    <!-- 모달 안드로이드 -->
+    <div id="modalGuideAndroidContent">
+      <div class="guide-step-box">
+        <b><span class="pill b" style="font-size:10.5px">1단계</span> 브라우저 메뉴 열기</b>
+        <span>• <b>크롬:</b> 화면 우측 상단 더보기 <b>(⋮)</b> 터치</span>
+        <span style="margin-top:2px">• <b>삼성 인터넷:</b> 화면 우측 하단 줄 3개 <b>(≡)</b> 터치</span>
+      </div>
+      <div class="guide-step-box">
+        <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
+        <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] ➡️ [홈 화면])를 누릅니다.</span>
+      </div>
+      <div class="guide-step-box" style="margin-bottom:0">
+        <b><span class="pill b" style="font-size:10.5px">3단계</span> [추가] 또는 [설치] 터치</b>
+        <span>확인 팝업에서 <b>[추가]</b>를 누르면 바탕화면에 <b>BVS 공수</b> 아이콘이 생성됩니다.</span>
+      </div>
+    </div>
+
+    <!-- 모달 아이폰 -->
+    <div id="modalGuideIosContent" class="hide">
+      <div class="guide-step-box">
+        <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
+        <span>Safari 화면 <b>하단 중앙의 네모+위로 화살표(↑) 공유 아이콘</b>을 누릅니다.<br>
+        <small class="dim">* 카톡 인앱 브라우저는 우측 하단 점 3개 ➡️ [Safari로 열기] 먼저 실행</small></span>
+      </div>
+      <div class="guide-step-box">
+        <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
+        <span>공유 메뉴를 아래로 스크롤하여 <b>[홈 화면에 추가] (➕)</b> 항목을 터치합니다.</span>
+      </div>
+      <div class="guide-step-box" style="margin-bottom:0">
+        <b><span class="pill b" style="font-size:10.5px">3단계</span> 우측 상단 [추가] 터치</b>
+        <span>우측 상단의 <b>[추가]</b>를 누르면 아이폰 홈 화면에 바로가기 앱이 등록 완료됩니다.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tabs hide" id="tabs">
   <div class="on" data-p="in" onclick="go('in')"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>입력</div>
   <div data-p="log" onclick="go('log')"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5zM8 12h8M8 16h6"/></svg>일지</div>
@@ -745,6 +907,70 @@ function toast(m,c){var t=document.createElement('div');t.className='toast '+(c|
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function hhmm(t){if(!t)return '';var m=String(t).match(/(\d{2}):(\d{2})/);return m?m[1]+':'+m[2]:''}
 window.onerror=function(m){toast('오류: '+m,'e')};
+
+/* ═══════════ PWA 설치 & 홈 화면 추가 가이드 로직 ═══════════ */
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  var b1 = el('pwaInstallBtn'); if(b1) b1.classList.remove('hide');
+  var b2 = el('pwaModalInstallBtn'); if(b2) b2.classList.remove('hide');
+});
+
+function installPwa(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(res){
+      if(res.outcome === 'accepted'){
+        toast('홈 화면에 BVS 공수 앱이 추가되었습니다!','g');
+      }
+      deferredInstallPrompt = null;
+      var b1 = el('pwaInstallBtn'); if(b1) b1.classList.add('hide');
+      var b2 = el('pwaModalInstallBtn'); if(b2) b2.classList.add('hide');
+    });
+  } else {
+    toggleInstallGuide(true);
+  }
+}
+
+function toggleInstallGuide(forceState){
+  var card = el('installGuideCard');
+  var arrow = el('guideArrow');
+  if(!card) return;
+  var show = (forceState !== undefined) ? forceState : card.classList.contains('hide');
+  card.classList.toggle('hide', !show);
+  if(arrow) arrow.textContent = show ? '▲' : '▼';
+}
+
+function switchGuideTab(tab){
+  var isAndroid = (tab === 'android');
+  el('tabGuideAndroid').classList.toggle('on', isAndroid);
+  el('tabGuideIos').classList.toggle('on', !isAndroid);
+  el('guideAndroidContent').classList.toggle('hide', !isAndroid);
+  el('guideIosContent').classList.toggle('hide', isAndroid);
+}
+
+function openHomeGuideModal(){
+  var m = el('homeGuideModal');
+  if(m) m.classList.remove('hide');
+  if(deferredInstallPrompt){
+    var b2 = el('pwaModalInstallBtn');
+    if(b2) b2.classList.remove('hide');
+  }
+}
+
+function closeHomeGuideModal(){
+  var m = el('homeGuideModal');
+  if(m) m.classList.add('hide');
+}
+
+function switchModalGuideTab(tab){
+  var isAndroid = (tab === 'android');
+  el('modalTabGuideAndroid').classList.toggle('on', isAndroid);
+  el('modalTabGuideIos').classList.toggle('on', !isAndroid);
+  el('modalGuideAndroidContent').classList.toggle('hide', !isAndroid);
+  el('modalGuideIosContent').classList.toggle('hide', isAndroid);
+}
 
 var CDN=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js','https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/supabase.min.js'];
 function loadLib(i){if(window.supabase&&window.supabase.createClient){boot();return}
