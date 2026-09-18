@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.26 (Speed Optimized)</title>
+<title>BVS ERP v1.26 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -481,37 +481,51 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .tax-panel{display:none}.tax-panel.on{display:block}
 .vat-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
 
-/* ── 월간 공휴일 & 투입·휴무 관제 달력 ── */
+/* ── 월간 공휴일 & 투입·휴무 관제 달력 (고시안성·시각피로 완화 개편) ── */
 .mcal-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .mcal-box{min-width:760px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
-.mcal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px;text-align:center;font-size:12px;font-weight:700;color:var(--tx2)}
-.mcal-head .sun{color:var(--crit)}
+.mcal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:8px;text-align:center;font-size:12px;font-weight:700;color:var(--tx2)}
+.mcal-head .sun{color:#dc2626}
 .mcal-head .sat{color:#2563eb}
 .mcal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-.mcal-cell{background:var(--sf);border:1px solid var(--ln);border-radius:10px;min-height:112px;padding:8px 6px;display:flex;flex-direction:column;transition:all .15s ease;cursor:pointer;position:relative}
-.mcal-cell:hover{border-color:var(--ac);box-shadow:var(--sh);transform:translateY(-1px);z-index:2}
-.mcal-cell.empty{background:var(--sf2);opacity:.4;cursor:default;border-style:dashed}
+
+/* 깔끔한 흰색/뉴트럴 표면 기반 — 눈부심 없는 자연스러운 카드 */
+.mcal-cell{background:#ffffff;border:1px solid var(--ln);border-radius:8px;min-height:108px;padding:7px 6px;display:flex;flex-direction:column;transition:all .15s ease;cursor:pointer;position:relative;box-sizing:border-box}
+.mcal-cell:hover{border-color:var(--ac);box-shadow:0 2px 8px rgba(0,0,0,0.06);transform:translateY(-1px);z-index:2}
+.mcal-cell.empty{background:var(--sf2);opacity:.35;cursor:default;border-style:dashed}
 .mcal-cell.empty:hover{transform:none;box-shadow:none;border-color:var(--ln)}
-.mcal-cell.sun{background:color-mix(in srgb,var(--critbg) 40%,var(--sf))}
-.mcal-cell.sat{background:color-mix(in srgb,var(--ac2) 35%,var(--sf))}
-.mcal-cell.holiday{background:color-mix(in srgb,#fef2f2 80%,var(--sf));border-color:#fca5a5}
-.mcal-cell.today{outline:2.5px solid var(--ac);outline-offset:-1px;box-shadow:0 0 0 3px rgba(42,120,214,0.2)}
-.mcal-cell.chuseok{background:color-mix(in srgb,#fef3c7 75%,var(--sf));border-color:#f59e0b}
-.mcal-cell.chuseok:hover{border-color:#d97706}
+
+/* 일요일/토요일: 부드러운 틴트 */
+.mcal-cell.sun{background:#fffbfb;border-color:#f1f5f9}
+.mcal-cell.sat{background:#fbfdff;border-color:#f1f5f9}
+
+/* 오늘 날짜: 깔끔한 인디고 아웃라인 */
+.mcal-cell.today{outline:2.5px solid #2563eb;outline-offset:-1px;box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+
+/* 추석 및 공휴일: 눈아픈 전면 형광노랑 제거 ➡️ 소프트 아이보리 + 상단 앰버 악센트 바 */
+.mcal-cell.chuseok{background:#fffdfa;border-color:#fde68a;border-top:3px solid #f59e0b}
+.mcal-cell.chuseok:hover{border-color:#f59e0b}
+.mcal-cell.holiday:not(.chuseok){background:#fffafa;border-color:#fecaca;border-top:3px solid #ef4444}
+
 .mcal-date-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.mcal-date-num{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.mcal-cell.sun .mcal-date-num,.mcal-cell.holiday .mcal-date-num{color:var(--crit)}
+.mcal-date-num{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
+.mcal-cell.sun .mcal-date-num,.mcal-cell.holiday .mcal-date-num{color:#dc2626}
 .mcal-cell.sat .mcal-date-num{color:#2563eb}
-.mcal-badge-today{font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;background:var(--ac);color:#fff}
-.mcal-hol-tag{font-size:10.5px;font-weight:700;color:#dc2626;background:#fee2e2;border:1px solid #fecaca;border-radius:6px;padding:2px 4px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:3px}
-.mcal-work-tag{font-size:10.5px;font-weight:700;color:#047857;background:#d1fae5;border:1px solid #a7f3d0;border-radius:6px;padding:2px 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mcal-ev-tag{font-size:10px;color:var(--tx2);background:var(--sf2);border:1px solid var(--ln);border-radius:5px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mcal-ev-tag.off{color:#b45309;background:#fef3c7;border-color:#fde68a}
-.mcal-ev-tag.edu{color:#1d4ed8;background:#dbeafe;border-color:#bfdbfe}
-.mcal-ev-tag.join{color:#047857;background:#d1fae5;border-color:#a7f3d0;font-weight:600}
-.mcal-ev-tag.pay{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe;font-weight:600}
-.mcal-ev-tag.hol{color:#dc2626;background:#fee2e2;border-color:#fecaca;font-weight:600}
-.mcal-ev-tag.work{color:#0369a1;background:#e0f2fe;border-color:#bae6fd}
+.mcal-badge-today{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:10px;background:#2563eb;color:#fff}
+
+/* 공휴일 / 출근 태그: 파스텔톤 + 명확한 대비 */
+.mcal-hol-tag{font-size:10.5px;font-weight:700;color:#991b1b;background:#fef2f2;border:1px solid #fee2e2;border-radius:4px;padding:2px 5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:3px}
+.mcal-work-tag{font-size:10.5px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #dcfce7;border-radius:4px;padding:2px 5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 부재·휴무 칩: 좌측 3px 컬러바 + 편안한 파스텔 배경 + 가독성 높은 폰트 */
+.mcal-ev-tag{font-size:11px;font-weight:600;border-radius:4px;padding:2px 6px;margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:1.4}
+.mcal-ev-tag.off{color:#1e40af;background:#eff6ff;border:1px solid #dbeafe;border-left:3px solid #3b82f6}
+.mcal-ev-tag.edu{color:#6b21a8;background:#faf5ff;border:1px solid #f3e8ff;border-left:3px solid #9333ea}
+.mcal-ev-tag.sick{color:#9f1239;background:#fff1f2;border:1px solid #ffe4e6;border-left:3px solid #e11d48}
+.mcal-ev-tag.join{color:#166534;background:#f0fdf4;border:1px solid #dcfce7;border-left:3px solid #22c55e}
+.mcal-ev-tag.pay{color:#4338ca;background:#eef2ff;border:1px solid #e0e7ff;border-left:3px solid #6366f1}
+.mcal-ev-tag.work{color:#0f766e;background:#f0fdfa;border:1px solid #ccfbf1;border-left:3px solid #14b8a6}
+.mcal-ev-tag.hol{color:#991b1b;background:#fef2f2;border:1px solid #fee2e2;border-left:3px solid #ef4444}
 </style>
 </head>
 <body>
@@ -561,7 +575,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.23</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.26</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -4737,43 +4751,14 @@ var BVS_SCHEDULE_EVENTS = {
     { who: '박준서', type: 'off', text: '병가 결근 (급여 일할 공제 1일)' },
     { who: '원동진', type: 'off', text: '현장 미투입 (급여 일할 공제 1일)' }
   ],
-  '2026-09-17': [
-    { who: '원동진', type: 'edu', text: 'SK이천 중량물 취급 안전교육 (13:30)' },
-    { who: '박정우', type: 'off', text: '연차 휴가 (전승진 엔지니어 커버)' }
-  ],
   '2026-09-18': [
-    { who: '이경준', type: 'work', text: 'SK이천 현장 긴급 기동 투입 지원' },
-    { who: '박정우', type: 'off', text: '연차 휴가 2일차' }
-  ],
-  '2026-09-20': [
-    { who: '최원·이세영', type: 'off', text: '일요 정기 휴무 (라인 사전 협의)' }
-  ],
-  '2026-09-22': [
-    { who: '조영훈', type: 'edu', text: 'SK청주 중량물 안전교육 (이경준 라인 대기)' }
-  ],
-  '2026-09-23': [
-    { who: '김현수', type: 'off', text: '연차 휴가 시작 (청주 주력조 정상 가동)' }
-  ],
-  '2026-09-24': [
-    { who: '전사', type: 'hol', text: '🌕 2026 추석 황금연휴 시작 (현장 휴무 관제)' }
-  ],
-  '2026-09-25': [
-    { who: '전사', type: 'hol', text: '🌕 2026 한가위 추석 당일 (전사 휴무)' }
-  ],
-  '2026-09-26': [
-    { who: '전사', type: 'hol', text: '🌕 추석 연휴 3일차 (토요 휴무)' }
-  ],
-  '2026-09-27': [
-    { who: '전사', type: 'hol', text: '🌕 추석 연휴 4일차 (일요 주휴일)' }
-  ],
-  '2026-09-28': [
-    { who: '전사', type: 'hol', text: '🌕 추석 대체공휴일 (5일 전사 황금연휴 마감)' }
+    { who: '이경준', type: 'work', text: 'SK이천 현장 긴급 기동 투입 지원' }
   ],
   '2026-09-29': [
     { who: '전사', type: 'work', text: '연휴 후 반도체 셋업 현장 전원 정상 복귀' }
   ],
   '2026-09-30': [
-    { who: '재무', type: 'pay', text: '9월 급여 정산 확정 (박준서 2,333,000 / 원동진 1,833,000 / 이경준 1,760,000)' }
+    { who: '재무', type: 'pay', text: '9월 급여 정산 확정 (박준서 233.3만 / 원동진 183.3만 / 이경준 176만)' }
   ]
 };
 
@@ -4798,27 +4783,75 @@ function isDateMatchSchedule(dateStr, scheduleDateStr){
 
 function getDayEvents(dateStr){
   var res = [];
-  if(typeof BVS_SCHEDULE_EVENTS !== 'undefined' && BVS_SCHEDULE_EVENTS && BVS_SCHEDULE_EVENTS[dateStr]){
-    res = res.concat(BVS_SCHEDULE_EVENTS[dateStr]);
+  var seen = {};
+
+  function markSeen(whoStr, typeCode){
+    if(!whoStr) return;
+    var names = whoStr.split(/[,·\/&]/).map(function(s){ return s.trim(); }).filter(Boolean);
+    names.forEach(function(n){
+      seen[n + '_' + typeCode] = true;
+    });
+    seen[whoStr.replace(/[\s,·\/\\]/g, '') + '_' + typeCode] = true;
   }
+
+  function isSeen(whoStr, typeCode){
+    if(!whoStr) return false;
+    var rawKey = whoStr.replace(/[\s,·\/\\]/g, '') + '_' + typeCode;
+    if(seen[rawKey]) return true;
+    var names = whoStr.split(/[,·\/&]/).map(function(s){ return s.trim(); }).filter(Boolean);
+    for(var i = 0; i < names.length; i++){
+      if(seen[names[i] + '_' + typeCode]) return true;
+    }
+    return false;
+  }
+
+  // 1. 부재·휴무 동적 관제 데이터 (단일 진실 공급원)
   try {
     if(typeof getAbsenceSchedules === 'function'){
       var schedules = getAbsenceSchedules();
       schedules.forEach(function(s){
         if(isDateMatchSchedule(dateStr, s.date)){
-          var typeCode = s.type === '교육' ? 'edu' : s.type === '휴가' ? 'off' : s.type === '휴무' ? 'off' : s.type === '병가' ? 'off' : 'work';
-          var already = res.some(function(r){ return r.who === s.who && r.text && r.text.indexOf(s.desc || s.type) >= 0; });
-          if(!already){
+          var typeCode = s.type === '교육' ? 'edu' : s.type === '휴가' ? 'off' : s.type === '휴무' ? 'off' : s.type === '병가' ? 'sick' : 'work';
+          var icon = s.type === '교육' ? '🎓' : s.type === '휴가' ? '🏖️' : s.type === '휴무' ? '🏖️' : s.type === '병가' ? '🏥' : '📋';
+          
+          if(!isSeen(s.who, typeCode)){
+            markSeen(s.who, typeCode);
+            var shortLabel = icon + ' ' + (s.who || '') + ' (' + (s.type || '') + ')';
+            var fullLabel = (s.desc || s.type) + (s.backup ? ' [대체: ' + s.backup + ']' : '') + (s.site ? ' @ ' + s.site : '');
             res.push({
               who: s.who,
               type: typeCode,
-              text: (s.desc || s.type) + (s.backup ? ' (' + s.backup + ')' : '')
+              text: shortLabel,
+              fullText: fullLabel
             });
           }
         }
       });
     }
   } catch(e){}
+
+  // 2. 정적·특수 스케줄 데이터 (BVS_SCHEDULE_EVENTS)
+  if(typeof BVS_SCHEDULE_EVENTS !== 'undefined' && BVS_SCHEDULE_EVENTS && BVS_SCHEDULE_EVENTS[dateStr]){
+    BVS_SCHEDULE_EVENTS[dateStr].forEach(function(item){
+      var typeCode = item.type || 'work';
+      if(!isSeen(item.who, typeCode)){
+        markSeen(item.who, typeCode);
+        var icon = item.type === 'edu' ? '🎓' : (item.type === 'off' || item.type === 'sick') ? '🏖️' : item.type === 'pay' ? '💰' : item.type === 'join' ? '🚀' : '📌';
+        var shortText = item.text;
+        if(item.who && item.who !== '전사'){
+          var simpleType = item.type === 'off' ? '휴무' : item.type === 'edu' ? '교육' : item.type === 'pay' ? '급여' : item.type === 'join' ? '투입' : '스케줄';
+          shortText = icon + ' ' + item.who + ' (' + simpleType + ')';
+        }
+        res.push({
+          who: item.who,
+          type: item.type,
+          text: shortText,
+          fullText: item.text
+        });
+      }
+    });
+  }
+
   return res;
 }
 
@@ -4994,8 +5027,7 @@ function renderMonthlyCal(ym){
       if(CAL_FILTER === 'work' && !isEvWork) return;
 
       var cls = 'mcal-ev-tag ' + (ev.type || '');
-      cellsHtml += '<div class="' + cls + '" title="' + esc(ev.text) + '">';
-      if(ev.who && ev.who !== '전사') cellsHtml += '<b>[' + esc(ev.who) + ']</b> ';
+      cellsHtml += '<div class="' + cls + '" title="' + esc(ev.fullText || ev.text) + '">';
       cellsHtml += esc(ev.text) + '</div>';
     });
 
@@ -5059,8 +5091,8 @@ function showCalDayDetail(dateStr){
     html += '<ul style="margin:0;padding-left:18px;font-size:12.5px;display:flex;flex-direction:column;gap:6px">';
     evList.forEach(function(ev){
       html += '<li>';
-      if(ev.who) html += '<b style="color:var(--tx)">[' + esc(ev.who) + ']</b> ';
-      html += esc(ev.text);
+      if(ev.who && (!ev.fullText || ev.fullText.indexOf(ev.who) < 0)) html += '<b style="color:var(--tx)">[' + esc(ev.who) + ']</b> ';
+      html += esc(ev.fullText || ev.text);
       html += '</li>';
     });
     html += '</ul>';
@@ -5119,7 +5151,7 @@ function showCalDayDetail(dateStr){
   detailBox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-/* ── 9월 부재·휴무·교육 관제 및 인터랙티브 달력 연동 시스템 (v1.23) ── */
+/* ── 9월 부재·휴무·교육 관제 및 인터랙티브 달력 연동 시스템 (v1.26) ── */
 var DEFAULT_ABSENCE_SCHEDULES = [
   { id: 1, date: '09/17 (목) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
   { id: 2, date: '09/17 (목) ~ 09/18 (금)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
@@ -5163,8 +5195,8 @@ function formatDateWithDow(dStr){
 function getAbsenceSchedules(){
   try {
     var v = localStorage.getItem('bvs_absence_version');
-    if(v !== '20260918_v3'){
-      localStorage.setItem('bvs_absence_version', '20260918_v3');
+    if(v !== '20260918_v4'){
+      localStorage.setItem('bvs_absence_version', '20260918_v4');
       localStorage.setItem('bvs_absence_schedules', JSON.stringify(DEFAULT_ABSENCE_SCHEDULES));
       return DEFAULT_ABSENCE_SCHEDULES.slice();
     }
