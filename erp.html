@@ -4095,11 +4095,13 @@ async function esgPreview(r){
   var v = res.data.vars||{};
   var warn = '';
   if(!r.ready_person) warn += '<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
+  var f = '<button class="btn" onclick="drClose()">닫기</button>'
+    + '<button class="btn" onclick="esgPrint()" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700" title="현장에서 친필 자필 서명을 받기 위해 A4 용지로 즉시 인쇄하거나 PDF로 저장합니다">🖨️ 친필 서명용 인쇄 / PDF</button>'
+    + '<button class="btn p" onclick="esgIssue(\''+r.employment_no+'\',\''+code+'\')" style="font-weight:700" title="근로자 모바일 현장앱으로 전송하여 전자서명을 받습니다">📱 전자서명 발행</button>';
   drOpen('계약서 미리보기 · '+(v.name||r.person_name||r.employment_no)+(isFixed?' (고정급·별지2 제외)':''),
     warn+(isFixed?'':esgAdjBar(r,v))
     +kv([['근로개시일 (계약일)',res.data.contract_on],['별지 1 적용일',res.data.apply_from],['기술등급',isFixed?'고정급 대상 (기술등급 비적용)':(v.grade+' 등급 · '+esc(v.grade_name||'')+' <span class="tierbadge">'+esc(v.grade_tier||'')+'</span>')],['직책',v.position],['월 지급총액','<b>'+v.amt_total+'</b>'],['통상임금',v.amt_ordinary],['통상시급',v.amt_hourly]])
-    +'<div class="docpaper" style="margin-top:12px">'+res.data.html+'</div>',
-    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="esgIssue(\''+r.employment_no+'\',\''+code+'\')">이 내용으로 발행</button>');
+    +'<div class="docpaper" id="docPrint" style="margin-top:12px">'+res.data.html+'</div>', f);
 }
 async function esgIssue(emp, code){
   var ok=await ask('계약서 발행','발행하면 본인 현장앱에 뜨고, 본문은 그 시점 내용으로 고정됩니다. 고치려면 무효화 후 다시 발행해야 합니다.\n\n발행할까요?',{ok:'발행'});
@@ -4111,11 +4113,11 @@ async function esgIssue(emp, code){
 async function esgOpen(r){
   var res=await sb.rpc('my_doc_body',{p_issue_id:r.issue_id});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
-  var f='<button class="btn" onclick="drClose()">닫기</button><button class="btn" onclick="esgPrint()">인쇄</button>';
+  var f='<button class="btn" onclick="drClose()">닫기</button><button class="btn" onclick="esgPrint()" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700">🖨️ 인쇄 / PDF</button>';
   if(r.status==='signed')f+='<button class="btn p" onclick="esgSeal('+r.issue_id+')">대표 날인 · 교부</button>';
   if(r.status!=='void'&&r.status!=='countersigned')f+='<button class="btn d" onclick="esgVoid('+r.issue_id+')">무효화</button>';
   var meta=kv([['문서번호',r.doc_no],['대상',r.person_name+' · '+r.employment_no],['근로개시일(계약일)',r.contract_on],['별지 1 적용일',r.apply_from],
-    ['근로자 전자서명',r.employee_signed_at?String(r.employee_signed_at).replace('T',' ').slice(0,16):'<span class="dim">미서명</span>'],
+    ['근로자 전자서명',r.employee_signed_at?String(r.employee_signed_at).replace('T',' ').slice(0,16):'<span class="dim">미서명 (친필 서명 가능)</span>'],
     ['회사 날인',r.company_signed_at?String(r.company_signed_at).replace('T',' ').slice(0,16):'<span class="dim">미날인</span>'],
     ['본문 해시','<span class="tiny dim">'+String(res.data.body_sha).slice(0,24)+'…</span>'],
     ['변조 검출',(+r.tamper_cnt||0)?'<span class="bad">'+r.tamper_cnt+'건</span>':'없음']]);
@@ -4125,7 +4127,20 @@ function esgPrint(){
   var h=el('docPrint');if(!h)return;
   var w=window.open('','_blank');if(!w){toast('팝업이 차단되었습니다','e');return}
   var css=Array.from(document.querySelectorAll('style')).map(function(x){return x.textContent}).join('\n');
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+esc(el('drT').textContent)+'</title><style>'+css+'\n@page{size:A4;margin:16mm}body{background:#fff;color:#000}.docpaper{font-size:11pt}.docpaper .pagebreak{page-break-after:always;height:0;background:none;margin:0}</style></head><body><div class="docpaper">'+h.innerHTML+'</div></body></html>');
+  var printCss = '@page{size:A4 portrait;margin:14mm 12mm 14mm 12mm}'
+    + 'body{background:#fff!important;color:#000!important;font-family:\'Noto Sans KR\',sans-serif,serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '.docpaper{font-size:10.5pt;line-height:1.55;color:#000!important;background:#fff!important;max-width:100%}'
+    + '.docpaper h1{font-size:17pt;font-weight:700;text-align:center;margin:0 0 14pt}'
+    + '.docpaper h2{font-size:12pt;font-weight:700;margin:14pt 0 4pt;color:#000!important;border-bottom:1px solid #333;padding-bottom:2pt}'
+    + '.docpaper h3{font-size:11pt;font-weight:700;margin:10pt 0 4pt}'
+    + '.docpaper table{width:100%;border-collapse:collapse;margin:6pt 0 10pt;font-size:9.5pt}'
+    + '.docpaper th,.docpaper td{border:1px solid #333!important;padding:4pt 6pt;color:#000!important}'
+    + '.docpaper th{background:#f1f5f9!important;font-weight:700}'
+    + '.docpaper .pagebreak{page-break-after:always;height:0;background:none;margin:0;border:none}'
+    + '.docpaper .sgbox{display:inline-block;min-width:110px;border-bottom:1.5px solid #000!important;color:#475569;font-size:10pt;text-align:center;padding:0 8px;margin:0 4px}'
+    + '.tierbadge{border:1px solid #666;padding:1px 6px;border-radius:4px;font-size:8.5pt}'
+    + '@media print{.no-print{display:none!important}}';
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+esc(el('drT')?el('drT').textContent:'근로계약서')+'</title><style>'+css+'\n'+printCss+'</style></head><body><div class="docpaper">'+h.innerHTML+'</div></body></html>');
   w.document.close();setTimeout(function(){w.print()},400);
 }
 async function esgSeal(id){
@@ -4162,7 +4177,8 @@ function renderEsign(){
     {k:'position_title',t:'직책',l:1},
     {k:'ordinary_amt',t:'통상임금',f:'won'},{k:'pkg_amt',t:'월 지급',f:'won'},
     {k:'ready_person',t:'인적사항',l:1,f:function(v){return v?'<span class="dim">완비</span>':'<span class="bad">누락</span>'}},
-    {k:'_live',t:'상태',l:1,f:function(v){return v==='미발행'?'<span class="stbtn w">미발행</span>':'<span class="dim">발행됨</span>'}}],
+    {k:'_live',t:'상태',l:1,f:function(v){return v==='미발행'?'<span class="stbtn w">미발행</span>':'<span class="dim">발행됨</span>'}},
+    {k:'_act',t:'서식 출력/발행',l:1,f:function(v,r){return '<button class="btn sm" style="padding:2px 8px;font-size:11px;font-weight:700;color:#1e40af;background:#eff6ff;border-color:#bfdbfe" onclick="event.stopPropagation();esgPreview(\''+esc(r.employment_no)+'\')">🖨️ 인쇄 / 📱 전자서명</button>'}}],
     {rows:todo,q:['person_name'],csv:false,page:30,onRow:esgPreview,
      empty:'정규직 인원이 없습니다'});
   grid('gEsg',[{k:'doc_no',t:'문서번호',l:1},{k:'person_name',t:'이름',l:1},
@@ -4170,7 +4186,8 @@ function renderEsign(){
     {k:'status',t:'상태',l:1,f:esgStat},
     {k:'employee_signed_at',t:'근로자 서명',l:1,f:function(v){return v?String(v).replace('T',' ').slice(0,16):'<span class="dim">–</span>'}},
     {k:'company_signed_at',t:'대표 날인',l:1,f:function(v){return v?String(v).replace('T',' ').slice(0,16):'<span class="dim">–</span>'}},
-    {k:'tamper_cnt',t:'변조',f:function(v){return (+v||0)?'<span class="bad">'+v+'</span>':'<span class="dim">0</span>'}}],
+    {k:'tamper_cnt',t:'변조',f:function(v){return (+v||0)?'<span class="bad">'+v+'</span>':'<span class="dim">0</span>'}},
+    {k:'_act',t:'출력',l:1,f:function(v,r){return '<button class="btn sm" style="padding:2px 8px;font-size:11px;font-weight:700;color:#1e40af;background:#eff6ff;border-color:#bfdbfe" onclick="event.stopPropagation();esgOpen('+JSON.stringify(r).replace(/"/g,'&quot;')+')">🖨️ 인쇄</button>'}}],
     {rows:rows,q:['doc_no','person_name'],csv:true,page:30,onRow:esgOpen,
      chips:[{k:'status',vals:[['','전체'],['issued','서명 대기'],['signed','날인 대기'],['countersigned','완료']]}],
      empty:'발행된 계약서가 없습니다 — 위 표에서 사람을 눌러 미리보기 후 발행하십시오'});
@@ -4505,7 +4522,9 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   // 서류·동의
   var ct=(D.ctr||[]).filter(function(x){return x.employment_no===emp});
   var KINDS=['근로계약서','비밀유지서약서','개인정보동의서','연봉계약서','기타'];
-  body+='<h4 style="margin:16px 0 6px">서류 · 동의 <span class="tiny dim">개인정보 동의서의 3자 제공 동의가 있어야 고객사 출입신청 명단에 들어갑니다 (개보법 제17조)</span></h4><table style="width:100%"><thead><tr><th class="l">서류</th><th class="l">판</th><th class="l">서명일</th><th class="l">교부일</th><th>3자제공</th><th>민감정보</th><th class="l">상태</th><th></th></tr></thead><tbody>'+(ct.length?ct.map(function(x){return '<tr><td class="l">'+esc(x.doc_kind)+'</td><td class="l tiny dim">'+esc(x.doc_version||'')+'</td><td class="l">'+esc(x.signed_on||'–')+'</td><td class="l">'+esc(String(x.delivered_at||'').slice(0,10)||'–')+'</td><td>'+yn(x.consent_third_party)+'</td><td>'+yn(x.consent_sensitive)+'</td><td class="l tiny">'+esc(x.status||'')+'</td><td><button class="stbtn x" onclick="ctrDel('+x.contract_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="8" class="empty">기록 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
+  body+='<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px"><h4 style="margin:0">서류 · 동의 <span class="tiny dim">개인정보 동의서의 3자 제공 동의가 있어야 고객사 출입신청 명단에 들어갑니다 (개보법 제17조)</span></h4>'
+    +'<button class="btn sm" style="padding:3px 10px;font-size:12px;font-weight:700;color:#1e40af;background:#eff6ff;border-color:#bfdbfe" onclick="esgPreview(\''+esc(emp)+'\')" title="이 직원의 표준 근로계약서를 미리보고 A4 인쇄하거나 전자서명을 발행합니다">🖨️ 근로계약서 인쇄 / 전자서명</button></div>'
+    +'<table style="width:100%"><thead><tr><th class="l">서류</th><th class="l">판</th><th class="l">서명일</th><th class="l">교부일</th><th>3자제공</th><th>민감정보</th><th class="l">상태</th><th></th></tr></thead><tbody>'+(ct.length?ct.map(function(x){return '<tr><td class="l">'+esc(x.doc_kind)+'</td><td class="l tiny dim">'+esc(x.doc_version||'')+'</td><td class="l">'+esc(x.signed_on||'–')+'</td><td class="l">'+esc(String(x.delivered_at||'').slice(0,10)||'–')+'</td><td>'+yn(x.consent_third_party)+'</td><td>'+yn(x.consent_sensitive)+'</td><td class="l tiny">'+esc(x.status||'')+'</td><td><button class="stbtn x" onclick="ctrDel('+x.contract_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="8" class="empty">기록 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>서류</label><select id="ct_kind" class="sel" style="width:100%">'+KINDS.map(function(k){return '<option value="'+k+'">'+k+'</option>'}).join('')+'</select></div><div class="f"><label>판(버전)</label><input id="ct_ver" class="in" value="v1"></div></div>'
    +'<div class="fr"><div class="f"><label>서명일</label><input id="ct_signed" class="in" type="date" value="'+today()+'"></div><div class="f"><label>교부일 (근로계약서는 교부가 의무)</label><input id="ct_deliv" class="in" type="date"></div></div>'
    +'<div class="fr"><div class="f"><label>제3자 제공 동의 (고객사 출입)</label><select id="ct_tp" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div><div class="f"><label>민감정보 동의 (건강진단 등)</label><select id="ct_sn" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div></div>'
