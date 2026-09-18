@@ -561,7 +561,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.21</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.22</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -590,6 +590,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           <button class="btn sm" onclick="homeDateStep(1)" title="다음 일자 (▶)">▶</button>
           <button class="btn sm" id="btnHomeToday" onclick="setHomeToday()">오늘</button>
           <button class="btn sm" onclick="openMonthlyCalView()" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700">🗓️ 9월 공휴일·추석 관제 달력</button>
+          <button class="btn sm" onclick="openAbsenceEditModal()" style="background:#e0e7ff;border-color:#6366f1;color:#3730a3;font-weight:700">🏖️ 부재·휴무 등록/수정</button>
         </div>
       </div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
@@ -611,7 +612,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     <!-- 현장 -->
     <section class="page" id="p-site">
       <div class="ph"><h2>현장 투입</h2><div class="desc">일자별 인원·공수·지급·매출 실황 관제</div>
-        <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select><button class="btn p" id="btnApprove" onclick="approveDay()">이 날 제출분 승인</button><button class="btn" onclick="approveRange()">기간 일괄 승인</button><button class="btn sm" id="btnScrollChk" onclick="el('site-check').scrollIntoView({behavior:'smooth'})">⚠️ 마감 점검 <span id="topChkN"></span></button></div></div>
+        <div class="act"><select id="daysel" class="sel" onchange="renderSite()"></select><button class="btn p" id="btnApprove" onclick="approveDay()">이 날 제출분 승인</button><button class="btn" onclick="approveRange()">기간 일괄 승인</button><button class="btn sm" id="btnScrollChk" onclick="el('site-check').scrollIntoView({behavior:'smooth'})">⚠️ 마감 점검 <span id="topChkN"></span></button><button class="btn sm" onclick="openAbsenceEditModal()" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700">🏖️ 9월 부재·휴무 수정</button></div></div>
       <div class="subtabs-bar" id="subnav-site">
         <button class="subtab-chip on" onclick="siteSubNav('siteKpi', this)">📊 공수 KPI</button>
         <button class="subtab-chip" onclick="siteSubNav('sec-gAtt', this)">📋 일별 투입 명세</button>
@@ -619,6 +620,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <button class="subtab-chip" onclick="siteSubNav('sec-gPlan', this)">📌 배치 계획</button>
         <button class="subtab-chip" onclick="siteSubNav('site-check', this)">⚠️ 마감 전 점검</button>
         <button class="subtab-chip" onclick="siteSubNav('sec-gDisp', this)">💬 공수 이의</button>
+        <button class="subtab-chip" onclick="go('crew');setTimeout(function(){crewSubNav('sec-crewAbsence', el('subnav-crew').children[3]);el('sec-crewAbsence').scrollIntoView({behavior:'smooth'})},100)" style="background:#fef3c7;color:#92400e;font-weight:700">🏖️ 9월 부재·휴무 타임라인 ↗</button>
       </div>
       <div class="kpis" id="siteKpi"></div>
 
@@ -853,7 +855,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 
     <section class="page" id="p-crew">
       <div class="ph"><h2>인력 배치 · 모빌리티</h2><div class="desc">고객사 제시용 인재 모빌리티 맵 · 9월 현장 부재/교육 일정 · 가용 인력 및 카풀조<button class="hbtn" onclick="helpCrew()">?</button></div>
-        <div class="act"><button class="btn p sm" onclick="copyAbsenceNotice()">📋 고객사용 9월 일정 카톡 복사</button><button class="btn" onclick="csv('crew')">CSV 내보내기</button></div></div>
+        <div class="act"><button class="btn p sm" onclick="openAbsenceEditModal()" style="font-weight:700;background:#2563eb;color:#fff;border-color:#1d4ed8">➕ 새 부재·휴무 등록</button><button class="btn sm" onclick="copyAbsenceNotice()">📋 고객사용 9월 일정 카톡 복사</button><button class="btn" onclick="csv('crew')">CSV 내보내기</button></div></div>
       <div class="subtabs-bar" id="subnav-crew">
         <button class="subtab-chip on" onclick="crewSubNav('crewKpi', this)">📊 인력 KPI</button>
         <button class="subtab-chip" onclick="crewSubNav('sec-crewTalent', this)">🚗 모빌리티 맵 &amp; 인재 카드</button>
@@ -904,7 +906,17 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         </div>
         <div id="calDayDetail" class="hide" style="margin-top:14px;background:var(--sf2);border:1px solid var(--ln);border-radius:12px;padding:14px"></div>
       </div>
-      <div class="sec" id="sec-crewAbsence"><h3>9월 현장 휴무 · 부재 · 교육 일정 타임라인 <span class="cnt">공수 사전 배치 완료</span></h3>
+      <div class="sec" id="sec-crewAbsence">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0;display:inline-block">9월 현장 휴무 · 부재 · 교육 일정 타임라인</h3>
+            <span class="cnt" id="absenceCntBadge">공수 사전 배치 관제</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="btn sm p" onclick="openAbsenceEditModal()" style="font-weight:700;background:#2563eb;color:#fff;border-color:#1d4ed8">➕ 새 부재·휴무 등록</button>
+            <button class="btn sm" onclick="resetDefaultAbsence()" title="초기 기본 6건으로 복원">🔄 기본값 복원</button>
+          </div>
+        </div>
         <div class="timeline-wrap" id="absenceWrap"></div>
       </div>
       <div class="sec" id="sec-crewCarpool"><h3>카풀 계획 <span class="tiny dim" style="font-weight:400">권역별 운전자 · 동승자</span></h3><div class="rcards" id="carCards"></div></div>
@@ -4888,7 +4900,7 @@ function renderMonthlyCal(ym){
     var isSat = (dayOfWeek === 6);
     var holName = HOLIDAYS_KR[dStr];
     var isToday = (dStr === todayStr);
-    var evList = BVS_SCHEDULE_EVENTS[dStr] || [];
+    var evList = getDayEvents(dStr);
     var attList = attMap[dStr] || [];
 
     var isChuseok = (dStr >= '2026-09-24' && dStr <= '2026-09-28');
@@ -4965,7 +4977,7 @@ function showCalDayDetail(dateStr){
   var dObj = new Date(dateStr + 'T00:00:00');
   var dayName = daysOfWeek[dObj.getDay()];
   var holName = HOLIDAYS_KR[dateStr];
-  var evList = BVS_SCHEDULE_EVENTS[dateStr] || [];
+  var evList = getDayEvents(dateStr);
 
   var attList = [];
   if(D && D.att && Array.isArray(D.att)){
@@ -5059,28 +5071,92 @@ function showCalDayDetail(dateStr){
   detailBox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+/* ── 9월 부재·휴무·교육 관제 및 동적 편집 시스템 (v1.22) ── */
+var DEFAULT_ABSENCE_SCHEDULES = [
+  { id: 1, date: '09/17 (수) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
+  { id: 2, date: '09/17 (수) ~ 09/18 (목)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
+  { id: 3, date: '09/21 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
+  { id: 4, date: '09/22 (월) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
+  { id: 5, date: '09/23 (화) ~ 09/28 (일)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
+  { id: 6, date: '09/28 (일) ~ 10/02 (목)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
+];
+
+function getAbsenceSchedules(){
+  try {
+    var ls = localStorage.getItem('bvs_absence_schedules');
+    if(ls){
+      var parsed = JSON.parse(ls);
+      if(Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e){}
+  return DEFAULT_ABSENCE_SCHEDULES.slice();
+}
+
+function setAbsenceSchedules(list){
+  try {
+    localStorage.setItem('bvs_absence_schedules', JSON.stringify(list));
+  } catch(e){}
+  // Sync to Supabase core.settings asynchronously
+  try {
+    if(typeof sb !== 'undefined' && sb){
+      sb.from('settings').upsert({
+        entity: 'BVS',
+        setting_key: 'bvs_absence_schedules_json',
+        valid_from: '2026-01-01',
+        valid_to: 'infinity',
+        value_text: JSON.stringify(list),
+        memo: '9월 부재·휴무 관제 일정 JSON'
+      }, {onConflict: 'entity,setting_key,valid_from'}).then(function(res){
+        if(res && res.error) console.warn('Supabase settings sync error:', res.error);
+      });
+    }
+  } catch(e){}
+}
+
 function renderAbsenceTimeline(){
   var box = el('absenceWrap'); if(!box) return;
-  var schedules = [
-    { date: '09/17 (수) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
-    { date: '09/17 (수) ~ 09/18 (목)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
-    { date: '09/21 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
-    { date: '09/22 (월) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
-    { date: '09/23 (화) ~ 09/28 (일)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
-    { date: '09/28 (일) ~ 10/02 (목)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
-  ];
+  var schedules = getAbsenceSchedules();
+  
+  var cntBadge = el('absenceCntBadge');
+  if(cntBadge) cntBadge.textContent = '총 ' + schedules.length + '건 등록됨';
+
+  if(!schedules.length){
+    box.innerHTML = '<div style="padding:30px;text-align:center;background:var(--sf2);border-radius:12px;border:1px dashed var(--ln)">'
+      + '<div style="font-size:24px;margin-bottom:8px">🏖️</div>'
+      + '<div style="font-weight:700;font-size:14px;color:var(--tx)">등록된 9월 부재·휴무 일정이 없습니다.</div>'
+      + '<div class="tiny dim" style="margin:6px 0 14px">상단의 [➕ 새 부재·휴무 등록] 버튼을 눌러 일정을 추가하세요.</div>'
+      + '<button class="btn sm p" onclick="openAbsenceEditModal()">➕ 새 부재·휴무 등록하기</button>'
+      + '</div>';
+    return;
+  }
 
   var timelineHtml = schedules.map(function(s){
     var isEdu = s.type === '교육';
     var isHol = s.type === '휴가';
-    return '<div class="timeline-item">'
-      + '<div class="ti-dot ' + (isEdu ? 'edu' : isHol ? 'vac' : 'off') + '"></div>'
-      + '<div class="ti-date">' + esc(s.date) + '</div>'
-      + '<div class="ti-cnt">'
-      + '<div class="ti-title"><span class="pill ' + (isEdu ? 'y' : isHol ? 'r' : '') + '">' + esc(s.type) + '</span> <b>' + esc(s.who) + '</b> <span class="tiny dim">(' + esc(s.site) + ')</span></div>'
-      + '<div class="ti-desc">' + esc(s.desc) + ' <span class="tiny pos">· ' + esc(s.backup) + '</span></div>'
+    var isSick = s.type === '병가';
+    var isOff = s.type === '휴무';
+
+    var dotColor = isEdu ? '#eab308' : isHol ? '#3b82f6' : isSick ? '#ef4444' : '#f97316';
+    var pillClass = isEdu ? 'y' : isHol ? 'b' : isSick ? 'r' : 'w';
+
+    return '<div class="timeline-item" style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--r2);background:var(--sf2);border:1px solid var(--ln2);margin-bottom:10px;transition:background .15s">'
+      + '<div style="width:11px;height:11px;border-radius:50%;background:' + dotColor + ';flex-shrink:0;box-shadow:0 0 6px ' + dotColor + '66"></div>'
+      + '<div style="font-weight:700;font-size:13.5px;min-width:145px;flex-shrink:0;font-variant-numeric:tabular-nums;color:var(--tx)">' + esc(s.date) + '</div>'
+      + '<div style="flex:1;min-width:200px">'
+      + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      + '<span class="pill ' + pillClass + '" style="font-size:11px;padding:2px 7px;font-weight:700">' + esc(s.type) + '</span>'
+      + '<b style="font-size:14px;color:var(--tx)">' + esc(s.who) + '</b>'
+      + '<span class="tiny dim">(' + esc(s.site || '현장') + ')</span>'
       + '</div>'
-      + '<div class="ti-badge"><span class="pill g">' + esc(s.status) + '</span></div>'
+      + '<div style="font-size:12.5px;color:var(--tx2);margin-top:3px">' + esc(s.desc) + (s.backup ? ' <span class="tiny pos" style="color:#059669">· ' + esc(s.backup) + '</span>' : '') + '</div>'
+      + '</div>'
+      + '<div style="flex-shrink:0">'
+      + '<span class="pill ' + (s.status === '승인' ? 'g' : s.status === '확정' ? 'b' : 'y') + '" style="font-size:11px;padding:2px 8px;font-weight:700">' + esc(s.status || '확정') + '</span>'
+      + '</div>'
+      + '<div style="flex-shrink:0;display:flex;gap:4px;margin-left:6px">'
+      + '<button class="btn xs" onclick="openAbsenceEditModal(' + s.id + ')" style="padding:4px 10px;font-weight:600;background:var(--sf);border:1px solid var(--ln)" title="이 일정 수정">✏️ 수정</button>'
+      + '<button class="btn xs d" onclick="deleteAbsenceItem(' + s.id + ')" style="padding:4px 8px" title="이 일정 삭제">🗑️</button>'
+      + '</div>'
       + '</div>';
   }).join('');
 
@@ -5089,7 +5165,7 @@ function renderAbsenceTimeline(){
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
     + '<div style="display:flex;align-items:center;gap:6px">'
     + '<span style="font-size:18px">💬</span>'
-    + '<b style="font-size:13.5px;color:#854d0e">고객사 PM 전달용 정제 카톡 서식 (혼선 제로·신뢰 제고 양식)</b>'
+    + '<b style="font-size:13.5px;color:#854d0e">고객사 PM 전달용 정제 카톡 서식 (실시간 연동 자동 생성)</b>'
     + '</div>'
     + '<button class="btn sm p" style="background:#eab308;border-color:#ca8a04;color:#713f12;font-weight:700" onclick="copyAbsenceNotice()">📋 이 서식 카톡 복사</button>'
     + '</div>'
@@ -5101,20 +5177,163 @@ function renderAbsenceTimeline(){
   box.innerHTML = timelineHtml + previewBoxHtml;
 }
 
+function openAbsenceEditModal(id){
+  var list = getAbsenceSchedules();
+  var item = id ? (list.filter(function(x){ return x.id === id; })[0] || {}) : {};
+  var isEdit = !!item.id;
+
+  var staffList = (D.staff || []).map(function(s){ return s.name; }).filter(Boolean);
+  var defaultStaff = ['원동진','박정우','김현수','전승진','조영훈','이경준','최원','이세영','박준서','이재관','박상민','조성하'];
+  var allStaff = Array.from(new Set(staffList.concat(defaultStaff)));
+
+  var staffChipsHtml = allStaff.map(function(name){
+    return '<span class="chip sm" style="cursor:pointer;margin:2px 3px;font-size:11.5px" onclick="setAbsenceStaff(\'' + esc(name) + '\')">' + esc(name) + '</span>';
+  }).join('');
+
+  var bodyHtml = '<div class="fr" style="display:flex;flex-direction:column;gap:12px">'
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">일정 일시 / 기간 <span class="r req" style="color:#ef4444">*</span></label>'
+    + '<input id="absDate" class="in" value="' + esc(item.date || '') + '" placeholder="예: 09/21 (일) 또는 09/23 (화) ~ 09/28 (일)" style="font-size:13.5px">'
+    + '<div class="tiny dim" style="margin-top:4px">월/일 및 요일, 또는 시작일~종료일 기간을 입력합니다.</div></div>'
+
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">대상 작업자 (이름) <span class="r req" style="color:#ef4444">*</span></label>'
+    + '<input id="absWho" class="in" value="' + esc(item.who || '') + '" placeholder="예: 박정우 또는 최원, 이세영" style="font-size:13.5px">'
+    + '<div style="margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:3px">'
+    + '<span class="tiny dim">빠른선택:</span> ' + staffChipsHtml + '</div></div>'
+
+    + '<div class="grid2" style="gap:10px">'
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">구분 / 유형</label>'
+    + '<select id="absType" class="sel">'
+    + '<option value="휴가"' + (item.type === '휴가' ? ' selected' : '') + '>🏖️ 휴가 (연차)</option>'
+    + '<option value="휴무"' + (item.type === '휴무' ? ' selected' : '') + '>🛌 휴무 (정기/사전협의)</option>'
+    + '<option value="교육"' + (item.type === '교육' ? ' selected' : '') + '>🎓 교육 (안전/법정)</option>'
+    + '<option value="병가"' + (item.type === '병가' ? ' selected' : '') + '>🏥 병가</option>'
+    + '<option value="출장"' + (item.type === '출장' ? ' selected' : '') + '>🚗 출장</option>'
+    + '<option value="기타"' + (item.type === '기타' ? ' selected' : '') + '>📌 기타</option>'
+    + '</select></div>'
+
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">진행 상태</label>'
+    + '<select id="absStatus" class="sel">'
+    + '<option value="승인"' + (item.status === '승인' ? ' selected' : '') + '>🟢 승인</option>'
+    + '<option value="확정"' + (item.status === '확정' ? ' selected' : '') + '>🔵 확정</option>'
+    + '<option value="계획"' + (item.status === '계획' ? ' selected' : '') + '>🟡 계획</option>'
+    + '<option value="대기"' + (item.status === '대기' ? ' selected' : '') + '>⚪ 대기</option>'
+    + '</select></div>'
+    + '</div>'
+
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">소속 현장 / 거점</label>'
+    + '<input id="absSite" class="in" value="' + esc(item.site || '일반 현장') + '" placeholder="예: 일반 현장 (SK이천), TES 용인 현장, SK청주 등"></div>'
+
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">상세 내용 / 사유</label>'
+    + '<input id="absDesc" class="in" value="' + esc(item.desc || '') + '" placeholder="예: 연차 휴가 (2일간), 청주 SK하이닉스 중량물 취급 안전교육 등"></div>'
+
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">대체 / 백업 방안</label>'
+    + '<input id="absBackup" class="in" value="' + esc(item.backup || '') + '" placeholder="예: 전승진 엔지니어 100% 밀착 커버, 사전 공수 대체 완료 등"></div>'
+
+    + '</div>';
+
+  var footHtml = '<button class="btn" onclick="drClose()">닫기</button>'
+    + (isEdit ? '<button class="btn d" onclick="deleteAbsenceItem(' + item.id + ')">🗑️ 이 일정 삭제</button>' : '')
+    + '<button class="btn p" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700" onclick="saveAbsenceForm(' + (item.id || 'null') + ')">💾 ' + (isEdit ? '수정 저장' : '등록 저장') + '</button>';
+
+  drOpen(isEdit ? '✏️ 부재·휴무 일정 수정' : '➕ 새 부재·휴무 일정 등록', bodyHtml, footHtml);
+}
+
+function setAbsenceStaff(name){
+  var inp = el('absWho');
+  if(!inp) return;
+  if(!inp.value.trim()){
+    inp.value = name;
+  } else {
+    var parts = inp.value.split(',').map(function(s){ return s.trim(); });
+    if(parts.indexOf(name) === -1){
+      inp.value = inp.value.trim() + ', ' + name;
+    }
+  }
+}
+
+function saveAbsenceForm(id){
+  var date = (el('absDate').value || '').trim();
+  var who = (el('absWho').value || '').trim();
+  var type = el('absType').value;
+  var status = el('absStatus').value;
+  var site = (el('absSite').value || '').trim() || '일반 현장';
+  var desc = (el('absDesc').value || '').trim();
+  var backup = (el('absBackup').value || '').trim();
+
+  if(!date){
+    toast('일정 일시 또는 기간을 입력해주세요.', 'w');
+    el('absDate').focus();
+    return;
+  }
+  if(!who){
+    toast('대상 작업자 이름을 입력해주세요.', 'w');
+    el('absWho').focus();
+    return;
+  }
+
+  var list = getAbsenceSchedules();
+  if(id){
+    for(var i = 0; i < list.length; i++){
+      if(list[i].id === id){
+        list[i] = { id: id, date: date, who: who, type: type, status: status, site: site, desc: desc, backup: backup };
+        break;
+      }
+    }
+  } else {
+    var newId = Date.now();
+    list.push({ id: newId, date: date, who: who, type: type, status: status, site: site, desc: desc, backup: backup });
+  }
+
+  setAbsenceSchedules(list);
+  drClose();
+  renderAbsenceTimeline();
+  toast('✅ 부재·휴무 일정이 성공적으로 저장되었습니다!', 'g');
+}
+
+function deleteAbsenceItem(id){
+  if(!confirm('선택하신 부재·휴무 일정을 삭제하시겠습니까?')) return;
+  var list = getAbsenceSchedules().filter(function(x){ return x.id !== id; });
+  setAbsenceSchedules(list);
+  drClose();
+  renderAbsenceTimeline();
+  toast('🗑️ 부재·휴무 일정이 삭제되었습니다.', 'g');
+}
+
+function resetDefaultAbsence(){
+  if(!confirm('초기 9월 공식 일정 6건 기본값으로 되돌리시겠습니까?\n(직접 수정한 내역이 초기화됩니다)')) return;
+  setAbsenceSchedules(DEFAULT_ABSENCE_SCHEDULES.slice());
+  renderAbsenceTimeline();
+  toast('🔄 기본 9월 일정으로 복원되었습니다.', 'g');
+}
+
 function getAbsenceNoticeText(){
-  return "[BVS 주식회사] 9월 현장 인력 부재 및 법정교육 일정 안내\n\n"
+  var schedules = getAbsenceSchedules();
+  var txt = "[BVS 주식회사] 9월 현장 인력 부재 및 법정교육 일정 안내\n\n"
     + "원청사 및 고객사 프로젝트 매니저님께 공유드립니다.\n"
-    + "사전 공수 및 라인 일정 조율이 완료된 현황입니다.\n\n"
-    + "■ 일반 현장 (SK이천 / SK청주)\n"
-    + "· 09/17(수) 13:30 : 원동진 [이천 SK하이닉스 중량물 안전교육] (사전대체 완료)\n"
-    + "· 09/21(일)       : 최원, 이세영 [정기 계획 휴무]\n"
-    + "· 09/22(월) 13:30 : 조영훈 [청주 SK하이닉스 중량물 안전교육] (라인 조율완료)\n"
-    + "· 09/23(화)~09/28(일) : 김현수 [연차 휴가] (이경준/조영훈 백업 투입)\n\n"
-    + "■ TES 용인 제조 현장\n"
-    + "· 09/17(수)~09/18(목) : 박정우 [연차 휴가] (전승진 엔지니어 100% 밀착 커버)\n"
-    + "· 09/28(일)~10/02(목) : 전승진 [연차 휴가] (박정우 엔지니어 전담 가동)\n\n"
-    + "※ 상기 엔지니어 외 모든 인력은 정상 투입 중이며, 비상 지원 및 교차 투입(이경준/이세영 자차 기동) 준비가 상시 완비되어 있습니다.\n"
+    + "사전 공수 및 라인 일정 조율이 완료된 현황입니다.\n\n";
+  
+  var normal = schedules.filter(function(s){ return !/TES|용인/i.test(s.site); });
+  var tes = schedules.filter(function(s){ return /TES|용인/i.test(s.site); });
+
+  if(normal.length){
+    txt += "■ 일반 현장 (SK이천 / SK청주)\n";
+    normal.forEach(function(s){
+      txt += "· " + s.date + " : " + s.who + " [" + s.desc + "]" + (s.backup ? " (" + s.backup + ")" : "") + "\n";
+    });
+    txt += "\n";
+  }
+
+  if(tes.length){
+    txt += "■ TES 용인 제조 현장\n";
+    tes.forEach(function(s){
+      txt += "· " + s.date + " : " + s.who + " [" + s.desc + "]" + (s.backup ? " (" + s.backup + ")" : "") + "\n";
+    });
+    txt += "\n";
+  }
+
+  txt += "※ 상기 엔지니어 외 모든 인력은 정상 투입 중이며, 비상 지원 및 교차 투입(이경준/이세영 자차 기동) 준비가 상시 완비되어 있습니다.\n"
     + "(주식회사 비브이에스 경영지원팀 / 현장관리팀 드림)";
+  return txt;
 }
 
 function copyAbsenceNotice(){
