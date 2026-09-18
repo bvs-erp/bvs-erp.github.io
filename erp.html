@@ -561,7 +561,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.22</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.23</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -4745,7 +4745,7 @@ var BVS_SCHEDULE_EVENTS = {
     { who: '이경준', type: 'work', text: 'SK이천 현장 긴급 기동 투입 지원' },
     { who: '박정우', type: 'off', text: '연차 휴가 2일차' }
   ],
-  '2026-09-21': [
+  '2026-09-20': [
     { who: '최원·이세영', type: 'off', text: '일요 정기 휴무 (라인 사전 협의)' }
   ],
   '2026-09-22': [
@@ -4776,6 +4776,51 @@ var BVS_SCHEDULE_EVENTS = {
     { who: '재무', type: 'pay', text: '9월 급여 정산 확정 (박준서 2,333,000 / 원동진 1,833,000 / 이경준 1,760,000)' }
   ]
 };
+
+function isDateMatchSchedule(dateStr, scheduleDateStr){
+  if(!dateStr || !scheduleDateStr) return false;
+  if(scheduleDateStr.indexOf('~') >= 0){
+    var parts = scheduleDateStr.split('~');
+    var m1 = parts[0].match(/(\d{2})[\/\-](\d{2})/);
+    var m2 = parts[1].match(/(\d{2})[\/\-](\d{2})/);
+    if(m1 && m2){
+      var startStr = '2026-' + m1[1] + '-' + m1[2];
+      var endStr = '2026-' + m2[1] + '-' + m2[2];
+      return dateStr >= startStr && dateStr <= endStr;
+    }
+  }
+  var m = scheduleDateStr.match(/(\d{2})[\/\-](\d{2})/);
+  if(m){
+    return dateStr === ('2026-' + m[1] + '-' + m[2]);
+  }
+  return false;
+}
+
+function getDayEvents(dateStr){
+  var res = [];
+  if(typeof BVS_SCHEDULE_EVENTS !== 'undefined' && BVS_SCHEDULE_EVENTS && BVS_SCHEDULE_EVENTS[dateStr]){
+    res = res.concat(BVS_SCHEDULE_EVENTS[dateStr]);
+  }
+  try {
+    if(typeof getAbsenceSchedules === 'function'){
+      var schedules = getAbsenceSchedules();
+      schedules.forEach(function(s){
+        if(isDateMatchSchedule(dateStr, s.date)){
+          var typeCode = s.type === '교육' ? 'edu' : s.type === '휴가' ? 'off' : s.type === '휴무' ? 'off' : s.type === '병가' ? 'off' : 'work';
+          var already = res.some(function(r){ return r.who === s.who && r.text && r.text.indexOf(s.desc || s.type) >= 0; });
+          if(!already){
+            res.push({
+              who: s.who,
+              type: typeCode,
+              text: (s.desc || s.type) + (s.backup ? ' (' + s.backup + ')' : '')
+            });
+          }
+        }
+      });
+    }
+  } catch(e){}
+  return res;
+}
 
 function openMonthlyCalView(){
   go('crew');
@@ -4997,7 +5042,10 @@ function showCalDayDetail(dateStr){
     html += '<span class="pill g" style="margin-left:8px">평일 소정근로일</span>';
   }
   html += '</div>';
+  html += '<div style="display:flex;gap:6px;align-items:center">';
+  html += '<button class="btn p sm" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700" onclick="openAbsenceEditModal(null,\'' + dateStr + '\')">➕ 이 날(' + dayName + ')에 부재·휴무 등록</button>';
   html += '<button class="btn sm" onclick="el(\'calDayDetail\').classList.add(\'hide\')" title="닫기">✕ 닫기</button>';
+  html += '</div>';
   html += '</div>';
 
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
@@ -5071,22 +5119,64 @@ function showCalDayDetail(dateStr){
   detailBox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-/* ── 9월 부재·휴무·교육 관제 및 동적 편집 시스템 (v1.22) ── */
+/* ── 9월 부재·휴무·교육 관제 및 인터랙티브 달력 연동 시스템 (v1.23) ── */
 var DEFAULT_ABSENCE_SCHEDULES = [
-  { id: 1, date: '09/17 (수) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
-  { id: 2, date: '09/17 (수) ~ 09/18 (목)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
-  { id: 3, date: '09/21 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
-  { id: 4, date: '09/22 (월) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
-  { id: 5, date: '09/23 (화) ~ 09/28 (일)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
-  { id: 6, date: '09/28 (일) ~ 10/02 (목)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
+  { id: 1, date: '09/17 (목) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
+  { id: 2, date: '09/17 (목) ~ 09/18 (금)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
+  { id: 3, date: '09/20 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
+  { id: 4, date: '09/22 (화) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
+  { id: 5, date: '09/23 (수) ~ 09/28 (월)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간 / 추석 황금연휴 연계)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
+  { id: 6, date: '09/28 (월) ~ 10/02 (금)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
 ];
+
+var ACTIVE_2026_STAFF_GROUPS = [
+  { group: '이천/청주 일반현장', members: ['김현수', '이경준', '조영훈', '이세영', '최원', '박준서', '원동진'] },
+  { group: 'TES 용인 제조', members: ['전승진', '박정우'] },
+  { group: '펌프실 현장', members: ['이재관', '박상민', '조성하'] },
+  { group: '지원/상주/공수', members: ['정용찬', '양성훈', '김혜진', '최성완', '이은경'] }
+];
+
+function sanitizeAbsenceDate(str){
+  if(!str) return str;
+  return str
+    .replace(/09\/17\s*\(수\)/g, '09/17 (목)')
+    .replace(/09\/18\s*\(목\)/g, '09/18 (금)')
+    .replace(/09\/21\s*\(일\)/g, '09/20 (일)')
+    .replace(/09\/22\s*\(월\)/g, '09/22 (화)')
+    .replace(/09\/23\s*\(화\)/g, '09/23 (수)')
+    .replace(/09\/28\s*\(일\)/g, '09/28 (월)')
+    .replace(/10\/02\s*\(목\)/g, '10/02 (금)');
+}
+
+function formatDateWithDow(dStr){
+  if(!dStr) return '';
+  var parts = dStr.split('-');
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10);
+  var d = parseInt(parts[2], 10);
+  var dow = ['일','월','화','수','목','금','토'][new Date(y, m - 1, d).getDay()];
+  var mm = m < 10 ? '0' + m : '' + m;
+  var dd = d < 10 ? '0' + d : '' + d;
+  return mm + '/' + dd + ' (' + dow + ')';
+}
 
 function getAbsenceSchedules(){
   try {
+    var v = localStorage.getItem('bvs_absence_version');
+    if(v !== '20260918_v3'){
+      localStorage.setItem('bvs_absence_version', '20260918_v3');
+      localStorage.setItem('bvs_absence_schedules', JSON.stringify(DEFAULT_ABSENCE_SCHEDULES));
+      return DEFAULT_ABSENCE_SCHEDULES.slice();
+    }
     var ls = localStorage.getItem('bvs_absence_schedules');
     if(ls){
       var parsed = JSON.parse(ls);
-      if(Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if(Array.isArray(parsed) && parsed.length > 0){
+        parsed.forEach(function(item){
+          if(item.date) item.date = sanitizeAbsenceDate(item.date);
+        });
+        return parsed;
+      }
     }
   } catch(e){}
   return DEFAULT_ABSENCE_SCHEDULES.slice();
@@ -5096,7 +5186,6 @@ function setAbsenceSchedules(list){
   try {
     localStorage.setItem('bvs_absence_schedules', JSON.stringify(list));
   } catch(e){}
-  // Sync to Supabase core.settings asynchronously
   try {
     if(typeof sb !== 'undefined' && sb){
       sb.from('settings').upsert({
@@ -5105,7 +5194,7 @@ function setAbsenceSchedules(list){
         valid_from: '2026-01-01',
         valid_to: 'infinity',
         value_text: JSON.stringify(list),
-        memo: '9월 부재·휴무 관제 일정 JSON'
+        memo: '9월 부재·휴무 관제 일정 JSON (2026년 정밀 교정본)'
       }, {onConflict: 'entity,setting_key,valid_from'}).then(function(res){
         if(res && res.error) console.warn('Supabase settings sync error:', res.error);
       });
@@ -5177,28 +5266,286 @@ function renderAbsenceTimeline(){
   box.innerHTML = timelineHtml + previewBoxHtml;
 }
 
-function openAbsenceEditModal(id){
+/* ── 부재·휴무 달력 피커 상태 및 제어 함수 ── */
+var PICKER_STATE = {
+  ym: '2026-09',
+  mode: 'single',
+  startDate: null,
+  endDate: null
+};
+
+function changePickerMonth(delta){
+  var parts = PICKER_STATE.ym.split('-');
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10) + delta;
+  if(m < 1){ y--; m = 12; }
+  else if(m > 12){ y++; m = 1; }
+  PICKER_STATE.ym = y + '-' + (m < 10 ? '0' + m : m);
+  renderPickerGrid();
+}
+
+function setPickerMonth(ym){
+  PICKER_STATE.ym = ym;
+  renderPickerGrid();
+}
+
+function setPickerMode(mode){
+  PICKER_STATE.mode = mode;
+  var btnS = el('btnModeSingle');
+  var btnR = el('btnModeRange');
+  if(btnS && btnR){
+    if(mode === 'single'){
+      btnS.className = 'btn xs p';
+      btnS.style.background = '#2563eb';
+      btnS.style.color = '#fff';
+      btnS.style.fontWeight = '700';
+      btnR.className = 'btn xs';
+      btnR.style.background = 'var(--sf)';
+      btnR.style.color = 'var(--tx)';
+      btnR.style.fontWeight = 'normal';
+    } else {
+      btnR.className = 'btn xs p';
+      btnR.style.background = '#2563eb';
+      btnR.style.color = '#fff';
+      btnR.style.fontWeight = '700';
+      btnS.className = 'btn xs';
+      btnS.style.background = 'var(--sf)';
+      btnS.style.color = 'var(--tx)';
+      btnS.style.fontWeight = 'normal';
+    }
+  }
+  renderPickerGrid();
+}
+
+function onPickerDayClick(dStr){
+  var inp = el('absDate');
+  if(PICKER_STATE.mode === 'single'){
+    PICKER_STATE.startDate = dStr;
+    PICKER_STATE.endDate = null;
+    if(inp) inp.value = formatDateWithDow(dStr);
+  } else {
+    if(!PICKER_STATE.startDate || (PICKER_STATE.startDate && PICKER_STATE.endDate)){
+      PICKER_STATE.startDate = dStr;
+      PICKER_STATE.endDate = null;
+    } else {
+      var s = PICKER_STATE.startDate;
+      var e = dStr;
+      if(e < s){ var tmp = s; s = e; e = tmp; }
+      PICKER_STATE.startDate = s;
+      PICKER_STATE.endDate = e;
+      if(inp) inp.value = formatDateWithDow(s) + ' ~ ' + formatDateWithDow(e);
+    }
+  }
+  renderPickerGrid();
+}
+
+function selectPickerPreset(dStr){
+  PICKER_STATE.mode = 'single';
+  PICKER_STATE.ym = dStr.slice(0, 7);
+  PICKER_STATE.startDate = dStr;
+  PICKER_STATE.endDate = null;
+  var inp = el('absDate');
+  if(inp) inp.value = formatDateWithDow(dStr);
+  setPickerMode('single');
+  renderPickerGrid();
+}
+
+function selectPickerRangePreset(sStr, eStr){
+  PICKER_STATE.mode = 'range';
+  PICKER_STATE.ym = sStr.slice(0, 7);
+  PICKER_STATE.startDate = sStr;
+  PICKER_STATE.endDate = eStr;
+  var inp = el('absDate');
+  if(inp) inp.value = formatDateWithDow(sStr) + ' ~ ' + formatDateWithDow(eStr);
+  setPickerMode('range');
+  renderPickerGrid();
+}
+
+function renderPickerGrid(){
+  var wrap = el('pickerGridWrap');
+  if(!wrap) return;
+  var parts = PICKER_STATE.ym.split('-');
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10);
+
+  var lbl = el('pickerMonthLabel');
+  if(lbl) lbl.textContent = y + '년 ' + m + '월';
+
+  var statusLbl = el('calPickerStatusText');
+  if(statusLbl){
+    if(PICKER_STATE.mode === 'single'){
+      statusLbl.textContent = PICKER_STATE.startDate ? ('선택: ' + formatDateWithDow(PICKER_STATE.startDate)) : '날짜를 클릭하세요';
+    } else {
+      if(PICKER_STATE.startDate && PICKER_STATE.endDate){
+        statusLbl.textContent = '기간: ' + formatDateWithDow(PICKER_STATE.startDate) + ' ~ ' + formatDateWithDow(PICKER_STATE.endDate);
+      } else if(PICKER_STATE.startDate){
+        statusLbl.textContent = '시작: ' + formatDateWithDow(PICKER_STATE.startDate) + ' (종료일 클릭 대기)';
+      } else {
+        statusLbl.textContent = '시작일을 클릭하세요';
+      }
+    }
+  }
+
+  var firstDay = new Date(y, m - 1, 1).getDay();
+  var totalDays = new Date(y, m, 0).getDate();
+  var todayStr = (typeof getSysToday === 'function' ? getSysToday() : new Date().toISOString().slice(0, 10));
+
+  var dowHeaders = ['일','월','화','수','목','금','토'];
+  var html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;text-align:center;margin-bottom:4px">';
+  dowHeaders.forEach(function(d, idx){
+    var color = idx === 0 ? '#ef4444' : idx === 6 ? '#2563eb' : 'var(--tx2)';
+    html += '<div style="font-weight:700;color:' + color + ';padding:2px 0">' + d + '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:12px;text-align:center">';
+
+  for(var b = 0; b < firstDay; b++){
+    html += '<div style="min-height:34px;background:var(--sf);opacity:0.3;border-radius:4px"></div>';
+  }
+
+  for(var d = 1; d <= totalDays; d++){
+    var dStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+    var dow = (firstDay + d - 1) % 7;
+    var isSun = (dow === 0);
+    var isSat = (dow === 6);
+    var isToday = (dStr === todayStr);
+    var hol = HOLIDAYS_KR[dStr];
+
+    var isSelected = false;
+    var isInRange = false;
+    if(PICKER_STATE.mode === 'single'){
+      isSelected = (dStr === PICKER_STATE.startDate);
+    } else {
+      if(PICKER_STATE.startDate && PICKER_STATE.endDate){
+        isSelected = (dStr === PICKER_STATE.startDate || dStr === PICKER_STATE.endDate);
+        isInRange = (dStr > PICKER_STATE.startDate && dStr < PICKER_STATE.endDate);
+      } else if(PICKER_STATE.startDate){
+        isSelected = (dStr === PICKER_STATE.startDate);
+      }
+    }
+
+    var cellBg = isSelected ? '#2563eb' : isInRange ? '#dbeafe' : isToday ? '#fef3c7' : 'var(--sf)';
+    var cellColor = isSelected ? '#ffffff' : isInRange ? '#1e3a8a' : isSun ? '#ef4444' : isSat ? '#2563eb' : 'var(--tx)';
+    var border = isSelected ? '1.5px solid #1d4ed8' : isToday ? '1px solid #f59e0b' : '1px solid var(--ln)';
+
+    html += '<div onclick="onPickerDayClick(\'' + dStr + '\')" style="min-height:34px;padding:3px 2px;cursor:pointer;border-radius:6px;background:' + cellBg + ';color:' + cellColor + ';border:' + border + ';display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .1s, background .15s" onmouseover="this.style.transform=\'scale(1.06)\'" onmouseout="this.style.transform=\'none\'">';
+    html += '<span style="font-weight:' + (isSelected || isToday ? '700' : '600') + ';font-size:12px">' + d + '</span>';
+    if(hol){
+      var holShort = hol.indexOf('추석') >= 0 ? '🌕추석' : (hol.length > 3 ? hol.slice(0, 3) : hol);
+      html += '<span style="font-size:9px;line-height:1;margin-top:1px;color:' + (isSelected ? '#fef08a' : '#ef4444') + ';font-weight:700">' + esc(holShort) + '</span>';
+    }
+    html += '</div>';
+  }
+
+  var totalRendered = firstDay + totalDays;
+  var rem = totalRendered % 7;
+  if(rem > 0){
+    for(var t = 0; t < (7 - rem); t++){
+      html += '<div style="min-height:34px;background:var(--sf);opacity:0.3;border-radius:4px"></div>';
+    }
+  }
+
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function openAbsenceEditModal(id, initialDateStr){
   var list = getAbsenceSchedules();
   var item = id ? (list.filter(function(x){ return x.id === id; })[0] || {}) : {};
   var isEdit = !!item.id;
 
-  var staffList = (D.staff || []).map(function(s){ return s.name; }).filter(Boolean);
-  var defaultStaff = ['원동진','박정우','김현수','전승진','조영훈','이경준','최원','이세영','박준서','이재관','박상민','조성하'];
-  var allStaff = Array.from(new Set(staffList.concat(defaultStaff)));
+  if(initialDateStr){
+    PICKER_STATE.startDate = initialDateStr;
+    PICKER_STATE.endDate = null;
+    PICKER_STATE.mode = 'single';
+    PICKER_STATE.ym = initialDateStr.slice(0, 7);
+    item.date = formatDateWithDow(initialDateStr);
+  } else if(item.date){
+    if(item.date.indexOf('~') >= 0){
+      var p = item.date.split('~');
+      var m1 = p[0].match(/(\d{2})[\/\-](\d{2})/);
+      var m2 = p[1].match(/(\d{2})[\/\-](\d{2})/);
+      if(m1 && m2){
+        PICKER_STATE.startDate = '2026-' + m1[1] + '-' + m1[2];
+        PICKER_STATE.endDate = '2026-' + m2[1] + '-' + m2[2];
+        PICKER_STATE.mode = 'range';
+        PICKER_STATE.ym = '2026-' + m1[1];
+      }
+    } else {
+      var m = item.date.match(/(\d{2})[\/\-](\d{2})/);
+      if(m){
+        PICKER_STATE.startDate = '2026-' + m[1] + '-' + m[2];
+        PICKER_STATE.endDate = null;
+        PICKER_STATE.mode = 'single';
+        PICKER_STATE.ym = '2026-' + m[1];
+      }
+    }
+  } else {
+    PICKER_STATE.startDate = null;
+    PICKER_STATE.endDate = null;
+    PICKER_STATE.mode = 'single';
+    PICKER_STATE.ym = '2026-09';
+  }
 
-  var staffChipsHtml = allStaff.map(function(name){
-    return '<span class="chip sm" style="cursor:pointer;margin:2px 3px;font-size:11.5px" onclick="setAbsenceStaff(\'' + esc(name) + '\')">' + esc(name) + '</span>';
+  var currentSelected = (item.who || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var staffGroupsHtml = ACTIVE_2026_STAFF_GROUPS.map(function(grp){
+    var chips = grp.members.map(function(name){
+      var isSel = currentSelected.indexOf(name) >= 0;
+      var bg = isSel ? '#2563eb' : 'var(--sf)';
+      var fg = isSel ? '#ffffff' : 'var(--tx)';
+      var bd = isSel ? '#1d4ed8' : 'var(--ln)';
+      var fw = isSel ? '700' : '500';
+      return '<span class="chip sm abs-staff-chip" data-name="' + esc(name) + '" style="cursor:pointer;margin:2px 3px;font-size:11.5px;background:' + bg + ';color:' + fg + ';border-color:' + bd + ';font-weight:' + fw + '" onclick="toggleAbsenceStaff(\'' + esc(name) + '\')">'
+        + (isSel ? '✓ ' : '') + esc(name) + '</span>';
+    }).join('');
+    return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin-bottom:4px">'
+      + '<span class="tiny dim" style="min-width:85px;font-weight:600">' + esc(grp.group) + ':</span>'
+      + chips + '</div>';
   }).join('');
 
   var bodyHtml = '<div class="fr" style="display:flex;flex-direction:column;gap:12px">'
-    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">일정 일시 / 기간 <span class="r req" style="color:#ef4444">*</span></label>'
-    + '<input id="absDate" class="in" value="' + esc(item.date || '') + '" placeholder="예: 09/21 (일) 또는 09/23 (화) ~ 09/28 (일)" style="font-size:13.5px">'
-    + '<div class="tiny dim" style="margin-top:4px">월/일 및 요일, 또는 시작일~종료일 기간을 입력합니다.</div></div>'
+    + '<div class="f"><label style="font-weight:700;font-size:13px;color:var(--tx);display:flex;justify-content:space-between;align-items:center">'
+    + '<span>📅 달력에서 날짜 선택 <span class="r req" style="color:#ef4444">*</span></span>'
+    + '<span id="calPickerStatusText" style="font-size:12px;font-weight:700;color:#2563eb"></span>'
+    + '</label>'
+    + '<div style="background:var(--sf2);border:1.5px solid var(--ln);border-radius:10px;padding:10px;margin-top:4px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">'
+    + '<div style="display:flex;align-items:center;gap:6px">'
+    + '<button type="button" class="btn sm" onclick="changePickerMonth(-1)">◀</button>'
+    + '<b id="pickerMonthLabel" style="font-size:13.5px;color:var(--tx);min-width:85px;text-align:center">2026년 9월</b>'
+    + '<button type="button" class="btn sm" onclick="changePickerMonth(1)">▶</button>'
+    + '<button type="button" class="btn xs" onclick="setPickerMonth(\'2026-09\')" style="margin-left:4px">9월 당월</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:4px">'
+    + '<button type="button" id="btnModeSingle" class="btn xs p" onclick="setPickerMode(\'single\')" style="font-weight:700;background:#2563eb;color:#fff">단일 일자</button>'
+    + '<button type="button" id="btnModeRange" class="btn xs" onclick="setPickerMode(\'range\')">기간(범위)</button>'
+    + '</div>'
+    + '</div>'
+    + '<div id="pickerGridWrap"></div>'
+    + '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--ln);display:flex;flex-wrap:wrap;align-items:center;gap:4px">'
+    + '<span class="tiny dim" style="font-weight:600">빠른선택:</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-18\')">오늘 (09/18 금)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-19\')">내일 (09/19 토)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-20\')">09/20 (일)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-21\')">09/21 (월)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-22\')">09/22 (화)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerRangePreset(\'2026-09-23\',\'2026-09-28\')">09/23(수)~28(월)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="selectPickerRangePreset(\'2026-09-24\',\'2026-09-28\')">🌕 추석 (09/24~28)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerRangePreset(\'2026-09-28\',\'2026-10-02\')">09/28(월)~10/02(금)</span>'
+    + '</div>'
+    + '</div>'
+    + '<div style="margin-top:6px">'
+    + '<input id="absDate" class="in" value="' + esc(item.date || '') + '" placeholder="달력 날짜를 클릭하세요 (예: 09/20 (일))" style="font-size:13.5px;font-weight:700;color:#1e40af;background:#f8fafc">'
+    + '<div class="tiny dim" style="margin-top:3px">달력을 클릭하면 <b>2026년 정확한 요일</b>이 자동 계산됩니다. (시간 필요 시 뒤에 " 13:30" 추가 가능)</div></div>'
+    + '</div>'
 
-    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">대상 작업자 (이름) <span class="r req" style="color:#ef4444">*</span></label>'
-    + '<input id="absWho" class="in" value="' + esc(item.who || '') + '" placeholder="예: 박정우 또는 최원, 이세영" style="font-size:13.5px">'
-    + '<div style="margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:3px">'
-    + '<span class="tiny dim">빠른선택:</span> ' + staffChipsHtml + '</div></div>'
+    + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">대상 작업자 (2026년 실재직 인원) <span class="r req" style="color:#ef4444">*</span></label>'
+    + '<input id="absWho" class="in" value="' + esc(item.who || '') + '" placeholder="아래 인력 칩을 클릭하여 선택 (예: 김현수 또는 최원, 이세영)" style="font-size:13.5px;font-weight:700">'
+    + '<div style="margin-top:6px;background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px">'
+    + '<div style="font-size:11px;font-weight:700;color:var(--dim);margin-bottom:6px">2026년 실재직 인원 빠른선택 (클릭 시 자동 입력 / 토글):</div>'
+    + staffGroupsHtml
+    + '</div></div>'
 
     + '<div class="grid2" style="gap:10px">'
     + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">구분 / 유형</label>'
@@ -5236,19 +5583,48 @@ function openAbsenceEditModal(id){
     + '<button class="btn p" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700" onclick="saveAbsenceForm(' + (item.id || 'null') + ')">💾 ' + (isEdit ? '수정 저장' : '등록 저장') + '</button>';
 
   drOpen(isEdit ? '✏️ 부재·휴무 일정 수정' : '➕ 새 부재·휴무 일정 등록', bodyHtml, footHtml);
+  setTimeout(function(){
+    renderPickerGrid();
+    if(PICKER_STATE.mode === 'range') setPickerMode('range');
+  }, 40);
 }
 
-function setAbsenceStaff(name){
+function toggleAbsenceStaff(name){
   var inp = el('absWho');
   if(!inp) return;
-  if(!inp.value.trim()){
-    inp.value = name;
+  var val = inp.value.trim();
+  var parts = val ? val.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+  var idx = parts.indexOf(name);
+  if(idx >= 0){
+    parts.splice(idx, 1);
   } else {
-    var parts = inp.value.split(',').map(function(s){ return s.trim(); });
-    if(parts.indexOf(name) === -1){
-      inp.value = inp.value.trim() + ', ' + name;
-    }
+    parts.push(name);
   }
+  inp.value = parts.join(', ');
+  updateStaffChipStyles();
+}
+
+function updateStaffChipStyles(){
+  var inp = el('absWho');
+  if(!inp) return;
+  var selected = inp.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  document.querySelectorAll('.abs-staff-chip').forEach(function(chip){
+    var name = chip.getAttribute('data-name');
+    var isSel = selected.indexOf(name) >= 0;
+    if(isSel){
+      chip.style.background = '#2563eb';
+      chip.style.color = '#ffffff';
+      chip.style.borderColor = '#1d4ed8';
+      chip.style.fontWeight = '700';
+      chip.textContent = '✓ ' + name;
+    } else {
+      chip.style.background = 'var(--sf)';
+      chip.style.color = 'var(--tx)';
+      chip.style.borderColor = 'var(--ln)';
+      chip.style.fontWeight = '500';
+      chip.textContent = name;
+    }
+  });
 }
 
 function saveAbsenceForm(id){
@@ -5287,6 +5663,9 @@ function saveAbsenceForm(id){
   setAbsenceSchedules(list);
   drClose();
   renderAbsenceTimeline();
+  try {
+    renderMonthlyCal(CAL_CUR_YM);
+  } catch(e){}
   toast('✅ 부재·휴무 일정이 성공적으로 저장되었습니다!', 'g');
 }
 
@@ -5296,6 +5675,9 @@ function deleteAbsenceItem(id){
   setAbsenceSchedules(list);
   drClose();
   renderAbsenceTimeline();
+  try {
+    renderMonthlyCal(CAL_CUR_YM);
+  } catch(e){}
   toast('🗑️ 부재·휴무 일정이 삭제되었습니다.', 'g');
 }
 
@@ -5303,6 +5685,9 @@ function resetDefaultAbsence(){
   if(!confirm('초기 9월 공식 일정 6건 기본값으로 되돌리시겠습니까?\n(직접 수정한 내역이 초기화됩니다)')) return;
   setAbsenceSchedules(DEFAULT_ABSENCE_SCHEDULES.slice());
   renderAbsenceTimeline();
+  try {
+    renderMonthlyCal(CAL_CUR_YM);
+  } catch(e){}
   toast('🔄 기본 9월 일정으로 복원되었습니다.', 'g');
 }
 
