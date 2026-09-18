@@ -4095,6 +4095,9 @@ async function esgPreview(r){
   var v = res.data.vars||{};
   var warn = '';
   if(!r.ready_person) warn += '<div class="desc" style="color:var(--crit)">생년월일·주소·연락처 중 비어 있는 항목이 있습니다. 인력 마스터에서 먼저 채우십시오 — 계약서에 빈칸으로 인쇄됩니다.</div>';
+  if(res.data.html && (v.name || r.person_name)){
+    res.data.html = res.data.html.replace(/와\s*○○○\s*\(이하/g, '와 ' + esc(v.name || r.person_name) + '(이하');
+  }
   var f = '<button class="btn" onclick="drClose()">닫기</button>'
     + '<button class="btn" onclick="esgPrint()" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700" title="현장에서 친필 자필 서명을 받기 위해 A4 용지로 즉시 인쇄하거나 PDF로 저장합니다">🖨️ 친필 서명용 인쇄 / PDF</button>'
     + '<button class="btn p" onclick="esgIssue(\''+r.employment_no+'\',\''+code+'\')" style="font-weight:700" title="근로자 모바일 현장앱으로 전송하여 전자서명을 받습니다">📱 전자서명 발행</button>';
@@ -4113,6 +4116,9 @@ async function esgIssue(emp, code){
 async function esgOpen(r){
   var res=await sb.rpc('my_doc_body',{p_issue_id:r.issue_id});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||(res.data&&res.data.error)||'실패','e');return}
+  if(res.data.html && r.person_name){
+    res.data.html = res.data.html.replace(/와\s*○○○\s*\(이하/g, '와 ' + esc(r.person_name) + '(이하');
+  }
   var f='<button class="btn" onclick="drClose()">닫기</button><button class="btn" onclick="esgPrint()" style="background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700">🖨️ 인쇄 / PDF</button>';
   if(r.status==='signed')f+='<button class="btn p" onclick="esgSeal('+r.issue_id+')">대표 날인 · 교부</button>';
   if(r.status!=='void'&&r.status!=='countersigned')f+='<button class="btn d" onclick="esgVoid('+r.issue_id+')">무효화</button>';
@@ -4125,23 +4131,63 @@ async function esgOpen(r){
 }
 function esgPrint(){
   var h=el('docPrint');if(!h)return;
-  var w=window.open('','_blank');if(!w){toast('팝업이 차단되었습니다','e');return}
-  var css=Array.from(document.querySelectorAll('style')).map(function(x){return x.textContent}).join('\n');
-  var printCss = '@page{size:A4 portrait;margin:14mm 12mm 14mm 12mm}'
-    + 'body{background:#fff!important;color:#000!important;font-family:\'Noto Sans KR\',sans-serif,serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-    + '.docpaper{font-size:10.5pt;line-height:1.55;color:#000!important;background:#fff!important;max-width:100%}'
-    + '.docpaper h1{font-size:17pt;font-weight:700;text-align:center;margin:0 0 14pt}'
-    + '.docpaper h2{font-size:12pt;font-weight:700;margin:14pt 0 4pt;color:#000!important;border-bottom:1px solid #333;padding-bottom:2pt}'
-    + '.docpaper h3{font-size:11pt;font-weight:700;margin:10pt 0 4pt}'
-    + '.docpaper table{width:100%;border-collapse:collapse;margin:6pt 0 10pt;font-size:9.5pt}'
-    + '.docpaper th,.docpaper td{border:1px solid #333!important;padding:4pt 6pt;color:#000!important}'
-    + '.docpaper th{background:#f1f5f9!important;font-weight:700}'
-    + '.docpaper .pagebreak{page-break-after:always;height:0;background:none;margin:0;border:none}'
-    + '.docpaper .sgbox{display:inline-block;min-width:110px;border-bottom:1.5px solid #000!important;color:#475569;font-size:10pt;text-align:center;padding:0 8px;margin:0 4px}'
-    + '.tierbadge{border:1px solid #666;padding:1px 6px;border-radius:4px;font-size:8.5pt}'
-    + '@media print{.no-print{display:none!important}}';
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+esc(el('drT')?el('drT').textContent:'근로계약서')+'</title><style>'+css+'\n'+printCss+'</style></head><body><div class="docpaper">'+h.innerHTML+'</div></body></html>');
-  w.document.close();setTimeout(function(){w.print()},400);
+  var title=esc(el('drT')?el('drT').textContent:'표준 근로계약서');
+  var w=window.open('','_blank');
+  if(!w){toast('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.','e');return}
+  var style = '@page{size:A4 portrait;margin:15mm 12mm 15mm 12mm}'
+    + '*{box-sizing:border-box;margin:0;padding:0}'
+    + 'html,body{background:#fff!important;color:#000!important;font-family:-apple-system,Pretendard,\'Noto Sans KR\',sans-serif;font-size:10pt;line-height:1.5;height:auto!important;min-height:100%;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
+    + '.no-print{position:sticky;top:0;background:#1e3a8a;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:sans-serif}'
+    + '.print-wrap{width:100%;max-width:190mm;margin:0 auto;padding:10mm 5mm;background:#fff!important;color:#000!important}'
+    + '.docpaper{width:100%;background:#fff!important;color:#000!important;font-size:10.5pt;line-height:1.55}'
+    + '.docpaper p{margin:0 0 5pt;word-break:keep-all;line-height:1.55;color:#000!important}'
+    + '.docpaper p.code{font-size:8.5pt;color:#475569!important;text-align:right;margin:0 0 2pt}'
+    + '.docpaper h1{font-size:17pt;font-weight:700;text-align:center;margin:4pt 0 4pt;letter-spacing:-.5px;color:#000!important}'
+    + '.docpaper p.sub{text-align:center;color:#475569!important;font-size:9.5pt;margin:0 0 12pt}'
+    + '.docpaper h2{font-size:11.5pt;font-weight:700;margin:12pt 0 4pt;color:#000!important;border-bottom:1.5px solid #222;padding-bottom:2pt}'
+    + '.docpaper h3{font-size:10.5pt;font-weight:700;margin:10pt 0 3pt;color:#000!important}'
+    + '.docpaper p.i1{padding-left:14pt}.docpaper p.i2{padding-left:28pt}'
+    + '.docpaper p.note{font-size:9pt;color:#475569!important;margin:2pt 0}'
+    + '.docpaper p.sigdate{text-align:center;margin:22pt 0 12pt;font-size:11.5pt;font-weight:700;color:#000!important}'
+    + '.docpaper table{width:100%;border-collapse:collapse;margin:6pt 0 10pt;font-size:9pt}'
+    + '.docpaper th,.docpaper td{border:1px solid #333!important;padding:4.5pt 6pt;vertical-align:middle;text-align:left;color:#000!important}'
+    + '.docpaper th{background:#f1f5f9!important;font-weight:700;white-space:nowrap}'
+    + '.docpaper td.r{text-align:right;font-variant-numeric:tabular-nums}'
+    + '.docpaper tr.tot td{font-weight:700;background:#f8fafc!important}'
+    + '.docpaper table.sig{margin-top:10pt}'
+    + '.docpaper table.sig th{text-align:center;font-size:10pt;padding:5pt;background:#f1f5f9!important}'
+    + '.docpaper table.sig td{padding:8pt 10pt;line-height:1.8;font-size:9.5pt;vertical-align:top}'
+    + '.docpaper .pagebreak{page-break-after:always!important;break-after:page!important;height:0;background:none;margin:0;border:none;visibility:hidden}'
+    + '.docpaper .sgbox{display:inline-block;min-width:110px;border-bottom:1.5px solid #000!important;color:#475569;font-size:9.5pt;text-align:center;padding:0 8px;margin:0 4px}'
+    + '.docpaper .tier,.tierbadge{display:inline-block;padding:1px 6px;border:1px solid #555;border-radius:4px;font-size:8.5pt;color:#111}'
+    + '.docpaper img.sg{max-height:48px;vertical-align:middle}'
+    + '.docpaper .sgd{display:block;font-size:8.5pt;color:#475569}'
+    + '@media print{'
+    + '.no-print{display:none!important}'
+    + 'body,html{background:#fff!important;color:#000!important}'
+    + 'body>*{display:block!important;visibility:visible!important}'
+    + '.print-wrap,#pr,.docpaper{display:block!important;visibility:visible!important;padding:0!important;margin:0!important;max-width:100%!important;width:100%!important}'
+    + '}';
+  var bar = '<div class="no-print">'
+    + '<span style="font-weight:700;font-size:13px">🖨️ 근로계약서 인쇄 미리보기 (A4 정격 서식)</span>'
+    + '<div>'
+    + '<button onclick="window.print()" style="background:#fff;color:#1e3a8a;font-weight:700;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:8px">🖨️ 인쇄하기 / PDF 저장</button>'
+    + '<button onclick="window.close()" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px">닫기</button>'
+    + '</div>'
+    + '</div>';
+  var fullHtml = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>'+style+'</style></head><body>'
+    + bar
+    + '<div class="print-wrap"><div id="pr" class="docpaper">' + h.innerHTML + '</div></div>'
+    + '</body></html>';
+  w.document.open();
+  w.document.write(fullHtml);
+  w.document.close();
+  setTimeout(function(){
+    try {
+      w.focus();
+      w.print();
+    } catch(e){}
+  }, 400);
 }
 async function esgSeal(id){
   var ok=await ask('대표 날인 · 교부','사용인감을 찍고 교부일을 기록합니다. 되돌릴 수 없습니다.',{ok:'날인'});
