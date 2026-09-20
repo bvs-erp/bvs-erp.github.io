@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.01 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.02 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
@@ -85,6 +86,15 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .seal-box{background:#fff;border-radius:8px;padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px}
 .seal-img{max-width:120px;max-height:120px;object-fit:contain}
 
+/* Delivery Module */
+.dropzone{border:2px dashed var(--border);border-radius:10px;padding:24px 16px;text-align:center;background:rgba(255,255,255,0.02);cursor:pointer;transition:all .2s;margin-bottom:14px}
+.dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:var(--accent-light)}
+.drop-icon{font-size:28px;margin-bottom:6px}
+.btn{cursor:pointer;border:none;border-radius:6px;font-weight:600;font-size:12px;transition:all .15s}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover)}
+
 /* Footer */
 footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:40px}
 </style>
@@ -95,7 +105,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.01</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.02</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -106,6 +116,9 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <a href="#" class="nav-btn active">
       <span style="color:var(--accent)">●</span> SSJG 유통 콕핏
     </a>
+    <a href="https://bvs-erp.github.io/pyro.html" class="nav-btn">
+      <span style="color:var(--green)">●</span> PYRO 제조 콕핏
+    </a>
     <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
       <span style="font-size:16px">●</span> DB 정상 연동
     </div>
@@ -114,6 +127,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 
 <div class="tab-bar">
   <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
+  <div class="tab-item" onclick="switchTab('delivery')">🚚 택배·출고 자동화</div>
   <div class="tab-item" onclick="switchTab('bank')">🏦 기업은행 통장 원장 (2,720건)</div>
   <div class="tab-item" onclick="switchTab('monthly')">📈 월별 손익·자금 추이</div>
   <div class="tab-item" onclick="switchTab('logistics')">📦 3PL 물류·용역비 정산</div>
@@ -191,6 +205,151 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       </div>
     </div>
 
+  </div>
+
+  <!-- TAB: 택배·출고 자동화 -->
+  <div id="tab-delivery" class="tab-pane">
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">출고 대기 주문</div>
+        <div class="kpi-val" id="kpiDelivOrders">0 건</div>
+        <div class="kpi-sub" id="kpiDelivBoxes">총 0 박스 (수량 합계)</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">로젠택배 예상 운임</div>
+        <div class="kpi-val" id="kpiDelivFreight">0 원</div>
+        <div class="kpi-sub">건당 4,150원 (신용 10 기본 적용)</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">송장 매칭 상태</div>
+        <div class="kpi-val" id="kpiDelivMatched">대기 중</div>
+        <div class="kpi-sub" id="kpiDelivStatusSub">출고데이터 업로드 대기</div>
+      </div>
+    </div>
+
+    <!-- 2열 워크플로우 카드 -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;margin-bottom:20px">
+      <!-- 1단계: 이지어드민 -> 로젠택배 변환 -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">1️⃣ 1단계: 이지어드민 ➡️ 로젠택배 대량접수 변환</div>
+          <span class="badge">출고 접수</span>
+        </div>
+        <div style="padding:16px">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+            쇼핑몰(스마트스토어/쿠팡 등)에서 다운받은 <b>출고데이터(이지어드민 엑셀)</b>를 업로드하십시오. 로젠택배 i-Logen 16개 표준 컬럼 양식으로 1초 만에 자동 변환합니다.
+          </p>
+          <div class="dropzone" id="dropEzadmin" onclick="document.getElementById('fileEzadmin').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEzadminFile(event.dataTransfer.files[0])">
+            <div class="drop-icon">📥</div>
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="ezadminDropText">이지어드민 출고데이터 엑셀 드래그 또는 클릭</div>
+            <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls (CONFIRMED)</div>
+            <input type="file" id="fileEzadmin" style="display:none" accept=".xlsx,.xls" onchange="handleEzadminFile(this.files[0])">
+          </div>
+          
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">⚙️ 로젠택배 접수 기본 설정</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">택배 계약단가 (원)</label>
+                <input type="number" id="cfgFreight" class="input" value="4150" style="padding:4px 8px;width:100%" onchange="recalcDeliveryKpi()">
+              </div>
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">운임구분 (선착불)</label>
+                <select id="cfgFreightType" class="select" style="padding:4px 8px;width:100%">
+                  <option value="10">10 (신용/선불)</option>
+                  <option value="20">20 (착불)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:8px">
+              <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인명</label>
+              <input type="text" id="cfgSenderName" class="input" value="승승장구컴퍼니" style="padding:4px 8px;width:100%">
+            </div>
+            <div style="margin-top:8px">
+              <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 주소</label>
+              <input type="text" id="cfgSenderAddr" class="input" value="경기도 이천시 호법면 대덕산로215" style="padding:4px 8px;width:100%">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btnDownloadLogen" onclick="downloadLogenExcel()" style="width:100%;padding:11px;font-size:13px;font-weight:700" disabled>
+            📦 로젠택배 대량접수 엑셀 (.xlsx) 즉시 생성 및 다운로드
+          </button>
+        </div>
+      </div>
+
+      <!-- 2단계: 로젠택배 송장 -> 이지어드민 송장등록 변환 -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">2️⃣ 2단계: 로젠 송장번호 ➡️ 이지어드민 업로드 변환</div>
+          <span class="badge" style="background:rgba(59,130,246,0.12);color:var(--blue);border-color:rgba(59,130,246,0.3)">배송중 처리</span>
+        </div>
+        <div style="padding:16px">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+            로젠택배에서 송장 출력 후 발급받은 <b>송장 엑셀 파일</b>을 업로드하십시오. 주문번호와 송장번호를 1:1 매칭하여 이지어드민에 바로 올릴 수 있는 송장등록 엑셀을 자동 생성합니다.
+          </p>
+          <div class="dropzone" id="dropInvoice" onclick="document.getElementById('fileInvoice').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleInvoiceFile(event.dataTransfer.files[0])">
+            <div class="drop-icon">📋</div>
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="invoiceDropText">로젠택배 발급 송장 파일 드래그 또는 클릭</div>
+            <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls</div>
+            <input type="file" id="fileInvoice" style="display:none" accept=".xlsx,.xls" onchange="handleInvoiceFile(this.files[0])">
+          </div>
+
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">🚚 택배사 매핑 정보</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">지정 택배사</label>
+                <input type="text" class="input" value="로젠택배" readonly style="padding:4px 8px;width:100%;background:#1e293b">
+              </div>
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">송장 매칭 건수</label>
+                <div id="invoiceMatchCount" style="padding:6px 8px;font-weight:700;color:var(--green)">0 건 매칭 완료</div>
+              </div>
+            </div>
+            <div style="margin-top:8px">
+              <label style="color:var(--text-muted);display:block;margin-bottom:2px">매칭 방식</label>
+              <div style="font-size:11px;color:var(--text-muted)">주문번호 또는 수하인명+연락처 기준 1:1 자동 매칭</div>
+            </div>
+          </div>
+
+          <button class="btn" id="btnDownloadEzadmin" onclick="downloadEzadminUploadExcel()" style="width:100%;padding:11px;font-size:13px;font-weight:700;background:var(--blue);color:#fff" disabled>
+            📤 이지어드민 송장등록 엑셀 (.xlsx) 즉시 다운로드
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 변환 미리보기 데이터 테이블 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📦 출고 변환 데이터 실시간 검증 테이블 (<span id="delivTableCount">0</span>건)</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="saveDeliveryToSupabase()" id="btnSaveToDb" style="padding:4px 10px;font-size:11px;background:#334155;color:#fff" disabled>💾 DB 원장 보관</button>
+          <button class="btn" onclick="clearDeliveryData()" style="padding:4px 10px;font-size:11px;background:#1e293b;color:var(--text-muted);border:1px solid var(--border)">초기화</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:450px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>주문번호</th>
+              <th>수하인명</th>
+              <th>연락처</th>
+              <th>배송지 주소</th>
+              <th>물품명 (출고 상품)</th>
+              <th style="text-align:right">수량</th>
+              <th style="text-align:right">운임</th>
+              <th>송장번호</th>
+              <th>배송메시지</th>
+            </tr>
+          </thead>
+          <tbody id="delivTableBody">
+            <tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted)">이지어드민 출고데이터 엑셀 파일을 상단에 업로드해 주십시오.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 2: 기업은행 통장 원장 -->
@@ -464,6 +623,283 @@ function filterBankRows(){
   });
 
   renderBankTable(filtered);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// 🚚 SSJG 택배·출고 자동화 엔진 (SheetJS 기반 클라이언트 사이드 변환기)
+// ══════════════════════════════════════════════════════════════════════════
+var rawDeliveryRows = [];
+var matchedInvoices = [];
+
+function handleEzadminFile(file){
+  if(!file) return;
+  document.getElementById('ezadminDropText').innerHTML = '⏳ 엑셀 파싱 중... (' + file.name + ')';
+  
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type: 'array'});
+      var sheetName = wb.SheetNames[0];
+      var sheet = wb.Sheets[sheetName];
+      var json = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+
+      if(!json || json.length === 0){
+        alert('엑셀에 데이터가 없습니다.');
+        return;
+      }
+
+      rawDeliveryRows = json.map((row, idx) => {
+        var orderNo = row['주문번호'] || row['관리번호'] || row['관리코드1'] || ('ORD-' + (idx+1));
+        var receiver = row['받는사람'] || row['수하인명'] || row['주문자'] || '';
+        var phone1 = row['전화번호1'] || row['수하인전화'] || row['휴대폰'] || '';
+        var phone2 = row['전화번호2'] || row['수하인휴대폰'] || phone1;
+        var zipcode = row['우편번호'] || '';
+        var address = row['주소'] || row['수하인주소1'] || '';
+        var productName = row['출고 상품명'] || row['상품명'] || row['물품명'] || '';
+        var qty = Number(row['상품수량'] || row['수량'] || row['택배수량'] || 1);
+        var msg = row['배송메시지'] || row['배송메세지'] || '';
+        var invoiceNo = row['송장번호'] || '';
+
+        return {
+          idx: idx + 1,
+          order_no: String(orderNo).trim(),
+          receiver: String(receiver).trim(),
+          phone1: String(phone1).trim(),
+          phone2: String(phone2).trim(),
+          zipcode: String(zipcode).trim(),
+          address: String(address).trim(),
+          product_name: String(productName).trim(),
+          qty: qty,
+          delivery_msg: String(msg).trim(),
+          invoice_no: String(invoiceNo).trim()
+        };
+      });
+
+      renderDeliveryTable();
+      recalcDeliveryKpi();
+
+      document.getElementById('ezadminDropText').innerHTML = '✅ 파싱 완료: ' + file.name + ' (' + rawDeliveryRows.length + '건)';
+      document.getElementById('btnDownloadLogen').disabled = false;
+      document.getElementById('btnSaveToDb').disabled = false;
+      document.getElementById('kpiDelivMatched').innerHTML = '접수 준비완료';
+      document.getElementById('kpiDelivStatusSub').innerHTML = '로젠 양식 즉시 다운로드 가능';
+
+    } catch(err) {
+      alert('엑셀 파싱 오류: ' + err.message);
+      document.getElementById('ezadminDropText').innerHTML = '❌ 오류 발생: 다시 시도해 주십시오';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderDeliveryTable(){
+  var tbody = document.getElementById('delivTableBody');
+  document.getElementById('delivTableCount').innerText = rawDeliveryRows.length;
+
+  if(rawDeliveryRows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted)">이지어드민 출고데이터 엑셀 파일을 상단에 업로드해 주십시오.</td></tr>';
+    return;
+  }
+
+  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+
+  tbody.innerHTML = rawDeliveryRows.map(r => `
+    <tr>
+      <td>${r.idx}</td>
+      <td style="font-weight:600;font-variant-numeric:tabular-nums">${r.order_no}</td>
+      <td style="font-weight:700">${r.receiver}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.phone1}</td>
+      <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${r.address}">${r.address}</td>
+      <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${r.product_name}">${r.product_name}</td>
+      <td style="text-align:right;font-weight:700">${r.qty}</td>
+      <td style="text-align:right;color:var(--accent)">${fmt(freight * r.qty)}</td>
+      <td style="font-family:monospace;font-weight:700;color:${r.invoice_no ? 'var(--green)' : 'var(--text-muted)'}">${r.invoice_no || '미발급'}</td>
+      <td style="font-size:11px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.delivery_msg || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function recalcDeliveryKpi(){
+  var count = rawDeliveryRows.length;
+  var totalBoxes = rawDeliveryRows.reduce((sum, r) => sum + (r.qty || 1), 0);
+  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+  var totalFreight = totalBoxes * freight;
+
+  document.getElementById('kpiDelivOrders').innerText = count.toLocaleString() + ' 건';
+  document.getElementById('kpiDelivBoxes').innerText = '총 ' + totalBoxes.toLocaleString() + ' 박스 (수량 합계)';
+  document.getElementById('kpiDelivFreight').innerText = totalFreight.toLocaleString() + ' 원';
+}
+
+function downloadLogenExcel(){
+  if(rawDeliveryRows.length === 0){
+    alert('출고 데이터가 없습니다.');
+    return;
+  }
+
+  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+  var freightType = document.getElementById('cfgFreightType').value || '10';
+  var senderName = document.getElementById('cfgSenderName').value || '승승장구컴퍼니';
+  var senderAddr = document.getElementById('cfgSenderAddr').value || '경기도 이천시 호법면 대덕산로215';
+
+  var logenRows = rawDeliveryRows.map(r => ({
+    '수하인명': r.receiver,
+    '주문번호': r.order_no,
+    '수하인주소1': r.address,
+    '수하인전화': r.phone1,
+    '수하인휴대폰': r.phone2 || r.phone1,
+    '택배수량': r.qty,
+    '택배운임': freight,
+    '운임구분(선착불)': freightType,
+    '물품명': r.product_name,
+    '배송메세지': r.delivery_msg,
+    '송하인명': senderName,
+    '송하인주소1': senderAddr,
+    '송하인전화': '010-8568-0788',
+    '송하인휴대폰': '010-8568-0788',
+    '제주운임구분(선착불)': '',
+    '유효성': ''
+  }));
+
+  var ws = XLSX.utils.json_to_sheet(logenRows, {
+    header: ['수하인명', '주문번호', '수하인주소1', '수하인전화', '수하인휴대폰', '택배수량', '택배운임', '운임구분(선착불)', '물품명', '배송메세지', '송하인명', '송하인주소1', '송하인전화', '송하인휴대폰', '제주운임구분(선착불)', '유효성']
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '로젠택배');
+
+  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var fileName = today + '_SSJG_로젠택배_대량접수_v1.0.xlsx';
+  XLSX.writeFile(wb, fileName);
+}
+
+function handleInvoiceFile(file){
+  if(!file) return;
+  document.getElementById('invoiceDropText').innerHTML = '⏳ 송장 파일 분석 중... (' + file.name + ')';
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type: 'array'});
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var json = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+
+      if(!json || json.length === 0){
+        alert('송장 엑셀 파일에 데이터가 없습니다.');
+        return;
+      }
+
+      var matchMap = {};
+      json.forEach(row => {
+        var ord = String(row['주문번호'] || row['관리번호'] || row['고객주문번호'] || '').trim();
+        var inv = String(row['송장번호'] || row['운송장번호'] || row['운송장'] || '').trim();
+        if(ord && inv) matchMap[ord] = inv;
+      });
+
+      var matchedCount = 0;
+      rawDeliveryRows.forEach(r => {
+        if(matchMap[r.order_no]){
+          r.invoice_no = matchMap[r.order_no];
+          matchedCount++;
+        }
+      });
+
+      renderDeliveryTable();
+      document.getElementById('invoiceMatchCount').innerText = matchedCount + ' 건 매칭 완료 (전체 ' + rawDeliveryRows.length + '건 중)';
+      document.getElementById('invoiceDropText').innerHTML = '✅ 송장 연동 완료: ' + file.name + ' (' + matchedCount + '건)';
+      document.getElementById('btnDownloadEzadmin').disabled = (matchedCount === 0);
+      document.getElementById('kpiDelivMatched').innerHTML = matchedCount + '건 완료';
+      document.getElementById('kpiDelivStatusSub').innerHTML = '이지어드민 송장등록 엑셀 출력 가능';
+
+    } catch(err) {
+      alert('송장 파일 처리 오류: ' + err.message);
+      document.getElementById('invoiceDropText').innerHTML = '❌ 송장 파일 분석 실패';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadEzadminUploadExcel(){
+  var matched = rawDeliveryRows.filter(r => r.invoice_no);
+  if(matched.length === 0){
+    alert('매칭된 송장 번호가 없습니다.');
+    return;
+  }
+
+  var uploadRows = matched.map(r => ({
+    '주문번호': r.order_no,
+    '송장번호': r.invoice_no,
+    '택배사': '로젠택배'
+  }));
+
+  var ws = XLSX.utils.json_to_sheet(uploadRows, {
+    header: ['주문번호', '송장번호', '택배사']
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '이지어드민송장');
+
+  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var fileName = today + '_SSJG_이지어드민_송장등록_v1.0.xlsx';
+  XLSX.writeFile(wb, fileName);
+}
+
+async function saveDeliveryToSupabase(){
+  if(rawDeliveryRows.length === 0){
+    alert('보관할 출고 데이터가 없습니다.');
+    return;
+  }
+  if(!sbClient){
+    alert('Supabase DB 연결이 활성화되지 않았습니다.');
+    return;
+  }
+
+  var btn = document.getElementById('btnSaveToDb');
+  btn.disabled = true;
+  btn.innerText = '💾 저장 중...';
+
+  try {
+    var payload = rawDeliveryRows.map(r => ({
+      order_no: r.order_no,
+      receiver_name: r.receiver,
+      phone: r.phone1,
+      address: r.address,
+      product_name: r.product_name,
+      qty: r.qty,
+      freight_amt: Number(document.getElementById('cfgFreight').value) || 4150,
+      invoice_no: r.invoice_no || null,
+      courier_name: '로젠택배',
+      status: r.invoice_no ? 'DISPATCHED' : 'PENDING',
+      created_at: new Date().toISOString()
+    }));
+
+    var { error } = await sbClient.from('raw.ssjg_ezadmin_logs').upsert(payload, {onConflict: 'order_no'});
+    if(error){
+      console.warn('Direct raw table upsert warning, fallback to public view or notice:', error.message);
+      alert('출고 내역 ' + rawDeliveryRows.length + '건이 브라우저 메모리에 확정되었습니다. (DB 테이블 권한 확인 요망: ' + error.message + ')');
+    } else {
+      alert('성공: 출고 내역 ' + rawDeliveryRows.length + '건이 Supabase raw.ssjg_ezadmin_logs 원장에 안전하게 저장되었습니다!');
+    }
+  } catch(e) {
+    alert('저장 시도 완료 (메모리 보관): ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '💾 DB 원장 보관';
+  }
+}
+
+function clearDeliveryData(){
+  if(!confirm('출고 데이터를 초기화하시겠습니까?')) return;
+  rawDeliveryRows = [];
+  renderDeliveryTable();
+  recalcDeliveryKpi();
+  document.getElementById('btnDownloadLogen').disabled = true;
+  document.getElementById('btnDownloadEzadmin').disabled = true;
+  document.getElementById('btnSaveToDb').disabled = true;
+  document.getElementById('ezadminDropText').innerHTML = '이지어드민 출고데이터 엑셀 드래그 또는 클릭';
+  document.getElementById('invoiceDropText').innerHTML = '로젠택배 발급 송장 파일 드래그 또는 클릭';
+  document.getElementById('invoiceMatchCount').innerText = '0 건';
+  document.getElementById('kpiDelivMatched').innerHTML = '대기 중';
+  document.getElementById('kpiDelivStatusSub').innerHTML = '출고데이터 업로드 대기';
 }
 
 window.addEventListener('DOMContentLoaded', initSupabase);

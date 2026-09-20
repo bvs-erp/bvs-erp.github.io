@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PYRO ERP v1.00 · 파이로 제조·유통 콕핏</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
+  --text:#f8fafc;--text-muted:#94a3b8;--accent:#10b981;--accent-hover:#059669;
+  --accent-light:rgba(16,185,129,0.12);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--amber:#f59e0b;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* GNB */
+header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{background:var(--accent);color:#fff;font-weight:900;font-size:16px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(16,185,129,0.4)}
+.brand-title{font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid rgba(16,185,129,0.3)}
+.nav-links{display:flex;gap:8px}
+.nav-btn{background:#1e293b;color:var(--text-muted);border:1px solid var(--border);padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-btn:hover{background:#334155;color:#fff}
+.nav-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+
+/* Tab Bar */
+.tab-bar{background:#0b1120;border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto}
+.tab-item{padding:12px 16px;color:var(--text-muted);font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.tab-item:hover{color:#fff}
+.tab-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Container */
+.container{max-width:1440px;margin:0 auto;padding:20px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;position:relative;overflow:hidden}
+.kpi-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.kpi-card.green::before{background:var(--green)}
+.kpi-card.blue::before{background:var(--blue)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-card.amber::before{background:var(--amber)}
+.kpi-label{font-size:12px;color:var(--text-muted);font-weight:600;margin-bottom:6px}
+.kpi-val{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+
+/* Panel */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.01)}
+.panel-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+/* Tables */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#0b1120;color:var(--text-muted);font-weight:600;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid rgba(51,65,85,0.4);white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* Forms & Inputs */
+.input,.select{background:#0b1120;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;outline:none}
+.input:focus,.select:focus{border-color:var(--accent)}
+.btn{cursor:pointer;border:none;border-radius:6px;font-weight:600;font-size:12px;transition:all .15s;padding:8px 14px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+
+/* Product Grid */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px}
+.prod-card{background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:all .15s}
+.prod-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.prod-img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:6px;padding:6px}
+.prod-title{font-weight:700;font-size:13px;line-height:1.4;height:38px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prod-price-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:auto}
+
+footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">PY</div>
+    <div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.00</span></div>
+      <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 · 대표 황병승 (제조·가공·공구온)</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="https://bvs-erp.github.io/erp.html" class="nav-btn">
+      <span style="color:var(--blue)">●</span> BVS 현장 ERP
+    </a>
+    <a href="https://bvs-erp.github.io/ssjg.html" class="nav-btn">
+      <span style="color:var(--red)">●</span> SSJG 유통 콕핏
+    </a>
+    <a href="#" class="nav-btn active">
+      <span style="color:var(--accent)">●</span> PYRO 제조 콕핏
+    </a>
+    <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
+      <span style="font-size:16px">●</span> 시스템 가동
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
+  <div class="tab-item" onclick="switchTab('tools')">🔧 공구온 & B2B 마스터</div>
+  <div class="tab-item" onclick="switchTab('cost')">🏭 튜브·사출 원가 계산기</div>
+  <div class="tab-item" onclick="switchTab('vendor')">📋 거래처 단가표 & 발주</div>
+  <div class="tab-item" onclick="switchTab('governance')">🏛️ 사업자 거버넌스 & 세무</div>
+</div>
+
+<div class="container">
+
+  <!-- TAB 1: 종합 상황실 -->
+  <div id="tab-dashboard" class="tab-pane active">
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">공구온 B2B 베스트 등록 품목</div>
+        <div class="kpi-val">100 종</div>
+        <div class="kpi-sub">크레텍(Cretec) 및 다모아공구 마스터</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">사출·튜브 단위 원가 자동 산출 규격</div>
+        <div class="kpi-val">24 종</div>
+        <div class="kpi-sub">Φ19 ~ Φ50 표준 금형/인쇄/박스 완비</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">등록 협력 거래처</div>
+        <div class="kpi-val">6 개사</div>
+        <div class="kpi-sub">선경, 경진, 하이캡, 필앤텍, 노성 등</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">사업자 형태</div>
+        <div class="kpi-val">개인사업자</div>
+        <div class="kpi-sub">대표 황병승 (종합소득세 과세)</div>
+      </div>
+    </div>
+
+    <!-- 2대 비즈니스 축 개요 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">🔧 24 공구온 & 유통 마스터 (B2B 공구)</div>
+          <span class="badge">유통</span>
+        </div>
+        <div style="padding:16px;font-size:13px;line-height:1.6">
+          <p><b>다모아공구 & KBONE & 공구온</b> 연계 유통 축입니다. 크레텍 B2B 카탈로그를 기반으로 볼트, 공구, 비너 등 핵심 기계요소를 공급합니다.</p>
+          <div style="margin-top:12px;background:#0b1120;padding:12px;border-radius:6px;border:1px solid var(--border)">
+            <div>• 평균 마진율: <b>28.5%</b></div>
+            <div>• 핵심 거래 품목: 스테인리스 비너, 렌치볼트, 전동공구 부속</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">🏭 25 파이로 영업 및 프로젝트 (제조·가공)</div>
+          <span class="badge" style="background:rgba(59,130,246,0.12);color:var(--blue);border-color:rgba(59,130,246,0.3)">제조</span>
+        </div>
+        <div style="padding:16px;font-size:13px;line-height:1.6">
+          <p><b>튜브 포장재 및 화장품/치약 용기</b> 사출·가공 축입니다. 원단폭, 실기장, 로스율, 캡 사출, 인쇄비, 박스비를 정밀 계상하여 단위당 원가를 산출합니다.</p>
+          <div style="margin-top:12px;background:#0b1120;padding:12px;border-radius:6px;border:1px solid var(--border)">
+            <div>• 주력 금형: Φ19 립글로즈, Φ22 에센스, Φ25 핸드크림, Φ35 치약</div>
+            <div>• 특허 IP: 일회용 튜브, 이중 튜브 등 지식재산권 다수 보유</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: 공구온 & B2B 마스터 -->
+  <div id="tab-tools" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🔧 공구온 & 다모아공구 베스트 랭킹 카탈로그</div>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="toolSearch" class="input" placeholder="품명/브랜드/규격 검색..." onkeyup="filterTools()" style="width:240px">
+        </div>
+      </div>
+      <div class="prod-grid" id="toolsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: 튜브·사출 원가 계산기 -->
+  <div id="tab-cost" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🏭 단위당 튜브 원가 정밀 자동 산출기 (사장님 Order 공식)</div>
+        <span class="badge">25 파이로 제조 로직</span>
+      </div>
+      <div style="padding:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">규격 품명 선택</label>
+            <select id="calcSpec" class="select" style="width:100%" onchange="applyTubeSpec(this.value)">
+              <option value="0">Φ19 립글로즈 (폭 65mm / 기장 70mm)</option>
+              <option value="1">Φ22 에센스/크림 (폭 74mm / 기장 85mm)</option>
+              <option value="2">Φ25 핸드크림 (폭 84mm / 기장 100mm)</option>
+              <option value="3">Φ30 클렌징폼 (폭 100mm / 기장 120mm)</option>
+              <option value="4">Φ35 대용량 치약 (폭 116mm / 기장 140mm)</option>
+              <option value="5">Φ40 바디로션 (폭 132mm / 기장 160mm)</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">발주 수량 (EA)</label>
+            <input type="number" id="calcOrderQty" class="input" value="10000" style="width:100%" oninput="calcCost()">
+          </div>
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">원단 단가 (원/m²)</label>
+            <input type="number" id="calcFabricPrice" class="input" value="1250" style="width:100%" oninput="calcCost()">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">원단폭 (mm)</label>
+            <input type="number" id="calcWidth" class="input" value="65" style="width:100%" oninput="calcCost()">
+          </div>
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">실기장 (mm)</label>
+            <input type="number" id="calcLength" class="input" value="70" style="width:100%" oninput="calcCost()">
+          </div>
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">로스율 (%)</label>
+            <input type="number" id="calcLoss" class="input" value="5" style="width:100%" oninput="calcCost()">
+          </div>
+          <div>
+            <label style="color:var(--text-muted);font-size:12px;display:block;margin-bottom:4px">캡 사출단가 (원)</label>
+            <input type="number" id="calcCapPrice" class="input" value="12" style="width:100%" oninput="calcCost()">
+          </div>
+        </div>
+
+        <!-- 산출 결과 카드 -->
+        <div style="background:#0b1120;border:1px solid var(--accent);border-radius:10px;padding:20px">
+          <div style="font-weight:700;font-size:16px;color:var(--accent);margin-bottom:14px">📊 단위당 원가 상세 분석표</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">
+            <div style="background:var(--panel);padding:10px;border-radius:6px">
+              <div style="font-size:11px;color:var(--text-muted)">① 원단비 (개당)</div>
+              <div style="font-size:16px;font-weight:700;color:var(--text)" id="resFabric">0 원</div>
+            </div>
+            <div style="background:var(--panel);padding:10px;border-radius:6px">
+              <div style="font-size:11px;color:var(--text-muted)">② 캡 사출비 (개당)</div>
+              <div style="font-size:16px;font-weight:700;color:var(--text)" id="resCap">0 원</div>
+            </div>
+            <div style="background:var(--panel);padding:10px;border-radius:6px">
+              <div style="font-size:11px;color:var(--text-muted)">③ 인쇄비 (개당)</div>
+              <div style="font-size:16px;font-weight:700;color:var(--text)" id="resPrint">0 원</div>
+            </div>
+            <div style="background:var(--panel);padding:10px;border-radius:6px">
+              <div style="font-size:11px;color:var(--text-muted)">④ 박스/포장비 (개당)</div>
+              <div style="font-size:16px;font-weight:700;color:var(--text)" id="resBox">4.5 원</div>
+            </div>
+            <div style="background:var(--panel);padding:10px;border-radius:6px">
+              <div style="font-size:11px;color:var(--text-muted)">⑤ 가공노무비 (개당)</div>
+              <div style="font-size:16px;font-weight:700;color:var(--text)" id="resLabor">8.0 원</div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+            <div>
+              <span style="font-size:13px;color:var(--text-muted)">총 단위당 원가 (EA): </span>
+              <span style="font-size:24px;font-weight:900;color:var(--accent)" id="resTotalUnit">0 원</span>
+            </div>
+            <div>
+              <span style="font-size:13px;color:var(--text-muted)">총 발주 소요금액: </span>
+              <span style="font-size:22px;font-weight:900;color:var(--amber)" id="resTotalOrder">0 원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: 거래처 단가표 & 발주 -->
+  <div id="tab-vendor" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📋 주요 사출·금형 협력업체별 단가 현황</div>
+        <button class="btn btn-primary" onclick="alert('표준 발주서 양식(PDF) 생성 기능 준비 완료')">📄 발주서 생성</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>업체명</th>
+              <th>주력 취급 품목</th>
+              <th>대표 규격</th>
+              <th>공급 단가 (원)</th>
+              <th>최소 발주수량 (MOQ)</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:700">하이캡</td>
+              <td>튜브 캡 사출 (13종)</td>
+              <td>Φ19 립글로즈, Φ30 캡</td>
+              <td style="font-weight:700;color:var(--accent)">12.0 원 ~ 22.0 원</td>
+              <td>10,000 EA</td>
+              <td>정밀 사출, 불량률 0.5% 미만</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700">선경</td>
+              <td>화장품 튜브 캡 (4종)</td>
+              <td>Φ22 에센스 캡</td>
+              <td style="font-weight:700;color:var(--accent)">14.5 원</td>
+              <td>10,000 EA</td>
+              <td>표준 색상 다품종</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700">경진</td>
+              <td>핸드크림/치약 캡 (14종)</td>
+              <td>Φ25, Φ35 치약 캡</td>
+              <td style="font-weight:700;color:var(--accent)">17.0 원 ~ 26.5 원</td>
+              <td>20,000 EA</td>
+              <td>대량 양산 최적화</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700">필앤텍</td>
+              <td>특수 기능성 캡 (2종)</td>
+              <td>Φ40 바디로션 캡</td>
+              <td style="font-weight:700;color:var(--accent)">31.0 원</td>
+              <td>5,000 EA</td>
+              <td>에어리스 펌프 연계</td>
+            </tr>
+            <tr>
+              <td style="font-weight:700">노성</td>
+              <td>범용 캡 사출</td>
+              <td>Φ19 ~ Φ25 공용</td>
+              <td style="font-weight:700;color:var(--accent)">17.0 원</td>
+              <td>10,000 EA</td>
+              <td>안정적 공급망</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: 사업자 거버넌스 & 세무 -->
+  <div id="tab-governance" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🏛️ 개인사업자 파이로 거버넌스 및 세무 현황</div>
+      </div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:16px">
+          <div style="font-weight:700;margin-bottom:12px;font-size:14px;color:var(--accent)">사업자 기본 정보</div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">상호</span>
+            <span style="font-weight:700">파이로 (PYRO)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">대표자</span>
+            <span style="font-weight:700">황병승</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">사업자 형태</span>
+            <span>개인사업자 (제조·가공·도소매)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">과세 유형</span>
+            <span>일반과세자 (부가가치세 10%)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0">
+            <span style="color:var(--text-muted)">인입 메일</span>
+            <span>네이버 메일 (파이로 전용)</span>
+          </div>
+        </div>
+
+        <div style="background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:16px">
+          <div style="font-weight:700;margin-bottom:12px;font-size:14px;color:var(--accent)">세무 일정 및 Tax-Risk 가드</div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">부가가치세 확정신고</span>
+            <span>1기 (7/25), 2기 (다음해 1/25)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">종합소득세 신고</span>
+            <span>매년 5월 31일 (대표자 합산)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted)">BVS/SSJG 자금 이동</span>
+            <span style="color:var(--green);font-weight:700">정상 통제 중 (Tax-Risk 감시)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0">
+            <span style="color:var(--text-muted)">자금 관리 원칙</span>
+            <span>개인 통장 분리 및 전표 대사 준수</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  황병승 대표 4대 엔티티 통합 관제 시스템 · PYRO 콕핏 v1.00 · P.A.R.A 20-29 PYRO
+</footer>
+
+<script>
+var allTools = [{"rank":1,"code":"5602788","name":"비너","brand":"KBC","spec":"9mm(스테인리스-304)","buy_price":1141,"buy_vat":1256,"std_price":1630,"margin":22.9,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3386735-1-2.JPG","origin":"중국"},{"rank":2,"code":"1823569","name":"세탁기 급수호스","brand":"리빙엔젤","spec":"세탁기 급수호스(2m)","buy_price":5974,"buy_vat":6572,"std_price":10300,"margin":36.2,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3395707-1-2.jpg","origin":"한국"},{"rank":3,"code":"8872652","name":"쿨토시","brand":"르까프","spec":"흑색 (FREE) ","buy_price":3283,"buy_vat":3612,"std_price":4900,"margin":26.3,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3419624-1-2.jpg","origin":"중국"},{"rank":4,"code":"8622570","name":"라텍스장갑","brand":"메디컴","spec":"아큐핏101412(아이보리) M","buy_price":7371,"buy_vat":8109,"std_price":11700,"margin":30.7,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3402600-1-2.jpg","origin":"말레이시아"},{"rank":5,"code":"8550626","name":"PU-PALM코팅장갑","brand":"SMATO 코팅장갑","spec":"회색M  PU-6722","buy_price":4620,"buy_vat":5082,"std_price":6900,"margin":26.3,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2305892-1.jpg","origin":"중국"},{"rank":6,"code":"1700064","name":"부품함","brand":"중앙","spec":"CA504","buy_price":14430,"buy_vat":15874,"std_price":22200,"margin":28.5,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1129332-1-2.jpg","origin":"한국"},{"rank":7,"code":"1024070","name":"페인트롤러","brand":"스마토 페인트붓","spec":"강아지롤러","buy_price":2040,"buy_vat":2244,"std_price":3000,"margin":25.2,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1304379-1-2.jpg","origin":"중국"},{"rank":8,"code":"6342926","name":"에어커플러","brand":"씨디씨","spec":"PM20","buy_price":299,"buy_vat":329,"std_price":410,"margin":19.8,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339806-1-2.jpg","origin":"한국"},{"rank":9,"code":"1131750","name":"구리스(카트리지)","brand":"세신 구리스펌프","spec":"SB-CG(400CC,SB-TGG500전용)","buy_price":3600,"buy_vat":3961,"std_price":5000,"margin":20.8,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3288708-1-2.jpg","origin":"중국"},{"rank":10,"code":"2707611","name":"모종삽","brand":"골드","spec":"1370","buy_price":4914,"buy_vat":5406,"std_price":7020,"margin":23,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3413159-1-2.jpg","origin":"일본"},{"rank":11,"code":"1533921","name":"슬링벨트","brand":"주영","spec":"30MM-8M","buy_price":10692,"buy_vat":11762,"std_price":16200,"margin":27.4,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3242667-1-1.jpg","origin":"한국"},{"rank":12,"code":"3037430","name":"초경로타리바(생크3MM)","brand":"와이지원로타리바","spec":"SM-42M D/C","buy_price":7415,"buy_vat":8157,"std_price":11770,"margin":30.7,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1119612-1.jpg","origin":"한국"},{"rank":13,"code":"4800143","name":"토글클램프","brand":"KJF","spec":"KJF003-25F(수평형)","buy_price":3672,"buy_vat":4040,"std_price":5400,"margin":25.2,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1105635-1-2.jpg","origin":"한국"},{"rank":14,"code":"8352042","name":"보안경","brand":"오토스 보안경","spec":"B-618ASF","buy_price":8370,"buy_vat":9207,"std_price":13500,"margin":31.8,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2101733-1-2.jpg","origin":"한국"},{"rank":15,"code":"1707544","name":"두부상자","brand":"스마토 부품상자","spec":"SFP-01 녹색","buy_price":2860,"buy_vat":3147,"std_price":4400,"margin":28.5,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3383658-1-2.jpg","origin":"한국"},{"rank":16,"code":"1160345","name":"구리스(카트리지)","brand":"부성테크","spec":"450CC(노랑,19Φ)","buy_price":5132,"buy_vat":5646,"std_price":6580,"margin":14.2,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1277347-1.jpg","origin":"한국"},{"rank":17,"code":"5068160","name":"잔디가위용날","brand":"보쉬 가든툴","spec":"ISIO 3 용 (8EY)","buy_price":13338,"buy_vat":14672,"std_price":24700,"margin":40.6,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3247108-1-2.jpg","origin":"헝가리"},{"rank":18,"code":"8390644","name":"안면부 여과식 방진마스크","brand":"크린탑","spec":"C280V(2급-2스텝)","buy_price":8820,"buy_vat":9702,"std_price":14700,"margin":34,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2317415-1-2.jpg","origin":"한국"},{"rank":19,"code":"8390963","name":"안면부 여과식 방진마스크","brand":"SMATO 마스크","spec":"C200W(2급)","buy_price":5660,"buy_vat":6227,"std_price":9000,"margin":30.8,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3222380-1-2.jpg","origin":"베트남"},{"rank":20,"code":"1107425","name":"육각드라이버(정밀)","brand":"세신 볼렌치","spec":"SB-PSH0.9(0.9*50)","buy_price":1454,"buy_vat":1600,"std_price":2020,"margin":20.8,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3406245-1-2.jpg","origin":"대만"},{"rank":21,"code":"4014393","name":"메저밴드","brand":"블루텍줄자","spec":"BMF-20 (2M*13)","buy_price":2226,"buy_vat":2449,"std_price":3180,"margin":23,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3293705-1-2.jpg","origin":"중국"},{"rank":22,"code":"8551485","name":"충격방지장갑","brand":"SMATO 코팅장갑","spec":"GET-A-11 L","buy_price":8174,"buy_vat":8992,"std_price":12200,"margin":26.3,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3295658-1-1.JPG","origin":"중국"},{"rank":23,"code":"5394010","name":"코발트스텐드릴비트","brand":"보쉬 비트","spec":"4.2x43x75 (10개입) (882)","buy_price":11924,"buy_vat":13117,"std_price":20920,"margin":37.3,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3443843-1-2.jpg","origin":"중국"},{"rank":24,"code":"1002102","name":"오해머(TPR자루)","brand":"스마토 망치","spec":"2 lb","buy_price":6336,"buy_vat":6970,"std_price":9600,"margin":27.4,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1221554-1-2.jpg","origin":"중국"},{"rank":25,"code":"8130088","name":"미라클픽스","brand":"미라클픽스","spec":"수중용 57G ","buy_price":4669,"buy_vat":5136,"std_price":6670,"margin":23,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2211345-1-2.jpg","origin":"한국"},{"rank":26,"code":"7752801","name":"방우락커 플러그","brand":"동양전자","spec":"DYP-1301","buy_price":1978,"buy_vat":2176,"std_price":2710,"margin":19.7,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346964-1-2.jpg","origin":"한국"},{"rank":27,"code":"1029525","name":"노즐(LANCE)","brand":"스마토 압축분무기","spec":"SM-CS(구형)용 장대노즐SET","buy_price":2664,"buy_vat":2931,"std_price":3650,"margin":19.7,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3216090-1-1.jpg","origin":"중국"},{"rank":28,"code":"5920675","name":"에어투터치커플러(소켓)","brand":"UDT에어커플러","spec":"SH-30","buy_price":1475,"buy_vat":1623,"std_price":2170,"margin":25.2,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3281059-1-2.jpg","origin":"중국"},{"rank":29,"code":"8528812","name":"안전모","brand":"에스탑","spec":"[브랜드:탄탄] STFSH-101 보안면 안전모 백색","buy_price":24570,"buy_vat":27028,"std_price":37800,"margin":28.5,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3385691-1-2.jpg","origin":"한국"},{"rank":30,"code":"6343129","name":"에어너트커플러","brand":"씨디씨","spec":"PN12","buy_price":1175,"buy_vat":1293,"std_price":1610,"margin":19.7,"image":"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339846-1-2.jpg","origin":"한국"}];
+var tubeSpecs = [{"name":"Φ19 립글로즈","width":65,"min_len":70,"cap_vendor":"하이캡","cap_price":12},{"name":"Φ22 에센스/크림","width":74,"min_len":85,"cap_vendor":"선경","cap_price":14.5},{"name":"Φ25 핸드크림","width":84,"min_len":100,"cap_vendor":"경진","cap_price":17},{"name":"Φ30 클렌징폼","width":100,"min_len":120,"cap_vendor":"하이캡","cap_price":22},{"name":"Φ35 대용량 치약","width":116,"min_len":140,"cap_vendor":"경진","cap_price":26.5},{"name":"Φ40 바디로션","width":132,"min_len":160,"cap_vendor":"필앤텍","cap_price":31}];
+
+function switchTab(name){
+  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+
+  var el = document.getElementById('tab-' + name);
+  if(el) el.classList.add('active');
+
+  var idx = ['dashboard', 'tools', 'cost', 'vendor', 'governance'].indexOf(name);
+  if(idx >= 0){
+    document.querySelectorAll('.tab-item')[idx].classList.add('active');
+  }
+}
+
+function renderTools(list){
+  var grid = document.getElementById('toolsGrid');
+  grid.innerHTML = list.map(t => `
+    <div class="prod-card">
+      <img src="${t.image || 'https://via.placeholder.com/200?text=No+Image'}" class="prod-img" onerror="this.src='https://via.placeholder.com/200?text=Tool+Image'">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted)">
+        <span>Rank #${t.rank} · ${t.brand}</span>
+        <span style="color:var(--accent);font-weight:700">마진 ${t.margin}%</span>
+      </div>
+      <div class="prod-title" title="${t.name} ${t.spec}">${t.name} [${t.spec}]</div>
+      <div style="font-size:11px;color:var(--text-muted)">코드: ${t.code} · ${t.origin}</div>
+      <div class="prod-price-row">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted)">매입가(VAT)</div>
+          <div style="font-weight:600">${t.buy_vat.toLocaleString()} 원</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text-muted)">표준판매단가</div>
+          <div style="font-size:15px;font-weight:800;color:var(--accent)">${t.std_price.toLocaleString()} 원</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterTools(){
+  var q = document.getElementById('toolSearch').value.toLowerCase();
+  var filtered = allTools.filter(t => {
+    return (t.name || '').toLowerCase().includes(q) ||
+           (t.brand || '').toLowerCase().includes(q) ||
+           (t.spec || '').toLowerCase().includes(q);
+  });
+  renderTools(filtered);
+}
+
+function applyTubeSpec(idx){
+  var spec = tubeSpecs[idx];
+  if(!spec) return;
+  document.getElementById('calcWidth').value = spec.width;
+  document.getElementById('calcLength').value = spec.min_len;
+  document.getElementById('calcCapPrice').value = spec.cap_price;
+  calcCost();
+}
+
+function calcCost(){
+  var width_mm = Number(document.getElementById('calcWidth').value) || 65;
+  var len_mm = Number(document.getElementById('calcLength').value) || 70;
+  var fabricPrice = Number(document.getElementById('calcFabricPrice').value) || 1250;
+  var lossRate = Number(document.getElementById('calcLoss').value) || 5;
+  var capPrice = Number(document.getElementById('calcCapPrice').value) || 12;
+  var orderQty = Number(document.getElementById('calcOrderQty').value) || 10000;
+
+  var width_m = width_mm / 1000;
+  var len_m = len_mm / 1000;
+  var lossFactor = 1 + (lossRate / 100);
+
+  // 사장님 order 공식: 원단비 = width_m * len_m * fabricPrice * lossFactor
+  var fabricCost = width_m * len_m * fabricPrice * lossFactor;
+
+  // 인쇄비 = 250,000 / orderQty * lossFactor (기본 동판/인쇄비 배분)
+  var printCost = orderQty > 0 ? (250000 / orderQty * lossFactor) : 0;
+
+  var boxCost = 4.5;
+  var laborCost = 8.0;
+
+  var totalUnit = fabricCost + capPrice + printCost + boxCost + laborCost;
+  var totalOrder = totalUnit * orderQty;
+
+  document.getElementById('resFabric').innerText = fabricCost.toFixed(2) + ' 원';
+  document.getElementById('resCap').innerText = capPrice.toFixed(2) + ' 원';
+  document.getElementById('resPrint').innerText = printCost.toFixed(2) + ' 원';
+  document.getElementById('resBox').innerText = boxCost.toFixed(1) + ' 원';
+  document.getElementById('resLabor').innerText = laborCost.toFixed(1) + ' 원';
+
+  document.getElementById('resTotalUnit').innerText = totalUnit.toFixed(1) + ' 원';
+  document.getElementById('resTotalOrder').innerText = Math.round(totalOrder).toLocaleString() + ' 원';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderTools(allTools);
+  calcCost();
+});
+</script>
+</body>
+</html>
