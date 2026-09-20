@@ -585,9 +585,9 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <div class="panel-head">
         <div>
           <div class="panel-title">📑 부가가치세 납부 예상 및 매입세액 공제 현황 (public.pyro_vat 직결)</div>
-          <div style="font-size:11px;color:var(--text-muted)">재활용폐자원 매입세액공제(3/103) 및 매입자납부특례 적용 상태</div>
+          <div style="font-size:11px;color:var(--text-muted)">대표님 확정: 고물상(MF) 전건은 수탁 임가공비 수취 구조임 (원자재 매입 0원 정상)</div>
         </div>
-        <span class="tag tag-tax-warn" style="font-size:11.5px">🔴 매입세액 0원 경고</span>
+        <span class="tag tag-tax-ok" style="font-size:11.5px">🟢 수탁임가공(용역) 확정 (매입 0원 정상)</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -1106,17 +1106,17 @@ function renderVatCard(rows){
   var tbody = document.getElementById('vatTableRows');
   if(!tbody || !rows || rows.length === 0) return;
   tbody.innerHTML = rows.map(r => {
-    var isZeroWarn = (r.item.includes('매입세액') || r.item.includes('공제')) && (Number(r.annual_amt) === 0);
+    var isZero = (r.item.includes('매입세액') || r.item.includes('공제')) && (Number(r.annual_amt) === 0);
     return `
       <tr>
         <td><strong>${r.item}</strong></td>
         <td style="font-size:11.5px;color:var(--text-muted)">${r.basis || '-'}</td>
         <td class="amt-neutral">${fmt(r.h1_amt)}</td>
         <td class="amt-neutral">${fmt(r.h2_amt)}</td>
-        <td class="${isZeroWarn ? 'amt-minus' : 'amt-plus'}" style="font-weight:800;font-size:13.5px">
-          ${fmt(r.annual_amt)} 원 ${isZeroWarn ? '<span class="tag tag-tax-warn" style="margin-left:4px">0원 누락</span>' : ''}
+        <td class="amt-neutral" style="font-weight:800;font-size:13.5px">
+          ${fmt(r.annual_amt)} 원 ${isZero ? '<span class="tag tag-tax-ok" style="margin-left:4px">임가공용역(0원정상)</span>' : ''}
         </td>
-        <td style="font-size:11.5px;color:var(--text-muted)">${r.note || '-'}</td>
+        <td style="font-size:11.5px;color:var(--text-muted)">${r.note || (isZero ? '수탁임가공비 수취 거래 (원자재 매입 없음)' : '-')}</td>
       </tr>
     `;
   }).join('');

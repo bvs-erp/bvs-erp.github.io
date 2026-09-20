@@ -825,7 +825,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         </div>
         <div style="font-size:12.5px;color:var(--tx2)">
           2026년 1~5월은 현장 공수 원장(5200 노무비)이 DB에 없어, 누적 손익표의 영업손실(-3,695만 원)이 실제 실적이 아닌 데이터 결손에 의한 왜곡입니다.<br>
-          경영 판단 시에는 <b>2026년 6월 이후 실적 및 발생주의 보정 뷰(bvs_pl_month_accrual)</b>를 기준으로 확인하십시오.
+          경영 판단 시에는 <b>2026년 6월 이후 실적 및 청구예상금액 반영 발생주의 보정 뷰(bvs_pl_month_accrual)</b>를 기준으로 확인하십시오.
         </div>
       </div>
       <div class="kpis" id="plKpi"></div>
@@ -2072,19 +2072,19 @@ async function renderGroupPlSummary(){
           <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <span style="font-weight:700;color:var(--ac);font-size:13px">🔵 BVS (반도체 셋업)</span>
-              ${unbilledGap > 0 ? `<span style="background:rgba(239,68,68,0.15);color:var(--crit);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">⚠️ 미발행 ${Math.round(unbilledGap/10000).toLocaleString()}만</span>` : ''}
+              ${unbilledGap > 0 ? `<span style="background:rgba(59,130,246,0.15);color:var(--ac);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">청구예상 +${Math.round(unbilledGap/10000).toLocaleString()}만 원</span>` : ''}
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
-              매출: 계산서 <b>${Math.round(bvsBilledRev/10000).toLocaleString()}만</b> ➔ 발생주의 <b>${Math.round(bvsAccrualRev/10000).toLocaleString()}만 원</b>
+              계산서 발행매출: <b>${Math.round(bvsBilledRev/10000).toLocaleString()}만 원</b>
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
-              현장청구액: <b>${Math.round(bvsFieldBill/10000).toLocaleString()}만 원</b>
+              청구예상금액: <b>${Math.round(bvsFieldBill/10000).toLocaleString()}만 원</b> (발생주의 <b>${Math.round(bvsAccrualRev/10000).toLocaleString()}만</b>)
             </div>
             <div style="font-size:12px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln);display:flex;justify-content:space-between">
               <span>영업이익:</span>
               <span>
                 <span class="neg" style="font-size:11px">${Math.round(bvsBilledOp/10000).toLocaleString()}만</span> ➔ 
-                <span class="pos" style="font-size:13px">${bvsAccrualOp >= 0 ? '+' : ''}${Math.round(bvsAccrualOp/10000).toLocaleString()}만 원 (흑자보정)</span>
+                <span class="pos" style="font-size:13px">${bvsAccrualOp >= 0 ? '+' : ''}${Math.round(bvsAccrualOp/10000).toLocaleString()}만 원 (청구예상 반영)</span>
               </span>
             </div>
           </div>
