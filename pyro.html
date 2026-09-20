@@ -193,7 +193,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.04</span></div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.05</span></div>
       <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 (PYRO)</div>
     </div>
   </div>
@@ -678,6 +678,39 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
             <tr><td colspan="6" style="text-align:center;padding:24px">부가세 데이터를 불러오는 중...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- WO-36: 초과인출금 지급이자 산출 불가 안내 및 필수 입력 항목 카드 -->
+    <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">⚠️</span>
+          <div>
+            <h4 style="font-size:14px;font-weight:800;color:var(--accent);margin:0">초과인출금 지급이자 적수 계산 — 대출 원장 미등록으로 산출 불가 (WO-36)</h4>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">소득세법 시행령 제61조 제1항 제2호: 필요경비 불산입액 = 지급이자(2,927만) × (초과인출금 적수 ÷ 차입금 적수)</div>
+          </div>
+        </div>
+        <span class="badge" style="background:#ca8a04;color:#fff;font-weight:700">원장 탭 추가 필요</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+        <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-weight:700;color:#86efac;font-size:12.5px;margin-bottom:6px">✅ 현재 확보된 데이터 (DB 적재 완료)</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.6">
+            • <b>사업주 인출·출자 내역</b>: <code>pyro_owner_account</code> 31건 (출자 3,435만 / 인출 4,727만)<br>
+            • <b>지급이자 실원장</b>: <code>pyro_journal</code> 9200 계정 11건 <b>29,273,036원</b>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-weight:700;color:#fca5a5;font-size:12.5px;margin-bottom:6px">❌ 부재 데이터 및 필수 입력 항목 (시트 탭 추가 필요)</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.6">
+            • <b>차입금 대출 원장</b>: <b>대출 실행일 · 최초 원금 · 일자별 상환 잔액 · 적용 이자율</b><br>
+            • <b>재무상태표</b>: 기말 사업용 자산 합계액 및 부채 합계액 (초과인출금 판정용)
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--text-muted);background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:6px;border:1px solid var(--border)">
+        💡 <b>세무 안내</b>: 2025-09 공장건물(4.2억) 담보대출 추정 시 불산입 세액은 수십만 원대로 추정되나, <b>국세청 세무조사 시 적수 계산 근거 구비 여부가 핵심</b>입니다. 시트에 대출 원장 탭이 추가되면 3단 뷰(<code>pyro_loan</code> ➔ <code>pyro_excess_draw_days</code> ➔ <code>pyro_interest_disallowed</code>)로 자동 산출 연동됩니다.
       </div>
     </div>
 
