@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.28 · 대표 콕핏</title>
+<title>BVS ERP v1.29 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -275,6 +275,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 .cal .ce.k-team_full{background:color-mix(in srgb,var(--warn) 18%,transparent)}.cal .ce.k-monthly{background:color-mix(in srgb,var(--s1) 12%,transparent)}
 .cal .ce.k-none{background:color-mix(in srgb,var(--tx3) 12%,transparent)}
 .cal .ce.plan{opacity:.55;font-style:italic}
+.cal .ce.abs{background:color-mix(in srgb,var(--info) 12%,transparent);color:var(--info);font-weight:600}
+@media(max-width:1100px){.cal .t{position:static!important}.cal th.nm,.cal td.nm{min-width:64px;padding:4px 5px}}
 .cal td.t,.cal th.t{text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums;background:var(--sf2);position:sticky;z-index:1;border-left:1px solid var(--ln)}
 .cal th.t{z-index:3}.cal tfoot td.t{z-index:2}
 .cal .t{box-sizing:border-box;overflow:hidden}.cal .t1{right:414px;width:60px;min-width:60px}.cal .t2{right:350px;width:64px;min-width:64px}.cal .t3{right:290px;width:60px;min-width:60px}.cal .t4{right:180px;width:110px;min-width:110px}.cal .t5{right:90px;width:90px;min-width:90px}.cal .t6{right:0;width:90px;min-width:90px}
@@ -598,7 +600,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.28</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.29</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -628,9 +630,11 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           <button class="btn sm" id="btnHomeToday" onclick="setHomeToday()">오늘</button>
           <button class="btn sm" onclick="openMonthlyCalView()" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700">🗓️ 9월 공휴일·추석 관제 달력</button>
           <button class="btn sm" onclick="openAbsenceEditModal()" style="background:#e0e7ff;border-color:#6366f1;color:#3730a3;font-weight:700">🏖️ 부재·휴무 등록/수정</button>
+          <button class="btn sm p" onclick="openWeekAvail()">💬 이번 주 투입 가능</button>
         </div>
       </div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
+      <div id="homeAbsReq" style="display:none"></div>
       <div class="kgrps" id="homeKpi"></div>
       <div class="sec" id="homeDaySec" style="margin-bottom:16px"><h3>현장 일보 <span class="cnt" id="homeAttN"></span><span class="r tiny dim" id="homeMtd"></span><span class="r"><button class="btn sm" onclick="go('site')">현장 →</button></span></h3>
         <div class="kpis" id="homeDayKpi" style="margin-bottom:10px"></div>
@@ -917,7 +921,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <button class="btn sm" onclick="changeCalMonth(-1)">◀ 이전 달</button>
-            <button class="btn sm" id="calChuseokBtn" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="setCalMonth('2026-09')">🌕 9월 추석 황금연휴</button>
+            <button class="btn sm" id="calChuseokBtn" style="background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="setCalMonth('2026-09')">🌕 9월 추석 연휴</button>
             <button class="btn sm" onclick="changeCalMonth(1)">다음 달 ▶</button>
             <button class="btn sm p" onclick="setCalToday()">오늘</button>
           </div>
@@ -925,7 +929,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="kpis" id="calKpis"></div>
         <div class="chips" id="calFilterChips" style="margin-bottom:12px">
           <span class="chip on" data-filter="all" onclick="setCalFilter('all', this)">전체 보기</span>
-          <span class="chip" data-filter="hol" onclick="setCalFilter('hol', this)">🎌 공휴일·추석 황금연휴</span>
+          <span class="chip" data-filter="hol" onclick="setCalFilter('hol', this)">🎌 공휴일·추석 연휴</span>
           <span class="chip" data-filter="off" onclick="setCalFilter('off', this)">🏖️ 휴무·부재·교육</span>
           <span class="chip" data-filter="work" onclick="setCalFilter('work', this)">👷 현장 출근일</span>
         </div>
@@ -1108,7 +1112,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.28';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.29';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1780,6 +1784,7 @@ async function loadAll(){
     ['stm',function(){return sb.from('ceo_settle_matches').select('*').order('matched_at',{ascending:false}).limit(500)}],
     ['po',function(){return sb.from('ceo_po_open').select('*').order('doc_date',{ascending:false})}],
     ['pick',function(){return sb.from('ceo_item_pick').select('*').order('name_ko').limit(3000)}],
+    ['abs',function(){return sb.from('ceo_absences').select('*').neq('status','취소').order('start_date')}],
     ['plans',function(){return sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')}]
   ];
 
@@ -2137,6 +2142,7 @@ function renderHome(){
   el('homeAttN').textContent=curDay||'';
   renderMap(curDay, targetRows);
   renderHomeDay(curDay, isToday);
+  try{renderHomeAbs()}catch(e){}
   grid('gHomeSd',[{k:'doc_date',t:'일자',l:1},{k:'doc_kind',t:'종류',l:1,f:pillKind},{k:'partner_name',t:'거래처',l:1},{k:'total_amt',t:'합계',f:'won'},{k:'status',t:'상태',l:1,f:pillSt}],{rows:D.sd.slice(0,8),csv:false,page:8,onRow:openDoc});
 }
 
@@ -2182,6 +2188,7 @@ async function renderHomeDay(day,isToday){
      chips:[{k:'_st',vals:[['','전체'],['1',isToday?'근무 중':'퇴근 미등록'],['2','퇴근'],['0','앱 기록 없음']]}],
      empty:'이 날 등록된 투입이 없습니다',
      expand:function(r){return expCell('업무',esc(r.work_desc||'–'))+expCell('업무일지',esc(r.work_log||'작성 안 함').replace(/\n/g,'<br>'))+expCell('잔업',num(r.ot_hours)+'h')+expCell('상태',pillSt(r.status))}});
+  try{var cg=el('gHomeAtt').querySelector('.chipgrp[data-k="_st"]');if(cg&&cg.children[1])cg.children[1].textContent=isToday?'근무 중':'퇴근 미등록'}catch(e){}
 }
 /* ═══════════ 현장 ═══════════ */
 function planNew(r){r=r||{};var sites=(D.sites||[]).filter(function(s){return s.is_active!==false});
@@ -2347,9 +2354,10 @@ async function renderCal(){var box=el('calBox');if(!box)return;var m=M();
   people.forEach(function(p){h+='<tr><td class="nm" title="'+esc(p.no)+'">'+esc(p.name)+(p.kind==='team_full'?' <span class="pill y tiny">도급</span>':p.kind==='monthly'?' <span class="pill tiny">월급</span>':'')+'</td>';
     for(var d=1;d<=nd;d++){var ds=m+'-'+String(d).padStart(2,'0');var wd=new Date(y,mo-1,d).getDay();var es=p.days[ds]||[];
       h+='<td class="d'+(wd===0||wd===6?' we':'')+'" onclick="calCell(\''+p.no+'\',\''+ds+'\')">';
+      if(!es.length){var ab=absOn(p.no,ds);if(ab)h+='<div class="ce abs" title="'+esc((ab.memo||'')+(ab.backup_note?' · '+ab.backup_note:''))+'">'+esc(ab.kind)+(ab.start_time?' '+String(ab.start_time).slice(0,5):'')+'</div>'}
       es.forEach(function(r){var hrs=(+r.work_md||0)*8+(+r.ot_hours||0);dayN[ds]=(dayN[ds]||0)+1;dayH[ds]=(dayH[ds]||0)+hrs;var k=(r.project_code==='PJ-EDU'||r.project_code==='PJ-OFF')?'none':r.cost_kind;var plan=!r.work_start&&r.status==='draft'&&!(+r.work_md);
-        var amt=k==='none'?'':k==='team_full'?'<span class="a">팀장 '+won(r.cost_amt)+'</span>':k==='monthly'?'<span class="a dim">월 '+won(r.cost_amt)+'</span>':'<span class="a">'+won(r.pay_amt)+(+r.leader_amt?'<span class="dim">+'+won(r.leader_amt)+'</span>':'')+'</span>';
-        h+='<div class="ce k-'+k+(plan?' plan':'')+(CAL.mode==='site'?' st-'+String(r.site_id||'').slice(0,2):'')+'" title="'+esc(r.site_name)+' · '+esc(PJ2[r.project_code]||r.project_code||'')+(r.rate_override_daily_amt?' · 단가조정 '+won(r.rate_override_daily_amt)+' ('+esc(r.rate_override_reason||'')+')':'')+(r.work_desc?'\n'+esc(r.work_desc):'')+'"><span class="s">'+esc(siteShort(r.site_name))+'</span> <span class="h">'+(plan?'계획':num(hrs,1).replace(/\.0$/,'')+'h')+'</span>'+(amt?'<br>'+amt:'')+'</div>'});
+        var amt=(k==='none'||plan)?'':k==='team_full'?'<span class="a">팀장 '+won(r.cost_amt)+'</span>':k==='monthly'?'<span class="a dim">월 '+won(r.cost_amt)+'</span>':'<span class="a">'+won(r.pay_amt)+(+r.leader_amt?'<span class="dim">+'+won(r.leader_amt)+'</span>':'')+'</span>';
+        h+='<div class="ce k-'+k+(plan?' plan':'')+(CAL.mode==='site'?' st-'+String(r.site_id||'').slice(0,2):'')+'" title="'+esc(r.site_name)+' · '+esc(PJ2[r.project_code]||r.project_code||'')+(r.rate_override_daily_amt?' · 단가조정 '+won(r.rate_override_daily_amt)+' ('+esc(r.rate_override_reason||'')+')':'')+(r.work_desc?'\n'+esc(r.work_desc):'')+'"><span class="s">'+esc(siteShort(r.site_name))+'</span> <span class="h">'+(plan?'예정':num(hrs,1).replace(/\.0$/,'')+'h')+'</span>'+(amt?'<br>'+amt:'')+'</div>'});
       h+='</td>'}
     h+='<td class="t t1">'+p.n+'</td><td class="t t2">'+num(p.md)+'</td><td class="t t3">'+(p.ot?num(p.ot):'<span class="dim">–</span>')+'</td><td class="t t4" title="'+esc(p.payNote)+'"><b>'+won(p.payTot)+'</b>'+(p.kind==='team_full'?'<br><span class="pill y tiny">팀장청구</span>':p.kind==='monthly'?'<br><span class="tiny dim">일할 합 '+won(p.cost)+'</span>':'')+'</td><td class="t t5">'+won(p.rev)+'</td><td class="t t6">'+sgn(p.margin)+'</td></tr>'});
   h+='</tbody><tfoot><tr><td class="nm">투입 인원 / 시간</td>';
@@ -4872,11 +4880,9 @@ var HOLIDAYS_KR = {
   '2026-06-06': '현충일',
   '2026-08-15': '광복절',
   '2026-08-17': '광복절 대체공휴일',
-  '2026-09-24': '추석 연휴 (황금연휴 1/5)',
-  '2026-09-25': '추석 당일 (한가위 2/5)',
-  '2026-09-26': '추석 연휴 (토요연휴 3/5)',
-  '2026-09-27': '일요일 / 추석 연휴 (4/5)',
-  '2026-09-28': '추석 대체공휴일 (5/5 황금연휴)',
+  '2026-09-24': '추석 연휴',
+  '2026-09-25': '추석',
+  '2026-09-26': '추석 연휴',
   '2026-10-03': '개천절',
   '2026-10-05': '개천절 대체공휴일',
   '2026-10-09': '한글날',
@@ -5101,8 +5107,8 @@ function renderMonthlyCal(ym){
     var kpiHtml = '';
     kpiHtml += kpi('월간 총 일수', totalDays + '<small>일</small>', ym + '월 기준', 'hl');
     if(ym === '2026-09'){
-      kpiHtml += kpi('법정공휴일·주휴일', '11<small>일</small>', '추석 황금연휴 5일 (9/24~28)', 'crit');
-      kpiHtml += kpi('평일 소정근로일', '19<small>일</small>', '일반 근무 19일 관제', 'good');
+      kpiHtml += kpi('법정 공휴일', holCount + '<small>일</small>', '추석 9/24~26 (9/28은 대체공휴일 아님)', 'crit');
+      kpiHtml += kpi('평일 소정근로일', workDayCount + '<small>일</small>', '주 5일 기준 소정근로', 'good');
       kpiHtml += kpi('9월 3인 급여 확정안', '592.6<small>만원</small>', '박준서233.3 원동진183.3 이경준176(토1.5배)', 'click', ' onclick="crewSubNav(\'sec-crewAbsence\')"');
     } else {
       kpiHtml += kpi('법정 공휴일', holCount + '<small>일</small>', '공휴일 지정 기준');
@@ -5141,7 +5147,7 @@ function renderMonthlyCal(ym){
     var evList = getDayEvents(dStr);
     var attList = attMap[dStr] || [];
 
-    var isChuseok = (dStr >= '2026-09-24' && dStr <= '2026-09-28');
+    var isChuseok = (dStr >= '2026-09-24' && dStr <= '2026-09-26');
     var cellClasses = ['mcal-cell'];
     if(isSun) cellClasses.push('sun');
     if(isSat) cellClasses.push('sat');
@@ -5275,8 +5281,8 @@ function showCalDayDetail(dateStr){
     html += '<b>이경준</b>: 토요일 첫 출근 투입일. 근로기준법상 주 40시간 미충족 시 1.0배이나, <b>CEO 특별 승인으로 1.5배 연장특근 인정 (+48,000원 상당 가산)</b> 반영.';
   } else if(dateStr === '2026-09-16'){
     html += '<b>박준서</b>: 병가 결근 1일 일할 공제.<br><b>원동진</b>: 현장 미투입 1일 일할 공제.';
-  } else if(dateStr >= '2026-09-24' && dateStr <= '2026-09-28'){
-    html += '<b>추석 황금연휴 (5일간)</b>: 법정 유급 공휴일(관공서 공휴일에 관한 규정 제2조 및 근로기준법 제55조 제2항)로서 정규 월급여 전액 보장.';
+  } else if(dateStr >= '2026-09-24' && dateStr <= '2026-09-26'){
+    html += '<b>추석 연휴 (9/24~26)</b>: 법정 유급 공휴일(관공서 공휴일에 관한 규정 제2조 및 근로기준법 제55조 제2항)로서 정규 월급여 전액 보장. ※ 9/28(월)은 대체공휴일이 아닙니다(토요일과 겹친 추석은 대체 대상 아님).';
   } else if(dateStr === '2026-09-30'){
     html += '<b>9월 급여 확정</b>:<br>'
       + '• <b>박준서</b>: 2,333,000원 (8/31 1일 +8.3만, 9/4·9/7·9/16 공제 -25만)<br>'
@@ -5312,14 +5318,7 @@ function showCalDayDetail(dateStr){
 }
 
 /* ── 9월 부재·휴무·교육 관제 및 인터랙티브 달력 연동 시스템 (v1.26) ── */
-var DEFAULT_ABSENCE_SCHEDULES = [
-  { id: 1, date: '09/17 (목) 13:30', site: '일반 현장 (SK이천)', who: '원동진', type: '교육', desc: '이천 SK하이닉스 중량물 취급 안전교육', backup: '사전 공수 대체 완료', status: '확정' },
-  { id: 2, date: '09/17 (목) ~ 09/18 (금)', site: 'TES 용인 현장', who: '박정우', type: '휴가', desc: '연차 휴가 (2일간)', backup: '전승진 엔지니어 100% 밀착 커버', status: '승인' },
-  { id: 3, date: '09/20 (일)', site: '일반 현장', who: '최원, 이세영', type: '휴무', desc: '일요 정기 휴무', backup: '고객사 라인 사전 협의 완료', status: '계획' },
-  { id: 4, date: '09/22 (화) 13:30', site: '일반 현장 (SK청주)', who: '조영훈', type: '교육', desc: '청주 SK하이닉스 중량물 취급 안전교육', backup: '이경준 엔지니어 라인 대기', status: '확정' },
-  { id: 5, date: '09/23 (수) ~ 09/28 (월)', site: '일반 현장', who: '김현수', type: '휴가', desc: '연차 휴가 (6일간 / 추석 황금연휴 연계)', backup: '청주 주력조(이경준/조영훈) 정상 가동', status: '승인' },
-  { id: 6, date: '09/28 (월) ~ 10/02 (금)', site: 'TES 용인 현장', who: '전승진', type: '휴가', desc: '추석 연휴 연계 연차 휴가 (5일간)', backup: '박정우 엔지니어 전담 가동', status: '승인' }
-];
+var DEFAULT_ABSENCE_SCHEDULES = []; /* v1.29: 휴가·부재 원장은 hr.absences (DB) */
 
 var ACTIVE_2026_STAFF_GROUPS = [
   { group: '이천/청주 일반현장', members: ['김현수', '이경준', '조영훈', '이세영', '최원', '박준서', '원동진'] },
@@ -5352,47 +5351,49 @@ function formatDateWithDow(dStr){
   return mm + '/' + dd + ' (' + dow + ')';
 }
 
-function getAbsenceSchedules(){
-  try {
-    var v = localStorage.getItem('bvs_absence_version');
-    if(v !== '20260918_v4'){
-      localStorage.setItem('bvs_absence_version', '20260918_v4');
-      localStorage.setItem('bvs_absence_schedules', JSON.stringify(DEFAULT_ABSENCE_SCHEDULES));
-      return DEFAULT_ABSENCE_SCHEDULES.slice();
-    }
-    var ls = localStorage.getItem('bvs_absence_schedules');
-    if(ls){
-      var parsed = JSON.parse(ls);
-      if(Array.isArray(parsed) && parsed.length > 0){
-        parsed.forEach(function(item){
-          if(item.date) item.date = sanitizeAbsenceDate(item.date);
-        });
-        return parsed;
-      }
-    }
-  } catch(e){}
-  return DEFAULT_ABSENCE_SCHEDULES.slice();
-}
+/* 휴가·부재: DB(hr.absences) 원장 — v1.29부터 브라우저 저장 폐지 */
+var DOW_KO=['일','월','화','수','목','금','토'];
+function absFmt(d){var x=new Date(d+'T00:00:00');return String(x.getMonth()+1).padStart(2,'0')+'/'+String(x.getDate()).padStart(2,'0')+' ('+DOW_KO[x.getDay()]+')'}
+function absLegacy(r){var dt=absFmt(r.start_date)+(r.end_date&&r.end_date!==r.start_date?' ~ '+absFmt(r.end_date):'')+(r.start_time?' '+String(r.start_time).slice(0,5):'');
+  return {id:r.absence_id,date:dt,who:r.person_name,type:r.kind,status:r.status,site:r.site_note||'',desc:r.memo||'',backup:r.backup_note||'',_r:r}}
+function absLive(){return (D.abs||[]).filter(function(r){return r.status!=='취소'&&r.status!=='반려'})}
+function absOn(emp,ds){var hit=null;absLive().forEach(function(r){if(r.status!=='신청'&&r.employment_no===emp&&r.start_date<=ds&&r.end_date>=ds)hit=r});return hit}
+function getAbsenceSchedules(){return absLive().map(absLegacy)}
+function setAbsenceSchedules(list){/* v1.29: DB 저장으로 대체 — 호출되어도 아무 것도 하지 않음 */}
+async function absReload(){var r=await sb.from('ceo_absences').select('*').neq('status','취소').order('start_date');if(r.error){toast(r.error.message,'e');return}D.abs=r.data||[];
+  try{renderAbsenceTimeline()}catch(e){} try{renderMonthlyCal(CAL_CUR_YM)}catch(e){} try{if(_renderedPages&&_renderedPages.site)renderSite()}catch(e){} try{renderHomeAbs()}catch(e){}}
+function absParseDates(txt){var y=+(String(CAL_CUR_YM||new Date().toISOString()).slice(0,4));var ms=[],re=/(\d{1,2})[\/\-.](\d{1,2})/g,m;
+  while((m=re.exec(txt))){var mm=+m[1],dd=+m[2];if(mm>=1&&mm<=12&&dd>=1&&dd<=31)ms.push(y+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0'))}
+  var tm=txt.match(/(\d{1,2}):(\d{2})/);return {d1:ms[0]||null,d2:ms[1]||ms[0]||null,t:tm?String(tm[1]).padStart(2,'0')+':'+tm[2]:null}}
+function absEmpByName(nm){var hit=(D.staff||[]).filter(function(x){return x.name===nm&&!x.resigned_on})[0]||(D.staff||[]).filter(function(x){return x.name===nm})[0];return hit?hit.employment_no:null}
+async function absDecide(id,st){var r0=(D.abs||[]).filter(function(x){return x.absence_id===id})[0];if(!r0)return;
+  var r=await sb.rpc('ceo_absence_set',{p:{absence_id:id,employment_no:r0.employment_no,kind:r0.kind,start_date:r0.start_date,end_date:r0.end_date,start_time:r0.start_time,status:st,memo:r0.memo,backup_note:r0.backup_note,site_note:r0.site_note}});
+  if(r.error||(r.data&&r.data.ok===false)){toast((r.error&&r.error.message)||r.data.error,'e');return}toast(r0.person_name+' '+r0.kind+' '+st,'g');absReload()}
+function renderHomeAbs(){var box=el('homeAbsReq');if(!box)return;var req=(D.abs||[]).filter(function(r){return r.status==='신청'});
+  if(!req.length){box.innerHTML='';box.style.display='none';return}box.style.display='block';
+  box.innerHTML='<div class="sec" style="margin-bottom:16px;border:1.5px solid var(--warn)"><h3>휴가 신청 <span class="cnt">'+req.length+'건</span><span class="r tiny dim">직원 앱에서 들어온 신청 — 승인해야 달력·고객사 안내에 반영됩니다</span></h3>'
+   +req.map(function(r){return '<div class="al" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;margin:0 0 6px;background:var(--sf)"><div><b>'+esc(r.person_name)+'</b> <span class="pill y">'+esc(r.kind)+'</span> '+esc(absFmt(r.start_date))+(r.end_date!==r.start_date?' ~ '+esc(absFmt(r.end_date)):'')+(r.memo?'<div class="tiny dim">'+esc(r.memo)+'</div>':'')+'</div><div style="display:flex;gap:6px;flex:none"><button class="btn sm p" onclick="absDecide('+r.absence_id+',\'승인\')">승인</button><button class="btn sm" onclick="absDecide('+r.absence_id+',\'반려\')">반려</button></div></div>'}).join('')+'</div>'}
 
-function setAbsenceSchedules(list){
-  try {
-    localStorage.setItem('bvs_absence_schedules', JSON.stringify(list));
-  } catch(e){}
-  try {
-    if(typeof sb !== 'undefined' && sb){
-      sb.from('settings').upsert({
-        entity: 'BVS',
-        setting_key: 'bvs_absence_schedules_json',
-        valid_from: '2026-01-01',
-        valid_to: 'infinity',
-        value_text: JSON.stringify(list),
-        memo: '9월 부재·휴무 관제 일정 JSON (2026년 정밀 교정본)'
-      }, {onConflict: 'entity,setting_key,valid_from'}).then(function(res){
-        if(res && res.error) console.warn('Supabase settings sync error:', res.error);
-      });
-    }
-  } catch(e){}
-}
+/* 이번 주 투입 가능 현황 — 고객사 카톡용 (단가·연락처 등 내부 정보 제외) */
+function availWeek(){var t=new Date(getSysToday()+'T00:00:00');var dow=t.getDay();var mon=new Date(t);mon.setDate(t.getDate()+(dow===0?1:1-dow));
+  var days=[];for(var i=0;i<6;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return days}
+function availGroup(site){var s=String(site||'');if(/청주/.test(s))return '청주 SK';if(/이천우주|우주/.test(s))return '이천 우주';if(/이천/.test(s))return '이천 SK';if(/TES|용인/.test(s))return '용인 TES';if(/화성|평택|삼성/.test(s))return '삼성';return '본사·기타'}
+function availRoster(){var from=new Date(getSysToday()+'T00:00:00');from.setDate(from.getDate()-21);var f=from.toISOString().slice(0,10);
+  var act={};(D.staff||[]).forEach(function(x){if(!x.resigned_on&&x.name!=='황병승')act[x.employment_no]=x.name});
+  var seen={};(D.att||[]).forEach(function(r){if(r.work_date>=f&&act[r.employment_no]&&+r.work_md>0){var o=seen[r.employment_no]=seen[r.employment_no]||{no:r.employment_no,name:act[r.employment_no],sites:{}};o.sites[r.site_name]=(o.sites[r.site_name]||0)+1}});
+  return Object.keys(seen).map(function(k){var o=seen[k];var top=Object.keys(o.sites).sort(function(a,b){return o.sites[b]-o.sites[a]})[0];o.site=top;o.grp=availGroup(top);return o}).sort(function(a,b){return a.grp.localeCompare(b.grp,'ko')||a.name.localeCompare(b.name,'ko')})}
+function absMd(ds){var x=new Date(ds+'T00:00:00');return (x.getMonth()+1)+'/'+x.getDate()+'('+DOW_KO[x.getDay()]+')'}
+function getWeekAvailText(){var days=availWeek(),ros=availRoster();var grps={};ros.forEach(function(p){(grps[p.grp]=grps[p.grp]||[]).push(p)});
+  var txt='[비브이에스] '+absMd(days[0])+' ~ '+absMd(days[5])+' 투입 가능 현황\n\n';
+  var dayCnt=days.map(function(){return 0});
+  Object.keys(grps).forEach(function(g){var ps=grps[g];var full=[],notes=[];
+    ps.forEach(function(p){var offs=[];days.forEach(function(ds,i){var ab=absOn(p.no,ds);if(ab&&ab.kind!=='교육')offs.push({ds:ds,ab:ab});else{dayCnt[i]++;if(ab)notes.push('· '+absMd(ds)+' '+p.name+' '+ab.kind+(ab.start_time?' ('+String(ab.start_time).slice(0,5)+'~)':''))}});
+      if(!offs.length)full.push(p.name);else{var a=offs[0].ds,b=offs[offs.length-1].ds;notes.push('· '+p.name+' '+offs[0].ab.kind+' '+absMd(a)+(b!==a?' ~ '+absMd(b):'')+(offs.length<days.length?' (그 외 가능)':''))}});
+    txt+='■ '+g+' ('+ps.length+'명)\n';if(full.length)txt+='· 주간 전일 가능: '+full.join(', ')+'\n';notes.forEach(function(n){txt+=n+'\n'});txt+='\n'});
+  txt+='일자별 가능 인원: '+days.map(function(ds,i){return absMd(ds).replace(/^\d+\//,'')+' '+dayCnt[i]+'명'+(HOLIDAYS_KR[ds]?'('+HOLIDAYS_KR[ds]+')':'')}).join(' · ')+'\n';
+  txt+='(주식회사 비브이에스)';return txt}
+function copyWeekAvail(){var t=getWeekAvailText();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('이번 주 투입 가능 현황을 복사했습니다 — 카톡에 붙여넣으세요','g')}).catch(function(){copyFallback(t)})}else copyFallback(t)}
+function openWeekAvail(){var t=getWeekAvailText();drOpen('이번 주 투입 가능 현황','<div class="tiny dim" style="margin-bottom:8px">단가·연락처 같은 내부 정보는 넣지 않습니다. 승인·확정·계획 상태의 휴가만 반영합니다.</div><pre style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:12px;white-space:pre-wrap;font-size:12.5px;line-height:1.7;margin:0">'+esc(t)+'</pre><div style="margin-top:12px;display:flex;gap:6px"><button class="btn p" onclick="copyWeekAvail()">📋 카톡용 복사</button></div>')}
 
 function renderAbsenceTimeline(){
   var box = el('absenceWrap'); if(!box) return;
@@ -5433,6 +5434,7 @@ function renderAbsenceTimeline(){
       + '</div>'
       + '<div style="flex-shrink:0">'
       + '<span class="pill ' + (s.status === '승인' ? 'g' : s.status === '확정' ? 'b' : 'y') + '" style="font-size:11px;padding:2px 8px;font-weight:700">' + esc(s.status || '확정') + '</span>'
+      + (s.status === '신청' ? ' <button class="btn xs p" onclick="absDecide(' + s.id + ',\'승인\')">승인</button> <button class="btn xs" onclick="absDecide(' + s.id + ',\'반려\')">반려</button>' : '')
       + '</div>'
       + '<div style="flex-shrink:0;display:flex;gap:4px;margin-left:6px">'
       + '<button class="btn xs" onclick="openAbsenceEditModal(' + s.id + ')" style="padding:4px 10px;font-weight:600;background:var(--sf);border:1px solid var(--ln)" title="이 일정 수정">✏️ 수정</button>'
@@ -5455,7 +5457,9 @@ function renderAbsenceTimeline(){
     + '</pre>'
     + '</div>';
 
-  box.innerHTML = timelineHtml + previewBoxHtml;
+  var weekTxt = getWeekAvailText();
+  var weekBox = '<div style="background:var(--sf);border:1.5px solid var(--ac);border-radius:12px;padding:16px;margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px"><b style="font-size:13.5px">💬 이번 주 투입 가능 현황 (고객사 전달용)</b><button class="btn sm p" onclick="copyWeekAvail()">📋 카톡용 복사</button></div><pre style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin:0">' + esc(weekTxt) + '</pre></div>';
+  box.innerHTML = timelineHtml + weekBox + previewBoxHtml;
 }
 
 /* ── 부재·휴무 달력 피커 상태 및 제어 함수 ── */
@@ -5723,7 +5727,7 @@ function openAbsenceEditModal(id, initialDateStr){
     + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-21\')">09/21 (월)</span>'
     + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerPreset(\'2026-09-22\')">09/22 (화)</span>'
     + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerRangePreset(\'2026-09-23\',\'2026-09-28\')">09/23(수)~28(월)</span>'
-    + '<span class="chip sm" style="cursor:pointer;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="selectPickerRangePreset(\'2026-09-24\',\'2026-09-28\')">🌕 추석 (09/24~28)</span>'
+    + '<span class="chip sm" style="cursor:pointer;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700" onclick="selectPickerRangePreset(\'2026-09-24\',\'2026-09-26\')">🌕 추석 (09/24~26)</span>'
     + '<span class="chip sm" style="cursor:pointer;font-size:11px" onclick="selectPickerRangePreset(\'2026-09-28\',\'2026-10-02\')">09/28(월)~10/02(금)</span>'
     + '</div>'
     + '</div>'
@@ -5819,69 +5823,30 @@ function updateStaffChipStyles(){
   });
 }
 
-function saveAbsenceForm(id){
-  var date = (el('absDate').value || '').trim();
-  var who = (el('absWho').value || '').trim();
-  var type = el('absType').value;
-  var status = el('absStatus').value;
-  var site = (el('absSite').value || '').trim() || '일반 현장';
-  var desc = (el('absDesc').value || '').trim();
-  var backup = (el('absBackup').value || '').trim();
-
-  if(!date){
-    toast('일정 일시 또는 기간을 입력해주세요.', 'w');
-    el('absDate').focus();
-    return;
+async function saveAbsenceForm(id){
+  var date=(el('absDate').value||'').trim(), who=(el('absWho').value||'').trim(), type=el('absType').value, status=el('absStatus').value;
+  var site=(el('absSite').value||'').trim(), desc=(el('absDesc').value||'').trim(), backup=(el('absBackup').value||'').trim();
+  if(!date){toast('일정 일시 또는 기간을 입력해주세요.','w');el('absDate').focus();return}
+  if(!who){toast('대상 작업자 이름을 입력해주세요.','w');el('absWho').focus();return}
+  var dd=absParseDates(date);if(!dd.d1){toast('날짜를 읽지 못했습니다 — 예: 09/22 ~ 09/29','w');return}
+  var names=who.split(/[,·\/\s]+/).map(function(x){return x.trim()}).filter(Boolean);var miss=names.filter(function(n){return !absEmpByName(n)});
+  if(miss.length){toast('인력 명단에 없는 이름: '+miss.join(', '),'w');return}
+  if(['휴가','휴무','교육','병가','기타'].indexOf(type)<0)type='기타';
+  if(['신청','승인','확정','계획','반려'].indexOf(status)<0)status='승인';
+  for(var i=0;i<names.length;i++){
+    var p={absence_id:(i===0&&id)?id:null,employment_no:absEmpByName(names[i]),kind:type,start_date:dd.d1,end_date:dd.d2,start_time:dd.t,status:status,memo:desc,backup_note:backup,site_note:site};
+    var r=await sb.rpc('ceo_absence_set',{p:p});
+    if(r.error||(r.data&&r.data.ok===false)){toast((r.error&&r.error.message)||r.data.error,'e');return}
   }
-  if(!who){
-    toast('대상 작업자 이름을 입력해주세요.', 'w');
-    el('absWho').focus();
-    return;
-  }
-
-  var list = getAbsenceSchedules();
-  if(id){
-    for(var i = 0; i < list.length; i++){
-      if(list[i].id === id){
-        list[i] = { id: id, date: date, who: who, type: type, status: status, site: site, desc: desc, backup: backup };
-        break;
-      }
-    }
-  } else {
-    var newId = Date.now();
-    list.push({ id: newId, date: date, who: who, type: type, status: status, site: site, desc: desc, backup: backup });
-  }
-
-  setAbsenceSchedules(list);
-  drClose();
-  renderAbsenceTimeline();
-  try {
-    renderMonthlyCal(CAL_CUR_YM);
-  } catch(e){}
-  toast('✅ 부재·휴무 일정이 성공적으로 저장되었습니다!', 'g');
+  drClose();toast('✅ 부재·휴무 일정을 저장했습니다 (모든 기기에 반영)','g');absReload();
 }
-
-function deleteAbsenceItem(id){
-  if(!confirm('선택하신 부재·휴무 일정을 삭제하시겠습니까?')) return;
-  var list = getAbsenceSchedules().filter(function(x){ return x.id !== id; });
-  setAbsenceSchedules(list);
-  drClose();
-  renderAbsenceTimeline();
-  try {
-    renderMonthlyCal(CAL_CUR_YM);
-  } catch(e){}
-  toast('🗑️ 부재·휴무 일정이 삭제되었습니다.', 'g');
+async function deleteAbsenceItem(id){
+  if(!confirm('이 일정을 취소 처리할까요? (기록은 남고 달력·안내에서 빠집니다)'))return;
+  var r=await sb.rpc('ceo_absence_cancel',{p_id:id});
+  if(r.error){toast(r.error.message,'e');return}
+  drClose();toast('일정을 취소했습니다','g');absReload();
 }
-
-function resetDefaultAbsence(){
-  if(!confirm('초기 9월 공식 일정 6건 기본값으로 되돌리시겠습니까?\n(직접 수정한 내역이 초기화됩니다)')) return;
-  setAbsenceSchedules(DEFAULT_ABSENCE_SCHEDULES.slice());
-  renderAbsenceTimeline();
-  try {
-    renderMonthlyCal(CAL_CUR_YM);
-  } catch(e){}
-  toast('🔄 기본 9월 일정으로 복원되었습니다.', 'g');
-}
+function resetDefaultAbsence(){absReload();toast('DB에서 다시 불러왔습니다','g')}
 
 function getAbsenceNoticeText(){
   var schedules = getAbsenceSchedules();
