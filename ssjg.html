@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.02 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.03 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -105,7 +105,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.02</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.03</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -224,6 +224,42 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div class="kpi-label">송장 매칭 상태</div>
         <div class="kpi-val" id="kpiDelivMatched">대기 중</div>
         <div class="kpi-sub" id="kpiDelivStatusSub">출고데이터 업로드 대기</div>
+      </div>
+    </div>
+
+    <!-- 0단계: 카페24 -> 이지어드민 변환 카드 (최우선 배치) -->
+    <div class="panel" style="border-left:4px solid var(--accent);margin-bottom:20px">
+      <div class="panel-head" style="background:rgba(239,68,68,0.05)">
+        <div class="panel-title">
+          <span>0️⃣ [주문 수집] 카페24 주문서 ➡️ 이지어드민 발주등록 엑셀 변환 (1초 자동화)</span>
+        </div>
+        <span class="badge" style="background:var(--accent);color:#fff">핵심 업무</span>
+      </div>
+      <div style="padding:16px">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          <b>카페24 관리자</b>에서 다운로드받은 주문 내역 엑셀 파일(18개 컬럼)을 업로드하십시오. 이지어드민에 대량 주문등록할 수 있는 표준 발주 엑셀 양식으로 즉시 1초 만에 매핑 변환합니다.
+        </p>
+        <div class="dropzone" id="dropCafe24" onclick="document.getElementById('fileCafe24').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleCafe24File(event.dataTransfer.files[0])">
+          <div class="drop-icon">🛍️</div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="cafe24DropText">카페24 주문 다운로드 엑셀 드래그 또는 클릭</div>
+          <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls (카페24 주문서 18개 컬럼 자동 인식)</div>
+          <input type="file" id="fileCafe24" style="display:none" accept=".xlsx,.xls" onchange="handleCafe24File(this.files[0])">
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
+          <div>
+            <span style="color:var(--text-muted)">카페24 파싱 주문건수: </span>
+            <span id="cafe24ParsedCount" style="font-weight:700;color:var(--green)">0 건</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted)">출력 규격: </span>
+            <span style="font-family:monospace;color:var(--accent)">YYMMDD_SSJG_이지어드민_주문등록_v1.0.xlsx</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btnDownloadEzadminOrder" onclick="downloadEzadminOrderExcel()" style="width:100%;padding:12px;font-size:14px;font-weight:800;background:var(--accent)" disabled>
+          🚀 이지어드민 대량주문등록 엑셀 (.xlsx) 즉시 생성 및 다운로드
+        </button>
       </div>
     </div>
 
@@ -626,8 +662,94 @@ function filterBankRows(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 🚚 SSJG 택배·출고 자동화 엔진 (SheetJS 기반 클라이언트 사이드 변환기)
+// 🚚 SSJG 유통·택배 자동화 3단계 통합 엔진 (SheetJS 기반)
 // ══════════════════════════════════════════════════════════════════════════
+
+// ── 0단계: 카페24 주문서 ➡️ 이지어드민 대량발주등록 변환 ──
+var rawCafe24Rows = [];
+
+function handleCafe24File(file){
+  if(!file) return;
+  document.getElementById('cafe24DropText').innerHTML = '⏳ 카페24 주문서 분석 중... (' + file.name + ')';
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type: 'array', cellText: true, cellDates: true});
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var json = XLSX.utils.sheet_to_json(sheet, {raw: false, defval: ''});
+
+      if(!json || json.length === 0){
+        alert('카페24 엑셀에 주문 데이터가 없습니다.');
+        return;
+      }
+
+      rawCafe24Rows = json.map((row, idx) => {
+        var orderNo = String(row['주문번호'] || ('ORD-' + (idx+1))).trim();
+        var channel = String(row['경로'] || '카페24').trim();
+        var orderer = String(row['주문자'] || row['수령인'] || '').trim();
+        var ordererPhone = String(row['주문자전화번호'] || row['전화'] || '').trim();
+        var ordererMobile = String(row['주문자핸드폰'] || row['핸드폰'] || '').trim();
+        var receiver = String(row['수령인'] || row['받는사람'] || '').trim();
+        var receiverPhone = String(row['전화'] || row['수하인전화'] || '').trim();
+        var receiverMobile = String(row['핸드폰'] || row['수령인핸드폰'] || receiverPhone).trim();
+        var zipcode = String(row['우편번호'] || '').trim();
+        var address = String(row['주소'] || '').trim();
+        var productName = String(row['주문상품명'] || row['상품명'] || '').trim();
+        var option = String(row['옵션'] || '').trim();
+        var qty = Number(row['수량']) || 1;
+        var itemCode = String(row['자체품목코드'] || '').trim();
+
+        return {
+          '판매처': channel,
+          '주문번호': orderNo,
+          '주문자명': orderer,
+          '주문자전화': ordererPhone,
+          '주문자핸드폰': ordererMobile,
+          '수령인명': receiver,
+          '수령인전화': receiverPhone,
+          '수령인핸드폰': receiverMobile,
+          '우편번호': zipcode,
+          '배송지주소': address,
+          '배송메시지': '', // Claude 합의: 카페24 원본에 없으므로 공란 보장
+          '상품명': productName,
+          '옵션': option,
+          '수량': qty,
+          '상품코드': itemCode
+        };
+      });
+
+      document.getElementById('cafe24ParsedCount').innerText = rawCafe24Rows.length + ' 건';
+      document.getElementById('cafe24DropText').innerHTML = '✅ 카페24 파싱 완료: ' + file.name + ' (' + rawCafe24Rows.length + '건)';
+      document.getElementById('btnDownloadEzadminOrder').disabled = false;
+
+    } catch(err) {
+      alert('카페24 엑셀 파싱 오류: ' + err.message);
+      document.getElementById('cafe24DropText').innerHTML = '❌ 파싱 실패: 다시 시도해 주십시오';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadEzadminOrderExcel(){
+  if(rawCafe24Rows.length === 0){
+    alert('변환할 카페24 주문 데이터가 없습니다.');
+    return;
+  }
+
+  var ws = XLSX.utils.json_to_sheet(rawCafe24Rows, {
+    header: ['판매처', '주문번호', '주문자명', '주문자전화', '주문자핸드폰', '수령인명', '수령인전화', '수령인핸드폰', '우편번호', '배송지주소', '배송메시지', '상품명', '옵션', '수량', '상품코드']
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '이지어드민주문');
+
+  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var fileName = today + '_SSJG_이지어드민_주문등록_v1.0.xlsx';
+  XLSX.writeFile(wb, fileName);
+}
+
+// ── 1단계 & 2단계: 이지어드민 ➡️ 로젠택배 & 송장 피드백 ──
 var rawDeliveryRows = [];
 var matchedInvoices = [];
 
