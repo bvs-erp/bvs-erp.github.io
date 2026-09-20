@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.29 · 대표 콕핏</title>
+<title>BVS ERP v1.30 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -600,7 +600,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.29</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.30</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -635,6 +635,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           <button class="btn sm p" onclick="openWeekAvail()">💬 이번 주 투입 가능</button>
         </div>
       </div>
+      <!-- WO-19: 3사 통합 손익 및 BVS 발생주의 관제 카드 -->
+      <div id="homeGroupSec" style="margin-bottom:16px"></div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
       <div id="homeAbsReq" style="display:none"></div>
       <div class="kgrps" id="homeKpi"></div>
@@ -815,6 +817,17 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     <!-- 손익 -->
     <section class="page" id="p-pl">
       <div class="ph"><h2>손익</h2><div class="desc">월별 매출·원가·판관비·영업이익</div></div>
+      <!-- WO-21: 2026-06 이전 현장 원장 부재 경고 배너 -->
+      <div id="plAccrualWarn" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--r2);padding:14px 18px;margin-bottom:16px;line-height:1.6">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:18px">⚠️</span>
+          <b style="color:var(--crit);font-size:14px">2026-06 이전 구간 현장 공수 원장 부재 안내 (경영 판단 주의)</b>
+        </div>
+        <div style="font-size:12.5px;color:var(--tx2)">
+          2026년 1~5월은 현장 공수 원장(5200 노무비)이 DB에 없어, 누적 손익표의 영업손실(-3,695만 원)이 실제 실적이 아닌 데이터 결손에 의한 왜곡입니다.<br>
+          경영 판단 시에는 <b>2026년 6월 이후 실적 및 발생주의 보정 뷰(bvs_pl_month_accrual)</b>를 기준으로 확인하십시오.
+        </div>
+      </div>
       <div class="kpis" id="plKpi"></div>
       <div class="chart" id="chPl" style="margin-bottom:16px"></div>
       <div class="sec"><div class="tb" id="gPl"></div></div>
@@ -1114,7 +1127,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.29';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.30';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2012,7 +2025,115 @@ function homeDateStep(delta){
   }
 }
 
+
+/* ── WO-19: 3사 통합 손익 및 BVS 발생주의 보정 관제 렌더러 ── */
+async function renderGroupPlSummary(){
+  var box = document.getElementById('homeGroupSec');
+  if(!box) return;
+  try {
+    var sb = (typeof window.sbClient === 'function' ? window.sbClient() : window.sb) || window.supabase;
+    if(!sb) return;
+
+    var [gRes, bRes] = await Promise.all([
+      sb.from('group_pl_month').select('*').order('ym', { ascending: false }).limit(9),
+      sb.from('bvs_pl_month_accrual').select('*').order('ym', { ascending: false }).limit(3)
+    ]);
+
+    var gRows = gRes.data || [];
+    var bRows = bRes.data || [];
+    var curYm = '2026-09';
+    var bvsAccrual = bRows.find(r => r.ym === curYm) || bRows[0] || {};
+    var bvsGroup = gRows.find(r => r.entity === 'BVS' && r.ym === curYm) || {};
+    var pyroGroup = gRows.find(r => r.entity === 'PYRO' && r.ym === curYm) || {};
+    var ssjgGroup = gRows.find(r => r.entity === 'SSJG' && r.ym === curYm) || {};
+
+    var unbilledGap = Number(bvsAccrual.unbilled_gap) || 0;
+    var bvsBilledRev = Number(bvsAccrual.revenue_billed) || Number(bvsGroup.revenue) || 0;
+    var bvsAccrualRev = Number(bvsAccrual.revenue_accrual) || 0;
+    var bvsFieldBill = Number(bvsAccrual.field_billing) || 0;
+    var bvsBilledOp = Number(bvsAccrual.op_income_billed) || Number(bvsGroup.op_income) || 0;
+    var bvsAccrualOp = Number(bvsAccrual.op_income_accrual) || 0;
+
+    box.innerHTML = `
+      <div class="card" style="padding:16px 20px;border-left:4px solid var(--ac);box-shadow:var(--sh)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">🌐</span>
+            <b style="font-size:14.5px;letter-spacing:-0.2px">3대 엔티티 당월 손익 실황 (${curYm}) · 발생주의 통합 관제</b>
+            <span class="vbadge" style="background:var(--infobg);color:var(--info);border:1px solid var(--info)">public.group_pl_month 직결</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--tx3)">
+            마지막 업데이트: ${new Date().toLocaleTimeString()}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+          <!-- BVS Card -->
+          <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-weight:700;color:var(--ac);font-size:13px">🔵 BVS (반도체 셋업)</span>
+              ${unbilledGap > 0 ? `<span style="background:rgba(239,68,68,0.15);color:var(--crit);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">⚠️ 미발행 ${Math.round(unbilledGap/10000).toLocaleString()}만</span>` : ''}
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              매출: 계산서 <b>${Math.round(bvsBilledRev/10000).toLocaleString()}만</b> ➔ 발생주의 <b>${Math.round(bvsAccrualRev/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              현장청구액: <b>${Math.round(bvsFieldBill/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:12px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln);display:flex;justify-content:space-between">
+              <span>영업이익:</span>
+              <span>
+                <span class="neg" style="font-size:11px">${Math.round(bvsBilledOp/10000).toLocaleString()}만</span> ➔ 
+                <span class="pos" style="font-size:13px">${bvsAccrualOp >= 0 ? '+' : ''}${Math.round(bvsAccrualOp/10000).toLocaleString()}만 원 (흑자보정)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- PYRO Card -->
+          <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-weight:700;color:var(--good);font-size:13px">🟢 PYRO (고물상·제조·임대)</span>
+              <span style="background:rgba(16,185,129,0.15);color:var(--good);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">흑자 유지</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              당월 매출: <b>${Math.round((Number(pyroGroup.revenue)||0)/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              매출원가: <b>${Math.round((Number(pyroGroup.cogs)||0)/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:12px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln);display:flex;justify-content:space-between">
+              <span>영업이익:</span>
+              <span class="pos">+${Math.round((Number(pyroGroup.op_income)||0)/10000).toLocaleString()}만 원</span>
+            </div>
+          </div>
+
+          <!-- SSJG Card -->
+          <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-weight:700;color:var(--warn);font-size:13px">🔴 SSJG (이커머스 유통)</span>
+              <span style="background:rgba(245,158,11,0.15);color:var(--warn);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">월중 집계</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              당월 매출: <b>${Math.round((Number(ssjgGroup.revenue)||0)/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
+              판관비 부담: <b>${Math.round((Number(ssjgGroup.sga)||0)/10000).toLocaleString()}만 원</b>
+            </div>
+            <div style="font-size:12px;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--ln);display:flex;justify-content:space-between">
+              <span>영업이익:</span>
+              <span class="${Number(ssjgGroup.op_income) >= 0 ? 'pos' : 'neg'}">${Math.round((Number(ssjgGroup.op_income)||0)/10000).toLocaleString()}만 원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch(err){
+    console.error('Group PL load error:', err);
+  }
+}
+
 function renderHome(){
+  try{renderGroupPlSummary()}catch(e){}
   var m=M(),dm=D.dash.filter(function(r){return r.period_ym===m})[0]||{};
   var set=D.set.filter(function(r){return r.period_ym===m});
   set.forEach(function(r){r._inc=/wage|근로/.test(String(r.income_type))?'wage':(/business|사업/.test(String(r.income_type))?'business':'');r._neg=(+r.company_margin||0)<0?'1':'0'});
