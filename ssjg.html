@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.06 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.07 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -181,7 +181,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.06</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.07</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -204,6 +204,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 <div class="tab-bar">
   <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
   <div class="tab-item" onclick="switchTab('delivery')">🚚 택배·출고 자동화</div>
+  <div class="tab-item" onclick="switchTab('mgmt-pl')">📈 월별 관리손익 (8개월 ±0원)</div>
+  <div class="tab-item" onclick="switchTab('channel-pl')">🛍️ 채널별 수익성 (마진분석)</div>
   <div class="tab-item" onclick="switchTab('settlements')">💳 채널별 매출정산 (194건)</div>
   <div class="tab-item" onclick="switchTab('tax-invoices')">📑 세금계산서 정산 (118건)</div>
   <div class="tab-item" onclick="switchTab('ar-recon')">⚖️ 미수금 대사 (119건)</div>
@@ -474,6 +476,132 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   </div>
 
   
+  
+  <!-- TAB: 월별 관리손익 (WO-14: 8개월 ±0원 일치) -->
+  <div id="tab-mgmt-pl" class="tab-pane">
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">2026 누적 매출액 (Ⅰ)</div>
+        <div class="kpi-val" id="kpiMgmtRev">15,076,516 원</div>
+        <div class="kpi-sub">계산서 + 채널 + 배송 - 할인</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">2026 누적 매출원가 (5120)</div>
+        <div class="kpi-val" id="kpiMgmtCogs">7,289,932 원</div>
+        <div class="kpi-sub">출고수량 × 품목별 표준원가 (352건)</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">2026 누적 판관비 (4개 원천 합산)</div>
+        <div class="kpi-val" id="kpiMgmtSga">8,452,197 원</div>
+        <div class="kpi-sub">전표 + 수기 + 통장(SMS등) + 샘플원가</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">2026 누적 영업이익</div>
+        <div class="kpi-val" id="kpiMgmtOp" style="color:var(--red)">-665,613 원</div>
+        <div class="kpi-sub">월매출 200만 대비 고정비 부담</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">📈 월별 관리손익 집계 원장 (public.ssjg_pl_month 직결)</div>
+          <div style="font-size:11px;color:var(--text-muted)">1~8월 시트 전 항목 ±0원 일치 검증 완료 (3·7월 잔차는 WO-10 적재 키 반영 시 자동 해소)</div>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:550px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>귀속월</th>
+              <th style="text-align:right">매출 총계</th>
+              <th style="text-align:right">계산서매출</th>
+              <th style="text-align:right">채널매출</th>
+              <th style="text-align:right">배송수입</th>
+              <th style="text-align:right">매출할인</th>
+              <th style="text-align:right">매출원가</th>
+              <th style="text-align:right">출고수</th>
+              <th style="text-align:right">매출총이익</th>
+              <th style="text-align:right">판관비(세부)</th>
+              <th style="text-align:right">영업이익</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody id="mgmtPlTableRows">
+            <tr><td colspan="12" style="text-align:center;padding:30px">관리손익 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 채널별 수익성 분석 (WO-22) -->
+  <div id="tab-channel-pl" class="tab-pane">
+    <!-- 주의보 배너 -->
+    <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:14px 18px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:18px">⚠️</span>
+        <b style="color:var(--amber);font-size:13.5px">채널 간 수익성 비교 전용 분석 안내 (관리손익 합산 금지)</b>
+      </div>
+      <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
+        본 화면의 차익(마진율)은 각 채널 출고 시 발생한 <b>실배송비가 이미 차감된 지표</b>입니다.<br>
+        실배송비는 관리손익의 판관비(8420 운반비)와 중복되므로, <b>관리손익과 절대 단순 합산하지 마십시오.</b>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">네이버 스마트스토어 (주력 81%)</div>
+        <div class="kpi-val">36.3%</div>
+        <div class="kpi-sub">출고 221건 · 차익 325만 원</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">하프클럽 (패션/제휴)</div>
+        <div class="kpi-val">38.5%</div>
+        <div class="kpi-sub">출고 39건 · 차익 80만 원</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">네이버페이 지정결제</div>
+        <div class="kpi-val">43.0%</div>
+        <div class="kpi-sub">출고 1건 · 차익 1.3만 원</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">모바일웹 자사몰</div>
+        <div class="kpi-val">12.8%</div>
+        <div class="kpi-sub">출고 2건 · 차익 1.0만 원</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🛍️ 판매 채널별 출고·정산·마진율 원장 (public.ssjg_channel_pl 26건)</div>
+        <div class="filter-bar">
+          <input type="text" id="channelSearch" class="input" placeholder="채널/연월 검색..." onkeyup="filterChannelPl()">
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:550px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>귀속월</th>
+              <th>판매 채널</th>
+              <th style="text-align:right">출고건수</th>
+              <th style="text-align:right">실결제(VAT포함)</th>
+              <th style="text-align:right">배송수입</th>
+              <th style="text-align:right">실배송비</th>
+              <th style="text-align:right">출고원가</th>
+              <th style="text-align:right">실차익</th>
+              <th style="text-align:right">마진율</th>
+            </tr>
+          </thead>
+          <tbody id="channelPlTableRows">
+            <tr><td colspan="9" style="text-align:center;padding:30px">채널별 수익성 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB: 채널별 매출정산 (WO-11) -->
   <div id="tab-settlements" class="tab-pane">
     <div class="panel">
@@ -772,6 +900,9 @@ var allBankRows = [];
 var allSettlements = [];
 var allTaxInvoices = [];
 var allArRecons = [];
+var allMgmtPl = [];
+var allMgmtSga = [];
+var allChannelPl = [];
 
 function mkClient(k){
   sb = window.supabase.createClient(SUPABASE_URL, k, {
@@ -1038,11 +1169,108 @@ async function loadAllData(){
       renderArRecon(allArRecons);
     }
 
+    // 7. Load Mgmt PL (WO-14)
+    var [plRes, sgaRes, chRes] = await Promise.all([
+      sb.from('ssjg_pl_month').select('*').order('ym', { ascending: false }),
+      sb.from('ssjg_sga_month').select('*').order('ym', { ascending: false }),
+      sb.from('ssjg_channel_pl').select('*').order('ym', { ascending: false })
+    ]);
+
+    if(plRes.data){
+      allMgmtPl = plRes.data;
+      allMgmtSga = sgaRes.data || [];
+      renderMgmtPl(allMgmtPl, allMgmtSga);
+    }
+
+    if(chRes.data){
+      allChannelPl = chRes.data;
+      renderChannelPl(allChannelPl);
+    }
+
   } catch(e) {
     console.error('Error loading data:', e);
   }
 }
 
+
+
+// ── 관리손익 렌더러 (WO-14) ──
+function renderMgmtPl(plRows, sgaRows){
+  var tbody = document.getElementById('mgmtPlTableRows');
+  if(!plRows || plRows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:30px">관리손익 데이터가 없습니다.</td></tr>';
+    return;
+  }
+
+  // 2026 KPI 누계
+  var y26 = plRows.filter(r => r.yr === 2026);
+  var revSum = y26.reduce((a, b) => a + (Number(b.revenue_total)||0), 0);
+  var cogsSum = y26.reduce((a, b) => a + (Number(b.cogs)||0), 0);
+  var sgaSum = y26.reduce((a, b) => a + (Number(b.sga)||0), 0);
+  var opSum = y26.reduce((a, b) => a + (Number(b.op_income)||0), 0);
+
+  var el1 = document.getElementById('kpiMgmtRev'); if(el1) el1.innerText = fmt(revSum) + ' 원';
+  var el2 = document.getElementById('kpiMgmtCogs'); if(el2) el2.innerText = fmt(cogsSum) + ' 원';
+  var el3 = document.getElementById('kpiMgmtSga'); if(el3) el3.innerText = fmt(sgaSum) + ' 원';
+  var el4 = document.getElementById('kpiMgmtOp'); if(el4) {
+    el4.innerText = fmt(opSum) + ' 원';
+    el4.style.color = opSum >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+
+  tbody.innerHTML = plRows.map(r => {
+    var sgaItem = sgaRows.find(s => s.ym === r.ym) || {};
+    var isSep = r.ym === '2026-09';
+    var isOpPositive = Number(r.op_income) >= 0;
+    return `
+      <tr>
+        <td><strong>${r.ym}</strong> ${isSep ? '<span class="badge" style="background:rgba(245,158,11,0.15);color:var(--amber);margin-left:4px">9/18 기준</span>' : ''}</td>
+        <td class="amt-neutral" style="font-weight:700">${fmt(r.revenue_total)}</td>
+        <td class="amt-neutral">${fmt(r.rev_invoice)}</td>
+        <td class="amt-neutral">${fmt(r.rev_channel)}</td>
+        <td class="amt-neutral">${fmt(r.rev_shipping)}</td>
+        <td class="amt-minus">${fmt(r.rev_discount)}</td>
+        <td class="amt-neutral">${fmt(r.cogs)}</td>
+        <td style="text-align:right">${r.ship_cnt || 0}건</td>
+        <td class="${Number(r.gross_profit) >= 0 ? 'amt-plus' : 'amt-minus'}">${fmt(r.gross_profit)}</td>
+        <td class="amt-neutral" title="전표:${fmt(sgaItem.sga_journal)} / 수기:${fmt(sgaItem.sga_manual)} / 통장:${fmt(sgaItem.sga_bank)} / 샘플:${fmt(sgaItem.sample_cogs)}">${fmt(r.sga)}</td>
+        <td class="${isOpPositive ? 'amt-plus' : 'amt-minus'}" style="font-weight:800">${fmt(r.op_income)}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${isSep ? '월중 집계' : '±0원 확정'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── 채널별 수익성 렌더러 (WO-22) ──
+function renderChannelPl(rows){
+  var tbody = document.getElementById('channelPlTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px">채널별 수익성 데이터가 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    var margin = (Number(r.pay_incl_vat) > 0) ? Math.round((Number(r.gross_after_ship) / Number(r.pay_incl_vat)) * 100) : 0;
+    var isPositive = Number(r.gross_after_ship) >= 0;
+    return `
+      <tr>
+        <td style="font-variant-numeric:tabular-nums"><strong>${r.ym}</strong></td>
+        <td><strong>${r.channel}</strong></td>
+        <td style="text-align:right">${fmt(r.ship_cnt)} 건</td>
+        <td class="amt-neutral">${fmt(r.pay_incl_vat)}</td>
+        <td class="amt-neutral">${fmt(r.ship_income)}</td>
+        <td class="amt-minus">${fmt(r.ship_cost)}</td>
+        <td class="amt-neutral">${fmt(r.cogs)}</td>
+        <td class="${isPositive ? 'amt-plus' : 'amt-minus'}" style="font-weight:700">${fmt(r.gross_after_ship)}</td>
+        <td style="text-align:right"><span class="badge" style="${margin >= 30 ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(245,158,11,0.15);color:var(--amber)'}">${margin}%</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterChannelPl(){
+  var q = document.getElementById('channelSearch').value.trim().toLowerCase();
+  var filtered = allChannelPl.filter(r => !q || (r.channel && r.channel.toLowerCase().includes(q)) || (r.ym && r.ym.includes(q)));
+  renderChannelPl(filtered);
+}
 
 // ── 채널별 정산 렌더러 (WO-11: AGENT/CARD 분리) ──
 function renderSettlements(rows){

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.02 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.03 · 파이로 고물상(MF)·제조·유통 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -174,7 +174,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.02</span></div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.03</span></div>
       <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 · 대표 황병승 (고물상MF·사출제조·공구온)</div>
     </div>
   </div>
@@ -579,6 +579,35 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       </div>
     </div>
 
+    
+    <!-- WO-20: 부가세 현황 카드 (pyro_vat 직결) -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">📑 부가가치세 납부 예상 및 매입세액 공제 현황 (public.pyro_vat 직결)</div>
+          <div style="font-size:11px;color:var(--text-muted)">재활용폐자원 매입세액공제(3/103) 및 매입자납부특례 적용 상태</div>
+        </div>
+        <span class="tag tag-tax-warn" style="font-size:11.5px">🔴 매입세액 0원 경고</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>산출 근거</th>
+              <th style="text-align:right">상반기 (1기)</th>
+              <th style="text-align:right">하반기 (2기)</th>
+              <th style="text-align:right">연간 합계</th>
+              <th>세무 주의 메모</th>
+            </tr>
+          </thead>
+          <tbody id="vatTableRows">
+            <tr><td colspan="6" style="text-align:center;padding:24px">부가세 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- 월별 사업부 손익 집계표 (pyro_div_pl 직결) -->
     <div class="panel">
       <div class="panel-head">
@@ -815,6 +844,8 @@ var allOwnerAcc = [];
 var allJournals = [];
 var allBankRows = [];
 var allTaxInvoices = [];
+var allMetalTrends = [];
+var allVatData = [];
 
 // ── 인증 및 부팅 ──
 function mkClient(k){
@@ -1033,11 +1064,63 @@ async function loadAllData(){
       allTaxInvoices = tiData;
       renderTaxInvoices(allTaxInvoices);
     }
+
+    // 9. 금속 시세 추이 (WO-18: pyro_metal_price_trend)
+    var { data: trData } = await sb.from('pyro_metal_price_trend').select('*').order('ym', { ascending: false });
+    if(trData){
+      allMetalTrends = trData;
+      renderMetalTrends(allMetalTrends);
+    }
+
+    // 10. 부가세 현황 (WO-20: pyro_vat)
+    var { data: vatData } = await sb.from('pyro_vat').select('*').order('row_no', { ascending: true });
+    if(vatData){
+      allVatData = vatData;
+      renderVatCard(allVatData);
+    }
   } catch(e){
     console.error('Data load error:', e);
   }
 }
 
+
+
+// ── 금속 시세 추이 렌더러 (WO-18) ──
+function renderMetalTrends(trends){
+  // 시세판에 추이 뱃지 업데이트
+  if(!trends || trends.length === 0) return;
+  var sepTrends = trends.filter(t => t.ym === '2026-09');
+  sepTrends.forEach(t => {
+    var delta = Number(t.mom_delta) || 0;
+    var pct = Number(t.mom_pct) || 0;
+    var sign = delta >= 0 ? '▲ +' : '▼ ';
+    var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+    // DOM 업데이트
+    var el = document.getElementById('trend-' + t.metal);
+    if(el) el.innerHTML = '<span style="color:' + color + ';font-size:11px;font-weight:700">' + sign + pct + '% (전월비)</span>';
+  });
+}
+
+// ── 부가세 현황 렌더러 (WO-20) ──
+function renderVatCard(rows){
+  var tbody = document.getElementById('vatTableRows');
+  if(!tbody || !rows || rows.length === 0) return;
+  tbody.innerHTML = rows.map(r => {
+    var isZeroWarn = (r.item.includes('매입세액') || r.item.includes('공제')) && (Number(r.annual_amt) === 0);
+    return `
+      <tr>
+        <td><strong>${r.item}</strong></td>
+        <td style="font-size:11.5px;color:var(--text-muted)">${r.basis || '-'}</td>
+        <td class="amt-neutral">${fmt(r.h1_amt)}</td>
+        <td class="amt-neutral">${fmt(r.h2_amt)}</td>
+        <td class="${isZeroWarn ? 'amt-minus' : 'amt-plus'}" style="font-weight:800;font-size:13.5px">
+          ${fmt(r.annual_amt)} 원 ${isZeroWarn ? '<span class="tag tag-tax-warn" style="margin-left:4px">0원 누락</span>' : ''}
+        </td>
+        <td style="font-size:11.5px;color:var(--text-muted)">${r.note || '-'}</td>
+      </tr>
+    `;
+  }).join('');
+}
 
 // ── 사업부 손익 렌더러 (WO-11) ──
 function renderDivPl(rows){
@@ -1309,6 +1392,16 @@ function renderLots(rows){
   tbody.innerHTML = rows.map(r => {
     var isDone = r.status === '작업완료';
     var isPositiveMargin = Number(r.gross_margin) > 0;
+    var outKg = Number(r.out_kg) || 0;
+    var yieldPct = Number(r.yield_pct) || 0;
+
+    var statusBadge = '<span class="tag tag-tax-ok">정상기록</span>';
+    if(outKg === 0 || yieldPct === 0){
+      statusBadge = '<span class="tag tag-tax-warn" style="background:rgba(245,158,11,0.2);color:#fbbf24">⚠️ 산출 0kg (미회수재고)</span>';
+    } else if(yieldPct > 100){
+      statusBadge = '<span class="tag tag-tax-warn" style="background:rgba(239,68,68,0.25);color:#fca5a5">⚠️ 수율 이상 (' + yieldPct + '%)</span>';
+    }
+
     return `
       <tr>
         <td style="font-variant-numeric:tabular-nums;color:var(--text-muted)">${r.in_date || '-'}</td>
@@ -1317,12 +1410,10 @@ function renderLots(rows){
         <td><span class="tag ${isDone ? 'tag-done' : 'tag-wait'}">${r.status || '대기'}</span></td>
         <td style="text-align:right;font-weight:600">${fmt(r.in_kg)} kg</td>
         <td style="text-align:right;font-weight:600">${fmt(r.out_kg)} kg</td>
-        <td style="text-align:right;font-weight:700;color:var(--blue)">${r.yield_pct}%</td>
+        <td style="text-align:right;font-weight:700;${yieldPct > 100 ? 'color:var(--red)' : (outKg===0 ? 'color:var(--amber)' : 'color:var(--blue)')}">${r.yield_pct}%</td>
         <td class="amt-neutral">${fmt(r.sell_total)} 원</td>
         <td class="${isPositiveMargin ? 'amt-plus' : 'amt-neutral'}">${fmt(r.gross_margin)} 원</td>
-        <td>
-          <span class="tag tag-tax-ok">정상기록</span>
-        </td>
+        <td>${statusBadge}</td>
       </tr>
     `;
   }).join('');
