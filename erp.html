@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.30 · 대표 콕핏</title>
+<title>BVS ERP v1.31 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -670,6 +670,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <button class="subtab-chip" onclick="go('crew');setTimeout(function(){crewSubNav('sec-crewAbsence', el('subnav-crew').children[3]);el('sec-crewAbsence').scrollIntoView({behavior:'smooth'})},100)" style="background:#fef3c7;color:#92400e;font-weight:700">🏖️ 9월 부재·휴무 타임라인 ↗</button>
       </div>
       <div class="kpis" id="siteKpi"></div>
+      <div id="siteUnassignedAlert"></div>
 
       <!-- 일별 투입 명세 (최우선 공수 관제) -->
       <div class="sec" id="sec-gAtt"><h3>투입 명세 (일별 실황) <span class="cnt" id="attDayTitle"></span></h3><div class="tb" id="gAtt"></div></div>
@@ -1045,9 +1046,11 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <!-- 계정 확인 인박스 -->
       <div class="sec" id="sec-gFiInbox"><h3>전표 계정 확인 인박스 <span class="cnt" id="fiInboxN"></span></h3><div class="desc" style="margin-bottom:8px">98% 이상의 거래가 자동 분류되며, 확인이 필요한 전표만 표시됩니다. 행을 눌러 계정을 지정하면 다음부터 자동 반영됩니다.</div><div class="tb" id="gFiInbox"></div></div>
 
-      <!-- 통장 상대명 연결 -->
-      <div class="sec" id="ht-alias"><h3>통장 상대명 연결 <span class="cnt" id="bunN"></span></h3>
-        <div class="desc" style="margin-bottom:8px">통장 인쇄명과 거래처명을 연결하여 정산 정확도를 100%로 유지합니다.</div>
+      <!-- 통장 상대명 연결 & 미매칭 관제 (WO-27, WO-29, WO-30) -->
+      <div class="sec" id="ht-alias"><h3>미매칭 통장 거래 관제 및 상대명 연결 <span class="cnt" id="bunN"></span></h3>
+        <div class="desc" style="margin-bottom:8px">통장 인쇄명과 거래처명을 연결하여 정산 정확도를 100%로 유지합니다. (총 178건 미매칭 거래 관제)</div>
+        <div id="boxHbsExpenseWarn"></div>
+        <div id="boxHbsDetailBreakdown" class="hide" style="margin-bottom:14px"></div>
         <div class="tb" id="gBunm"></div></div>
 
       <!-- 접을 수 있는 세금계산서 월별 대조 및 수집 기록 -->
@@ -1068,6 +1071,18 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <button class="subtab-chip" onclick="stSubNav('sec-stMatch', this)">🔗 대사 이력</button>
       </div>
       <div class="kpis" id="stKpi"></div>
+
+      <!-- WO-23: 통장 대사 미연결 경고 -->
+      <div class="al crit" style="margin:14px 0;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">⚠️</span>
+          <div>
+            <b style="color:var(--crit);font-size:13px">[정산 왜곡 방지] 통장 대사 미연결 178건 (순유출 8.68억 원) 잔존</b>
+            <div style="font-size:11.5px;color:var(--tx2)">파이로 4,400만 원처럼 통장 지급이 거래처와 미연결되어 허수 미지급으로 잔존할 수 있습니다.</div>
+          </div>
+        </div>
+        <button class="btn sm p" onclick="go('ht');setTimeout(function(){htSubNav('ht-alias',el('subnav-ht').children[4]);el('ht-alias').scrollIntoView({behavior:'smooth'})},150)">통장 상대명 연결 ↗</button>
+      </div>
       <div class="sec" id="st-cash"><h3>거래처 총액 대조 <span class="cnt" id="pcN"></span></h3>
         <div class="desc" style="margin-bottom:8px">세금계산서 합계와 통장 합계를 <b>거래처 단위로 통째로</b> 맞춘 표입니다. 건별 대사가 어긋나도 이 차액이 진실입니다 — 상대가 여러 건을 합산해 한 번에 보내면 건별로는 미수로 남지만 총액은 0이 됩니다. <b>받을 차액</b>이 양수면 실제 못 받은 돈, <b>줄 차액</b>이 양수면 실제 안 준 돈입니다. 음수는 계산서 없이 오간 돈이라 증빙을 봐야 합니다.</div>
         <div class="tb" id="gPcash"></div></div>
@@ -1127,7 +1142,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.30';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.31';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1970,7 +1985,7 @@ function hotCount(){
   }).length;
   var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
   return alCnt
-    + D.intg.filter(function(r){return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name) && +r.cnt>0}).length
+    + D.intg.filter(function(r){return !/업무문서|Tax-Risk/.test(r.check_name) && +r.cnt>0}).length
     + (!hasGapInAl && realGapRows().length ? 1 : 0)
     + (trRows().length?1:0)
     + (sfMiss().length?1:0)
@@ -2244,7 +2259,7 @@ function renderHome(){
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
   var intgClean = (D.intg||[]).filter(function(r){
-    return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name) && +r.cnt>0;
+    return !/업무문서|Tax-Risk/.test(r.check_name) && +r.cnt>0;
   });
   var als=D.al.filter(function(r){
     if(/지급의제/.test(r.title)) return pastOverdue > 0;
@@ -2401,6 +2416,26 @@ function renderSite(){
   /* 오늘이거나 미래 날짜는 퇴근 미등록이 아님 (근무 중이거나 사전 등록) */
   var noout=(cur<td)?rows.filter(function(r){return r.work_start&&!r.work_end&&r.source==='worker_app'}).length:0;
   var attDayTtl=el('attDayTitle');if(attDayTtl)attDayTtl.textContent=cur+(cur===td?' (오늘)':(cur>td?' (사전등록)':''))+' · '+rows.length+'명 투입';
+
+  // WO-24: 9월 현장 청구처 미지정 건 경고
+  var sepUnassigned = (D.attk||[]).filter(function(k){
+    return k.work_date >= '2026-09-01' && (!k.partner_id || k.partner_id === '');
+  });
+  var unEl = el('siteUnassignedAlert');
+  if(unEl){
+    if(sepUnassigned.length > 0){
+      unEl.innerHTML = '<div class="al crit" style="margin-bottom:14px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);display:flex;align-items:center;gap:12px">'
+        + '<span style="font-size:22px">⚠️</span>'
+        + '<div style="flex:1">'
+        +   '<div style="font-weight:800;font-size:13.5px;color:var(--crit)">[긴급 청구 관제] 9월 현장 청구처 미지정 ' + sepUnassigned.length + '건 감지 (예상청구 220,000원)</div>'
+        +   '<div style="font-size:12px;color:var(--tx2);margin-top:2px">이천 현장(BV-IC) 공수 중 고객사(partner_id) 미지정 발생 (9/2, 9/3, 9/7 황병승, 9/19 김현수 1.0M/D). 청구 누락 방지를 위해 [마감 전 점검 > 청구처 자동 채우기] 또는 개별 지정을 완료하십시오.</div>'
+        + '</div>'
+        + '<button class="btn sm p" onclick="el(\'site-check\').scrollIntoView({behavior:\'smooth\'})">청구처 점검 이동</button>'
+        + '</div>';
+    } else {
+      unEl.innerHTML = '';
+    }
+  }
   if(isEngLead()){
     el('siteKpi').innerHTML=kpi('투입 인원',rows.length+'<small>명</small>',Object.keys(by(rows,'site_name')).length+'개 현장','hl click',' onclick="siteKpiClick(\'att\')"')
       +kpi('공수 / 잔업',num(md)+'<small>M/D</small>','잔업 '+num(ot)+'h','click',' onclick="siteKpiClick(\'att\')"')
@@ -3547,22 +3582,96 @@ async function bunSet(r){
   var res=await sb.rpc('ceo_bank_alias_set',{p_alias_key:r.alias_key,p_alias_text:r.raw_name,p_partner_id:pid});
   if(res.error||!res.data||!res.data.ok){toast((res.error&&res.error.message)||'실패','e');return}
   toast(pid?'연결했습니다':'연결을 지웠습니다','g');loadAll()}
+function toggleHbsBreakdown(){
+  var b = el('boxHbsDetailBreakdown');
+  if(b) b.classList.toggle('hide');
+}
+
 function renderBunm(){if(!el('gBunm'))return;
+
+  // WO-30: 대표 경유 비용 상시 표시 경고 카드
+  var expEl = el('boxHbsExpenseWarn');
+  if(expEl){
+    expEl.innerHTML = '<div class="al crit" style="margin-bottom:12px;padding:12px 16px;border-radius:8px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4)">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+      +   '<div style="display:flex;align-items:center;gap:10px">'
+      +     '<span style="font-size:22px">🚨</span>'
+      +     '<div>'
+      +       '<div style="font-weight:800;font-size:14px;color:var(--crit)">[Tax-Risk 1순위] 대표 개인 계좌 경유 법인 비용: 1억 5,091만 원 (37건)</div>'
+      +       '<div style="font-size:12px;color:var(--tx2);margin-top:2px">법인 비용(인건비 5,431만 · 채권회수 5,000만 · 재료외주 4,661만 · 급여 300만)이 대표 개인 계좌를 경유해 지급되었습니다. 세무조사 소명 증빙(세금계산서/지급명세서 + 대표 이체내역) 준비 필수.</div>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div style="display:flex;gap:8px;align-items:center">'
+      +     '<span style="font-size:11.5px;color:var(--good);font-weight:700;background:rgba(21,128,61,0.1);padding:4px 8px;border-radius:4px;border:1px solid rgba(21,128,61,0.3)">가지급/가수 순액: 대표 채권 +9,025만 (서면 상계약정 권장)</span>'
+      +     '<button class="btn sm" onclick="toggleHbsBreakdown()" style="font-weight:700">황병승 105건 분해표 토글</button>'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // WO-29: 황병승 105건 전수 분해표
+  var bdEl = el('boxHbsDetailBreakdown');
+  if(bdEl){
+    bdEl.innerHTML = '<div style="background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:14px;box-shadow:0 4px 12px rgba(0,0,0,0.05)">'
+      + '<div style="font-weight:700;font-size:13.5px;margin-bottom:8px">👑 「황병승」 105건 전수 계정별 분해 원장 (출금 407,117,557원 / 입금 291,850,000원)</div>'
+      + '<table class="mini" style="width:100%;font-size:12px;border-collapse:collapse">'
+      +   '<thead><tr style="background:var(--sf2);border-bottom:1px solid var(--ln)">'
+      +     '<th style="padding:6px 8px;text-align:left">코드</th>'
+      +     '<th style="padding:6px 8px;text-align:left">계정명</th>'
+      +     '<th style="padding:6px 8px;text-align:right">건수</th>'
+      +     '<th style="padding:6px 8px;text-align:right">출금(법인→대표)</th>'
+      +     '<th style="padding:6px 8px;text-align:right">입금(대표→법인)</th>'
+      +     '<th style="padding:6px 8px;text-align:left">성격 및 소명 방안</th>'
+      +   '</tr></thead>'
+      +   '<tbody>'
+      +     '<tr><td><b>Z910</b></td><td>(대표)가수금</td><td style="text-align:right">38</td><td style="text-align:right">2,127,400</td><td style="text-align:right;font-weight:700;color:var(--good)">291,850,000</td><td style="color:var(--tx2)">대표가 법인에 입금한 자금 (대표 채권)</td></tr>'
+      +     '<tr><td><b>Z900</b></td><td>(대표)가지급금</td><td style="text-align:right">14</td><td style="text-align:right;font-weight:700;color:var(--crit)">201,600,000</td><td style="text-align:right">0</td><td style="color:var(--tx2)">법인 자금 대여 (상계 약정서 미비 시 연 4.6% 인정이자 과세)</td></tr>'
+      +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>Z100</b></td><td>(자금)인건비지급</td><td style="text-align:right">21</td><td style="text-align:right;font-weight:700;color:var(--warn)">54,308,160</td><td style="text-align:right">0</td><td style="color:var(--crit)">⚠️ 대표 계좌 거친 인건비 — 실수령자 원천징수 영수증 대사 필수</td></tr>'
+      +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>9120</b></td><td>채권회수 수당</td><td style="text-align:right">1</td><td style="text-align:right;font-weight:700;color:var(--warn)">50,000,000</td><td style="text-align:right">0</td><td style="color:var(--crit)">⚠️ 대표 개인 수령 용역비 — 급여·상여 재분류 리스크 점검</td></tr>'
+      +     '<tr><td><b>Z200</b></td><td>(자금)매입대금</td><td style="text-align:right">16</td><td style="text-align:right">49,478,000</td><td style="text-align:right">0</td><td style="color:var(--tx2)">파이로 임대료 440만×11회(4,840만) 포함 완제 확인</td></tr>'
+      +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>5100</b></td><td>재료비·외주매입</td><td style="text-align:right">14</td><td style="text-align:right;font-weight:700;color:var(--warn)">46,607,757</td><td style="text-align:right">0</td><td style="color:var(--crit)">⚠️ 실제 공급사 세금계산서 누락 시 손금 부인 대상</td></tr>'
+      +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>5300</b></td><td>급여</td><td style="text-align:right">1</td><td style="text-align:right">2,996,240</td><td style="text-align:right">0</td><td style="color:var(--tx2)">원천징수 신고 대사</td></tr>'
+      +     '<tr style="background:var(--sf2);font-weight:800;border-top:2px solid var(--ln)">'
+      +       '<td colspan="2">합계</td><td style="text-align:right">105</td><td style="text-align:right">407,117,557</td><td style="text-align:right">291,850,000</td><td style="color:var(--good)">가지급·가수 순액: 법인 채무(대표 채권) +90,250,000원</td>'
+      +     '</tr>'
+      +   '</tbody>'
+      + '</table>'
+      + '</div>';
+  }
+
   var rows=(D.bunm||[]).slice();
   rows.forEach(function(r){r._amt=(+r.out_amt||0)+(+r.in_amt||0);r._s=r.suggest_id?'제안':'없음'});
   rows.sort(function(a,b){return b._amt-a._amt});
   el('bunN').textContent=rows.length?rows.length+'개':'';
-  grid('gBunm',[{k:'raw_name',t:'통장 상대명',l:1},
+
+  // WO-27: 황병승 개인왕래 일괄매칭 금지 경고 및 별칭등록 UI
+  grid('gBunm',[
+    {k:'raw_name',t:'통장 상대명',l:1,f:function(v,r){
+      if(v === '황병승'){
+        return '<b style="color:var(--crit)">황병승</b> <span class="pill r" style="font-size:10px">개인 왕래 — 일괄 매칭 금지</span>';
+      }
+      return esc(v);
+    }},
     {k:'txn_cnt',t:'건수',f:function(v){return String(+v||0)}},
     {k:'out_amt',t:'출금',f:'won',sum:1},
     {k:'in_amt',t:'입금',f:'won',sum:1},
     {k:'acct_codes',t:'계정',l:1,cls:'tiny dim'},
-    {k:'suggest_name',t:'제안 거래처',l:1,f:function(v,r){return v?esc(v)+'<span class="tiny dim"> ('+(r.suggest_score||0)+')</span>':'<span class="dim">—</span>'}},
-    {k:'last_on',t:'최근',l:1}],
-    {rows:rows,q:['raw_name','suggest_name'],csv:true,page:30,
-     chips:[{k:'_s',vals:[['','전체'],['제안','제안 있음'],['없음','제안 없음']]}],
-     onRow:bunSet,
-     empty:'통장 이름이 전부 거래처와 연결돼 있습니다'});}
+    {k:'suggest_name',t:'제안 거래처',l:1,f:function(v,r){
+      if(r.raw_name === '황병승'){
+        return '<button class="stbtn" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5" onclick="event.stopPropagation();toggleHbsBreakdown()">계정별 분해</button>';
+      }
+      var s = v ? esc(v)+'<span class="tiny dim"> ('+(r.suggest_score||0)+')</span> ' : '<span class="dim">—</span> ';
+      if(v){
+        s += '<button class="stbtn p" style="margin-left:4px" onclick="event.stopPropagation();bunSet('+JSON.stringify(r).replace(/"/g,'&quot;')+')">별칭 등록</button>';
+      }
+      return s;
+    }},
+    {k:'last_on',t:'최근',l:1}
+  ],
+  {rows:rows,q:['raw_name','suggest_name'],csv:true,page:30,
+   chips:[{k:'_s',vals:[['','전체'],['제안','제안 있음'],['없음','제안 없음']]}],
+   onRow:bunSet,
+   empty:'통장 이름이 전부 거래처와 연결돼 있습니다'});}
 function renderHt(){
   renderBunm();
   if(!el('gBank')) return;
@@ -6521,7 +6630,7 @@ function renderAlerts(){
   })
     .concat((D.intg||[]).filter(function(r){
       // 중복 무결성 항목 제거 (D.al에 이미 존재하는 항목 필터링)
-      return !/업무문서|Tax-Risk|계약·동의/.test(r.check_name);
+      return !/업무문서|Tax-Risk/.test(r.check_name);
     }).map(function(r){
       return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),domain:alDomain(r.check_name),action:alActionNote(r.check_name),intg:1};
     }))

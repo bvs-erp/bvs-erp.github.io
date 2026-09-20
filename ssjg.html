@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.07 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.08 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -13,6 +13,25 @@
   --accent-light:rgba(239,68,68,0.12);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
+html[data-theme="light"]{
+  --bg:#f8fafc;--panel:#ffffff;--panel-card:#f1f5f9;--panel-border:#cbd5e1;--border:#e2e8f0;
+  --text:#0f172a;--text-muted:#64748b;--accent:#dc2626;--accent-hover:#b91c1c;
+  --accent-light:rgba(239,68,68,0.15);
+}
+html[data-theme="light"] header{background:#ffffff;border-bottom:1px solid #e2e8f0}
+html[data-theme="light"] .tab-bar{background:#f1f5f9;border-bottom:1px solid #cbd5e1}
+html[data-theme="light"] th{background:#f1f5f9;color:#475569;border-bottom:1px solid #cbd5e1}
+html[data-theme="light"] td{border-bottom:1px solid #e2e8f0}
+html[data-theme="light"] tr:hover td{background:#f8fafc}
+html[data-theme="light"] .input,html[data-theme="light"] .select{background:#ffffff;color:#0f172a;border-color:#cbd5e1}
+html[data-theme="light"] .nav-btn{background:#ffffff;color:#475569;border-color:#cbd5e1}
+html[data-theme="light"] .nav-btn:hover{background:#f1f5f9;color:#0f172a}
+html[data-theme="light"] .tax-banner{background:#fef2f2;border-color:#fca5a5}
+html[data-theme="light"] .tax-body h4{color:#991b1b}
+html[data-theme="light"] .tax-body p{color:#334155}
+html[data-theme="light"] .tax-table th{color:#991b1b}
+html[data-theme="light"] .tax-table td{border-bottom:1px solid #fee2e2}
+html[data-theme="light"] .amt-neutral{color:#334155}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
 
@@ -181,8 +200,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.07</span></div>
-      <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.08</span></div>
+      <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
   <div class="nav-links">
@@ -195,6 +214,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <a href="https://bvs-erp.github.io/pyro.html" class="nav-btn">
       <span style="color:var(--green)">●</span> PYRO 제조 콕핏
     </a>
+    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">🌓 테마</button>
     <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
       <span style="font-size:16px">●</span> DB 정상 연동
     </div>
@@ -203,6 +223,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 
 <div class="tab-bar">
   <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
+  <div class="tab-item" onclick="switchTab('inventory')">📦 OP재고 관리 (13품목)</div>
   <div class="tab-item" onclick="switchTab('delivery')">🚚 택배·출고 자동화</div>
   <div class="tab-item" onclick="switchTab('mgmt-pl')">📈 월별 관리손익 (8개월 ±0원)</div>
   <div class="tab-item" onclick="switchTab('channel-pl')">🛍️ 채널별 수익성 (마진분석)</div>
@@ -234,6 +255,25 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
             <tr><td colspan="6">조회 중...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- WO-26: 원천세 미신고 및 법정 납부기한 도과 경고 배너 -->
+    <div class="tax-banner" style="background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.45);margin-bottom:20px">
+      <div class="tax-icon" style="background:#dc2626">🚨</div>
+      <div class="tax-body" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <h4 style="color:#fca5a5;margin:0">원천세 법정 신고·납부기한 도과 경고 (WO-26)</h4>
+            <span class="badge" style="background:#dc2626;color:#fff;font-weight:700">D+11 초과 미신고</span>
+          </div>
+          <span style="font-size:11px;color:#fca5a5;font-weight:600">세무사 기한후신고 필수</span>
+        </div>
+        <p style="margin-top:6px;font-size:12px;color:var(--text);line-height:1.5">
+          • <b>대상 거래</b>: <code>public.ssjg_manual_journal</code> 2026-08-21 김나연 프리랜서 외주용역비 (사업소득 3.3%)<br>
+          • <b>지급 금액</b>: 총지급 1,300,000원 · 통장 실지급 1,257,100원 · <b>원천징수세액 42,900원</b><br>
+          • <b>법정 납기</b>: <b>2026-09-10</b> (지급월 익월 10일)이나 현재 미신고 상태입니다. 가산세 방지를 위해 즉시 세무대리인을 통해 기한후신고 및 자진납부하시기 바랍니다.
+        </p>
       </div>
     </div>
 
@@ -286,6 +326,62 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       </div>
     </div>
 
+  </div>
+
+  <!-- TAB: OP재고 관리 (WO-34: public.ssjg_inventory 직결) -->
+  <div id="tab-inventory" class="tab-pane">
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">완제품 3PL 실사 (2개입 박스)</div>
+        <div class="kpi-val" id="invKpiFg">179 박스</div>
+        <div class="kpi-sub">프리미엄 148박스 + 슈퍼 31박스 (차이 0박스 ✅)</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">포장 부자재 실사 (파우치)</div>
+        <div class="kpi-val" id="invKpiPouch">12,070 장</div>
+        <div class="kpi-sub">슈퍼 8,117장 + 프리미엄 3,953장 (차이 0 ✅)</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">포장 부자재 실사 (박스)</div>
+        <div class="kpi-val" id="invKpiBox">577 개</div>
+        <div class="kpi-sub">2입 387개 + 1입 190개 (차이 0 ✅)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">3PL(이지어드민) 실사 기준일</div>
+        <div class="kpi-val" style="font-size:18px">2026-09-02</div>
+        <div class="kpi-sub">제이엘씨엔티 물류센터 실사 확정</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">📦 레드캣 벤토나이트 품목 재고 원장 (public.ssjg_inventory 13품목)</div>
+          <div style="font-size:11.5px;color:var(--text-muted)">※ 1P/4P 단품은 2개입 박스로 통합 관리되는 판매 단위이므로 재고 0으로 고정 표시됩니다.</div>
+        </div>
+        <span class="badge" style="font-size:11.5px">원천: raw.sheet_current</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>품목코드</th>
+              <th>품목명</th>
+              <th style="text-align:right">장부재고</th>
+              <th style="text-align:right">3PL 실사</th>
+              <th style="text-align:right">차이수량</th>
+              <th style="text-align:center">판정</th>
+              <th>실사일자</th>
+              <th>비고 및 산출 메모</th>
+            </tr>
+          </thead>
+          <tbody id="invTableRows">
+            <tr><td colspan="9" style="text-align:center;padding:24px">재고 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: 택배·출고 자동화 -->
@@ -903,6 +999,7 @@ var allArRecons = [];
 var allMgmtPl = [];
 var allMgmtSga = [];
 var allChannelPl = [];
+var allInventory = [];
 
 function mkClient(k){
   sb = window.supabase.createClient(SUPABASE_URL, k, {
@@ -1185,6 +1282,13 @@ async function loadAllData(){
     if(chRes.data){
       allChannelPl = chRes.data;
       renderChannelPl(allChannelPl);
+    }
+
+    // 8. Load Inventory (WO-34: public.ssjg_inventory)
+    var { data: invData } = await sb.from('ssjg_inventory').select('*').order('row_no', { ascending: true });
+    if(invData){
+      allInventory = invData;
+      renderInventory(allInventory);
     }
 
   } catch(e) {
@@ -1801,10 +1905,62 @@ function clearDeliveryData(){
   document.getElementById('btnSaveToDb').disabled = true;
   document.getElementById('ezadminDropText').innerHTML = '이지어드민 출고데이터 엑셀 드래그 또는 클릭';
   document.getElementById('invoiceDropText').innerHTML = '로젠택배 발급 송장 파일 드래그 또는 클릭';
-  document.getElementById('invoiceMatchCount').innerText = '0 건';
   document.getElementById('kpiDelivMatched').innerHTML = '대기 중';
   document.getElementById('kpiDelivStatusSub').innerHTML = '출고데이터 업로드 대기';
 }
+// ── OP재고 렌더러 (WO-34) ──
+function renderInventory(rows){
+  var tbody = document.getElementById('invTableRows');
+  if(!tbody || !rows) return;
+
+  var p148 = (rows.find(r => r.item_code === 'FG-RCPRE-6K-2P')||{}).pl3_qty || 0;
+  var p31 = (rows.find(r => r.item_code === 'FG-RCSPR-6K-2P')||{}).pl3_qty || 0;
+  var pouchPre = (rows.find(r => r.item_code === 'PKG-RCPRE-POUCH')||{}).pl3_qty || 0;
+  var pouchSpr = (rows.find(r => r.item_code === 'PKG-RCSPR-POUCH')||{}).pl3_qty || 0;
+  var box2p = (rows.find(r => r.item_code === 'PKG-COM-BOX-2P')||{}).pl3_qty || 0;
+  var box1p = (rows.find(r => r.item_code === 'PKG-COM-BOX-1P')||{}).pl3_qty || 0;
+
+  var elFg = document.getElementById('invKpiFg'); if(elFg) elFg.textContent = fmt(Number(p148) + Number(p31)) + ' 박스';
+  var elPouch = document.getElementById('invKpiPouch'); if(elPouch) elPouch.textContent = fmt(Number(pouchPre) + Number(pouchSpr)) + ' 장';
+  var elBox = document.getElementById('invKpiBox'); if(elBox) elBox.textContent = fmt(Number(box2p) + Number(box1p)) + ' 개';
+
+  tbody.innerHTML = rows.map(r => {
+    var isSubUnit = r.item_code.endsWith('1P') || r.item_code.endsWith('4P');
+    var bookDisplay = isSubUnit ? '<span class="tag tag-wait">0 (박스통합)</span>' : fmt(r.book_qty);
+    var pl3Display = r.pl3_qty !== null && r.pl3_qty !== undefined ? fmt(r.pl3_qty) : '-';
+    var diffDisplay = r.diff_qty !== null && r.diff_qty !== undefined ? fmt(r.diff_qty) : '-';
+    var verdictHtml = r.verdict ? (r.verdict.includes('일치') ? `<span class="tag tag-deposit">${r.verdict}</span>` : `<span class="tag tag-wait">${r.verdict}</span>`) : '-';
+    return `
+      <tr>
+        <td><span class="badge">${r.item_kind || '-'}</span></td>
+        <td><code>${r.item_code}</code></td>
+        <td><strong>${r.item_name}</strong></td>
+        <td style="text-align:right">${bookDisplay}</td>
+        <td style="text-align:right;font-weight:700">${pl3Display}</td>
+        <td style="text-align:right;color:var(--text-muted)">${diffDisplay}</td>
+        <td style="text-align:center">${verdictHtml}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${r.count_date || '-'}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);max-width:320px;white-space:normal">${r.memo || '-'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── 테마 전환 (WO-33) ──
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+}
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  var t = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(t);
+  try{ localStorage.setItem('ssjg_theme', t); }catch(e){}
+}
+(function(){
+  var t = 'dark';
+  try{ t = localStorage.getItem('ssjg_theme') || 'dark'; }catch(e){}
+  applyTheme(t);
+})();
 
 window.addEventListener('DOMContentLoaded', initSupabase);
 </script>
