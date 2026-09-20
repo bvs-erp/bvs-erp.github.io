@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>HBS 통합 관제 허브 · 황병승 대표 4대 엔티티 콕핏</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#0b1120;--panel:#1e293b;--border:#334155;--text:#f8fafc;--text-muted:#94a3b8;
@@ -12,6 +13,21 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px}
+
+.hide{display:none!important}
+
+/* Auth Gate (WO-5 보안 규격 준수: 비인증 시 법인정보/목록 원천 은닉) */
+#gate{width:100%;display:flex;align-items:center;justify-content:center}
+.gate-card{background:rgba(30,41,59,0.85);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 36px rgba(0,0,0,0.6);width:380px;max-width:92vw;padding:32px}
+.f-group{margin-bottom:14px}.f-group label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.auth-input{width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:6px;font-size:13px;outline:none}
+.auth-input:focus{border-color:var(--gold)}
+.auth-btn{width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:6px;font-weight:800;font-size:13.5px;cursor:pointer;transition:all .15s}
+.auth-btn:hover{background:#d97706;color:#fff}
+.auth-lnk{background:none;border:none;padding:0;color:var(--gold);cursor:pointer;font-size:11px}
+.auth-log{background:#0f172a;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;margin-top:12px;font-family:monospace;white-space:pre-wrap;display:none}
+
+/* Hub Card */
 .hub-card{max-width:960px;width:100%;background:rgba(30,41,59,0.7);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:16px;padding:36px;box-shadow:0 20px 40px rgba(0,0,0,0.5)}
 .hub-header{text-align:center;margin-bottom:36px}
 .hub-title{font-size:26px;font-weight:900;letter-spacing:-0.5px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
@@ -38,51 +54,270 @@ footer{margin-top:30px;font-size:11px;color:var(--text-muted);text-align:center}
 </head>
 <body>
 
-<div class="hub-card">
-  <div class="hub-header">
-    <div class="hub-title">👑 황병승 대표 4대 엔티티 통합 콕핏 허브</div>
-    <div class="hub-sub">P.A.R.A 00~99 단일 좌표계 기반 현장·유통·제조 통합 관제 시스템</div>
-  </div>
+<!-- ── 비인증 방문자 차단 로그인 게이트 ── -->
+<div id="gate">
+  <div class="gate-card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:36px;margin-bottom:8px">👑</div>
+      <h1 style="font-size:18px;font-weight:900;letter-spacing:-0.3px;margin:0">HBS 통합 관제 허브</h1>
+      <p style="color:var(--text-muted);font-size:11px;margin-top:4px">4대 엔티티 통합 콕핏 관제 시스템</p>
+    </div>
 
-  <div class="grid">
-    <!-- BVS -->
-    <a href="./erp.html" class="entity-card blue">
-      <div class="card-tag">30_BVS · 법인</div>
-      <div class="card-name">주식회사 비브이에스</div>
-      <div class="card-desc">반도체 셋업·현장공수(M/D)·외주노무·관리손익 실시간 관제 ERP (v1.29)</div>
-      <div class="card-btn">
-        <span style="color:var(--blue)">현장 ERP 콕핏 진입</span>
-        <span>→</span>
+    <div id="stepkey" class="hide">
+      <div class="f-group">
+        <label>Supabase anon key</label>
+        <input id="akey" class="auth-input" placeholder="sb_publishable_...">
       </div>
-    </a>
+      <button class="auth-btn" onclick="saveKey()">키 저장 및 계속</button>
+    </div>
 
-    <!-- SSJG -->
-    <a href="./ssjg.html" class="entity-card red">
-      <div class="card-tag">40_SSJG · 법인</div>
-      <div class="card-name">주식회사 승승장구컴퍼니</div>
-      <div class="card-desc">유통·커머스·47레드캣 고양이모래·로젠택배 대량출고 자동화 콕핏 (v1.02)</div>
-      <div class="card-btn">
-        <span style="color:var(--red)">유통·택배 콕핏 진입</span>
-        <span>→</span>
+    <div id="steplogin">
+      <div class="f-group">
+        <label>계정 이메일</label>
+        <input id="email" class="auth-input" value="enicy1211@gmail.com" autocomplete="username">
       </div>
-    </a>
+      <div class="f-group">
+        <label>비밀번호 <span id="pwlen" style="color:var(--text-muted);font-size:10px"></span></label>
+        <input id="pw" class="auth-input" type="password" autocomplete="current-password">
+      </div>
+      <label style="display:block;font-size:11px;color:var(--text-muted);margin:-6px 0 14px">
+        <input type="checkbox" id="pwshow" onchange="togglePw()"> 비밀번호 보기
+      </label>
+      <button class="auth-btn" onclick="doLogin()">마스터 콕핏 인증</button>
+      <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:11px">
+        <button class="auth-lnk" onclick="showReset()">비밀번호 재설정</button>
+        <button class="auth-lnk" onclick="resetKey()" style="color:var(--text-muted)">API 키 설정</button>
+      </div>
+    </div>
 
-    <!-- PYRO -->
-    <a href="./pyro.html" class="entity-card green">
-      <div class="card-tag">20_PYRO · 개인사업자</div>
-      <div class="card-name">파이로 (PYRO)</div>
-      <div class="card-desc">24 공구온 B2B 카탈로그 마스터 & 25 튜브·사출 단위당 원가 자동 계산기 (v1.00)</div>
-      <div class="card-btn">
-        <span style="color:var(--green)">제조·유통 콕핏 진입</span>
-        <span>→</span>
+    <div id="stepreset" class="hide">
+      <div class="f-group">
+        <label>메일 수신 재설정 링크</label>
+        <input id="rurl" class="auth-input" placeholder="https://...#access_token=...">
       </div>
-    </a>
+      <div class="f-group">
+        <label>새 비밀번호 (6자 이상)</label>
+        <input id="npw" class="auth-input" type="password">
+      </div>
+      <label style="display:block;font-size:11px;color:var(--text-muted);margin:-6px 0 14px">
+        <input type="checkbox" id="npshow" onchange="toggleNp()"> 보기
+      </label>
+      <button class="auth-btn" onclick="doReset()">비밀번호 변경 및 로그인</button>
+      <div style="margin-top:12px;text-align:center">
+        <button class="auth-lnk" onclick="showLogin()">← 로그인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="authLog" class="auth-log"></div>
   </div>
 </div>
 
-<footer>
-  황병승 대표 4대 엔티티 통합 관제 및 AI 수석 비서 헌법 준수 (260921 확정)
-</footer>
+<!-- ── 인증 완료 시 노출되는 엔티티 허브 ── -->
+<div id="hubContent" class="hide" style="width:100%;display:flex;flex-direction:column;align-items:center">
+  <div class="hub-card">
+    <div class="hub-header">
+      <div class="hub-title">👑 황병승 대표 4대 엔티티 통합 콕핏 허브</div>
+      <div class="hub-sub">P.A.R.A 00~99 단일 좌표계 기반 현장·유통·제조·고물상 통합 관제 시스템</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px">
+        <span id="userEmailBadge" style="font-size:11px;color:var(--gold);background:rgba(245,158,11,0.15);padding:3px 10px;border-radius:12px;border:1px solid rgba(245,158,11,0.3)">인증 세션 활성</span>
+        <button onclick="doLogout()" style="background:none;border:none;color:#ef4444;font-size:11px;cursor:pointer">로그아웃</button>
+      </div>
+    </div>
 
+    <div class="grid">
+      <!-- BVS -->
+      <a href="./erp.html" class="entity-card blue">
+        <div class="card-tag">30_BVS · 법인</div>
+        <div class="card-name">주식회사 비브이에스</div>
+        <div class="card-desc">반도체 셋업·현장공수(M/D)·외주노무·관리손익 실시간 관제 ERP (v1.29)</div>
+        <div class="card-btn">
+          <span style="color:var(--blue)">현장 ERP 콕핏 진입</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- SSJG -->
+      <a href="./ssjg.html" class="entity-card red">
+        <div class="card-tag">40_SSJG · 법인</div>
+        <div class="card-name">주식회사 승승장구컴퍼니</div>
+        <div class="card-desc">유통·커머스·47레드캣 고양이모래·카페24/이지어드민/로젠 3단계 택배 자동화 (v1.05)</div>
+        <div class="card-btn">
+          <span style="color:var(--red)">유통·택배 콕핏 진입</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- PYRO -->
+      <a href="./pyro.html" class="entity-card green">
+        <div class="card-tag">20_PYRO · 개인사업자</div>
+        <div class="card-name">파이로 (PYRO)</div>
+        <div class="card-desc">고물상(MF) 금속시세판 & 67종 매입견적기 & 24공구온 & 25사출원가 (v1.01)</div>
+        <div class="card-btn">
+          <span style="color:var(--green)">고물상·제조 콕핏 진입</span>
+          <span>→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    황병승 대표 4대 엔티티 통합 관제 및 AI 수석 비서 헌법 준수 (260921 확정)
+  </footer>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://buchnmdsdjlcvqnjaaxe.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez';
+var LS_KEY = 'hub_supabase_key';
+var sb = null;
+var USER = null;
+
+function mkClient(k){
+  sb = window.supabase.createClient(SUPABASE_URL, k, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
+}
+
+async function boot(){
+  var k = null;
+  try { k = localStorage.getItem(LS_KEY); } catch(e){}
+  if(!k || k.length < 20) k = SUPABASE_KEY;
+  mkClient(k);
+
+  try {
+    var r = await sb.auth.getSession();
+    if(r.data && r.data.session){
+      USER = r.data.session.user.email;
+      startHub();
+    } else {
+      showGate();
+    }
+  } catch(e){
+    console.error('Session check failed:', e);
+    showGate();
+  }
+}
+
+function showGate(){
+  document.getElementById('gate').classList.remove('hide');
+  document.getElementById('hubContent').classList.add('hide');
+}
+
+function hideGate(){
+  document.getElementById('gate').classList.add('hide');
+  document.getElementById('hubContent').classList.remove('hide');
+}
+
+function authLog(msg, isErr){
+  var el = document.getElementById('authLog');
+  if(!el) return;
+  el.style.display = 'block';
+  el.innerHTML = isErr ? '<span style="color:#ef4444">' + msg + '</span>' : '<span style="color:#10b981">' + msg + '</span>';
+}
+
+async function doLogin(){
+  var em = document.getElementById('email').value.trim().toLowerCase();
+  var pw = document.getElementById('pw').value;
+  authLog('로그인 시도 중... (' + em + ')');
+  try {
+    var r = await sb.auth.signInWithPassword({ email: em, password: pw });
+    if(r.error){
+      authLog('로그인 실패: ' + r.error.message, true);
+      return;
+    }
+    document.getElementById('pw').value = '';
+    USER = r.data.user.email;
+    startHub();
+  } catch(e){
+    authLog('로그인 오류: ' + e.message, true);
+  }
+}
+
+async function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  try { if(sb && sb.auth) await sb.auth.signOut(); } catch(e){}
+  sessionStorage.clear();
+  location.reload();
+}
+
+function togglePw(){
+  var p = document.getElementById('pw');
+  p.type = document.getElementById('pwshow').checked ? 'text' : 'password';
+}
+function toggleNp(){
+  var p = document.getElementById('npw');
+  p.type = document.getElementById('npshow').checked ? 'text' : 'password';
+}
+function showReset(){
+  document.getElementById('steplogin').classList.add('hide');
+  document.getElementById('stepreset').classList.remove('hide');
+}
+function showLogin(){
+  document.getElementById('stepreset').classList.add('hide');
+  document.getElementById('steplogin').classList.remove('hide');
+}
+function parseHash(u){
+  var i = u.indexOf('#');
+  var h = i >= 0 ? u.slice(i+1) : u;
+  if(h.indexOf('?') === 0) h = h.slice(1);
+  var p = new URLSearchParams(h);
+  return { at: p.get('access_token'), rt: p.get('refresh_token'), err: p.get('error_description') || p.get('error') };
+}
+async function doReset(){
+  var t = parseHash(document.getElementById('rurl').value.trim());
+  if(t.err){ authLog('링크 오류: ' + t.err, true); return; }
+  if(!t.at){ authLog('링크에서 access_token을 찾을 수 없습니다.', true); return; }
+  var np = document.getElementById('npw').value;
+  if(np.length < 6){ authLog('새 비밀번호는 6자 이상이어야 합니다.', true); return; }
+  try {
+    var s1 = await sb.auth.setSession({ access_token: t.at, refresh_token: t.rt || '' });
+    if(s1.error){ authLog('링크 유효하지 않음: ' + s1.error.message, true); return; }
+    var s2 = await sb.auth.updateUser({ password: np });
+    if(s2.error){ authLog('변경 실패: ' + s2.error.message, true); return; }
+    authLog('비밀번호가 성공적으로 변경되었습니다!');
+    USER = s2.data.user.email;
+    startHub();
+  } catch(e){
+    authLog('재설정 오류: ' + e.message, true);
+  }
+}
+function saveKey(){
+  var k = document.getElementById('akey').value.trim();
+  if(k.length < 20){ alert('키가 너무 짧습니다.'); return; }
+  try { localStorage.setItem(LS_KEY, k); } catch(e){}
+  mkClient(k);
+  document.getElementById('stepkey').classList.add('hide');
+  document.getElementById('steplogin').classList.remove('hide');
+}
+function resetKey(){
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
+  document.getElementById('steplogin').classList.add('hide');
+  document.getElementById('stepreset').classList.add('hide');
+  document.getElementById('stepkey').classList.remove('hide');
+}
+
+function startHub(){
+  hideGate();
+  var badge = document.getElementById('userEmailBadge');
+  if(badge) badge.innerText = '👑 ' + USER;
+}
+
+document.addEventListener('keydown', function(ev){
+  if(ev.key !== 'Enter' || !document.getElementById('hubContent').classList.contains('hide')) return;
+  if(!document.getElementById('stepreset').classList.contains('hide')) doReset();
+  else if(!document.getElementById('steplogin').classList.contains('hide')) doLogin();
+  else if(!document.getElementById('stepkey').classList.contains('hide')) saveKey();
+});
+
+document.addEventListener('input', function(ev){
+  if(!ev.target) return;
+  if(ev.target.id === 'pw'){
+    var el = document.getElementById('pwlen');
+    if(el) el.textContent = ev.target.value ? '(' + ev.target.value.length + '자)' : '';
+  }
+});
+
+window.addEventListener('DOMContentLoaded', boot);
+</script>
 </body>
 </html>
