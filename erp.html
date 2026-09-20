@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.26 · 대표 콕핏</title>
+<title>BVS ERP v1.28 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -598,7 +598,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.26</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.28</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -632,6 +632,9 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       </div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
       <div class="kgrps" id="homeKpi"></div>
+      <div class="sec" id="homeDaySec" style="margin-bottom:16px"><h3>현장 일보 <span class="cnt" id="homeAttN"></span><span class="r tiny dim" id="homeMtd"></span><span class="r"><button class="btn sm" onclick="go('site')">현장 →</button></span></h3>
+        <div class="kpis" id="homeDayKpi" style="margin-bottom:10px"></div>
+        <div class="tb" id="gHomeAtt"></div></div>
       <div class="sec" id="mapSec" style="margin-bottom:16px">
         <h3><span id="mapTitleText">현장 투입 현황</span> <span class="cnt" id="mapN"></span><span class="r tiny dim" id="mapHint">거점 카드를 누르면 상세 명단이 열립니다</span></h3>
         <div id="siteMap"></div>
@@ -640,8 +643,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="chart" id="chHome"></div>
         <div class="sec"><h3>경보 <span class="cnt" id="homeAlN"></span><span class="r"><button class="btn sm" onclick="go('alerts')">전체 →</button></span></h3><div class="alist" id="homeAl"></div></div>
       </div>
-      <div class="grid2" style="margin-top:16px">
-        <div class="sec"><h3>투입 실황 <span class="cnt" id="homeAttN"></span><span class="r"><button class="btn sm" onclick="go('site')">현장 →</button></span></h3><div class="tb" id="gHomeAtt"></div></div>
+      <div style="margin-top:16px">
         <div class="sec"><h3>최근 문서 <span class="r"><button class="btn sm p" onclick="newDoc()">+ 새 문서</button><button class="btn sm" onclick="go('sales')">매출 →</button></span></h3><div class="tb" id="gHomeSd"></div></div>
       </div>
     </section>
@@ -1106,7 +1108,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.27';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.28';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2081,7 +2083,7 @@ function renderHome(){
   }
 
   // 이상 징후 카운트 (선택일 기준)
-  var curNoOut = targetRows.filter(function(r){return r.work_start && !r.work_end && r.source==='worker_app'}).length;
+  var curNoOut = targetRows.filter(function(r){return r.work_start && !r.work_end}).length;
   var curPend = targetRows.filter(function(r){return (r.status==='submitted'||r.status==='draft') && !r.settled_ym}).length;
   var curSites = Object.keys(by(targetRows, 'site_name')).length;
   var curMd = num(sum(targetRows, 'work_md'));
@@ -2134,10 +2136,53 @@ function renderHome(){
 
   el('homeAttN').textContent=curDay||'';
   renderMap(curDay, targetRows);
-  grid('gHomeAtt',[{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_start',t:'출근',f:hhmm},{k:'work_md',t:'공수',f:'num'},{k:'pay_amt',t:'지급',f:'won'}],{rows:targetRows.slice(0,12),csv:false,page:12});
+  renderHomeDay(curDay, isToday);
   grid('gHomeSd',[{k:'doc_date',t:'일자',l:1},{k:'doc_kind',t:'종류',l:1,f:pillKind},{k:'partner_name',t:'거래처',l:1},{k:'total_amt',t:'합계',f:'won'},{k:'status',t:'상태',l:1,f:pillSt}],{rows:D.sd.slice(0,8),csv:false,page:8,onRow:openDoc});
 }
 
+
+/* ── 홈 「오늘 현장」: 출근·퇴근·업무일지·매출·지급을 한 표로 (v1.28) ── */
+var HDAY={seq:0};
+function hdState(r,isToday){
+  if(r.work_start&&r.work_end)return '<span class="pill g">퇴근</span>';
+  if(r.work_start)return isToday?'<span class="pill b">근무 중</span>':'<span class="pill y">퇴근 미등록</span>';
+  return '<span class="pill">앱 기록 없음</span>';
+}
+function hdLog(v,r){var t=r.work_log||'';if(!t)return '<span class="dim">'+esc(r.work_desc||'–')+'</span>';
+  return esc(t.length>34?t.slice(0,34)+'…':t)}
+async function renderHomeDay(day,isToday){
+  var my=++HDAY.seq, m=String(day||'').slice(0,7);
+  var box=el('gHomeAtt'); if(!box||!day)return;
+  var dr=await sb.from('ceo_labor_month').select('entry_id,work_date,person_name,site_name,work_start,work_end,work_md,ot_hours,status,source,work_desc,work_log,pay_amt,cost_amt,revenue_amt,margin_amt').eq('work_date',day).neq('status','void').order('site_name').limit(500);
+  if(my!==HDAY.seq)return;
+  if(dr.error){toast(dr.error.message,'e');return}
+  var rows=(dr.data||[]).map(function(r){r._st=(r.work_start&&r.work_end)?2:(r.work_start?1:0);return r});
+  var mrows=calRows(m); if(!mrows){try{mrows=await calFetch(m)}catch(e){mrows=[]}}
+  if(my!==HDAY.seq)return;
+  mrows=(mrows||[]).filter(function(r){return r.status!=='void'&&r.work_date<=day});
+  var rev=sum(rows,'revenue_amt'),cost=sum(rows,'cost_amt'),mg=sum(rows,'margin_amt');
+  var onN=rows.filter(function(r){return r._st===1}).length, offN=rows.filter(function(r){return r._st===2}).length, noN=rows.filter(function(r){return r._st===0}).length;
+  var logN=rows.filter(function(r){return r.work_log}).length;
+  el('homeAttN').textContent=day+' · '+rows.length+'명';
+  el('homeDayKpi').innerHTML=
+     kpi('출근 · 퇴근', offN+'<small> 퇴근</small> / '+(onN?'<span class="'+(isToday?'':'wn')+'">'+onN+'</span>':'0')+'<small> '+(isToday?'근무 중':'미등록')+'</small>', noN?('앱 기록 없음 '+noN+'명'):'전원 앱 기록', onN&&!isToday?'warn':'')
+    +kpi('업무일지', logN+'<small> / '+rows.length+'</small>', rows.length&&logN<rows.length?'미작성 '+(rows.length-logN)+'명':'모두 작성', '')
+    +kpi('매출', won(rev), '현장 공수 기준 청구 금액', '')
+    +kpi('공수로 나갈 돈', '<span class="wn">'+won(cost)+'</span>', '본인 지급 + 팀장 몫 (월급제는 일할)', '')
+    +kpi('마진', sgn(mg), rev?num(mg/rev*100,1)+'%':'–', '');
+  el('homeMtd').innerHTML=m+' 1일~'+day.slice(8)+'일 누계 · 매출 <b>'+won(sum(mrows,'revenue_amt'))+'</b> · 지급 <b>'+won(sum(mrows,'cost_amt'))+'</b> · 마진 <b>'+sgn(sum(mrows,'margin_amt'))+'</b>&nbsp;&nbsp;';
+  grid('gHomeAtt',[
+    {k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},
+    {k:'work_start',t:'출근',f:hhmm},{k:'work_end',t:'퇴근',f:hhmm},
+    {k:'_st',t:'상태',l:1,f:function(v,r){return hdState(r,isToday)}},
+    {k:'work_log',t:'업무일지',l:1,w:220,f:hdLog},
+    {k:'work_md',t:'공수',f:'num',sum:1},{k:'revenue_amt',t:'매출',f:'won',sum:1},
+    {k:'cost_amt',t:'지급',f:'won',sum:1},{k:'margin_amt',t:'마진',f:'sgn',sum:1}],
+    {rows:rows,csv:false,page:40,foot:true,q:['person_name','site_name','work_log','work_desc'],qph:'이름·현장·업무일지 검색',
+     chips:[{k:'_st',vals:[['','전체'],['1',isToday?'근무 중':'퇴근 미등록'],['2','퇴근'],['0','앱 기록 없음']]}],
+     empty:'이 날 등록된 투입이 없습니다',
+     expand:function(r){return expCell('업무',esc(r.work_desc||'–'))+expCell('업무일지',esc(r.work_log||'작성 안 함').replace(/\n/g,'<br>'))+expCell('잔업',num(r.ot_hours)+'h')+expCell('상태',pillSt(r.status))}});
+}
 /* ═══════════ 현장 ═══════════ */
 function planNew(r){r=r||{};var sites=(D.sites||[]).filter(function(s){return s.is_active!==false});
   var so=sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===r.site_id?' selected':'')+'>'+esc(s.site_name||s.site_id)+'</option>'}).join('');
