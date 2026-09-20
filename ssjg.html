@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.03 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.04 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -15,6 +15,18 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+
+
+.hide{display:none!important}
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.gate-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.5);width:380px;max-width:92vw;padding:28px}
+.f-group{margin-bottom:14px}.f-group label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.auth-input{width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px;outline:none}
+.auth-input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;transition:background .15s}
+.auth-btn:hover{background:var(--accent-hover)}
+.auth-lnk{background:none;border:none;padding:0;color:var(--accent);cursor:pointer;font-size:11px}
+.auth-log{background:#0f172a;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;margin-top:12px;font-family:monospace;white-space:pre-wrap;display:none}
 
 /* GNB */
 header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
@@ -100,12 +112,76 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 </style>
 </head>
 <body>
+<!-- ── Supabase 인증 게이트 (WO-1 보안 정상화) ── -->
+<div id="gate" class="hide">
+  <div class="gate-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="background:var(--accent);color:#fff;font-weight:900;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">SS</div>
+      <div>
+        <h1 style="font-size:17px;font-weight:800;letter-spacing:-0.3px;margin:0">승승장구 콕핏 ERP</h1>
+        <p style="color:var(--text-muted);font-size:11px;margin:0">주식회사 승승장구컴퍼니 보안 관제</p>
+      </div>
+    </div>
+    <div style="height:1px;background:var(--border);margin:14px 0"></div>
+
+    <div id="stepkey" class="hide">
+      <div class="f-group">
+        <label>Supabase anon key (최초 1회 설정)</label>
+        <input id="akey" class="auth-input" placeholder="sb_publishable_...">
+      </div>
+      <button class="auth-btn" onclick="saveKey()">키 저장 및 계속</button>
+    </div>
+
+    <div id="steplogin">
+      <div class="f-group">
+        <label>계정 이메일</label>
+        <input id="email" class="auth-input" value="enicy1211@gmail.com" autocomplete="username">
+      </div>
+      <div class="f-group">
+        <label>비밀번호 <span id="pwlen" style="color:var(--text-muted);font-size:10px"></span></label>
+        <input id="pw" class="auth-input" type="password" autocomplete="current-password">
+      </div>
+      <label style="display:block;font-size:11px;color:var(--text-muted);margin:-6px 0 14px">
+        <input type="checkbox" id="pwshow" onchange="togglePw()"> 비밀번호 보기
+      </label>
+      <button class="auth-btn" onclick="doLogin()">로그인</button>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:11px">
+        <button class="auth-lnk" onclick="showReset()">비밀번호 재설정</button>
+        <button class="auth-lnk" onclick="resetKey()" style="color:var(--text-muted)">API 키 재입력</button>
+      </div>
+    </div>
+
+    <div id="stepreset" class="hide">
+      <div class="f-group">
+        <label>메일 수신 재설정 링크 전체</label>
+        <input id="rurl" class="auth-input" placeholder="https://...#access_token=...">
+      </div>
+      <div class="f-group">
+        <label>새 비밀번호 (6자 이상)</label>
+        <input id="npw" class="auth-input" type="password">
+      </div>
+      <label style="display:block;font-size:11px;color:var(--text-muted);margin:-6px 0 14px">
+        <input type="checkbox" id="npshow" onchange="toggleNp()"> 비밀번호 보기
+      </label>
+      <button class="auth-btn" onclick="doReset()">비밀번호 변경 및 로그인</button>
+      <div style="margin-top:12px;text-align:center">
+        <button class="auth-lnk" onclick="showLogin()">← 로그인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="authLog" class="auth-log"></div>
+  </div>
+</div>
+
+<!-- ── 메인 콕핏 앱 셸 (로그인 인증 후 노출) ── -->
+<div id="app" class="hide">
+
 
 <header>
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.03</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.04</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -297,13 +373,19 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
                 </select>
               </div>
             </div>
-            <div style="margin-top:8px">
-              <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인명</label>
-              <input type="text" id="cfgSenderName" class="input" value="승승장구컴퍼니" style="padding:4px 8px;width:100%">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인명</label>
+                <input type="text" id="cfgSenderName" class="input" value="주식회사 승승장구컴퍼니" style="padding:4px 8px;width:100%">
+              </div>
+              <div>
+                <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 연락처</label>
+                <input type="text" id="cfgSenderPhone" class="input" value="" placeholder="DB 로딩 중..." style="padding:4px 8px;width:100%">
+              </div>
             </div>
             <div style="margin-top:8px">
-              <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 주소</label>
-              <input type="text" id="cfgSenderAddr" class="input" value="경기도 이천시 호법면 대덕산로215" style="padding:4px 8px;width:100%">
+              <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 출하지 주소</label>
+              <input type="text" id="cfgSenderAddr" class="input" value="" placeholder="DB 로딩 중..." style="padding:4px 8px;width:100%">
             </div>
           </div>
 
@@ -511,22 +593,23 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="gov-grid">
       <div class="gov-card">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🏢 주식회사 승승장구컴퍼니 거버넌스 정보</h3>
-        <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span>134811-0530752</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span>772-87-02119</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span id="govCorpNo">134811-0530752</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span id="govBizNo">772-87-02119</span></div>
         <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영 (지분율 100%, 40,000주)</span></div>
         <div class="gov-info-row"><span class="gov-info-label">자본금</span><span>20,000,000 원</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span>경기도 용인시 처인구 이동읍 백옥대로753번길 15(어반즈19) 405호</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span>도매 및 소매업 / 애완용 동물 및 관련용품, 통신판매업</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span id="govAddress">경기도 용인시 처인구 이동읍 백옥대로753번길 15(어반즈19) 405호</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span id="govBizItem">도매 및 소매업 / 애완용 동물 및 관련용품, 통신판매업</span></div>
         <div class="gov-info-row"><span class="gov-info-label">특수 인증</span><span>여성기업 확인서 보유 (유효기간 2024~2027)</span></div>
         <div class="gov-info-row"><span class="gov-info-label">주력 브랜드</span><span>47 레드캣 (REDCAT) 고양이 벤토나이트 모래</span></div>
       </div>
       <div class="gov-card">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🔏 법인 공식 인감</h3>
         <div class="seal-box">
-          <!-- 공식 법인인감 투명 PNG (41 폴더 실측 자산) -->
-          <img src="https://raw.githubusercontent.com/bvs-erp/bvs-erp.github.io/main/260830_증명_법인인감_배경투명_v2.png" 
-               alt="SSJG 법인인감" class="seal-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'45\' fill=\'none\' stroke=\'%23ef4444\' stroke-width=\'4\'/><text x=\'50\' y=\'55\' fill=\'%23ef4444\' font-size=\'14\' font-family=\'sans-serif\' text-anchor=\'middle\'>승승장구인</text></svg>'">
-          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감 (정본)</div>
+          <div id="sealLoadingBox" style="font-size:11px;color:var(--text-muted);padding:24px 10px">
+            🔐 보안 알림: 로그인 후 DB(core.company_info)에서 정본 인감을 안전하게 불러옵니다.
+          </div>
+          <img id="govSealImg" src="" alt="SSJG 법인인감" class="seal-img" style="display:none;max-height:100px;margin:0 auto;filter:drop-shadow(0 2px 8px rgba(239,68,68,0.25))">
+          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감 (DB 암호화 정본)</div>
         </div>
       </div>
     </div>
@@ -537,19 +620,181 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 <footer>
   주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
 </footer>
+</div>
 
 <script>
 var SUPABASE_URL = 'https://buchnmdsdjlcvqnjaaxe.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez';
+var LS_KEY = 'ssjg_supabase_key';
 var sb = null;
+var USER = null;
+var ME = null;
+var compInfo = null;
 var allBankRows = [];
+
+function mkClient(k){
+  sb = window.supabase.createClient(SUPABASE_URL, k, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
+}
+
+async function boot(){
+  var k = null;
+  try { k = localStorage.getItem(LS_KEY); } catch(e){}
+  if(!k || k.length < 20) k = SUPABASE_KEY;
+  mkClient(k);
+
+  try {
+    var r = await sb.auth.getSession();
+    if(r.data && r.data.session){
+      USER = r.data.session.user.email;
+      startApp();
+    } else {
+      showGate();
+    }
+  } catch(e){
+    console.error('Session check failed:', e);
+    showGate();
+  }
+}
+
+function showGate(){
+  document.getElementById('gate').classList.remove('hide');
+  document.getElementById('app').classList.add('hide');
+  document.getElementById('steplogin').classList.remove('hide');
+  document.getElementById('stepreset').classList.add('hide');
+  document.getElementById('stepkey').classList.add('hide');
+  setTimeout(function(){ var pwInput = document.getElementById('pw'); if(pwInput) pwInput.focus(); }, 100);
+}
+
+function hideGate(){
+  document.getElementById('gate').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+}
+
+function authLog(msg, isErr){
+  var el = document.getElementById('authLog');
+  if(!el) return;
+  el.style.display = 'block';
+  el.innerHTML = isErr ? '<span style="color:#ef4444">' + msg + '</span>' : '<span style="color:#10b981">' + msg + '</span>';
+}
+
+async function doLogin(){
+  var em = document.getElementById('email').value.trim().toLowerCase();
+  var pw = document.getElementById('pw').value;
+  authLog('로그인 시도 중... (' + em + ')');
+  try {
+    var r = await sb.auth.signInWithPassword({ email: em, password: pw });
+    if(r.error){
+      authLog('로그인 실패: ' + r.error.message, true);
+      return;
+    }
+    document.getElementById('pw').value = '';
+    USER = r.data.user.email;
+    startApp();
+  } catch(e){
+    authLog('로그인 오류: ' + e.message, true);
+  }
+}
+
+async function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  try {
+    if(sb && sb.auth) await sb.auth.signOut();
+  } catch(e){}
+  sessionStorage.clear();
+  location.reload();
+}
+
+function togglePw(){
+  var p = document.getElementById('pw');
+  p.type = document.getElementById('pwshow').checked ? 'text' : 'password';
+}
+function toggleNp(){
+  var p = document.getElementById('npw');
+  p.type = document.getElementById('npshow').checked ? 'text' : 'password';
+}
+function showReset(){
+  document.getElementById('steplogin').classList.add('hide');
+  document.getElementById('stepreset').classList.remove('hide');
+}
+function showLogin(){
+  document.getElementById('stepreset').classList.add('hide');
+  document.getElementById('steplogin').classList.remove('hide');
+}
+function parseHash(u){
+  var i = u.indexOf('#');
+  var h = i >= 0 ? u.slice(i+1) : u;
+  if(h.indexOf('?') === 0) h = h.slice(1);
+  var p = new URLSearchParams(h);
+  return { at: p.get('access_token'), rt: p.get('refresh_token'), err: p.get('error_description') || p.get('error') };
+}
+async function doReset(){
+  var t = parseHash(document.getElementById('rurl').value.trim());
+  if(t.err){ authLog('링크 오류: ' + t.err, true); return; }
+  if(!t.at){ authLog('링크에서 access_token을 찾을 수 없습니다.', true); return; }
+  var np = document.getElementById('npw').value;
+  if(np.length < 6){ authLog('새 비밀번호는 6자 이상이어야 합니다.', true); return; }
+  try {
+    var s1 = await sb.auth.setSession({ access_token: t.at, refresh_token: t.rt || '' });
+    if(s1.error){ authLog('링크 만료/유효하지 않음: ' + s1.error.message, true); return; }
+    var s2 = await sb.auth.updateUser({ password: np });
+    if(s2.error){ authLog('변경 실패: ' + s2.error.message, true); return; }
+    authLog('비밀번호가 성공적으로 변경되었습니다!');
+    USER = s2.data.user.email;
+    startApp();
+  } catch(e){
+    authLog('재설정 오류: ' + e.message, true);
+  }
+}
+function saveKey(){
+  var k = document.getElementById('akey').value.trim();
+  if(k.length < 20){ alert('키가 너무 짧습니다.'); return; }
+  try { localStorage.setItem(LS_KEY, k); } catch(e){}
+  mkClient(k);
+  document.getElementById('stepkey').classList.add('hide');
+  document.getElementById('steplogin').classList.remove('hide');
+}
+function resetKey(){
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
+  document.getElementById('steplogin').classList.add('hide');
+  document.getElementById('stepreset').classList.add('hide');
+  document.getElementById('stepkey').classList.remove('hide');
+}
+
+async function startApp(){
+  hideGate();
+  var userDisplay = document.getElementById('userEmail');
+  if(userDisplay) userDisplay.innerText = USER || '로그인 완료';
+
+  try {
+    var st = await sb.rpc('my_status');
+    if(st && st.data) ME = st.data;
+  } catch(e){ console.warn('my_status error:', e); }
+
+  await loadAllData();
+}
+
+document.addEventListener('keydown', function(ev){
+  if(ev.key !== 'Enter' || !document.getElementById('app').classList.contains('hide')) return;
+  if(!document.getElementById('stepreset').classList.contains('hide')) doReset();
+  else if(!document.getElementById('steplogin').classList.contains('hide')) doLogin();
+  else if(!document.getElementById('stepkey').classList.contains('hide')) saveKey();
+});
+
+document.addEventListener('input', function(ev){
+  if(!ev.target) return;
+  if(ev.target.id === 'pw'){
+    var el = document.getElementById('pwlen');
+    if(el) el.textContent = ev.target.value ? '(' + ev.target.value.length + '자)' : '';
+  }
+});
 
 function initSupabase(){
   if(window.supabase && window.supabase.createClient){
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    loadAllData();
+    boot();
   } else {
-    setTimeout(initSupabase, 200);
+    setTimeout(initSupabase, 100);
   }
 }
 
@@ -569,6 +814,37 @@ function fmt(n){
 
 async function loadAllData(){
   try {
+    // 0. Load Company Info & Seal from DB (WO-1 보안 규격)
+    try {
+      var { data: compList, error: compErr } = await sb.from('ssjg_company').select('*').limit(1);
+      if(compList && compList.length > 0){
+        compInfo = compList[0];
+        if(compInfo.address){
+          var addrEl = document.getElementById('govAddress');
+          if(addrEl) addrEl.innerText = compInfo.address;
+          var senderAddrInput = document.getElementById('cfgSenderAddr');
+          if(senderAddrInput && !senderAddrInput.value) senderAddrInput.value = compInfo.address;
+        }
+        if(compInfo.phone){
+          var phoneInput = document.getElementById('cfgSenderPhone');
+          if(phoneInput && !phoneInput.value) phoneInput.value = compInfo.phone;
+        }
+        if(compInfo.corp_name){
+          var senderNameInput = document.getElementById('cfgSenderName');
+          if(senderNameInput) senderNameInput.value = compInfo.corp_name;
+        }
+        if(compInfo.seal_data_url){
+          var sealImg = document.getElementById('govSealImg');
+          var loadBox = document.getElementById('sealLoadingBox');
+          if(sealImg) {
+            sealImg.src = compInfo.seal_data_url;
+            sealImg.style.display = 'inline-block';
+          }
+          if(loadBox) loadBox.style.display = 'none';
+        }
+      }
+    } catch(compEx){ console.warn('ssjg_company fetch error:', compEx); }
+
     // 1. Load Tax-Risk Rows
     var { data: taxData } = await sb.from('ssjg_tax_risk').select('*');
     if(taxData && taxData.length > 0){
@@ -861,8 +1137,9 @@ function downloadLogenExcel(){
 
   var freight = Number(document.getElementById('cfgFreight').value) || 4150;
   var freightType = document.getElementById('cfgFreightType').value || '10';
-  var senderName = document.getElementById('cfgSenderName').value || '승승장구컴퍼니';
-  var senderAddr = document.getElementById('cfgSenderAddr').value || '경기도 이천시 호법면 대덕산로215';
+  var senderName = document.getElementById('cfgSenderName').value || (compInfo && compInfo.corp_name) || '승승장구컴퍼니';
+  var senderAddr = document.getElementById('cfgSenderAddr').value || (compInfo && compInfo.address) || '';
+  var senderPhone = document.getElementById('cfgSenderPhone').value.trim() || (compInfo && compInfo.phone) || '';
 
   var logenRows = rawDeliveryRows.map(r => ({
     '수하인명': r.receiver,
@@ -877,8 +1154,8 @@ function downloadLogenExcel(){
     '배송메세지': r.delivery_msg,
     '송하인명': senderName,
     '송하인주소1': senderAddr,
-    '송하인전화': '010-8568-0788',
-    '송하인휴대폰': '010-8568-0788',
+    '송하인전화': senderPhone,
+    '송하인휴대폰': senderPhone,
     '제주운임구분(선착불)': '',
     '유효성': ''
   }));
