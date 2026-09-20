@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SSJG ERP v1.00 · 승승장구 콕핏</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
+  --text:#f8fafc;--text-muted:#94a3b8;--accent:#f97316;--accent-hover:#ea580c;
+  --accent-light:rgba(249,115,22,0.12);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* GNB */
+header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{background:var(--accent);color:#fff;font-weight:900;font-size:16px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(249,115,22,0.4)}
+.brand-title{font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid rgba(249,115,22,0.3)}
+.nav-links{display:flex;gap:8px}
+.nav-btn{background:#1e293b;color:var(--text-muted);border:1px solid var(--border);padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-btn:hover{background:#334155;color:#fff}
+.nav-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+
+/* Tab Bar */
+.tab-bar{background:#0b1120;border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto}
+.tab-item{padding:12px 16px;color:var(--text-muted);font-weight:600;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.tab-item:hover{color:#fff}
+.tab-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Container */
+.container{max-width:1440px;margin:0 auto;padding:20px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;position:relative;overflow:hidden}
+.kpi-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.kpi-card.green::before{background:var(--green)}
+.kpi-card.blue::before{background:var(--blue)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-label{font-size:12px;color:var(--text-muted);font-weight:600;margin-bottom:6px}
+.kpi-val{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+
+/* Tax-Risk Banner */
+.tax-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+.tax-icon{background:var(--red);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;margin-top:2px}
+.tax-body h4{font-size:14px;font-weight:700;color:#fca5a5;margin-bottom:4px}
+.tax-body p{font-size:12px;color:#cbd5e1;line-height:1.5}
+.tax-table{margin-top:10px;width:100%;border-collapse:collapse;font-size:12px}
+.tax-table th,.tax-table td{padding:6px 10px;text-align:left;border-bottom:1px solid rgba(239,68,68,0.2)}
+.tax-table th{color:#fca5a5}
+
+/* Data Table */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:20px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.panel-title{font-size:15px;font-weight:700}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input{background:#0f172a;border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:12px;outline:none}
+.input:focus{border-color:var(--accent)}
+.select{background:#0f172a;border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:12px;outline:none}
+.table-wrap{overflow-x:auto;max-height:550px;border:1px solid var(--border);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+th{background:#0b1120;color:var(--text-muted);font-weight:600;padding:10px 12px;position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid rgba(51,65,85,0.4)}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.amt-plus{color:var(--green);font-weight:600;text-align:right}
+.amt-minus{color:var(--red);font-weight:600;text-align:right}
+.amt-neutral{color:#cbd5e1;text-align:right}
+.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.tag-deposit{background:rgba(16,185,129,0.15);color:#34d399}
+.tag-withdraw{background:rgba(239,68,68,0.15);color:#f87171}
+
+/* Seal Card */
+.gov-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.gov-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px}
+.gov-info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(51,65,85,0.3)}
+.gov-info-label{color:var(--text-muted);font-weight:600}
+.seal-box{background:#fff;border-radius:8px;padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px}
+.seal-img{max-width:120px;max-height:120px;object-fit:contain}
+
+/* Footer */
+footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">SS</div>
+    <div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.00</span></div>
+      <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="https://bvs-erp.github.io/erp.html" class="nav-btn">
+      <span style="color:var(--blue)">●</span> BVS 현장 ERP
+    </a>
+    <a href="#" class="nav-btn active">
+      <span style="color:var(--accent)">●</span> SSJG 유통 콕핏
+    </a>
+    <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
+      <span style="font-size:16px">●</span> DB 정상 연동
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
+  <div class="tab-item" onclick="switchTab('bank')">🏦 기업은행 통장 원장 (2,720건)</div>
+  <div class="tab-item" onclick="switchTab('monthly')">📈 월별 손익·자금 추이</div>
+  <div class="tab-item" onclick="switchTab('logistics')">📦 3PL 물류·용역비 정산</div>
+  <div class="tab-item" onclick="switchTab('governance')">🏛️ 법인 정보 & 인감</div>
+</div>
+
+<div class="container">
+
+  <!-- TAB 1: 종합 대시보드 -->
+  <div id="tab-dashboard" class="tab-pane active">
+    
+    <!-- Tax-Risk Guard Alert -->
+    <div class="tax-banner" id="taxBanner">
+      <div class="tax-icon">!</div>
+      <div class="tax-body" style="flex:1">
+        <h4>⚠️ Tax-Risk Guard 경고: 특수관계인(BVS ↔ SSJG) 내부거래 2건 감지</h4>
+        <p>헌법 제5조에 의거, BVS 법인과 SSJG 법인 간 자금 이체 2건(총 2,750만 원)이 실측 포착되었습니다. 가지급금 및 부당행위계산부인 방지를 위해 증빙 및 반증자료(계약서, 세금계산서)를 상시 대조하십시오.</p>
+        <table class="tax-table">
+          <thead>
+            <tr><th>거래일자</th><th>거래처</th><th>구분</th><th>금액</th><th>잔액</th><th>적요</th></tr>
+          </thead>
+          <tbody id="taxRiskRows">
+            <tr><td colspan="6">조회 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">누적 총 입금액 (2021~2025)</div>
+        <div class="kpi-val" id="kpiDeposit">13억 3,580만</div>
+        <div class="kpi-sub">원장 총 1,335,808,399 원</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">누적 총 출금액 (2021~2025)</div>
+        <div class="kpi-val" id="kpiWithdraw">13억 3,730만</div>
+        <div class="kpi-sub">원장 총 1,337,308,778 원</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">통장 거래 총 건수</div>
+        <div class="kpi-val" id="kpiCount">2,720 건</div>
+        <div class="kpi-sub">IBK기업은행 원장 100% 적재 완료</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">최신 통장 마감 잔액</div>
+        <div class="kpi-val" id="kpiBalance">0 원</div>
+        <div class="kpi-sub">2025-12-31 결산 마감 기준</div>
+      </div>
+    </div>
+
+    <!-- 최근 월별 손익 요약 카드 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">최근 12개월 월별 자금 입출금 및 순현금흐름</div>
+        <span style="font-size:12px;color:var(--text-muted)">단위: 원</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>정산월 (Period)</th>
+              <th style="text-align:right">거래건수</th>
+              <th style="text-align:right">월 입금 합계</th>
+              <th style="text-align:right">월 출금 합계</th>
+              <th style="text-align:right">순현금흐름 (입금 - 출금)</th>
+              <th style="text-align:right">월말 잔액</th>
+            </tr>
+          </thead>
+          <tbody id="dashMonthlyRows">
+            <tr><td colspan="6" style="text-align:center;padding:20px">데이터 로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: 기업은행 통장 원장 -->
+  <div id="tab-bank" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">IBK기업은행 통장 거래 원장 전수 (2,720건)</div>
+          <div style="font-size:11px;color:var(--text-muted)">계좌: IBK-SSJG · 자연키 유니크 제약 100% 검증 완료</div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="bankSearch" class="input" placeholder="거래처/적요 검색..." onkeyup="filterBankRows()">
+          <select id="bankYear" class="select" onchange="filterBankRows()">
+            <option value="">전체 연도</option>
+            <option value="2025">2025년</option>
+            <option value="2023">2023년</option>
+            <option value="2022">2022년</option>
+            <option value="2021">2021년</option>
+          </select>
+          <select id="bankType" class="select" onchange="filterBankRows()">
+            <option value="">입출금 전체</option>
+            <option value="in">입금만</option>
+            <option value="out">출금만</option>
+          </select>
+          <span id="bankCountLabel" style="font-size:12px;color:var(--text-muted)">2,720건 표시 중</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>거래일시</th>
+              <th>적요 / 거래내용</th>
+              <th>거래처 (상대계좌예금주명)</th>
+              <th>구분</th>
+              <th style="text-align:right">입금액</th>
+              <th style="text-align:right">출금액</th>
+              <th style="text-align:right">거래후 잔액</th>
+              <th>메모</th>
+              <th>원천 파일</th>
+            </tr>
+          </thead>
+          <tbody id="bankTableRows">
+            <tr><td colspan="9" style="text-align:center;padding:30px">데이터를 불러오는 중입니다...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: 월별 손익·자금 추이 -->
+  <div id="tab-monthly" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">2021년 ~ 2025년 전 기간 월별 손익 및 자금 수지 총괄</div>
+        <span style="font-size:12px;color:var(--text-muted)">총 58개 정산월 집계</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>정산월 (YM)</th>
+              <th style="text-align:right">거래건수</th>
+              <th style="text-align:right">총 입금액</th>
+              <th style="text-align:right">총 출금액</th>
+              <th style="text-align:right">순수지 (Net)</th>
+              <th style="text-align:right">월말 통장잔액</th>
+            </tr>
+          </thead>
+          <tbody id="allMonthlyRows">
+            <tr><td colspan="6" style="text-align:center;padding:30px">집계 데이터 로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: 3PL 물류·용역비 정산 -->
+  <div id="tab-logistics" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">2026년 08월 물류용역비 청구서 대사 원장</div>
+          <div style="font-size:11px;color:var(--text-muted)">공급자: 주식회사 제이엘씨엔티 · 공급받는자: (주)승승장구컴퍼니 (대표 이세영)</div>
+        </div>
+        <div class="badge">청구일자: 2026-09-01</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>정산 항목</th>
+              <th style="text-align:right">수량</th>
+              <th>단위</th>
+              <th style="text-align:right">단가</th>
+              <th style="text-align:right">공급가액</th>
+              <th style="text-align:right">세액 (VAT)</th>
+              <th style="text-align:right">합계금액</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>택배 출고료</td><td style="text-align:right">86</td><td>원/BOX</td><td style="text-align:right">700</td><td style="text-align:right">60,200</td><td style="text-align:right">6,020</td><td style="text-align:right;font-weight:600">66,220</td><td>-</td></tr>
+            <tr><td>쿠팡 작업비</td><td style="text-align:right">31</td><td>원/BOX</td><td style="text-align:right">500</td><td style="text-align:right">15,500</td><td style="text-align:right">1,550</td><td style="text-align:right;font-weight:600">17,050</td><td>쿠팡 로켓입고 라벨링</td></tr>
+            <tr><td>택배비</td><td style="text-align:right">86</td><td>원/BOX</td><td>실비 청구</td><td style="text-align:right">181,818</td><td style="text-align:right">18,182</td><td style="text-align:right;font-weight:600">200,000</td><td>로젠택배 실비</td></tr>
+            <tr><td>보관비</td><td style="text-align:right">173</td><td>PLT/일</td><td style="text-align:right">700</td><td style="text-align:right">121,100</td><td style="text-align:right">12,110</td><td style="text-align:right;font-weight:600">133,210</td><td>레드캣 모래 팔레트 보관</td></tr>
+            <tr><td>기타 (삽지 작업)</td><td style="text-align:right">251</td><td>BOX/개</td><td style="text-align:right">200</td><td style="text-align:right">50,200</td><td style="text-align:right">5,020</td><td style="text-align:right;font-weight:600">55,220</td><td>홍보물 삽지</td></tr>
+            <tr style="background:#1e1e2f;font-weight:700">
+              <td colspan="4" style="text-align:center">합계 (청구 확정액)</td>
+              <td style="text-align:right">428,818</td>
+              <td style="text-align:right">42,882</td>
+              <td style="text-align:right;color:var(--accent);font-size:14px">471,700 원</td>
+              <td>VAT 포함 518,870원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: 거버넌스 & 인감 -->
+  <div id="tab-governance" class="tab-pane">
+    <div class="gov-grid">
+      <div class="gov-card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🏢 주식회사 승승장구컴퍼니 거버넌스 정보</h3>
+        <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span>134811-0530752</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span>772-87-02119</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영 (지분율 100%, 40,000주)</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">자본금</span><span>20,000,000 원</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span>경기도 용인시 처인구 이동읍 백옥대로753번길 15(어반즈19) 405호</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span>도매 및 소매업 / 애완용 동물 및 관련용품, 통신판매업</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">특수 인증</span><span>여성기업 확인서 보유 (유효기간 2024~2027)</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">주력 브랜드</span><span>47 레드캣 (REDCAT) 고양이 벤토나이트 모래</span></div>
+      </div>
+      <div class="gov-card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🔏 법인 공식 인감</h3>
+        <div class="seal-box">
+          <!-- 공식 법인인감 투명 PNG (41 폴더 실측 자산) -->
+          <img src="https://raw.githubusercontent.com/bvs-erp/bvs-erp.github.io/main/260830_증명_법인인감_배경투명_v2.png" 
+               alt="SSJG 법인인감" class="seal-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'45\' fill=\'none\' stroke=\'%23ef4444\' stroke-width=\'4\'/><text x=\'50\' y=\'55\' fill=\'%23ef4444\' font-size=\'14\' font-family=\'sans-serif\' text-anchor=\'middle\'>승승장구인</text></svg>'">
+          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감 (정본)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
+</footer>
+
+<script>
+var SUPABASE_URL = 'https://buchnmdsdjlcvqnjaaxe.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_8IbvXKSyMvhVurvs-2ssLQ_Gj9Svfez';
+var sb = null;
+var allBankRows = [];
+
+function initSupabase(){
+  if(window.supabase && window.supabase.createClient){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    loadAllData();
+  } else {
+    setTimeout(initSupabase, 200);
+  }
+}
+
+function switchTab(tabId){
+  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  var target = document.getElementById('tab-' + tabId);
+  if(target) target.classList.add('active');
+}
+
+function fmt(n){
+  if(n === null || n === undefined) return '0';
+  return Number(n).toLocaleString('ko-KR');
+}
+
+async function loadAllData(){
+  try {
+    // 1. Load Tax-Risk Rows
+    var { data: taxData } = await sb.from('ssjg_tax_risk').select('*');
+    if(taxData && taxData.length > 0){
+      document.getElementById('taxRiskRows').innerHTML = taxData.map(r => `
+        <tr>
+          <td><strong>${r.txn_date}</strong></td>
+          <td><span class="badge" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">${r.counterparty}</span></td>
+          <td>${r.deposit_amt > 0 ? '<span class="tag tag-deposit">입금</span>' : '<span class="tag tag-withdraw">출금</span>'}</td>
+          <td class="${r.deposit_amt > 0 ? 'amt-plus' : 'amt-minus'}">${fmt(r.deposit_amt > 0 ? r.deposit_amt : r.withdraw_amt)} 원</td>
+          <td class="amt-neutral">${fmt(r.balance_amt)} 원</td>
+          <td>${r.description}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 2. Load Monthly Summary
+    var { data: mData } = await sb.from('ssjg_month_summary').select('*');
+    if(mData && mData.length > 0){
+      // Dashboard first 12
+      document.getElementById('dashMonthlyRows').innerHTML = mData.slice(0, 12).map(r => renderMonthRow(r)).join('');
+      // All monthly table
+      document.getElementById('allMonthlyRows').innerHTML = mData.map(r => renderMonthRow(r)).join('');
+    }
+
+    // 3. Load Bank Txns
+    var { data: bData } = await sb.from('ssjg_bank_txns').select('*').order('txn_at', { ascending: false }).limit(1000);
+    if(bData){
+      allBankRows = bData;
+      renderBankTable(allBankRows);
+    }
+
+  } catch(e) {
+    console.error('Error loading data:', e);
+  }
+}
+
+function renderMonthRow(r){
+  var isNetPlus = Number(r.net_cashflow) >= 0;
+  return `
+    <tr>
+      <td><strong>${r.period_ym}</strong></td>
+      <td style="text-align:right">${fmt(r.txn_count)}건</td>
+      <td class="amt-plus">${fmt(r.deposit_sum)}</td>
+      <td class="amt-minus">${fmt(r.withdraw_sum)}</td>
+      <td class="${isNetPlus ? 'amt-plus' : 'amt-minus'}">${isNetPlus ? '+' : ''}${fmt(r.net_cashflow)}</td>
+      <td class="amt-neutral">${fmt(r.month_end_balance)}</td>
+    </tr>
+  `;
+}
+
+function renderBankTable(rows){
+  document.getElementById('bankCountLabel').innerText = `${fmt(rows.length)}건 표시 중`;
+  if(!rows || rows.length === 0){
+    document.getElementById('bankTableRows').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px">검색 결과가 없습니다.</td></tr>';
+    return;
+  }
+  document.getElementById('bankTableRows').innerHTML = rows.map(r => `
+    <tr>
+      <td style="color:var(--text-muted)">${r.txn_at}</td>
+      <td><strong>${r.description || '-'}</strong></td>
+      <td>${r.counterparty || '-'}</td>
+      <td>${r.deposit_amt > 0 ? '<span class="tag tag-deposit">입금</span>' : '<span class="tag tag-withdraw">출금</span>'}</td>
+      <td class="amt-plus">${r.deposit_amt > 0 ? fmt(r.deposit_amt) : '-'}</td>
+      <td class="amt-minus">${r.withdraw_amt > 0 ? fmt(r.withdraw_amt) : '-'}</td>
+      <td class="amt-neutral">${fmt(r.balance_amt)}</td>
+      <td style="color:var(--text-muted)">${r.memo || '-'}</td>
+      <td style="color:var(--text-muted);font-size:11px">${r.source_file}</td>
+    </tr>
+  `).join('');
+}
+
+function filterBankRows(){
+  var q = document.getElementById('bankSearch').value.toLowerCase();
+  var yr = document.getElementById('bankYear').value;
+  var tp = document.getElementById('bankType').value;
+
+  var filtered = allBankRows.filter(r => {
+    if(yr && !r.txn_at.startsWith(yr)) return false;
+    if(tp === 'in' && Number(r.deposit_amt) <= 0) return false;
+    if(tp === 'out' && Number(r.withdraw_amt) <= 0) return false;
+    if(q){
+      var matchDesc = (r.description || '').toLowerCase().includes(q);
+      var matchCp = (r.counterparty || '').toLowerCase().includes(q);
+      var matchMemo = (r.memo || '').toLowerCase().includes(q);
+      if(!matchDesc && !matchCp && !matchMemo) return false;
+    }
+    return true;
+  });
+
+  renderBankTable(filtered);
+}
+
+window.addEventListener('DOMContentLoaded', initSupabase);
+</script>
+</body>
+</html>
