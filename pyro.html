@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.03 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.04 · 파이로 고물상(MF)·제조·유통 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -13,6 +13,25 @@
   --accent-light:rgba(16,185,129,0.12);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--amber:#f59e0b;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
+html[data-theme="light"]{
+  --bg:#f8fafc;--panel:#ffffff;--panel-card:#f1f5f9;--panel-border:#cbd5e1;--border:#e2e8f0;
+  --text:#0f172a;--text-muted:#64748b;--accent:#059669;--accent-hover:#047857;
+  --accent-light:rgba(16,185,129,0.15);
+}
+html[data-theme="light"] header{background:#ffffff;border-bottom:1px solid #e2e8f0}
+html[data-theme="light"] .tab-bar{background:#f1f5f9;border-bottom:1px solid #cbd5e1}
+html[data-theme="light"] th{background:#f1f5f9;color:#475569;border-bottom:1px solid #cbd5e1}
+html[data-theme="light"] td{border-bottom:1px solid #e2e8f0}
+html[data-theme="light"] tr:hover td{background:#f8fafc}
+html[data-theme="light"] .input,html[data-theme="light"] .select{background:#ffffff;color:#0f172a;border-color:#cbd5e1}
+html[data-theme="light"] .nav-btn{background:#ffffff;color:#475569;border-color:#cbd5e1}
+html[data-theme="light"] .nav-btn:hover{background:#f1f5f9;color:#0f172a}
+html[data-theme="light"] .tag-tax-warn{background:#fee2e2;color:#b91c1c;border:1px solid #f87171}
+html[data-theme="light"] .tag-tax-ok{background:#d1fae5;color:#047857;border:1px solid #34d399}
+html[data-theme="light"] .tag-wait{background:#fef3c7;color:#b45309}
+html[data-theme="light"] .tag-done{background:#d1fae5;color:#047857}
+html[data-theme="light"] .prod-card{background:#ffffff;border-color:#e2e8f0}
+html[data-theme="light"] .amt-neutral{color:#334155}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
 
@@ -174,8 +193,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.03</span></div>
-      <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 · 대표 황병승 (고물상MF·사출제조·공구온)</div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.04</span></div>
+      <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 (PYRO)</div>
     </div>
   </div>
   <div class="nav-links">
@@ -183,6 +202,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <a href="erp.html" class="nav-btn">🔵 BVS</a>
     <a href="ssjg.html" class="nav-btn">🔴 SSJG</a>
     <a href="pyro.html" class="nav-btn active">🟢 PYRO</a>
+    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">🌓 테마</button>
     <div id="userBadge" style="display:flex;align-items:center;gap:6px;margin-left:8px;padding-left:8px;border-left:1px solid var(--border)">
       <span id="userEmail" style="font-size:11px;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis">인증 확인중</span>
       <button onclick="doLogout()" class="nav-btn" style="padding:4px 8px;font-size:11px;color:#ef4444;border-color:rgba(239,68,68,0.3)">로그아웃</button>
@@ -580,6 +600,59 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     </div>
 
     
+    <!-- WO-25: 부가세 실원장 vs 시트 대조 및 매입세액 환급 분석 카드 -->
+    <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">🚨</span>
+          <div>
+            <h4 style="font-size:14px;font-weight:800;color:#fca5a5;margin:0">[세무 환급 긴급 경보] 세금계산서 실원장 vs 시트 매입세액 대사 (WO-25)</h4>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">현재 시트(FI부가세) 매입세액 0원 표기 ↔ 실제 세금계산서 수취 원장(pyro_tax_invoices) 매입세액 비교</div>
+          </div>
+        </div>
+        <span class="tag tag-tax-warn" style="font-size:11.5px;padding:4px 8px">⚠️ 경정청구 최대 4,200만 원 환급 기회</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:8px">
+        <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:700;color:var(--accent);font-size:13px">🏛️ 2025년 매입세액 (공장 건물 취득 등)</span>
+            <span class="tag tag-tax-warn" style="font-size:10.5px">환급 누락</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="color:var(--text-muted)">• 시트 신고 매입세액:</span>
+            <b>0 원</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="color:#fca5a5;font-weight:700">• 세금계산서 실원장:</span>
+            <b style="color:#fca5a5;font-size:13px" id="vatTi2025">42,220,000 원 (3건)</b>
+          </div>
+          <div style="font-size:11px;color:#93c5fd;line-height:1.4;background:rgba(59,130,246,0.1);padding:6px 8px;border-radius:4px;border:1px solid rgba(59,130,246,0.2);margin-top:6px">
+            └ 2025-09 쏠테크 공장건물 매입세액 4,200만 + 법무사 7만 + 중개 15만<br>
+            <b>👉 대표 조치: 세무사 확인 후 부가세 경정청구 시 최대 4,200만 원 환급 가능</b>
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:700;color:var(--accent);font-size:13px">📦 2026년 매입세액 (통관·물류 등)</span>
+            <span class="tag tag-tax-ok" style="font-size:10.5px">공제 대상</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="color:var(--text-muted)">• 시트 신고 매입세액:</span>
+            <b>0 원 (임가공 명목)</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="color:#86efac;font-weight:700">• 세금계산서 실원장:</span>
+            <b style="color:#86efac;font-size:13px" id="vatTi2026">471,900 원 (14건)</b>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.4;background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:4px;margin-top:6px">
+            └ 페덱스·유니패스·우체국 등 수입/통관 부대비용 세금계산서 수취분<br>
+            <b>👉 조치: 수탁임가공이라도 부대경비 매입세액은 합법적 공제 반영 필요</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- WO-20: 부가세 현황 카드 (pyro_vat 직결) -->
     <div class="panel">
       <div class="panel-head">
@@ -1101,10 +1174,23 @@ function renderMetalTrends(trends){
   });
 }
 
-// ── 부가세 현황 렌더러 (WO-20) ──
+// ── 부가세 현황 렌더러 (WO-20 & WO-25) ──
 function renderVatCard(rows){
   var tbody = document.getElementById('vatTableRows');
   if(!tbody || !rows || rows.length === 0) return;
+
+  // WO-25: 실원장 세액 계산 및 DOM 반영
+  if(allTaxInvoices && allTaxInvoices.length > 0){
+    var p25 = allTaxInvoices.filter(r => (r.write_date||'').startsWith('2025') && r.flow === '매입');
+    var p26 = allTaxInvoices.filter(r => (r.write_date||'').startsWith('2026') && r.flow === '매입');
+    var v25 = p25.reduce((s, r) => s + (Number(r.vat_amt)||0), 0);
+    var v26 = p26.reduce((s, r) => s + (Number(r.vat_amt)||0), 0);
+    var el25 = document.getElementById('vatTi2025');
+    var el26 = document.getElementById('vatTi2026');
+    if(el25) el25.textContent = fmt(v25) + ' 원 (' + p25.length + '건)';
+    if(el26) el26.textContent = fmt(v26) + ' 원 (' + p26.length + '건)';
+  }
+
   tbody.innerHTML = rows.map(r => {
     var isZero = (r.item.includes('매입세액') || r.item.includes('공제')) && (Number(r.annual_amt) === 0);
     return `
@@ -1524,6 +1610,21 @@ document.addEventListener('input', function(ev){
     if(el) el.textContent = ev.target.value ? '(' + ev.target.value.length + '자)' : '';
   }
 });
+// ── 테마 전환 (WO-33) ──
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+}
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  var t = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(t);
+  try{ localStorage.setItem('pyro_theme', t); }catch(e){}
+}
+(function(){
+  var t = 'dark';
+  try{ t = localStorage.getItem('pyro_theme') || 'dark'; }catch(e){}
+  applyTheme(t);
+})();
 
 window.addEventListener('DOMContentLoaded', boot);
 </script>
