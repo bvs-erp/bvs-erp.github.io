@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.01 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.02 · 파이로 고물상(MF)·제조·유통 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -174,7 +174,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.01</span></div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.02</span></div>
       <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 · 대표 황병승 (고물상MF·사출제조·공구온)</div>
     </div>
   </div>
@@ -194,6 +194,10 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="tab-item active" onclick="switchTab('mf')">🪙 고물상·비철 관제 (MF)</div>
   <div class="tab-item" onclick="switchTab('mf-guide')">🎯 현장 매입 견적기 (67종)</div>
   <div class="tab-item" onclick="switchTab('mf-lots')">📦 로트 진행판 (27건)</div>
+  <div class="tab-item" onclick="switchTab('div-pl')">📊 사업부 손익 & 자금관제</div>
+  <div class="tab-item" onclick="switchTab('journal')">📑 전표 원장 (152건)</div>
+  <div class="tab-item" onclick="switchTab('bank')">🏦 통장 원장 (77건)</div>
+  <div class="tab-item" onclick="switchTab('tax-invoices')">🧾 세금계산서 (29건)</div>
   <div class="tab-item" onclick="switchTab('tools')">🔧 24 공구온 & B2B 마스터</div>
   <div class="tab-item" onclick="switchTab('cost')">🏭 25 튜브·사출 원가 계산기</div>
   <div class="tab-item" onclick="switchTab('vendor')">📋 협력 거래처 단가표</div>
@@ -503,6 +507,261 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     </div>
   </div>
 
+  
+  <!-- TAB: 사업부 손익 (P&L) & 사업주 계정 관제 (WO-11, WO-12) -->
+  <div id="tab-div-pl" class="tab-pane">
+    <!-- WO-12: 사업주 인출/출자 현황 카드 & 초과인출 경고 -->
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">출자금 누적 (개인 ➡️ 사업)</div>
+        <div class="kpi-val" id="kpiInvestIn">34,350,000 원</div>
+        <div class="kpi-sub">총 11건 출자 전표</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">인출금 누적 (사업 ➡️ 개인)</div>
+        <div class="kpi-val" id="kpiDrawOut">47,271,431 원</div>
+        <div class="kpi-sub">총 20건 인출 전표</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">순잔액 (초과인출 상태)</div>
+        <div class="kpi-val" id="kpiNetCum" style="color:var(--red)">-12,921,431 원</div>
+        <div class="kpi-sub" style="color:var(--red);font-weight:700">⚠️ 인출 초과 발생 중</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">연간 지급이자 비용 (계정 9200)</div>
+        <div class="kpi-val" id="kpiInterestExp">29,273,036 원</div>
+        <div class="kpi-sub">총 11건 이자 전표 집계</div>
+      </div>
+    </div>
+
+    <!-- Tax-Risk Guard: 소득세법 시행령 §61①(2) 초과인출금 경고 배너 -->
+    <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:10px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:22px">⚠️</span>
+        <h4 style="font-size:14px;font-weight:700;color:#fca5a5;margin:0">Tax-Risk Guard: 초과인출금 지급이자 필요경비 불산입 경고 (소득세법 시행령 제61조 제1항 제2호)</h4>
+      </div>
+      <p style="font-size:12.5px;color:#e2e8f0;line-height:1.6;margin-bottom:8px">
+        현재 파이로 사업주 계정은 <b>-12,921,431원의 초과인출</b> 상태입니다.<br>
+        개인사업자가 사업용 자산가액을 초과하여 자금을 인출한 상태에서 차입금 지급이자(2,927만 원)가 발생하면, 
+        <b>초과인출금 적수 비율에 상당하는 지급이자는 종합소득세 신고 시 필요경비에 불산입</b>되어 세부담이 증가합니다.
+      </p>
+      <div style="font-size:11.5px;color:#94a3b8;background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:6px">
+        📐 <b>법정 불산입 산식</b>: 지급이자 × (초과인출금 적수 ÷ 차입금 적수) ｜ <b>권고 조치</b>: 사업자 계좌로 출자금 재입금 또는 차입금 조기 상환 검토
+      </div>
+    </div>
+
+    <!-- 사업부별 실적 KPI 요약 카드 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🏢 5대 사업부별 실적 구조 요약 (RE · MF · DS · CM · SV)</div>
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+        <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--blue)">
+          <div style="font-size:11px;color:var(--text-muted)">RE 부동산임대 (주력 이익원)</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 3,200만</div>
+          <div style="font-size:11.5px;color:var(--blue);margin-top:2px">영업이익 +3,200만 (이자 2,130만)</div>
+        </div>
+        <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--green)">
+          <div style="font-size:11px;color:var(--text-muted)">MF 제조·고물상 (신규 성장)</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 645만</div>
+          <div style="font-size:11.5px;color:var(--green);margin-top:2px">원가 333만 · 이익 +312만 (마진 48%)</div>
+        </div>
+        <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--amber)">
+          <div style="font-size:11px;color:var(--text-muted)">DS 도소매·공구온</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 0만</div>
+          <div style="font-size:11.5px;color:var(--amber);margin-top:2px">매입원가 119만 (재고 보유)</div>
+        </div>
+        <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--purple)">
+          <div style="font-size:11px;color:var(--text-muted)">CM 공통 판관비</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 판관비 86만</div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">수선비·세금과공과 등</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 월별 사업부 손익 집계표 (pyro_div_pl 직결) -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📊 사업부×월 손익 집계 원장 (pyro_div_pl 24건)</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="plYrFilter" class="select" onchange="filterDivPl()">
+            <option value="">연도 전체</option>
+            <option value="2026">2026년</option>
+            <option value="2025">2025년</option>
+          </select>
+          <select id="plDivFilter" class="select" onchange="filterDivPl()">
+            <option value="">사업부 전체</option>
+            <option value="RE">RE (부동산임대)</option>
+            <option value="MF">MF (제조/스크랩)</option>
+            <option value="DS">DS (도소매)</option>
+            <option value="CM">CM (공통)</option>
+            <option value="SV">SV (서비스)</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:500px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>연도</th>
+              <th>월</th>
+              <th>사업부</th>
+              <th>사업부명</th>
+              <th style="text-align:right">매출액</th>
+              <th style="text-align:right">매출원가</th>
+              <th style="text-align:right">판관비</th>
+              <th style="text-align:right">영업이익</th>
+              <th style="text-align:right">영업외비용</th>
+              <th style="text-align:right">전표건수</th>
+            </tr>
+          </thead>
+          <tbody id="divPlTableRows">
+            <tr><td colspan="10" style="text-align:center;padding:30px">손익 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 사업주 인출/출자 거래 원장 (pyro_owner_account) -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">👤 사업주 계정 거래 원장 (pyro_owner_account 31건)</div>
+        <div style="font-size:11px;color:var(--text-muted)">개인 자금 입출금 내역 및 누적 잔액 추이</div>
+      </div>
+      <div class="table-wrap" style="max-height:450px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>거래일자</th>
+              <th>구분</th>
+              <th>적요</th>
+              <th>상대방</th>
+              <th style="text-align:right">출자금(입금)</th>
+              <th style="text-align:right">인출금(출금)</th>
+              <th style="text-align:right">누적잔액</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody id="ownerAccTableRows">
+            <tr><td colspan="8" style="text-align:center;padding:30px">사업주 계정 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 전표 원장 (WO-11) -->
+  <div id="tab-journal" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📑 분개 전표 원장 (pyro_journal 152건)</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="jvSearch" class="input" placeholder="거래처/적요/계정 검색..." onkeyup="filterJournal()">
+          <span id="jvCountLabel" style="font-size:12px;color:var(--text-muted)">152건</span>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>전표번호</th>
+              <th>일자</th>
+              <th>사업부</th>
+              <th>계정과목</th>
+              <th>적요</th>
+              <th>거래처</th>
+              <th style="text-align:right">공급가액</th>
+              <th style="text-align:right">부가세</th>
+              <th style="text-align:right">차변(비용)</th>
+              <th style="text-align:right">대변(수익)</th>
+              <th>증빙</th>
+              <th>특수관계자</th>
+            </tr>
+          </thead>
+          <tbody id="jvTableRows">
+            <tr><td colspan="12" style="text-align:center;padding:30px">전표 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 통장 거래 원장 (WO-11) -->
+  <div id="tab-bank" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">🏦 통장 거래 원장 (pyro_bank 77건)</div>
+          <div style="font-size:11px;color:var(--text-muted)">보안 가이드라인 준수: 계좌번호 열 비노출</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="bankSearch" class="input" placeholder="적요/거래처 검색..." onkeyup="filterBank()">
+          <span id="bankCountLabel" style="font-size:12px;color:var(--text-muted)">77건</span>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>거래일자</th>
+              <th>구분</th>
+              <th>거래처</th>
+              <th>적요</th>
+              <th>계정과목</th>
+              <th>사업부</th>
+              <th style="text-align:right">입금액</th>
+              <th style="text-align:right">출금액</th>
+              <th style="text-align:right">잔액</th>
+              <th>특수관계자</th>
+            </tr>
+          </thead>
+          <tbody id="bankTableRows">
+            <tr><td colspan="10" style="text-align:center;padding:30px">통장 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 세금계산서 (WO-11) -->
+  <div id="tab-tax-invoices" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🧾 전자세금계산서 원장 (pyro_tax_invoices 29건)</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="tiFlowFilter" class="select" onchange="filterTaxInvoices()">
+            <option value="">매출/매입 전체</option>
+            <option value="매출">매출만</option>
+            <option value="매입">매입만</option>
+          </select>
+          <input type="text" id="tiSearch" class="input" placeholder="거래처/품목 검색..." onkeyup="filterTaxInvoices()">
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>작성일자</th>
+              <th>구분</th>
+              <th>공급자</th>
+              <th>공급받는자</th>
+              <th>품목</th>
+              <th>사업부</th>
+              <th style="text-align:right">공급가액</th>
+              <th style="text-align:right">세액</th>
+              <th style="text-align:right">합계금액</th>
+              <th>정산상태</th>
+              <th>승인번호</th>
+            </tr>
+          </thead>
+          <tbody id="tiTableRows">
+            <tr><td colspan="11" style="text-align:center;padding:30px">세금계산서 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 7: 사업자 거버넌스 & 세무 -->
   <div id="tab-governance" class="tab-pane">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
@@ -551,6 +810,11 @@ var USER = null;
 var allMetals = [];
 var allGuides = [];
 var allLots = [];
+var allDivPl = [];
+var allOwnerAcc = [];
+var allJournals = [];
+var allBankRows = [];
+var allTaxInvoices = [];
 
 // ── 인증 및 부팅 ──
 function mkClient(k){
@@ -734,9 +998,205 @@ async function loadAllData(){
         document.getElementById('kpiMfTotalSales').innerText = fmt(totalSales) + ' 원';
       }
     }
+
+    // 4. 사업부별 손익 (pyro_div_pl)
+    var { data: plData } = await sb.from('pyro_div_pl').select('*').order('yr', { ascending: false }).order('mo', { ascending: false });
+    if(plData){
+      allDivPl = plData;
+      renderDivPl(allDivPl);
+    }
+
+    // 5. 사업주 계정 (pyro_owner_account)
+    var { data: oaData } = await sb.from('pyro_owner_account').select('*').order('tx_date', { ascending: true });
+    if(oaData){
+      allOwnerAcc = oaData;
+      renderOwnerAcc(allOwnerAcc);
+    }
+
+    // 6. 분개 전표 (pyro_journal)
+    var { data: jvData } = await sb.from('pyro_journal').select('*').order('jv_date', { ascending: false });
+    if(jvData){
+      allJournals = jvData;
+      renderJournal(allJournals);
+    }
+
+    // 7. 통장 거래 (pyro_bank)
+    var { data: bData } = await sb.from('pyro_bank').select('*').order('tx_date', { ascending: false });
+    if(bData){
+      allBankRows = bData;
+      renderBank(allBankRows);
+    }
+
+    // 8. 세금계산서 (pyro_tax_invoices)
+    var { data: tiData } = await sb.from('pyro_tax_invoices').select('*').order('write_date', { ascending: false });
+    if(tiData){
+      allTaxInvoices = tiData;
+      renderTaxInvoices(allTaxInvoices);
+    }
   } catch(e){
     console.error('Data load error:', e);
   }
+}
+
+
+// ── 사업부 손익 렌더러 (WO-11) ──
+function renderDivPl(rows){
+  var tbody = document.getElementById('divPlTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px">손익 데이터가 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    var isOpPositive = Number(r.op_income) >= 0;
+    return `
+      <tr>
+        <td><strong>${r.yr}</strong></td>
+        <td>${r.mo ? r.mo + '월' : '-'}</td>
+        <td><span class="badge">${r.div_code}</span></td>
+        <td><strong>${r.div_name || '-'}</strong></td>
+        <td class="amt-neutral">${fmt(r.revenue)}</td>
+        <td class="amt-neutral">${fmt(r.cogs)}</td>
+        <td class="amt-neutral">${fmt(r.sga)}</td>
+        <td class="${isOpPositive ? 'amt-plus' : 'amt-minus'}" style="font-weight:700">${fmt(r.op_income)}</td>
+        <td class="amt-neutral">${fmt(r.other_expense)}</td>
+        <td style="text-align:right">${r.jv_cnt || 0}건</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterDivPl(){
+  var yr = document.getElementById('plYrFilter').value;
+  var div = document.getElementById('plDivFilter').value;
+  var filtered = allDivPl.filter(r => {
+    var matchYr = !yr || String(r.yr) === yr;
+    var matchDiv = !div || r.div_code === div;
+    return matchYr && matchDiv;
+  });
+  renderDivPl(filtered);
+}
+
+// ── 사업주 계정 렌더러 (WO-12) ──
+function renderOwnerAcc(rows){
+  var tbody = document.getElementById('ownerAccTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px">사업주 거래 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    var isDraw = Number(r.draw_out) > 0;
+    var isInvest = Number(r.invest_in) > 0;
+    var isNetMinus = Number(r.net_cum) < 0;
+    return `
+      <tr>
+        <td style="font-variant-numeric:tabular-nums">${r.tx_date || '-'}</td>
+        <td><span class="tag ${isInvest ? 'tag-tax-ok' : 'tag-tax-warn'}">${r.kind || (isInvest ? '출자' : '인출')}</span></td>
+        <td>${r.tx_desc || '-'}</td>
+        <td>${r.counterparty || '-'}</td>
+        <td class="amt-plus">${fmt(r.invest_in)}</td>
+        <td class="amt-minus">${fmt(r.draw_out)}</td>
+        <td class="${isNetMinus ? 'amt-minus' : 'amt-plus'}" style="font-weight:700">${fmt(r.net_cum)}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${r.memo || '-'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── 전표 원장 렌더러 (WO-11) ──
+function renderJournal(rows){
+  var tbody = document.getElementById('jvTableRows');
+  document.getElementById('jvCountLabel').innerText = rows.length + '건';
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:30px">전표 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-size:11px;color:var(--text-muted)">${r.jv_no || '-'}</td>
+      <td style="font-variant-numeric:tabular-nums">${r.jv_date || '-'}</td>
+      <td><span class="badge">${r.div_code || '-'}</span></td>
+      <td><strong>${r.account || '-'}</strong></td>
+      <td title="${r.memo}">${r.memo || '-'}</td>
+      <td>${r.partner || '-'}</td>
+      <td class="amt-neutral">${fmt(r.supply_amt)}</td>
+      <td class="amt-neutral">${fmt(r.vat_amt)}</td>
+      <td class="amt-neutral">${fmt(r.dr_amt)}</td>
+      <td class="amt-neutral">${fmt(r.cr_amt)}</td>
+      <td><span class="tag tag-tax-ok">${r.evidence || '-'}</span></td>
+      <td>${r.related_party ? '<span class="tag tag-tax-warn">' + r.related_party + '</span>' : '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterJournal(){
+  var q = document.getElementById('jvSearch').value.trim().toLowerCase();
+  var filtered = allJournals.filter(r => !q || (r.partner && r.partner.toLowerCase().includes(q)) || (r.memo && r.memo.toLowerCase().includes(q)) || (r.account && r.account.toLowerCase().includes(q)) || (r.jv_no && r.jv_no.toLowerCase().includes(q)));
+  renderJournal(filtered);
+}
+
+// ── 통장 원장 렌더러 (WO-11) ──
+function renderBank(rows){
+  var tbody = document.getElementById('bankTableRows');
+  document.getElementById('bankCountLabel').innerText = rows.length + '건';
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px">통장 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-variant-numeric:tabular-nums">${r.tx_date || '-'}</td>
+      <td><span class="tag ${Number(r.in_amt) > 0 ? 'tag-tax-ok' : 'tag-tax-warn'}">${r.tx_kind || (Number(r.in_amt) > 0 ? '입금' : '출금')}</span></td>
+      <td><strong>${r.cp_name || '-'}</strong></td>
+      <td title="${r.tx_desc}">${r.tx_desc || '-'}</td>
+      <td>${r.pl_account || r.account || '-'}</td>
+      <td><span class="badge">${r.div_code || '-'}</span></td>
+      <td class="amt-plus">${fmt(r.in_amt)}</td>
+      <td class="amt-minus">${fmt(r.out_amt)}</td>
+      <td class="amt-neutral" style="font-weight:700">${fmt(r.balance)}</td>
+      <td>${r.related_party ? '<span class="tag tag-tax-warn">' + r.related_party + '</span>' : '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterBank(){
+  var q = document.getElementById('bankSearch').value.trim().toLowerCase();
+  var filtered = allBankRows.filter(r => !q || (r.cp_name && r.cp_name.toLowerCase().includes(q)) || (r.tx_desc && r.tx_desc.toLowerCase().includes(q)) || (r.account && r.account.toLowerCase().includes(q)));
+  renderBank(filtered);
+}
+
+// ── 세금계산서 렌더러 (WO-11) ──
+function renderTaxInvoices(rows){
+  var tbody = document.getElementById('tiTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px">세금계산서 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-variant-numeric:tabular-nums">${r.write_date || '-'}</td>
+      <td><span class="tag ${r.flow === '매출' ? 'tag-tax-ok' : 'tag-tax-warn'}">${r.flow}</span></td>
+      <td>${r.supplier || '-'}</td>
+      <td>${r.buyer || '-'}</td>
+      <td title="${r.item}">${r.item || '-'}</td>
+      <td><span class="badge">${r.div_code || '-'}</span></td>
+      <td class="amt-neutral">${fmt(r.supply_amt)}</td>
+      <td class="amt-neutral">${fmt(r.vat_amt)}</td>
+      <td style="font-weight:700;text-align:right">${fmt(r.total_amt)}</td>
+      <td><span class="tag ${r.settle_status && r.settle_status.includes('완료') ? 'tag-tax-ok' : 'tag-tax-warn'}">${r.settle_status || '미정산'}</span></td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterTaxInvoices(){
+  var flow = document.getElementById('tiFlowFilter').value;
+  var q = document.getElementById('tiSearch').value.trim().toLowerCase();
+  var filtered = allTaxInvoices.filter(r => {
+    var matchFlow = !flow || r.flow === flow;
+    var matchQ = !q || (r.supplier && r.supplier.toLowerCase().includes(q)) || (r.buyer && r.buyer.toLowerCase().includes(q)) || (r.item && r.item.toLowerCase().includes(q));
+    return matchFlow && matchQ;
+  });
+  renderTaxInvoices(filtered);
 }
 
 function renderMetals(rows){

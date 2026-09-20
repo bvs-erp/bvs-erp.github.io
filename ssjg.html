@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.05 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.06 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -181,7 +181,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.05</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.06</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -204,7 +204,10 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 <div class="tab-bar">
   <div class="tab-item active" onclick="switchTab('dashboard')">📊 종합 상황실</div>
   <div class="tab-item" onclick="switchTab('delivery')">🚚 택배·출고 자동화</div>
-  <div class="tab-item" onclick="switchTab('bank')">🏦 기업은행 통장 원장 (2,720건)</div>
+  <div class="tab-item" onclick="switchTab('settlements')">💳 채널별 매출정산 (194건)</div>
+  <div class="tab-item" onclick="switchTab('tax-invoices')">📑 세금계산서 정산 (118건)</div>
+  <div class="tab-item" onclick="switchTab('ar-recon')">⚖️ 미수금 대사 (119건)</div>
+  <div class="tab-item" onclick="switchTab('bank')">🏦 기업은행 통장 원장</div>
   <div class="tab-item" onclick="switchTab('monthly')">📈 월별 손익·자금 추이</div>
   <div class="tab-item" onclick="switchTab('logistics')">📦 3PL 물류·용역비 정산</div>
   <div class="tab-item" onclick="switchTab('governance')">🏛️ 법인 정보 & 인감</div>
@@ -470,6 +473,141 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     </div>
   </div>
 
+  
+  <!-- TAB: 채널별 매출정산 (WO-11) -->
+  <div id="tab-settlements" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">💳 판매대행(PG) 및 카드매출 채널별 정산 원장</div>
+          <div style="font-size:11px;color:var(--text-muted)">⚠️ AGENT(채널상세)와 CARD(홈택스집계) 자료 분리 관제 (합산 중복 방지)</div>
+        </div>
+        <div class="filter-bar">
+          <select id="settleSrcFilter" class="select" onchange="filterSettlements()">
+            <option value="">전체 소스 (194건)</option>
+            <option value="AGENT">AGENT (판매대행 채널상세 146건)</option>
+            <option value="CARD">CARD (홈택스 카드집계 48건)</option>
+          </select>
+          <input type="text" id="settleSearch" class="input" placeholder="채널/가맹점 검색..." onkeyup="filterSettlements()">
+          <span id="settleCountLabel" style="font-size:12px;color:var(--text-muted)">194건 표시 중</span>
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:550px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>정산월</th>
+              <th>채널 / 가맹점명</th>
+              <th style="text-align:right">결제건수</th>
+              <th style="text-align:right">정산금액(공급가)</th>
+              <th>원천 파일명</th>
+            </tr>
+          </thead>
+          <tbody id="settleTableRows">
+            <tr><td colspan="6" style="text-align:center;padding:30px">정산 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 세금계산서 정산관리 (WO-11) -->
+  <div id="tab-tax-invoices" class="tab-pane">
+    <div class="kpi-grid">
+      <div class="kpi-card red">
+        <div class="kpi-label">🔴 미송금 매입계산서</div>
+        <div class="kpi-val" id="kpiUnpaidBuy">47 건 · 234만 원</div>
+        <div class="kpi-sub">지급 예정 외상매입금</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">🔴 미수금 매출계산서</div>
+        <div class="kpi-val" id="kpiUncollectedSales">14 건 · 63만 원</div>
+        <div class="kpi-sub">회수 대기 매출채권</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">🟢 정산 완료 계산서</div>
+        <div class="kpi-val" id="kpiSettledInvoices">57 건</div>
+        <div class="kpi-sub">통장 입출금 1:1 대사 완료</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📑 전자세금계산서 정산 상태별 원장 (총 118건)</div>
+        <div class="filter-bar">
+          <select id="tiFlowFilter" class="select" onchange="filterTaxInvoices()">
+            <option value="">매출/매입 전체</option>
+            <option value="매출">매출만</option>
+            <option value="매입">매입만</option>
+          </select>
+          <select id="tiStatusFilter" class="select" onchange="filterTaxInvoices()">
+            <option value="">정산상태 전체</option>
+            <option value="🔴미송금">🔴 미송금만</option>
+            <option value="🔴미수금">🔴 미수금만</option>
+            <option value="🟢입금완료">🟢 입금완료만</option>
+          </select>
+          <input type="text" id="tiSearch" class="input" placeholder="거래처/품목 검색..." onkeyup="filterTaxInvoices()">
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:550px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>작성일자</th>
+              <th>구분</th>
+              <th>공급자</th>
+              <th>공급받는자</th>
+              <th>품목명</th>
+              <th style="text-align:right">공급가액</th>
+              <th style="text-align:right">세액</th>
+              <th style="text-align:right">합계금액</th>
+              <th>정산 상태</th>
+              <th>승인번호</th>
+            </tr>
+          </thead>
+          <tbody id="tiTableRows">
+            <tr><td colspan="10" style="text-align:center;padding:30px">세금계산서 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 미수금 대사 (WO-11) -->
+  <div id="tab-ar-recon" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">⚖️ 거래처별 청구 vs 입금 미수금 대사 원장 (119건)</div>
+          <div style="font-size:11px;color:var(--text-muted)">승인번호 기준 계산서-통장 118/118 완전 정합 검증 완료</div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="arSearch" class="input" placeholder="거래처 검색..." onkeyup="filterArRecon()">
+        </div>
+      </div>
+      <div class="table-wrap" style="max-height:550px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>거래처명</th>
+              <th>구분</th>
+              <th>정산월</th>
+              <th style="text-align:right">청구합계(원)</th>
+              <th style="text-align:right">수금확인(원)</th>
+              <th style="text-align:right">미수잔액(원)</th>
+              <th>대사 상태</th>
+              <th>승인번호</th>
+            </tr>
+          </thead>
+          <tbody id="arTableRows">
+            <tr><td colspan="8" style="text-align:center;padding:30px">대사 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 2: 기업은행 통장 원장 -->
   <div id="tab-bank" class="tab-pane">
     <div class="panel">
@@ -631,6 +769,9 @@ var USER = null;
 var ME = null;
 var compInfo = null;
 var allBankRows = [];
+var allSettlements = [];
+var allTaxInvoices = [];
+var allArRecons = [];
 
 function mkClient(k){
   sb = window.supabase.createClient(SUPABASE_URL, k, {
@@ -876,9 +1017,141 @@ async function loadAllData(){
       renderBankTable(allBankRows);
     }
 
+    // 4. Load Settlements (WO-11)
+    var { data: sData } = await sb.from('ssjg_settlements').select('*').order('ym_raw', { ascending: false });
+    if(sData){
+      allSettlements = sData;
+      renderSettlements(allSettlements);
+    }
+
+    // 5. Load Tax Invoices (WO-11)
+    var { data: tiData } = await sb.from('ssjg_tax_invoices').select('*').order('write_date', { ascending: false });
+    if(tiData){
+      allTaxInvoices = tiData;
+      renderTaxInvoices(allTaxInvoices);
+    }
+
+    // 6. Load AR Recon (WO-11)
+    var { data: arData } = await sb.from('ssjg_ar_recon').select('*').order('issue_ym', { ascending: false });
+    if(arData){
+      allArRecons = arData;
+      renderArRecon(allArRecons);
+    }
+
   } catch(e) {
     console.error('Error loading data:', e);
   }
+}
+
+
+// ── 채널별 정산 렌더러 (WO-11: AGENT/CARD 분리) ──
+function renderSettlements(rows){
+  var tbody = document.getElementById('settleTableRows');
+  document.getElementById('settleCountLabel').innerText = rows.length + '건 표시 중';
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px">정산 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><span class="badge" style="${r.src === 'AGENT' ? 'background:rgba(59,130,246,0.15);color:var(--blue)' : 'background:rgba(245,158,11,0.15);color:var(--amber)'}">${r.src}</span></td>
+      <td><strong>${r.ym_raw || r.ym || '-'}</strong></td>
+      <td>${r.channel || '-'}</td>
+      <td style="text-align:right">${fmt(r.cnt)} 건</td>
+      <td class="amt-plus">${fmt(r.amt)} 원</td>
+      <td style="font-size:11px;color:var(--text-muted)">${r.src_file || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterSettlements(){
+  var src = document.getElementById('settleSrcFilter').value;
+  var q = document.getElementById('settleSearch').value.trim().toLowerCase();
+  var filtered = allSettlements.filter(r => {
+    var matchSrc = !src || r.src === src;
+    var matchQ = !q || (r.channel && r.channel.toLowerCase().includes(q)) || (r.ym_raw && r.ym_raw.includes(q));
+    return matchSrc && matchQ;
+  });
+  renderSettlements(filtered);
+}
+
+// ── 세금계산서 정산 렌더러 (WO-11: 뱃지 완비) ──
+function renderTaxInvoices(rows){
+  var tbody = document.getElementById('tiTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px">세금계산서 내역이 없습니다.</td></tr>';
+    return;
+  }
+
+  // KPI 업데이트
+  var unpaidBuy = rows.filter(r => r.settle_status && r.settle_status.includes('미송금'));
+  var uncollected = rows.filter(r => r.settle_status && r.settle_status.includes('미수금'));
+  var settled = rows.filter(r => r.settle_status && r.settle_status.includes('입금완료'));
+
+  var unpaidSum = unpaidBuy.reduce((a, b) => a + (Number(b.total_amt)||0), 0);
+  var uncollectedSum = uncollected.reduce((a, b) => a + (Number(b.total_amt)||0), 0);
+
+  var el1 = document.getElementById('kpiUnpaidBuy');
+  if(el1) el1.innerText = unpaidBuy.length + ' 건 · ' + Math.round(unpaidSum/10000) + '만 원';
+  var el2 = document.getElementById('kpiUncollectedSales');
+  if(el2) el2.innerText = uncollected.length + ' 건 · ' + Math.round(uncollectedSum/10000) + '만 원';
+  var el3 = document.getElementById('kpiSettledInvoices');
+  if(el3) el3.innerText = settled.length + ' 건';
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-variant-numeric:tabular-nums">${r.write_date || '-'}</td>
+      <td><span class="tag ${r.flow === '매출' ? 'tag-deposit' : 'tag-withdraw'}">${r.flow}</span></td>
+      <td>${r.supplier || '-'}</td>
+      <td>${r.buyer || '-'}</td>
+      <td title="${r.item}">${r.item || '-'}</td>
+      <td class="amt-neutral">${fmt(r.supply_amt)}</td>
+      <td class="amt-neutral">${fmt(r.vat_amt)}</td>
+      <td style="font-weight:700;text-align:right">${fmt(r.total_amt)}</td>
+      <td><span class="tag" style="${r.settle_status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${r.settle_status}</span></td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterTaxInvoices(){
+  var flow = document.getElementById('tiFlowFilter').value;
+  var status = document.getElementById('tiStatusFilter').value;
+  var q = document.getElementById('tiSearch').value.trim().toLowerCase();
+  var filtered = allTaxInvoices.filter(r => {
+    var matchFlow = !flow || r.flow === flow;
+    var matchStatus = !status || (r.settle_status && r.settle_status.includes(status));
+    var matchQ = !q || (r.supplier && r.supplier.toLowerCase().includes(q)) || (r.buyer && r.buyer.toLowerCase().includes(q)) || (r.item && r.item.toLowerCase().includes(q));
+    return matchFlow && matchStatus && matchQ;
+  });
+  renderTaxInvoices(filtered);
+}
+
+// ── 미수금 대사 렌더러 (WO-11) ──
+function renderArRecon(rows){
+  var tbody = document.getElementById('arTableRows');
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px">대사 내역이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${r.partner}</strong></td>
+      <td>${r.kind}</td>
+      <td>${r.issue_ym}</td>
+      <td class="amt-neutral">${fmt(r.total_amt)}</td>
+      <td class="amt-plus">${fmt(r.collect_amt)}</td>
+      <td class="${Number(r.ar_balance) > 0 ? 'amt-minus' : 'amt-neutral'}">${fmt(r.ar_balance)}</td>
+      <td><span class="tag" style="${r.status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${r.status}</span></td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterArRecon(){
+  var q = document.getElementById('arSearch').value.trim().toLowerCase();
+  var filtered = allArRecons.filter(r => !q || (r.partner && r.partner.toLowerCase().includes(q)) || (r.approval_no && r.approval_no.includes(q)));
+  renderArRecon(filtered);
 }
 
 function renderMonthRow(r){
