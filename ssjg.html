@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.04 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.05 · 승승장구 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -181,7 +181,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.04</span></div>
+      <div class="brand-title">승승장구컴퍼니 콕핏 <span class="badge">SSJG v1.05</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 · 대표 이세영 · 총괄 황병승</div>
     </div>
   </div>
@@ -1247,8 +1247,8 @@ async function saveDeliveryToSupabase(){
     alert('보관할 출고 데이터가 없습니다.');
     return;
   }
-  if(!sbClient){
-    alert('Supabase DB 연결이 활성화되지 않았습니다.');
+  if(!sb){
+    alert('Supabase DB 연결이 활성화되지 않았습니다. 로그인을 확인해 주십시오.');
     return;
   }
 
@@ -1257,29 +1257,33 @@ async function saveDeliveryToSupabase(){
   btn.innerText = '💾 저장 중...';
 
   try {
-    var payload = rawDeliveryRows.map(r => ({
+    var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+    var payload = rawDeliveryRows.map((r, idx) => ({
       order_no: r.order_no,
-      receiver_name: r.receiver,
-      phone: r.phone1,
-      address: r.address,
+      order_seq: idx + 1,
+      order_date: new Date().toISOString(),
+      shop_name: '이지어드민출고',
       product_name: r.product_name,
+      option_name: r.delivery_msg || '',
       qty: r.qty,
-      freight_amt: Number(document.getElementById('cfgFreight').value) || 4150,
+      freight_amt: freight,
       invoice_no: r.invoice_no || null,
       courier_name: '로젠택배',
       status: r.invoice_no ? 'DISPATCHED' : 'PENDING',
-      created_at: new Date().toISOString()
+      source_file: 'ssjg_delivery_upload'
     }));
 
-    var { error } = await sbClient.from('raw.ssjg_ezadmin_logs').upsert(payload, {onConflict: 'order_no'});
+    // PostgREST 경유 SECURITY DEFINER RPC 호출 (Claude WO-1/WO-6 규격 준수)
+    var { data, error } = await sb.rpc('ssjg_ezadmin_upsert', { p: payload });
     if(error){
-      console.warn('Direct raw table upsert warning, fallback to public view or notice:', error.message);
-      alert('출고 내역 ' + rawDeliveryRows.length + '건이 브라우저 메모리에 확정되었습니다. (DB 테이블 권한 확인 요망: ' + error.message + ')');
+      console.warn('RPC upsert error:', error);
+      alert('출고 내역 저장 실패: ' + error.message);
     } else {
-      alert('성공: 출고 내역 ' + rawDeliveryRows.length + '건이 Supabase raw.ssjg_ezadmin_logs 원장에 안전하게 저장되었습니다!');
+      var count = (data && data.count) || rawDeliveryRows.length;
+      alert('성공: 출고 내역 ' + count + '건이 Supabase raw.ssjg_ezadmin_logs 원장에 안전하게 저장되었습니다!');
     }
   } catch(e) {
-    alert('저장 시도 완료 (메모리 보관): ' + e.message);
+    alert('저장 오류: ' + e.message);
   } finally {
     btn.disabled = false;
     btn.innerText = '💾 DB 원장 보관';
