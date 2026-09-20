@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HBS 통합 관제 허브 · 황병승 대표 4대 엔티티 콕핏</title>
+<style>
+:root{
+  --bg:#0b1120;--panel:#1e293b;--border:#334155;--text:#f8fafc;--text-muted:#94a3b8;
+  --gold:#f59e0b;--green:#10b981;--blue:#3b82f6;--red:#ef4444;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px}
+.hub-card{max-width:960px;width:100%;background:rgba(30,41,59,0.7);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:16px;padding:36px;box-shadow:0 20px 40px rgba(0,0,0,0.5)}
+.hub-header{text-align:center;margin-bottom:36px}
+.hub-title{font-size:26px;font-weight:900;letter-spacing:-0.5px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+.hub-sub{font-size:13px;color:var(--text-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.entity-card{background:#0f172a;border:1px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:12px;transition:all .2s;position:relative;overflow:hidden}
+.entity-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.4)}
+.entity-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px}
+.entity-card.blue::before{background:var(--blue)}
+.entity-card.blue:hover{border-color:var(--blue)}
+.entity-card.red::before{background:var(--red)}
+.entity-card.red:hover{border-color:var(--red)}
+.entity-card.green::before{background:var(--green)}
+.entity-card.green:hover{border-color:var(--green)}
+.card-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;align-self:flex-start}
+.entity-card.blue .card-tag{background:rgba(59,130,246,0.15);color:var(--blue)}
+.entity-card.red .card-tag{background:rgba(239,68,68,0.15);color:var(--red)}
+.entity-card.green .card-tag{background:rgba(16,185,129,0.15);color:var(--green)}
+.card-name{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.card-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+.card-btn{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700}
+footer{margin-top:30px;font-size:11px;color:var(--text-muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="hub-card">
+  <div class="hub-header">
+    <div class="hub-title">👑 황병승 대표 4대 엔티티 통합 콕핏 허브</div>
+    <div class="hub-sub">P.A.R.A 00~99 단일 좌표계 기반 현장·유통·제조 통합 관제 시스템</div>
+  </div>
+
+  <div class="grid">
+    <!-- BVS -->
+    <a href="./erp.html" class="entity-card blue">
+      <div class="card-tag">30_BVS · 법인</div>
+      <div class="card-name">주식회사 비브이에스</div>
+      <div class="card-desc">반도체 셋업·현장공수(M/D)·외주노무·관리손익 실시간 관제 ERP (v1.29)</div>
+      <div class="card-btn">
+        <span style="color:var(--blue)">현장 ERP 콕핏 진입</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <!-- SSJG -->
+    <a href="./ssjg.html" class="entity-card red">
+      <div class="card-tag">40_SSJG · 법인</div>
+      <div class="card-name">주식회사 승승장구컴퍼니</div>
+      <div class="card-desc">유통·커머스·47레드캣 고양이모래·로젠택배 대량출고 자동화 콕핏 (v1.02)</div>
+      <div class="card-btn">
+        <span style="color:var(--red)">유통·택배 콕핏 진입</span>
+        <span>→</span>
+      </div>
+    </a>
+
+    <!-- PYRO -->
+    <a href="./pyro.html" class="entity-card green">
+      <div class="card-tag">20_PYRO · 개인사업자</div>
+      <div class="card-name">파이로 (PYRO)</div>
+      <div class="card-desc">24 공구온 B2B 카탈로그 마스터 & 25 튜브·사출 단위당 원가 자동 계산기 (v1.00)</div>
+      <div class="card-btn">
+        <span style="color:var(--green)">제조·유통 콕핏 진입</span>
+        <span>→</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<footer>
+  황병승 대표 4대 엔티티 통합 관제 및 AI 수석 비서 헌법 준수 (260921 확정)
+</footer>
+
+</body>
+</html>
