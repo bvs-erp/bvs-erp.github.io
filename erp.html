@@ -600,7 +600,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.32</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.33</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1143,7 +1143,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.32';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.33';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1715,7 +1715,7 @@ function showWorkerOnlyGate(me){
     + 'BVS 대표 ERP는 경영기획팀 및 엔지니어링 리드 전용 관제 시스템입니다.<br>'
     + '현장 출퇴근 등록 및 업무일지 작성은 <b>모바일 현장앱</b>을 이용해 주십시오.'
     + '</p>'
-    + '<a href="worker.html" class="btn p w" style="display:block;text-align:center;padding:14px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px;border-radius:12px">📱 모바일 현장앱 바로가기</a>'
+    + '<a href="worker.html" target="_blank" rel="noopener noreferrer" class="btn p w" style="display:block;text-align:center;padding:14px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px;border-radius:12px">📱 모바일 현장앱 바로가기</a>'
     + '<button class="btn w" onclick="doLogout()" style="padding:12px">로그아웃</button>'
     + '</div>';
 }
