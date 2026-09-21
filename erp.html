@@ -323,7 +323,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 #pr.on{display:block}
 #pr .bar{position:sticky;top:0;background:#ffffff;border-bottom:1px solid #cbd5e1;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;z-index:70;box-shadow:0 2px 8px rgba(15,23,42,0.06)}
 #pr .sheet{max-width:840px;width:840px;min-height:1120px;margin:28px auto 60px;padding:44px 48px;background:#ffffff;box-shadow:0 8px 30px rgba(15,23,42,0.12);border-radius:4px;border:1px solid #cbd5e1;box-sizing:border-box;font-size:12.5px;line-height:1.45}
-#pr h1{text-align:center;font-size:26px;letter-spacing:12px;text-indent:12px;margin:0 0 16px;font-weight:800;color:#1e3a8a}
+#pr h1{text-align:center;font-size:26px;letter-spacing:12px;text-indent:12px;margin:0 0 16px;font-weight:700;color:#1e3a8a}
 #pr h1 small{display:block;font-size:12.5px;letter-spacing:3px;text-indent:3px;font-weight:600;color:#475569;margin-top:5px}
 #pr *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #pr table{width:100%;border-collapse:collapse}
@@ -1710,7 +1710,7 @@ function showWorkerOnlyGate(me){
   b.classList.remove('hide');
   b.innerHTML = '<div style="text-align:center;padding:24px 12px">'
     + '<div style="font-size:52px;margin-bottom:14px">⚠️</div>'
-    + '<h2 style="margin:0 0 10px;font-size:21px;font-weight:800;color:var(--tx)">ERP 접속 권한 안내</h2>'
+    + '<h2 style="margin:0 0 10px;font-size:21px;font-weight:700;color:var(--tx)">ERP 접속 권한 안내</h2>'
     + '<p style="color:var(--tx2);font-size:14px;line-height:1.65;margin-bottom:24px">'
     + '안녕하세요, <b>' + esc(me.name || '근로자') + '</b> 님.<br>'
     + 'BVS 대표 ERP는 경영기획팀 및 엔지니어링 리드 전용 관제 시스템입니다.<br>'
@@ -2429,7 +2429,7 @@ function renderSite(){
       unEl.innerHTML = '<div class="al crit" style="margin-bottom:14px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);display:flex;align-items:center;gap:12px">'
         + '<span style="font-size:22px">⚠️</span>'
         + '<div style="flex:1">'
-        +   '<div style="font-weight:800;font-size:13.5px;color:var(--crit)">[긴급 청구 관제] 9월 현장 청구처 미지정 ' + sepUnassigned.length + '건 감지 (예상청구 220,000원)</div>'
+        +   '<div style="font-weight:700;font-size:13.5px;color:var(--crit)">[긴급 청구 관제] 9월 현장 청구처 미지정 ' + sepUnassigned.length + '건 감지 (예상청구 220,000원)</div>'
         +   '<div style="font-size:12px;color:var(--tx2);margin-top:2px">이천 현장(BV-IC) 공수 중 고객사(partner_id) 미지정 발생 (9/2, 9/3, 9/7 황병승, 9/19 김현수 1.0M/D). 청구 누락 방지를 위해 [마감 전 점검 > 청구처 자동 채우기] 또는 개별 지정을 완료하십시오.</div>'
         + '</div>'
         + '<button class="btn sm p" onclick="el(\'site-check\').scrollIntoView({behavior:\'smooth\'})">청구처 점검 이동</button>'
@@ -3599,7 +3599,7 @@ function renderBunm(){if(!el('gBunm'))return;
       +   '<div style="display:flex;align-items:center;gap:10px">'
       +     '<span style="font-size:22px">🚨</span>'
       +     '<div>'
-      +       '<div style="font-weight:800;font-size:14px;color:var(--crit)">[Tax-Risk 1순위] 대표 개인 계좌 경유 법인 비용: 1억 5,091만 원 (37건)</div>'
+      +       '<div style="font-weight:700;font-size:14px;color:var(--crit)">[Tax-Risk 1순위] 대표 개인 계좌 경유 법인 비용: 1억 5,091만 원 (37건)</div>'
       +       '<div style="font-size:12px;color:var(--tx2);margin-top:2px">법인 비용(인건비 5,431만 · 채권회수 5,000만 · 재료외주 4,661만 · 급여 300만)이 대표 개인 계좌를 경유해 지급되었습니다. 세무조사 소명 증빙(세금계산서/지급명세서 + 대표 이체내역) 준비 필수.</div>'
       +     '</div>'
       +   '</div>'
@@ -3633,7 +3633,7 @@ function renderBunm(){if(!el('gBunm'))return;
       +     '<tr><td><b>Z200</b></td><td>(자금)매입대금</td><td style="text-align:right">16</td><td style="text-align:right">49,478,000</td><td style="text-align:right">0</td><td style="color:var(--tx2)">파이로 임대료 440만×11회(4,840만) 포함 완제 확인</td></tr>'
       +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>5100</b></td><td>재료비·외주매입</td><td style="text-align:right">14</td><td style="text-align:right;font-weight:700;color:var(--warn)">46,607,757</td><td style="text-align:right">0</td><td style="color:var(--crit)">⚠️ 실제 공급사 세금계산서 누락 시 손금 부인 대상</td></tr>'
       +     '<tr style="background:rgba(239,68,68,0.04)"><td><b>5300</b></td><td>급여</td><td style="text-align:right">1</td><td style="text-align:right">2,996,240</td><td style="text-align:right">0</td><td style="color:var(--tx2)">원천징수 신고 대사</td></tr>'
-      +     '<tr style="background:var(--sf2);font-weight:800;border-top:2px solid var(--ln)">'
+      +     '<tr style="background:var(--sf2);font-weight:700;border-top:2px solid var(--ln)">'
       +       '<td colspan="2">합계</td><td style="text-align:right">105</td><td style="text-align:right">407,117,557</td><td style="text-align:right">291,850,000</td><td style="color:var(--good)">가지급·가수 순액: 법인 채무(대표 채권) +90,250,000원</td>'
       +     '</tr>'
       +   '</tbody>'
