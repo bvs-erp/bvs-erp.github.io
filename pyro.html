@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.08 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.09 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -11,8 +14,11 @@
   --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
   --text:#f8fafc;--text-muted:#94a3b8;--accent:#10b981;--accent-hover:#059669;
   --accent-light:rgba(16,185,129,0.12);--green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--amber:#f59e0b;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-sans:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --font:var(--font-sans);
 }
+body,button,input,select,textarea,table{font-family:var(--font-sans)}
+.num,td.amt,.md,.kpi-value,.kpi-val,.amt-plus,.amt-minus,.amt-neutral{font-variant-numeric:tabular-nums}
 html[data-theme="light"]{
   --bg:#f8fafc;--panel:#ffffff;--panel-card:#f1f5f9;--panel-border:#cbd5e1;--border:#e2e8f0;
   --text:#0f172a;--text-muted:#64748b;--accent:#059669;--accent-hover:#047857;

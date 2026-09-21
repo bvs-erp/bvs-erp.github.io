@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  --font-sans:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
   --bg:#f8fafc;--sf:#ffffff;--sf2:#f1f5f9;--ln:#e2e8f0;--ln2:#f1f5f9;
   --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
   --ac:#1e3a8a;--ac2:#eff6ff;--acx:#1e40af;
@@ -29,12 +30,12 @@ html[data-theme="dark"]{
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font:inherit;color:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 var(--font-sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea,table{font-family:var(--font-sans);color:inherit}
 a{color:var(--ac);text-decoration:none}
 .hide{display:none!important}
 .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-.num{text-align:right;font-variant-numeric:tabular-nums}
+.num,td.amt,.md,.kpi-value{text-align:right;font-variant-numeric:tabular-nums}
 .pos{color:var(--good)}.neg{color:var(--crit)}.wn{color:var(--warn)}.dim{color:var(--tx3)}.tx2{color:var(--tx2)}
 .tiny{font-size:12px}.xs{font-size:11px}
 b{font-weight:600}

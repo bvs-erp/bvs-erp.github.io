@@ -8,12 +8,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 공수">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 공수 v1.01</title>
+<title>BVS 공수 v1.02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <style>
 /* ── 테마 시스템 (선명한 고대비 낮모드 vs 눈 편한 밤모드) ── */
 :root, html[data-theme="light"] {
+  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --bg: #f1f5f9;
   --sf: #ffffff;
   --sf2: #f8fafc;
@@ -39,12 +43,12 @@
   --tab-bg: rgba(255,255,255,0.88);
 }
 /* WO-40: 현장 야외 가독성 강화 고대비 스타일 (라이트 모드) */
-html[data-theme="light"] .btn.in-btn.done { background:#dcfce7!important; color:#15803d!important; font-weight:800!important; border:1px solid #86efac!important; }
+html[data-theme="light"] .btn.in-btn.done { background:#dcfce7!important; color:#15803d!important; font-weight:700!important; border:1px solid #86efac!important; }
 html[data-theme="light"] .btn.out-btn { background:#ffffff!important; border-color:#94a3b8!important; color:#0f172a!important; font-weight:700!important; }
-html[data-theme="light"] .pill.y { background:#fef3c7!important; color:#92400e!important; font-weight:800!important; border:1px solid #fde68a!important; }
-html[data-theme="light"] .pill.b { background:#dbeafe!important; color:#1e40af!important; font-weight:800!important; border:1px solid #bfdbfe!important; }
-html[data-theme="light"] .pill.g { background:#dcfce7!important; color:#166534!important; font-weight:800!important; border:1px solid #bbf7d0!important; }
-html[data-theme="light"] .pill.r { background:#fee2e2!important; color:#991b1b!important; font-weight:800!important; border:1px solid #fecaca!important; }
+html[data-theme="light"] .pill.y { background:#fef3c7!important; color:#92400e!important; font-weight:700!important; border:1px solid #fde68a!important; }
+html[data-theme="light"] .pill.b { background:#dbeafe!important; color:#1e40af!important; font-weight:700!important; border:1px solid #bfdbfe!important; }
+html[data-theme="light"] .pill.g { background:#dcfce7!important; color:#166534!important; font-weight:700!important; border:1px solid #bbf7d0!important; }
+html[data-theme="light"] .pill.r { background:#fee2e2!important; color:#991b1b!important; font-weight:700!important; border:1px solid #fecaca!important; }
 
 @media(prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -102,11 +106,12 @@ html[data-theme="dark"] {
 html,body{height:100%}
 body{
   margin:0;background:var(--bg);color:var(--tx);
-  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font:15px/1.55 var(--font-sans);
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
   transition:background .2s ease,color .2s ease;
 }
-button,input,select,textarea{font:inherit;color:inherit}
+button,input,select,textarea,table{font-family:var(--font-sans);color:inherit}
+.num,td.amt,.md,.kpi-value{font-variant-numeric:tabular-nums}
 .hide{display:none!important}
 .pos{color:var(--good)}.neg{color:var(--crit)}.wn{color:var(--warn)}.dim{color:var(--tx3)}.tiny{font-size:12.5px}
 .wrap{max-width:580px;margin:0 auto;padding:14px 16px calc(88px + env(safe-area-inset-bottom))}
@@ -214,6 +219,58 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
   cursor:pointer;box-shadow:var(--sh);transition:all .15s ease;
 }
 .gate-theme-btn:hover{border-color:var(--ac);color:var(--tx)}
+
+
+/* ── WO-53 리드 상단 3개 세그먼트 전환 바 ── */
+.lead-segment-nav{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:6px 0 10px;margin-bottom:12px;display:flex;gap:6px;
+  border-bottom:1px solid var(--ln);
+}
+.lead-seg-btn{
+  flex:1;text-align:center;padding:9px 6px;border-radius:10px;
+  border:1px solid var(--ln);background:var(--sf);font-size:13px;font-weight:600;
+  color:var(--tx2);cursor:pointer;transition:all .15s ease;
+}
+.lead-seg-btn:hover{background:var(--sf2);color:var(--tx)}
+.lead-seg-btn.on{
+  background:var(--ac);color:#fff;border-color:var(--ac);
+  box-shadow:0 2px 6px rgba(29,78,216,0.25);font-weight:700;
+}
+
+/* ── WO-52 월간 공수 달력 (세로: 팀원명 sticky, 가로: 1~말일, 합계: 출근·MD·OT, 무금액) ── */
+.cal-table-wrap{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--ln);border-radius:12px;background:var(--sf);
+  margin:10px 0;max-width:100%;
+}
+.cal-table{
+  width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap;
+}
+.cal-table th,.cal-table td{
+  padding:7px 5px;text-align:center;border-bottom:1px solid var(--ln);
+  border-right:1px solid color-mix(in srgb,var(--ln) 50%,transparent);
+}
+.cal-table th{
+  background:var(--sf2);color:var(--tx2);font-weight:600;
+  position:sticky;top:0;z-index:4;
+}
+.cal-table th.col-name,.cal-table td.col-name{
+  position:sticky;left:0;z-index:6;background:var(--sf);
+  text-align:left;font-weight:700;min-width:76px;
+  box-shadow:2px 0 4px rgba(0,0,0,0.06);
+}
+.cal-table th.col-name{
+  z-index:8;background:var(--sf2);
+}
+.cal-table .sat{color:#2563eb}
+.cal-table .sun{color:#dc2626}
+.cal-table td.work{background:var(--goodbg);color:var(--good);font-weight:700}
+.cal-table td.ot{background:var(--warnbg);color:var(--warn);font-weight:700}
+.cal-table td.empty-day{color:var(--tx3);font-size:11px}
+.cal-table th.col-sum,.cal-table td.col-sum{
+  background:var(--sf2);font-weight:700;text-align:right;padding:7px 8px;
+}
 
 /* ── 공수/투입 대형 버튼 ── */
 .btn.big{
@@ -463,7 +520,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
       </button>
     </div>
     <div style="text-align:center;margin:24px 0 20px">
-      <div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--ac),#10b981);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;margin:0 auto 10px;box-shadow:0 4px 16px rgba(37,99,235,0.3)">BV</div>
+      <div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--ac),#10b981);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px;margin:0 auto 10px;box-shadow:0 4px 16px rgba(37,99,235,0.3)">BV</div>
       <h1 style="font-size:20px;margin:0 0 4px">주식회사 비브이에스</h1>
       <div class="tiny dim">현장 엔지니어 전용 모바일 콕핏</div>
     </div>
@@ -658,58 +715,62 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
     </section>
 
     <!-- 리드: 팀 공수 승인 및 현황 (WO-42) -->
+    <!-- 리드 관제 허브 (WO-42, WO-52, WO-53) -->
     <section class="page" id="p-lead">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h2 style="margin:0">현장 팀 리드 관제 <small class="dim tiny">팀장 전용</small></h2>
-          <span class="pill b" style="font-size:11px;font-weight:700">🔒 보안 규정 준수</span>
-        </div>
-        <p class="tiny dim" style="margin:0 0 12px">
-          ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인하고 승인합니다.<br>
-          <span style="color:var(--good);font-weight:600">🛡️ 개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
-        </p>
-        <div class="chips" id="leadDates" style="margin-bottom:10px"></div>
-        <div id="leadSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
-          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:11px;color:var(--tx3)">팀 출근 인원</div>
-            <div style="font-size:18px;font-weight:800;color:var(--ac)" id="leadKpiWorkers">-</div>
+      <!-- WO-53 상단 3개 세그먼트 전환 바 (sticky) -->
+      <div class="lead-segment-nav">
+        <button type="button" class="lead-seg-btn on" id="btnSegDay" onclick="switchLeadSeg('day')">당일 관제</button>
+        <button type="button" class="lead-seg-btn" id="btnSegDeploy" onclick="switchLeadSeg('deploy')">투입현황</button>
+        <button type="button" class="lead-seg-btn" id="btnSegMonth" onclick="switchLeadSeg('month')">월 달력</button>
+      </div>
+
+      <!-- [세그먼트 1] 당일 관제 -->
+      <div id="leadSegDay">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h2 style="margin:0">현장 팀 리드 관제 <small class="dim tiny">팀장 전용</small></h2>
+            <span class="pill b" style="font-size:11px;font-weight:700">🔒 보안 규정 준수</span>
           </div>
-          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:11px;color:var(--tx3)">당일 총 공수</div>
-            <div style="font-size:18px;font-weight:800;color:var(--good)" id="leadKpiMd">- M/D</div>
+          <p class="tiny dim" style="margin:0 0 12px">
+            ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인하고 승인합니다.<br>
+            <span style="color:var(--good);font-weight:600">🛡️ 개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
+          </p>
+          <div class="chips" id="leadDates" style="margin-bottom:10px"></div>
+          <div id="leadSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+            <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--tx3)">팀 출근 인원</div>
+              <div style="font-size:18px;font-weight:700;color:var(--ac)" id="leadKpiWorkers">-</div>
+            </div>
+            <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--tx3)">당일 총 공수</div>
+              <div style="font-size:18px;font-weight:700;color:var(--good)" id="leadKpiMd">- M/D</div>
+            </div>
+            <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:11px;color:var(--tx3)">승인 대기</div>
+              <div style="font-size:18px;font-weight:700;color:var(--warn)" id="leadKpiPending">- 건</div>
+            </div>
           </div>
-          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-size:11px;color:var(--tx3)">승인 대기</div>
-            <div style="font-size:18px;font-weight:800;color:var(--warn)" id="leadKpiPending">- 건</div>
+        </div>
+
+        <!-- 승인 대기 건 카드 -->
+        <div class="card" id="leadApprovalCard">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h2>공수 승인 대기 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
+            <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
           </div>
+          <div id="leadPendingRows"></div>
+        </div>
+
+        <!-- 당일 팀원 출퇴근 및 투입 현황 -->
+        <div class="card">
+          <h2>팀원 당일 출퇴근 현황 <small class="dim tiny" id="leadWorkersN">0명</small></h2>
+          <div id="leadWorkersRows"></div>
         </div>
       </div>
 
-      <!-- 승인 대기 건 카드 -->
-      <div class="card" id="leadApprovalCard">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h2>공수 승인 대기 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
-          <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
-        </div>
-        <div id="leadPendingRows"></div>
-      </div>
-
-      <!-- 당일 팀원 출퇴근 및 투입 현황 -->
-      <div class="card">
-        <h2>팀원 당일 출퇴근 현황 <small class="dim tiny" id="leadWorkersN">0명</small></h2>
-        <div id="leadWorkersRows"></div>
-      </div>
-
-      <!-- 월 팀 공수 집계 (M/D) -->
-      <div class="card">
-        <h2>이번 달 팀 공수 누적 집계 (M/D)</h2>
-        <div id="leadMonthRollup"></div>
-      </div>
-    </section>
-
-    <!-- 리드: 투입현황 -->
-    <section class="page" id="p-deploy">
-      <div class="card">
+      <!-- [세그먼트 2] 투입현황 (WO-53 통합) -->
+      <div id="leadSegDeploy" class="hide">
+<div class="card">
         <h2>투입현황 <small class="dim tiny">리드·대표</small></h2>
         <div class="chips" id="dpDates" style="margin-bottom:10px"></div>
         <div id="dpBlocks"><pre id="dpText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre></div>
@@ -726,7 +787,41 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="row2" style="margin-top:10px"><button class="btn" onclick="copyText('plText')">문구 복사</button><button class="btn" onclick="shareText('plText','내일 배치')">카톡으로 공유</button></div>
         <div class="msg" id="plMsg"></div>
       </div>
+      </div>
+
+      <!-- [세그먼트 3] 월 달력 (WO-52 월간 공수 달력) -->
+      <div id="leadSegMonth" class="hide">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h2 style="margin:0">월간 팀 공수 달력 <small class="dim tiny" id="leadCalMonthLabel">-</small></h2>
+            <div style="display:flex;gap:4px">
+              <button class="btn sm" onclick="leadMonthPrev()" style="padding:4px 10px">◀</button>
+              <button class="btn sm" onclick="leadMonthNext()" style="padding:4px 10px">▶</button>
+            </div>
+          </div>
+          <p class="tiny dim" style="margin:0 0 10px">
+            ※ 팀원별 일자별 투입 공수(M/D) 및 연장(OT)을 확인합니다.<br>
+            <span style="color:var(--good);font-weight:600">🛡️ 무금액 원칙</span>: 급여·단가·정산액은 완전 비공개 처리됩니다.
+          </p>
+          <div class="cal-table-wrap">
+            <table class="cal-table" id="leadCalTable">
+              <thead id="leadCalThead"></thead>
+              <tbody id="leadCalTbody"></tbody>
+            </table>
+          </div>
+          <div id="leadCalMsg" class="tiny dim" style="margin-top:8px;text-align:center"></div>
+        </div>
+
+        <!-- 월 팀 공수 누적 집계 (M/D) -->
+        <div class="card">
+          <h2>이번 달 팀 공수 누적 집계 (M/D)</h2>
+          <div id="leadMonthRollup"></div>
+        </div>
+      </div>
     </section>
+
+    <!-- 리드: 투입현황 -->
+    
 
     <!-- 리드: 펌프실 -->
     <section class="page" id="p-pump">
@@ -896,7 +991,6 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
   <div data-p="list" onclick="go('list')"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>기록</div>
   <div data-p="leave" onclick="go('leave')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>휴가</div>
   <div data-p="lead" class="lead hide" onclick="go('lead')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>리드</div>
-  <div data-p="deploy" class="lead hide" onclick="go('deploy')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0"/></svg>투입</div>
   <div data-p="pump" class="lead hide" onclick="go('pump')"><svg viewBox="0 0 24 24"><path d="M4 18V8h6l2-3h8v13zM8 12h8"/></svg>펌프실</div>
   <div data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>내 스펙</div>
   <div data-p="doc" onclick="go('doc')"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg>계약</div>
@@ -1477,6 +1571,161 @@ async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 
   toast('✨ 업무일지가 깔끔하게 정리되었습니다','g');
   b.disabled=false;b.textContent='✨ AI 정리'}
 function aiApply(){el('logText').value=el('aiText').textContent;aiDismiss()}
+
+/* ══════ WO-53: 리드 세그먼트 전환 (당일 관제 · 투입현황 · 월 달력) ══════ */
+var LEAD_CURRENT_SEG = 'day';
+function switchLeadSeg(seg){
+  LEAD_CURRENT_SEG = seg;
+  var segs = ['day', 'deploy', 'month'];
+  segs.forEach(function(s){
+    var btn = el('btnSeg' + s.charAt(0).toUpperCase() + s.slice(1));
+    var pane = el('leadSeg' + s.charAt(0).toUpperCase() + s.slice(1));
+    if(btn) btn.classList.toggle('on', s === seg);
+    if(pane) pane.classList.toggle('hide', s !== seg);
+  });
+  if(seg === 'deploy'){
+    dpOpen();
+    plOpen();
+  } else if(seg === 'month'){
+    leadMonthCalendarOpen();
+  } else {
+    leadOpen();
+  }
+}
+
+/* ══════ WO-52: 리드 월간 공수 달력 (세로: 팀원명 sticky, 가로: 1~말일, 합계: 출근·MD·OT, 무금액) ══════ */
+var LEAD_CAL = { yearMonth: '' };
+
+function leadMonthPrev(){
+  var cur = LEAD_CAL.yearMonth || today().slice(0, 7);
+  var parts = cur.split('-');
+  var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+  if(m < 1){ m = 12; y--; }
+  leadMonthCalendarOpen(y + '-' + (m < 10 ? '0' : '') + m);
+}
+
+function leadMonthNext(){
+  var cur = LEAD_CAL.yearMonth || today().slice(0, 7);
+  var parts = cur.split('-');
+  var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) + 1;
+  if(m > 12){ m = 1; y++; }
+  leadMonthCalendarOpen(y + '-' + (m < 10 ? '0' : '') + m);
+}
+
+async function leadMonthCalendarOpen(ym){
+  if(!IS_LEAD) return;
+  ym = ym || LEAD_CAL.yearMonth || today().slice(0, 7);
+  LEAD_CAL.yearMonth = ym;
+  var ymParts = ym.split('-');
+  var year = parseInt(ymParts[0], 10);
+  var month = parseInt(ymParts[1], 10);
+  if(el('leadCalMonthLabel')) el('leadCalMonthLabel').textContent = year + '년 ' + month + '월';
+
+  var daysInMonth = new Date(year, month, 0).getDate();
+  var daysArr = [];
+  for(var d = 1; d <= daysInMonth; d++){
+    var dt = new Date(year, month - 1, d);
+    var dayOfWeek = dt.getDay(); // 0: Sun, 6: Sat
+    daysArr.push({ day: d, dow: dayOfWeek, dateStr: ym + '-' + (d < 10 ? '0' : '') + d });
+  }
+
+  // Header render
+  var theadHtml = '<tr>'
+    + '<th class="col-name">팀원</th>';
+  daysArr.forEach(function(d){
+    var dowCls = d.dow === 0 ? 'sun' : (d.dow === 6 ? 'sat' : '');
+    theadHtml += '<th class="' + dowCls + '" style="min-width:26px">' + d.day + '</th>';
+  });
+  theadHtml += '<th class="col-sum" style="min-width:42px">출근</th>'
+    + '<th class="col-sum" style="min-width:50px">M/D</th>'
+    + '<th class="col-sum" style="min-width:42px">OT</th>'
+    + '</tr>';
+  if(el('leadCalThead')) el('leadCalThead').innerHTML = theadHtml;
+
+  var tbody = el('leadCalTbody');
+  if(tbody) tbody.innerHTML = '<tr><td colspan="' + (daysArr.length + 4) + '" style="padding:20px;text-align:center" class="dim tiny">월간 공수 집계 불러오는 중…</td></tr>';
+
+  try {
+    var r = null;
+    try {
+      r = await sb.rpc('lead_monthly_calendar', { p_month: ym });
+    } catch(err){}
+
+    var matrix = {};
+    var workers = [];
+
+    if(r && r.data && r.data.ok && r.data.rows && r.data.rows.length){
+      r.data.rows.forEach(function(row){
+        var name = row.person_name || row.name;
+        if(!matrix[name]){
+          matrix[name] = { name: name, days: {}, totalDays: 0, totalMd: 0, totalOt: 0 };
+          workers.push(name);
+        }
+        var day = parseInt(String(row.work_date).slice(8, 10), 10);
+        var md = +row.work_md || 0;
+        var ot = +row.ot_hours || 0;
+        matrix[name].days[day] = { md: md, ot: ot, status: row.status };
+        if(md > 0) matrix[name].totalDays++;
+        matrix[name].totalMd += md;
+        matrix[name].totalOt += ot;
+      });
+    } else {
+      var knownWorkers = (LEAD.rows && LEAD.rows.length) ? LEAD.rows : [];
+      if(knownWorkers.length){
+        var todayDay = parseInt(today().slice(8, 10), 10);
+        var isCurrentMonth = (ym === today().slice(0, 7));
+        knownWorkers.forEach(function(w){
+          var name = w.name;
+          if(!matrix[name]){
+            matrix[name] = { name: name, days: {}, totalDays: 0, totalMd: 0, totalOt: 0 };
+            workers.push(name);
+          }
+          if(isCurrentMonth){
+            var md = +w.md || 0;
+            var ot = +w.ot || 0;
+            matrix[name].days[todayDay] = { md: md, ot: ot, status: w.status };
+            if(md > 0) matrix[name].totalDays++;
+            matrix[name].totalMd += md;
+            matrix[name].totalOt += ot;
+          }
+        });
+      }
+    }
+
+    if(!workers.length){
+      if(tbody) tbody.innerHTML = '<tr><td colspan="' + (daysArr.length + 4) + '" style="padding:24px;text-align:center" class="empty">조회된 팀원 출역 데이터가 없습니다.</td></tr>';
+      if(el('leadCalMsg')) el('leadCalMsg').textContent = '※ 월간 뷰 연동 대기 중 (당일 관제 탭에서 팀 출역 확인 가능)';
+      return;
+    }
+
+    var tbodyHtml = workers.map(function(name){
+      var w = matrix[name];
+      var rowStr = '<tr><td class="col-name">' + esc(w.name) + '</td>';
+      daysArr.forEach(function(d){
+        var cell = w.days[d.day];
+        if(!cell || cell.md === 0){
+          rowStr += '<td class="empty-day">-</td>';
+        } else {
+          var cls = cell.ot > 0 ? 'ot' : 'work';
+          var val = cell.md === 1 ? '1' : (cell.md === 0.5 ? '½' : cell.md.toFixed(1));
+          rowStr += '<td class="' + cls + '" title="' + d.dateStr + ': ' + cell.md + ' M/D' + (cell.ot > 0 ? ' (+OT ' + cell.ot + 'h)' : '') + '">' + val + '</td>';
+        }
+      });
+      rowStr += '<td class="col-sum">' + w.totalDays + '일</td>'
+        + '<td class="col-sum" style="color:var(--ac)">' + w.totalMd.toFixed(1) + '</td>'
+        + '<td class="col-sum" style="color:var(--warn)">' + (w.totalOt > 0 ? '+' + w.totalOt + 'h' : '0') + '</td>'
+        + '</tr>';
+      return rowStr;
+    }).join('');
+
+    if(tbody) tbody.innerHTML = tbodyHtml;
+    if(el('leadCalMsg')) el('leadCalMsg').textContent = '※ 출근 인원: ' + workers.length + '명 · 금액 제외 안전 모드 가동 중';
+  } catch(e) {
+    console.error('Lead calendar render error:', e);
+    if(tbody) tbody.innerHTML = '<tr><td colspan="' + (daysArr.length + 4) + '" style="padding:20px;text-align:center" class="neg tiny">달력 생성 중 오류가 발생했습니다.</td></tr>';
+  }
+}
+
 /* ══════ WO-42: 현장 팀 리드 전용 관제 (팀원 급여·단가·계좌 완전 비공개) ══════ */
 var LEAD = { date: null, rows: [] };
 
@@ -1575,7 +1824,7 @@ function renderLeadMonthlyRollup(rows){
             + '<td style="padding:6px 8px;font-weight:700">' + esc(u.name) + '</td>'
             + '<td style="padding:6px 8px;text-align:right">' + u.days + '일</td>'
             + '<td style="padding:6px 8px;text-align:right;color:var(--warn)">' + (u.ot > 0 ? '+' + u.ot + 'h' : '0h') + '</td>'
-            + '<td style="padding:6px 8px;text-align:right;font-weight:800;color:var(--ac)">' + u.md.toFixed(1) + ' M/D</td>'
+            + '<td style="padding:6px 8px;text-align:right;font-weight:700;color:var(--ac)">' + u.md.toFixed(1) + ' M/D</td>'
             + '</tr>';
         }).join('')
     +   '</tbody>'
@@ -1968,7 +2217,7 @@ async function leaveCancel(id){if(!confirm('이 신청을 취소할까요?'))ret
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('신청을 취소했습니다','g');leaveLoad()}
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){var on=(t.dataset.p===p);t.classList.toggle('on',on);if(on&&typeof t.scrollIntoView==='function'){try{t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}catch(e){}}});window.scrollTo(0,0);
-  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
+  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();switchLeadSeg(LEAD_CURRENT_SEG||'day');return}if(p==='deploy'){go('lead');switchLeadSeg('deploy');return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
 </script>
