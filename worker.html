@@ -1189,18 +1189,17 @@ async function edSign(id){
   toast('서명 완료','g');await loadAll();
 }
 
-/* ── 장소 → 라인 (WO-48: 그룹화 및 BVS이천 1번 고정) ── */
+/* ── 장소 → 라인 (WO-48: 5대 그룹 및 BVS이천 1번 고정, 우주이천 하이닉스 배치) ── */
 var PLACE_GROUPS = [
   { label: '본사', items: [['BV','BVS이천']], isHQ: true },
-  { label: '하이닉스', items: [['IC','SK이천'], ['CJ','SK청주']] },
+  { label: '하이닉스', items: [['IC','SK이천'], ['UO','우주이천'], ['CJ','SK청주']] },
   { label: '삼성', items: [['PT','삼성평택'], ['HS','삼성화성']] },
   { label: 'TES', items: [['TE','TES용인']] },
-  { label: '기타', items: [['UO','우주이천']] },
   { label: '비근무', items: [['ED','교육'], ['OFF','휴무·병가']], isOff: true }
 ];
 var PLACES = [
-  ['BV','BVS이천'],['IC','SK이천'],['CJ','SK청주'],['PT','삼성평택'],
-  ['HS','삼성화성'],['TE','TES용인'],['UO','우주이천'],['ED','교육'],['OFF','휴무·병가']
+  ['BV','BVS이천'],['IC','SK이천'],['UO','우주이천'],['CJ','SK청주'],
+  ['PT','삼성평택'],['HS','삼성화성'],['TE','TES용인'],['ED','교육'],['OFF','휴무·병가']
 ];
 function sitesOf(pf){return D.sites.filter(function(s){return String(s.site_id).split('-')[0]===pf})}
 function lineLabel(s){var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
@@ -1244,8 +1243,11 @@ function updateSiteSummaryBadge(){
   if(!b||!t) return;
   if(SEL.site){
     var sName=siteName(SEL.site);
+    if(SEL.place==='UO' || String(SEL.site).indexOf('UO-')===0){
+      sName = '우주이엔지 이천사무실 (SK이천 앞)';
+    }
     b.className='site-summary-badge ok';
-    t.innerHTML='선택 현장: <b>'+esc(sName)+'</b>'+(el('w_pump')&&el('w_pump').checked?' <span class="pill y">펌프실</span>':'');
+    t.innerHTML='📍 선택 현장: <b>'+esc(sName)+'</b>'+(el('w_pump')&&el('w_pump').checked?' <span class="pill y">펌프실</span>':'');
   } else {
     b.className='site-summary-badge';
     t.textContent='작업 장소와 라인을 위에서 선택해 주세요';
