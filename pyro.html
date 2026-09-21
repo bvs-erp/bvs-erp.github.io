@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.07 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.08 · 파이로 고물상(MF)·제조·유통 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -32,6 +32,8 @@ html[data-theme="light"] .tag-wait{background:#fef3c7;color:#b45309}
 html[data-theme="light"] .tag-done{background:#d1fae5;color:#047857}
 html[data-theme="light"] .prod-card{background:#ffffff;border-color:#e2e8f0}
 html[data-theme="light"] .amt-neutral{color:#334155}
+.banner-amber{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24}
+html[data-theme="light"] .banner-amber{background:#fffbeb;border:1px solid #fcd34d;color:#b45309}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
 
@@ -193,7 +195,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.07</span></div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.08</span></div>
       <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 (PYRO)</div>
     </div>
   </div>
@@ -532,6 +534,14 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   
   <!-- TAB: 사업부 손익 (P&L) & 사업주 계정 관제 (WO-11, WO-12) -->
   <div id="tab-div-pl" class="tab-pane">
+    <!-- WO-45: 카드 사용내역 미적재 경고 배너 -->
+    <div class="banner-amber" style="border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px;flex-shrink:0">⚠️</span>
+      <div style="font-size:13px;font-weight:700;line-height:1.5">
+        ⚠️ 카드 사용내역 미적재 — 판관비가 실제보다 작게 잡혀 영업이익이 과대 표시됩니다. (2026년 판관비 전표 2건 858,398원 / 카드결제 출금 14,873,333원은 자금거래로만 인식)
+      </div>
+    </div>
+
     <!-- WO-12: 사업주 인출/출자 현황 카드 & 초과인출 경고 -->
     <div class="kpi-grid">
       <div class="kpi-card green">
