@@ -600,7 +600,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.33</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.34</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1143,7 +1143,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pump intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.33';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.34';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2087,7 +2087,7 @@ async function renderGroupPlSummary(){
           <!-- BVS Card -->
           <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-weight:700;color:var(--ac);font-size:13px">🔵 BVS (반도체 셋업)</span>
+              <span style="font-weight:700;color:var(--ac);font-size:13px">🔵 BVS (반도체 셋업) <span class="vbadge" style="background:rgba(59,130,246,0.15);color:var(--ac);border:1px solid rgba(59,130,246,0.4);font-size:10px;padding:2px 6px;margin-left:4px;cursor:help;vertical-align:middle" title="BVS는 미청구 현장공수를 포함한 발생주의 기준입니다. SSJG·PYRO는 원장 기준입니다.">발생주의</span></span>
               ${unbilledGap > 0 ? `<span style="background:rgba(59,130,246,0.15);color:var(--ac);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">청구예상 +${Math.round(unbilledGap/10000).toLocaleString()}만 원</span>` : ''}
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
