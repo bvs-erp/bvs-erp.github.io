@@ -1648,14 +1648,15 @@ async function leadMonthCalendarOpen(ym){
   try {
     var r = null;
     try {
-      r = await sb.rpc('lead_monthly_calendar', { p_month: ym });
+      r = await sb.rpc('lead_monthly_calendar', { p_ym: ym });
     } catch(err){}
 
     var matrix = {};
     var workers = [];
+    var rows = Array.isArray(r && r.data) ? r.data : ((r && r.data && r.data.rows) || []);
 
-    if(r && r.data && r.data.ok && r.data.rows && r.data.rows.length){
-      r.data.rows.forEach(function(row){
+    if(rows && rows.length){
+      rows.forEach(function(row){
         var name = row.person_name || row.name;
         if(!matrix[name]){
           matrix[name] = { name: name, days: {}, totalDays: 0, totalMd: 0, totalOt: 0 };
@@ -1664,7 +1665,13 @@ async function leadMonthCalendarOpen(ym){
         var day = parseInt(String(row.work_date).slice(8, 10), 10);
         var md = +row.work_md || 0;
         var ot = +row.ot_hours || 0;
-        matrix[name].days[day] = { md: md, ot: ot, status: row.status };
+        matrix[name].days[day] = {
+          md: md,
+          ot: ot,
+          status: row.status,
+          day_type: row.day_type,
+          site_name: row.site_name
+        };
         if(md > 0) matrix[name].totalDays++;
         matrix[name].totalMd += md;
         matrix[name].totalOt += ot;
@@ -1703,12 +1710,22 @@ async function leadMonthCalendarOpen(ym){
       var rowStr = '<tr><td class="col-name">' + esc(w.name) + '</td>';
       daysArr.forEach(function(d){
         var cell = w.days[d.day];
-        if(!cell || cell.md === 0){
+        if(!cell){
           rowStr += '<td class="empty-day">-</td>';
-        } else {
+        } else if(cell.day_type === '휴가'){
+          rowStr += '<td style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:11px" title="' + d.dateStr + ': 휴가">휴가</td>';
+        } else if(cell.day_type === '병가'){
+          rowStr += '<td style="background:#fef3c7;color:#92400e;font-weight:700;font-size:11px" title="' + d.dateStr + ': 병가">병가</td>';
+        } else if(cell.day_type === '교육'){
+          rowStr += '<td style="background:#dcfce7;color:#166534;font-weight:700;font-size:11px" title="' + d.dateStr + ': 교육">교육</td>';
+        } else if(cell.day_type === '휴무'){
+          rowStr += '<td style="background:var(--sf2);color:var(--tx3);font-weight:700;font-size:11px" title="' + d.dateStr + ': 휴무">휴무</td>';
+        } else if(cell.md > 0){
           var cls = cell.ot > 0 ? 'ot' : 'work';
           var val = cell.md === 1 ? '1' : (cell.md === 0.5 ? '½' : cell.md.toFixed(1));
-          rowStr += '<td class="' + cls + '" title="' + d.dateStr + ': ' + cell.md + ' M/D' + (cell.ot > 0 ? ' (+OT ' + cell.ot + 'h)' : '') + '">' + val + '</td>';
+          rowStr += '<td class="' + cls + '" title="' + d.dateStr + ': ' + (cell.site_name || '현장') + ' ' + cell.md + ' M/D' + (cell.ot > 0 ? ' (+OT ' + cell.ot + 'h)' : '') + '">' + val + '</td>';
+        } else {
+          rowStr += '<td class="empty-day">-</td>';
         }
       });
       rowStr += '<td class="col-sum">' + w.totalDays + '일</td>'
