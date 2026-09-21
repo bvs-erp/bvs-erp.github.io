@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 /* GNB */
 header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{background:var(--accent);color:#fff;font-weight:900;font-size:16px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(16,185,129,0.4)}
+.logo{background:var(--accent);color:#fff;font-weight:700;font-size:16px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(16,185,129,0.4)}
 .brand-title{font-size:16px;font-weight:700;letter-spacing:-0.3px}
 .badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid rgba(16,185,129,0.3)}
 .nav-links{display:flex;gap:8px;align-items:center}
@@ -88,7 +88,7 @@ header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20p
 .kpi-card.amber::before{background:var(--amber)}
 .kpi-card.purple::before{background:var(--purple)}
 .kpi-label{font-size:12px;color:var(--text-muted);font-weight:600;margin-bottom:6px}
-.kpi-val{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.kpi-val{font-size:22px;font-weight:700;letter-spacing:-0.5px}
 .kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
 
 /* Panel */
@@ -137,9 +137,9 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 <div id="gate" class="hide">
   <div class="gate-card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <div style="background:var(--accent);color:#fff;font-weight:900;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">PY</div>
+      <div style="background:var(--accent);color:#fff;font-weight:700;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">PY</div>
       <div>
-        <h1 style="font-size:17px;font-weight:800;letter-spacing:-0.3px;margin:0">파이로 콕핏 ERP</h1>
+        <h1 style="font-size:17px;font-weight:700;letter-spacing:-0.3px;margin:0">파이로 콕핏 ERP</h1>
         <p style="color:var(--text-muted);font-size:11px;margin:0">개인사업자 파이로 고물상(MF)·제조·유통 관제</p>
       </div>
     </div>
@@ -340,17 +340,17 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;background:#0b1120;padding:16px;border-radius:8px;border:1px solid var(--border)">
           <div>
             <div style="font-size:11px;color:var(--text-muted)">단위당 회수가치</div>
-            <div id="calcUnitRecover" style="font-size:18px;font-weight:800;color:var(--blue)">0 원/kg</div>
+            <div id="calcUnitRecover" style="font-size:18px;font-weight:700;color:var(--blue)">0 원/kg</div>
             <div id="calcTotalRecover" style="font-size:11px;color:var(--text-muted);margin-top:2px">총 0 원</div>
           </div>
           <div>
             <div style="font-size:11px;color:var(--text-muted)">손익분기 매입가 (가공400+운송80 차감)</div>
-            <div id="calcUnitBreak" style="font-size:18px;font-weight:800;color:var(--amber)">0 원/kg</div>
+            <div id="calcUnitBreak" style="font-size:18px;font-weight:700;color:var(--amber)">0 원/kg</div>
             <div id="calcTotalBreak" style="font-size:11px;color:var(--text-muted);margin-top:2px">총 0 원</div>
           </div>
           <div style="border-left:2px solid var(--accent);padding-left:14px">
             <div style="font-size:11px;color:var(--green);font-weight:700">★ 현장 권장 매입가 (목표마진 25% 확보)</div>
-            <div id="calcUnitGuide" style="font-size:22px;font-weight:900;color:var(--green)">0 원/kg</div>
+            <div id="calcUnitGuide" style="font-size:22px;font-weight:700;color:var(--green)">0 원/kg</div>
             <div id="calcTotalGuide" style="font-size:12px;color:var(--text);font-weight:700;margin-top:2px">총 권장매입금액: 0 원</div>
           </div>
         </div>
@@ -499,7 +499,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
           </div>
           <div style="border-left:2px solid var(--accent);padding-left:16px">
             <div style="font-size:12px;color:var(--accent);font-weight:700">★ 총 단위당 공급 원가</div>
-            <div style="font-size:24px;font-weight:800;color:var(--accent)" id="costTotal">121.5 원</div>
+            <div style="font-size:24px;font-weight:700;color:var(--accent)" id="costTotal">121.5 원</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px" id="costTotalSum">총 발주액: 1,215,000 원</div>
           </div>
         </div>
@@ -596,22 +596,22 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
         <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--blue)">
           <div style="font-size:11px;color:var(--text-muted)">RE 부동산임대 (주력 이익원)</div>
-          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 3,200만</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">2026년 매출 3,200만</div>
           <div style="font-size:11.5px;color:var(--blue);margin-top:2px">영업이익 +3,200만 (이자 2,130만)</div>
         </div>
         <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--green)">
           <div style="font-size:11px;color:var(--text-muted)">MF 제조·고물상 (신규 성장)</div>
-          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 645만</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">2026년 매출 645만</div>
           <div style="font-size:11.5px;color:var(--green);margin-top:2px">원가 333만 · 이익 +312만 (마진 48%)</div>
         </div>
         <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--amber)">
           <div style="font-size:11px;color:var(--text-muted)">DS 도소매·공구온</div>
-          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 매출 0만</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">2026년 매출 0만</div>
           <div style="font-size:11.5px;color:var(--amber);margin-top:2px">매입원가 119만 (재고 보유)</div>
         </div>
         <div style="background:#0b1120;padding:14px;border-radius:8px;border-left:4px solid var(--purple)">
           <div style="font-size:11px;color:var(--text-muted)">CM 공통 판관비</div>
-          <div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">2026년 판관비 86만</div>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">2026년 판관비 86만</div>
           <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">수선비·세금과공과 등</div>
         </div>
       </div>
@@ -624,7 +624,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:20px">🚨</span>
           <div>
-            <h4 style="font-size:14px;font-weight:800;color:#fca5a5;margin:0">[세무 환급 긴급 경보] 세금계산서 실원장 vs 시트 매입세액 대사 (WO-25)</h4>
+            <h4 style="font-size:14px;font-weight:700;color:#fca5a5;margin:0">[세무 환급 긴급 경보] 세금계산서 실원장 vs 시트 매입세액 대사 (WO-25)</h4>
             <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">현재 시트(FI부가세) 매입세액 0원 표기 ↔ 실제 세금계산서 수취 원장(pyro_tax_invoices) 매입세액 비교</div>
           </div>
         </div>
@@ -705,7 +705,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:20px">⚠️</span>
           <div>
-            <h4 style="font-size:14px;font-weight:800;color:var(--accent);margin:0">초과인출금 지급이자 적수 계산 — 대출 원장 미등록으로 산출 불가 (WO-36)</h4>
+            <h4 style="font-size:14px;font-weight:700;color:var(--accent);margin:0">초과인출금 지급이자 적수 계산 — 대출 원장 미등록으로 산출 불가 (WO-36)</h4>
             <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">소득세법 시행령 제61조 제1항 제2호: 필요경비 불산입액 = 지급이자(2,927만) × (초과인출금 적수 ÷ 차입금 적수)</div>
           </div>
         </div>
@@ -1250,7 +1250,7 @@ function renderVatCard(rows){
         <td style="font-size:11.5px;color:var(--text-muted)">${r.basis || '-'}</td>
         <td class="amt-neutral">${fmt(r.h1_amt)}</td>
         <td class="amt-neutral">${fmt(r.h2_amt)}</td>
-        <td class="amt-neutral" style="font-weight:800;font-size:13.5px">
+        <td class="amt-neutral" style="font-weight:700;font-size:13.5px">
           ${fmt(r.annual_amt)} 원 ${isZero ? '<span class="tag tag-tax-ok" style="margin-left:4px">임가공용역(0원정상)</span>' : ''}
         </td>
         <td style="font-size:11.5px;color:var(--text-muted)">${r.note || (isZero ? '수탁임가공비 수취 거래 (원자재 매입 없음)' : '-')}</td>
@@ -1599,7 +1599,7 @@ function renderTools(list){
         <div class="prod-price-row">
           <div>
             <div style="font-size:10px;color:var(--text-muted)">매입(공급가): ${fmt(t.buyPrice)}원</div>
-            <div style="font-size:15px;font-weight:800;color:var(--text)">${fmt(t.stdPrice)} 원</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text)">${fmt(t.stdPrice)} 원</div>
           </div>
           <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--green)">마진 ${margin}%</span>
         </div>
