@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PYRO ERP v1.04 · 파이로 고물상(MF)·제조·유통 콕핏</title>
+<title>PYRO ERP v1.07 · 파이로 고물상(MF)·제조·유통 콕핏</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -193,7 +193,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="brand">
     <div class="logo">PY</div>
     <div>
-      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.06</span></div>
+      <div class="brand-title">파이로 콕핏 <span class="badge">PYRO v1.07</span></div>
       <div style="font-size:11px;color:var(--text-muted)">개인사업자 파이로 (PYRO)</div>
     </div>
   </div>
@@ -403,11 +403,12 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
               <th style="text-align:right">실적수율(%)</th>
               <th style="text-align:right">매각금액(원)</th>
               <th style="text-align:right">조이익(원)</th>
+              <th style="text-align:right">시간당 조이익</th>
               <th>세무증빙/인적사항</th>
             </tr>
           </thead>
           <tbody id="lotTableBody">
-            <tr><td colspan="10" style="text-align:center;padding:30px">로트 데이터를 불러오는 중...</td></tr>
+            <tr><td colspan="11" style="text-align:center;padding:30px">로트 데이터를 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1506,7 +1507,7 @@ function renderLots(rows){
   var tbody = document.getElementById('lotTableBody');
   document.getElementById('lotCount').innerText = rows.length;
   if(!rows || rows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px">등록된 로트가 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px">등록된 로트가 없습니다.</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(r => {
@@ -1514,12 +1515,24 @@ function renderLots(rows){
     var isPositiveMargin = Number(r.gross_margin) > 0;
     var outKg = Number(r.out_kg) || 0;
     var yieldPct = Number(r.yield_pct) || 0;
+    var manH = Number(r.man_h) || 0;
+    var grossMargin = Number(r.gross_margin) || 0;
 
     var statusBadge = '<span class="tag tag-tax-ok">정상기록</span>';
     if(outKg === 0 || yieldPct === 0){
       statusBadge = '<span class="tag tag-tax-warn" style="background:rgba(245,158,11,0.2);color:#fbbf24">⚠️ 산출 0kg (미회수재고)</span>';
     } else if(yieldPct > 100){
       statusBadge = '<span class="tag tag-tax-warn" style="background:rgba(239,68,68,0.25);color:#fca5a5">⚠️ 수율 이상 (' + yieldPct + '%)</span>';
+    }
+
+    var marginPerHourHtml = '—';
+    if(manH > 0){
+      var mph = Math.round(grossMargin / manH);
+      if(mph < 10000){
+        marginPerHourHtml = `<span class="badge" style="background:#dc2626;color:#ffffff;font-weight:700">🔴 ${fmt(mph)}원/h</span>`;
+      } else {
+        marginPerHourHtml = `<span style="color:var(--accent);font-weight:700">${fmt(mph)}원/h</span> <span class="tiny dim" style="font-size:10.5px;color:var(--text-muted)">(${manH}h)</span>`;
+      }
     }
 
     return `
@@ -1533,6 +1546,7 @@ function renderLots(rows){
         <td style="text-align:right;font-weight:700;${yieldPct > 100 ? 'color:var(--red)' : (outKg===0 ? 'color:var(--amber)' : 'color:var(--blue)')}">${r.yield_pct}%</td>
         <td class="amt-neutral">${fmt(r.sell_total)} 원</td>
         <td class="${isPositiveMargin ? 'amt-plus' : 'amt-neutral'}">${fmt(r.gross_margin)} 원</td>
+        <td style="text-align:right">${marginPerHourHtml}</td>
         <td>${statusBadge}</td>
       </tr>
     `;
