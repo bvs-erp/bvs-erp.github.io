@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 공수">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 공수</title>
+<title>BVS 공수 v1.01</title>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <style>
@@ -247,22 +247,24 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
 .fix .btn small{font-size:11.5px;color:var(--tx3);font-weight:400}
 .note{background:var(--warnbg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5}
 
-/* ── 하단 글래스모피즘 내비게이션 바 ── */
+/* ── 하단 글래스모피즘 내비게이션 바 (WO-47) ── */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;
   background:var(--tab-bg);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-top:1px solid var(--ln);
-  display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;
-  padding:4px 4px calc(4px + env(safe-area-inset-bottom));
+  display:flex;justify-content:space-around;align-items:center;
+  padding:4px 4px calc(6px + env(safe-area-inset-bottom));
+  padding-bottom:calc(6px + env(safe-area-inset-bottom));
   z-index:10;gap:2px;box-shadow:0 -4px 16px rgba(0,0,0,0.04);
 }
 .tabs::-webkit-scrollbar{display:none}
 .tabs div{
-  flex:1 0 auto;min-width:54px;max-width:76px;text-align:center;
-  padding:6px 2px 4px;font-size:11px;color:var(--tx3);cursor:pointer;
+  flex:1 1 0;min-width:0;text-align:center;
+  padding:5px 1px 3px;font-size:10px;color:var(--tx3);cursor:pointer;
   border-radius:10px;transition:all .15s ease;position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .tabs div:hover{background:var(--sf2);color:var(--tx)}
 .tabs div.on{color:var(--ac);background:var(--ac2);font-weight:700}
@@ -276,7 +278,37 @@ textarea.in{min-height:84px;resize:vertical;line-height:1.5}
   0%,100%{transform:scale(1);opacity:1}
   50%{transform:scale(1.25);opacity:.8}
 }
-.tabs svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 2px}
+.tabs svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 2px;flex-shrink:0}
+@media (max-width:360px){
+  .tabs{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    justify-content:flex-start;
+  }
+  .tabs div{
+    flex:0 0 52px;min-width:52px;
+  }
+}
+
+/* ── WO-48: 장소 버튼 그룹화 스타일 ── */
+.place-group-list{display:flex;flex-direction:column;gap:8px;width:100%}
+.place-group-row{display:flex;align-items:center;gap:10px;width:100%}
+.place-group-lbl{
+  font-size:11px;font-weight:700;color:var(--tx3);width:48px;flex-shrink:0;
+  text-align:right;pointer-events:none;user-select:none;
+}
+.place-group-chips{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.place-group-row.hq-row{padding-bottom:8px;border-bottom:1px dashed var(--ln);margin-bottom:2px}
+.chip-hq{
+  padding:14px 22px!important;font-size:15.5px!important;font-weight:700!important;
+  border-width:1.5px!important;min-height:46px!important;
+}
+.place-group-row.off-row{padding-top:8px;border-top:1px dashed var(--ln);margin-top:2px}
+.chip-off{
+  border-color:var(--ln)!important;background:var(--sf2)!important;color:var(--tx3)!important;
+}
+.chip-off.on{
+  background:var(--tx3)!important;color:var(--sf)!important;border-color:var(--tx3)!important;
+}
 .page{display:none}.page.on{display:block}
 #toasts{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:70;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--tx);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;text-align:center;box-shadow:var(--shx)}
@@ -1157,8 +1189,19 @@ async function edSign(id){
   toast('서명 완료','g');await loadAll();
 }
 
-/* ── 장소 → 라인 ── */
-var PLACES=[['IC','SK이천'],['CJ','SK청주'],['PT','삼성평택'],['HS','삼성화성'],['BV','BVS이천'],['UO','우주이천'],['TE','TES용인'],['ED','교육'],['OFF','휴무·병가']];
+/* ── 장소 → 라인 (WO-48: 그룹화 및 BVS이천 1번 고정) ── */
+var PLACE_GROUPS = [
+  { label: '본사', items: [['BV','BVS이천']], isHQ: true },
+  { label: '하이닉스', items: [['IC','SK이천'], ['CJ','SK청주']] },
+  { label: '삼성', items: [['PT','삼성평택'], ['HS','삼성화성']] },
+  { label: 'TES', items: [['TE','TES용인']] },
+  { label: '기타', items: [['UO','우주이천']] },
+  { label: '비근무', items: [['ED','교육'], ['OFF','휴무·병가']], isOff: true }
+];
+var PLACES = [
+  ['BV','BVS이천'],['IC','SK이천'],['CJ','SK청주'],['PT','삼성평택'],
+  ['HS','삼성화성'],['TE','TES용인'],['UO','우주이천'],['ED','교육'],['OFF','휴무·병가']
+];
 function sitesOf(pf){return D.sites.filter(function(s){return String(s.site_id).split('-')[0]===pf})}
 function lineLabel(s){var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
   if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
@@ -1166,11 +1209,28 @@ function lineLabel(s){var parts=String(s.site_name).trim().split(/\s+/);var l=pa
 function renderPlaces(){
   if(!SEL.site){var last=D.labor.filter(function(r){return r.status!=='void'})[0];if(last)SEL.site=last.site_id;}
   if(SEL.site&&!SEL.place)SEL.place=String(SEL.site).split('-')[0];
-  el('w_place').innerHTML=PLACES.filter(function(p){return sitesOf(p[0]).length}).map(function(p){return '<span class="chip'+(p[0]===SEL.place?' on':'')+'" onclick="pickPlace(\''+p[0]+'\')">'+p[1]+'</span>'}).join('');
+  var html = '<div class="place-group-list">';
+  PLACE_GROUPS.forEach(function(grp){
+    var avail = grp.items.filter(function(p){ return sitesOf(p[0]).length > 0; });
+    if(!avail.length) return;
+    var chips = avail.map(function(p){
+      var isSel = (p[0] === SEL.place);
+      var cls = 'chip' + (isSel ? ' on' : '');
+      if(grp.isHQ) cls += ' chip-hq';
+      if(grp.isOff) cls += ' chip-off';
+      return '<span class="' + cls + '" data-place="' + p[0] + '" onclick="pickPlace(\'' + p[0] + '\')">' + p[1] + '</span>';
+    }).join('');
+    html += '<div class="place-group-row' + (grp.isHQ ? ' hq-row' : '') + (grp.isOff ? ' off-row' : '') + '">'
+          + '<div class="place-group-lbl">' + grp.label + '</div>'
+          + '<div class="place-group-chips">' + chips + '</div>'
+          + '</div>';
+  });
+  html += '</div>';
+  el('w_place').innerHTML = html;
   renderLines();
 }
 function pickPlace(pf){SEL.place=pf;var ss=sitesOf(pf);SEL.site=ss.length===1?ss[0].site_id:(ss.some(function(s){return s.site_id===SEL.site})?SEL.site:null);
-  document.querySelectorAll('#w_place .chip').forEach(function(c){c.classList.toggle('on',c.textContent===(PLACES.filter(function(p){return p[0]===pf})[0]||[])[1])});renderLines()}
+  document.querySelectorAll('#w_place .chip').forEach(function(c){c.classList.toggle('on',c.getAttribute('data-place')===pf)});renderLines()}
 function renderLines(){var ss=SEL.place?sitesOf(SEL.place):[];
   el('lineBox').classList.toggle('hide',ss.length<=1);
   el('w_line').innerHTML=ss.map(function(s){return '<span class="chip'+(s.site_id===SEL.site?' on':'')+'" onclick="pickLine(\''+esc(s.site_id)+'\')">'+esc(lineLabel(s))+'</span>'}).join('');
@@ -1541,9 +1601,14 @@ async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDay
   var r=await sb.rpc('lead_deployment',{p_date:DP.date});
   if(r.error||!r.data||!r.data.ok){el('dpBlocks').innerHTML='';el('dpMsg').innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
   var d=r.data;var parts=(d.partners&&d.partners.length)?d.partners:[{partner:'전체',partner_id:'all',n:d.total,groups:d.groups||[]}];
-  el('dpBlocks').innerHTML=parts.map(function(pt,i){var lines=[kdate(d.date)+' 투입현황 — '+pt.partner];
+  el('dpBlocks').innerHTML=parts.map(function(pt,i){
+    var lines=[
+      kdate(d.date)+' 투입현황',
+      (pt.partner||'전체')+' / 총 '+pt.n+'명'
+    ];
     (pt.groups||[]).forEach(function(g){
       if(g.project==='휴무')return;
+      lines.push('');
       lines.push('['+g.project+'] '+g.n+'명');
       var pMap={};
       (g.sites||[]).forEach(function(s){
@@ -1557,11 +1622,12 @@ async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDay
         }
       });
       Object.keys(pMap).forEach(function(pl){
-        lines.push('· '+pl+' — '+pMap[pl].join(', '));
+        lines.push(' '+pl+': '+pMap[pl].join(', '));
       });
     });
-    lines.push('총 '+pt.n+'명');
-    return '<div class="dpblk"><h3>'+esc(pt.partner)+' <span class="pill b">'+pt.n+'명</span></h3><pre id="dpText'+i+'" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0">'+esc(lines.join('\n'))+'</pre><div class="row2" style="margin-top:8px"><button class="btn" onclick="copyText(\'dpText'+i+'\')">복사</button><button class="btn p" onclick="shareText(\'dpText'+i+'\',\'투입현황 '+esc(pt.partner)+'\')">카톡으로 공유</button></div></div>'}).join('');
+    var reportText=lines.join('\n').trim();
+    return '<div class="dpblk"><h3>'+esc(pt.partner)+' <span class="pill b">'+pt.n+'명</span></h3><pre id="dpText'+i+'" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0">'+esc(reportText)+'</pre><div class="row2" style="margin-top:8px"><button class="btn" onclick="copyText(\'dpText'+i+'\')">복사</button><button class="btn p" onclick="shareText(\'dpText'+i+'\',\'투입현황 '+esc(pt.partner)+'\')">카톡으로 공유</button></div></div>';
+  }).join('');
   el('dpMsg').textContent='';
   el('dpN').textContent=(d.rows||[]).length+'명';
   el('dpRows').innerHTML=(d.rows||[]).map(function(x){return '<div class="item"><div class="m"><div class="s">'+esc(x.name)+' <span class="pill '+(x.status==='submitted'?'b':x.status==='approved'?'g':'')+'">'+esc((STMAP[x.status]||[x.status])[0])+'</span></div><div class="t">'+esc(x.site||'')+' · '+esc(x.project)+(x.partner?' · '+esc(x.partner):'')+(x.start?' · '+hhmm(x.start)+' 시작':'')+'</div></div><div class="r"><b>'+(+x.md||0).toFixed(1)+'</b><small class="dim">'+((+x.ot)>0?'+'+x.ot+'h':'공수')+'</small></div></div>'}).join('')||'<div class="empty">기록 없음</div>';
@@ -1899,7 +1965,7 @@ async function leaveCancel(id){if(!confirm('이 신청을 취소할까요?'))ret
   var r=await sb.rpc('my_absence_cancel',{p_id:id});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('신청을 취소했습니다','g');leaveLoad()}
-function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});window.scrollTo(0,0);
+function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){var on=(t.dataset.p===p);t.classList.toggle('on',on);if(on&&typeof t.scrollIntoView==='function'){try{t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}catch(e){}}});window.scrollTo(0,0);
   if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
