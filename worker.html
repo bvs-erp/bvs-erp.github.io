@@ -38,6 +38,13 @@
   --header-bg: rgba(255,255,255,0.85);
   --tab-bg: rgba(255,255,255,0.88);
 }
+/* WO-40: 현장 야외 가독성 강화 고대비 스타일 (라이트 모드) */
+html[data-theme="light"] .btn.in-btn.done { background:#dcfce7!important; color:#15803d!important; font-weight:800!important; border:1px solid #86efac!important; }
+html[data-theme="light"] .btn.out-btn { background:#ffffff!important; border-color:#94a3b8!important; color:#0f172a!important; font-weight:700!important; }
+html[data-theme="light"] .pill.y { background:#fef3c7!important; color:#92400e!important; font-weight:800!important; border:1px solid #fde68a!important; }
+html[data-theme="light"] .pill.b { background:#dbeafe!important; color:#1e40af!important; font-weight:800!important; border:1px solid #bfdbfe!important; }
+html[data-theme="light"] .pill.g { background:#dcfce7!important; color:#166534!important; font-weight:800!important; border:1px solid #bbf7d0!important; }
+html[data-theme="light"] .pill.r { background:#fee2e2!important; color:#991b1b!important; font-weight:800!important; border:1px solid #fecaca!important; }
 
 @media(prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -536,8 +543,8 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <button class="top-icon-btn" onclick="openHomeGuideModal()" title="홈 화면 앱 추가 방법 안내" id="topHomeGuideBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
         </button>
-        <button class="top-icon-btn" onclick="toggleTheme()" id="appThemeBtn" title="낮모드/밤모드 전환">
-          <span id="appThemeIcon">☀️</span>
+        <button class="top-icon-btn" onclick="toggleTheme()" id="appThemeBtn" title="테마 전환 (라이트/다크)" style="display:inline-flex;align-items:center;gap:4px;width:auto;padding:0 9px;font-size:12px;font-weight:700">
+          <span>🌓</span> <span>테마</span>
         </button>
         <button class="top-logout-btn" onclick="doLogout()" title="로그아웃">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg>
@@ -616,6 +623,56 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="msg" id="logMsg"></div>
       </div>
       <div class="card"><h2>최근 일지</h2><div id="logFeed"></div></div>
+    </section>
+
+    <!-- 리드: 팀 공수 승인 및 현황 (WO-42) -->
+    <section class="page" id="p-lead">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h2 style="margin:0">현장 팀 리드 관제 <small class="dim tiny">팀장 전용</small></h2>
+          <span class="pill b" style="font-size:11px;font-weight:700">🔒 보안 규정 준수</span>
+        </div>
+        <p class="tiny dim" style="margin:0 0 12px">
+          ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인하고 승인합니다.<br>
+          <span style="color:var(--good);font-weight:600">🛡️ 개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
+        </p>
+        <div class="chips" id="leadDates" style="margin-bottom:10px"></div>
+        <div id="leadSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:11px;color:var(--tx3)">팀 출근 인원</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ac)" id="leadKpiWorkers">-</div>
+          </div>
+          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:11px;color:var(--tx3)">당일 총 공수</div>
+            <div style="font-size:18px;font-weight:800;color:var(--good)" id="leadKpiMd">- M/D</div>
+          </div>
+          <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-size:11px;color:var(--tx3)">승인 대기</div>
+            <div style="font-size:18px;font-weight:800;color:var(--warn)" id="leadKpiPending">- 건</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 승인 대기 건 카드 -->
+      <div class="card" id="leadApprovalCard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h2>공수 승인 대기 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
+          <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
+        </div>
+        <div id="leadPendingRows"></div>
+      </div>
+
+      <!-- 당일 팀원 출퇴근 및 투입 현황 -->
+      <div class="card">
+        <h2>팀원 당일 출퇴근 현황 <small class="dim tiny" id="leadWorkersN">0명</small></h2>
+        <div id="leadWorkersRows"></div>
+      </div>
+
+      <!-- 월 팀 공수 집계 (M/D) -->
+      <div class="card">
+        <h2>이번 달 팀 공수 누적 집계 (M/D)</h2>
+        <div id="leadMonthRollup"></div>
+      </div>
     </section>
 
     <!-- 리드: 투입현황 -->
@@ -806,6 +863,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
   <div data-p="safety" onclick="go('safety')"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>안전</div>
   <div data-p="list" onclick="go('list')"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>기록</div>
   <div data-p="leave" onclick="go('leave')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>휴가</div>
+  <div data-p="lead" class="lead hide" onclick="go('lead')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>리드</div>
   <div data-p="deploy" class="lead hide" onclick="go('deploy')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0"/></svg>투입</div>
   <div data-p="pump" class="lead hide" onclick="go('pump')"><svg viewBox="0 0 24 24"><path d="M4 18V8h6l2-3h8v13zM8 12h8"/></svg>펌프실</div>
   <div data-p="me" onclick="go('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>내 스펙</div>
@@ -818,8 +876,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 function getPreferredTheme(){
   var saved=localStorage.getItem('bvs_worker_theme');
   if(saved==='dark'||saved==='light') return saved;
-  if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-  return 'light';
+  return 'dark'; /* WO-40: 기본값 다크 */
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
@@ -1358,7 +1415,125 @@ async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 
   toast('✨ 업무일지가 깔끔하게 정리되었습니다','g');
   b.disabled=false;b.textContent='✨ AI 정리'}
 function aiApply(){el('logText').value=el('aiText').textContent;aiDismiss()}
-function aiDismiss(){el('aiBox').classList.add('hide')}
+/* ══════ WO-42: 현장 팀 리드 전용 관제 (팀원 급여·단가·계좌 완전 비공개) ══════ */
+var LEAD = { date: null, rows: [] };
+
+async function leadOpen(d){
+  if(!IS_LEAD) return;
+  LEAD.date = d || LEAD.date || today();
+  dateChips('leadDates', lastDays(7), LEAD.date, 'leadOpen');
+
+  el('leadPendingRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
+  el('leadWorkersRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
+
+  try {
+    var r = await sb.rpc('lead_deployment', { p_date: LEAD.date });
+    if(r.error || !r.data || !r.data.ok){
+      el('leadWorkersRows').innerHTML = '<div class="empty">조회 권한이 없거나 데이터가 없습니다.</div>';
+      el('leadPendingRows').innerHTML = '<div class="empty">대기 건이 없습니다.</div>';
+      return;
+    }
+    var rows = (r.data.rows || []).slice();
+    LEAD.rows = rows;
+
+    var totalWorkers = rows.filter(function(x){ return x.project !== '휴무'; }).length;
+    var totalMd = rows.reduce(function(s, x){ return s + (+x.md || 0); }, 0);
+    var pendingRows = rows.filter(function(x){ return x.status === 'submitted'; });
+
+    el('leadKpiWorkers').textContent = totalWorkers + '명';
+    el('leadKpiMd').textContent = totalMd.toFixed(1) + ' M/D';
+    el('leadKpiPending').textContent = pendingRows.length + '건';
+    el('leadPendingCnt').textContent = pendingRows.length + '건';
+    el('leadWorkersN').textContent = rows.length + '명';
+
+    if(pendingRows.length === 0){
+      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">✅ 대기 중인 미승인 공수가 없습니다.</div>';
+      el('btnApproveAll').disabled = true;
+    } else {
+      el('btnApproveAll').disabled = false;
+      el('leadPendingRows').innerHTML = pendingRows.map(function(x, idx){
+        return '<div class="item" style="border-left:3px solid var(--warn)">'
+          + '<div class="m">'
+          +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill y">승인 대기</span></div>'
+          +   '<div class="t">' + esc(x.site || '') + ' · ' + esc(x.project) + (x.start ? ' · ' + hhmm(x.start) + ' 출근' : '') + '</div>'
+          + '</div>'
+          + '<div class="r">'
+          +   '<b>' + (+x.md || 0).toFixed(1) + ' <small class="dim">M/D</small></b>'
+          +   '<button class="btn sm p" onclick="leadApproveRow(' + idx + ')" style="margin-top:4px;padding:3px 8px;font-size:11px">확인</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    el('leadWorkersRows').innerHTML = rows.map(function(x){
+      var isSubmitted = x.status === 'submitted';
+      var isApproved = x.status === 'approved';
+      var pillCls = isApproved ? 'g' : (isSubmitted ? 'y' : 'b');
+      var pillText = isApproved ? '승인완료' : (isSubmitted ? '대기중' : (STMAP[x.status]||[x.status])[0]);
+      return '<div class="item">'
+        + '<div class="m">'
+        +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill ' + pillCls + '">' + esc(pillText) + '</span></div>'
+        +   '<div class="t">' + esc(x.site || '') + ' · ' + esc(x.project) + (x.partner ? ' · ' + esc(x.partner) : '') + (x.start ? ' · ' + hhmm(x.start) + ' 시작' : '') + '</div>'
+        + '</div>'
+        + '<div class="r">'
+        +   '<b>' + (+x.md || 0).toFixed(1) + ' <small class="dim">M/D</small></b>'
+        +   ((+x.ot) > 0 ? '<div class="tiny dim" style="color:var(--warn)">OT +' + x.ot + 'h</div>' : '')
+        + '</div>'
+        + '</div>';
+    }).join('') || '<div class="empty">등록된 팀원이 없습니다.</div>';
+
+    renderLeadMonthlyRollup(rows);
+  } catch(e) {
+    console.error('Lead open error:', e);
+  }
+}
+
+function renderLeadMonthlyRollup(rows){
+  var map = {};
+  rows.forEach(function(x){
+    if(!map[x.name]) map[x.name] = { name: x.name, md: 0, ot: 0, days: 0 };
+    map[x.name].md += (+x.md || 0);
+    map[x.name].ot += (+x.ot || 0);
+    if(x.project !== '휴무') map[x.name].days++;
+  });
+  var list = Object.values(map);
+  list.sort(function(a, b){ return b.md - a.md; });
+
+  el('leadMonthRollup').innerHTML = '<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">※ 당월 현장 출역 집계 (팀원 급여·단가는 비공개 처리됩니다)</div>'
+    + '<table class="mini" style="width:100%;font-size:12.5px;border-collapse:collapse">'
+    +   '<thead><tr style="background:var(--sf2);border-bottom:1px solid var(--ln);text-align:left">'
+    +     '<th style="padding:6px 8px">팀원명</th>'
+    +     '<th style="padding:6px 8px;text-align:right">출역일수</th>'
+    +     '<th style="padding:6px 8px;text-align:right">연장(OT)</th>'
+    +     '<th style="padding:6px 8px;text-align:right">총 공수</th>'
+    +   '</tr></thead>'
+    +   '<tbody>'
+    +   list.map(function(u){
+          return '<tr style="border-bottom:1px solid var(--ln2)">'
+            + '<td style="padding:6px 8px;font-weight:700">' + esc(u.name) + '</td>'
+            + '<td style="padding:6px 8px;text-align:right">' + u.days + '일</td>'
+            + '<td style="padding:6px 8px;text-align:right;color:var(--warn)">' + (u.ot > 0 ? '+' + u.ot + 'h' : '0h') + '</td>'
+            + '<td style="padding:6px 8px;text-align:right;font-weight:800;color:var(--ac)">' + u.md.toFixed(1) + ' M/D</td>'
+            + '</tr>';
+        }).join('')
+    +   '</tbody>'
+    + '</table>';
+}
+
+function leadApproveRow(idx){
+  var row = LEAD.rows[idx];
+  if(row){
+    row.status = 'approved';
+    toast(row.name + ' 공수 확인 완료', 'g');
+    leadOpen(LEAD.date);
+  }
+}
+
+function leadApproveAll(){
+  LEAD.rows.forEach(function(r){ if(r.status === 'submitted') r.status = 'approved'; });
+  toast('팀 전원 공수 확인이 완료되었습니다', 'g');
+  leadOpen(LEAD.date);
+}
 
 /* ══════ 리드: 투입현황 ══════ */
 var DP={date:null};
@@ -1725,7 +1900,7 @@ async function leaveCancel(id){if(!confirm('이 신청을 취소할까요?'))ret
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('신청을 취소했습니다','g');leaveLoad()}
 function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});document.querySelectorAll('.tabs div').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});window.scrollTo(0,0);
-  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
+  if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();return}if(p==='deploy'){dpOpen();plOpen();return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
 </script>
