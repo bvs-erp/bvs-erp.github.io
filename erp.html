@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.49 · 대표 콕핏</title>
+<title>BVS ERP v1.50 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.49</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.50</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1747,7 +1747,7 @@ var PAGE_KEYS={
 var LQ={gen:0,queue:[],fns:{},done:{},busy:0,errs:[],t0:0,rendered:{},waiters:[],heavy:0};
 /* 무거운 뷰: 동시에 몰리면 DB 가 포화돼 각각 수 초~타임아웃(2026-09-25 03:37 실측) → 동시에 최대 2개 */
 var HEAVY_KEYS={dash:1,set:1,pay:1,al:1,intg:1,retro:1,lm:1,ldr:1,sdm:1,gap:1,tro:1,pcash:1,payp:1,mrev:1,mrevl:1,stl:1,bunm:1,card:1,ht:1,roster:1,pjs:1,lrv:1,att:1};
-var HEAVY_MAX=2;
+var HEAVY_MAX=1;
 function lqPageKeys(p){return (PAGE_KEYS._global||[]).concat(PAGE_KEYS[p]||[])}
 function lqBump(p){if(!LOADING)return;var want={};lqPageKeys(p).forEach(function(k){want[k]=1});
   var a=LQ.queue.filter(function(k){return want[k]}),b=LQ.queue.filter(function(k){return !want[k]});LQ.queue=a.concat(b)}
@@ -2075,7 +2075,7 @@ async function renderGroupPlSummary(){
     var sb = (typeof window.sbClient === 'function' ? window.sbClient() : window.sb) || window.supabase;
     if(!sb) return;
 
-    if(LOADING) return;   // 전체 조회가 끝난 뒤 한 번만(무거운 조회 2개가 다른 조회와 겹치지 않게)
+    if(LOADING||!LQ.gen) return;   // 전체 조회가 끝난 뒤 한 번만(무거운 조회 2개가 다른 조회와 겹치지 않게)
     var ymK = M(), cached = GPL_CACHE[ymK];
     if(!cached){
       if(GPL_CACHE['_busy_'+ymK]) return;
@@ -2335,11 +2335,14 @@ function hdLog(v,r){var t=r.work_log||'';if(!t)return '<span class="dim">'+esc(r
 async function renderHomeDay(day,isToday){
   var my=++HDAY.seq, m=String(day||'').slice(0,7);
   var box=el('gHomeAtt'); if(!box||!day)return;
-  var dr=await sb.from('ceo_labor_month').select('entry_id,work_date,person_name,site_name,work_start,work_end,work_md,ot_hours,status,source,work_desc,work_log,pay_amt,cost_amt,revenue_amt,margin_amt').eq('work_date',day).neq('status','void').order('site_name').limit(500);
+  if(!LQ.gen)return;   // 첫 조회 시작 전 초기 화면에서는 쏘지 않음
+  HDAY.cache=HDAY.cache||{};var ck=day+'@'+LQ.gen;
+  if(!HDAY.cache[ck])HDAY.cache[ck]=sb.from('ceo_labor_month').select('entry_id,work_date,person_name,site_name,work_start,work_end,work_md,ot_hours,status,source,work_desc,work_log,pay_amt,cost_amt,revenue_amt,margin_amt').eq('work_date',day).neq('status','void').order('site_name').limit(500).then(function(x){return x});
+  var dr=await HDAY.cache[ck];if(dr&&dr.error)delete HDAY.cache[ck];
   if(my!==HDAY.seq)return;
   if(dr.error){toast(dr.error.message,'e');return}
   var rows=(dr.data||[]).map(function(r){r._st=(r.work_start&&r.work_end)?2:(r.work_start?1:0);return r});
-  var mrows=calRows(m); if(!mrows){try{mrows=await calFetch(m)}catch(e){mrows=[]}}
+  var mrows=calRows(m); if(!mrows&&m===M()&&LQ.done&&LQ.done.lm)mrows=D.lm; if(!mrows){try{mrows=await calFetch(m)}catch(e){mrows=[]}}
   if(my!==HDAY.seq)return;
   mrows=(mrows||[]).filter(function(r){return r.status!=='void'&&r.work_date<=day});
   var rev=sum(rows,'revenue_amt'),cost=sum(rows,'cost_amt'),mg=sum(rows,'margin_amt');
