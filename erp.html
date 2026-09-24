@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.37 · 대표 콕핏</title>
+<title>BVS ERP v1.38 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.37</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.38</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -823,6 +823,9 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="chart" id="chPl" style="margin-bottom:16px"></div>
       <div class="sec"><div class="tb" id="gPl"></div></div>
       <div class="sec"><h3>가지급금 인정이자 (Tax-Risk)</h3><div class="tb" id="gDi"></div></div>
+      <div class="sec" id="sec-gMj"><h3>수기 전표 <span class="cnt" id="mjN"></span><span class="r"><button class="btn sm p" onclick="mjNew()">+ 전표 추가</button></span></h3><div class="tb" id="gMj"></div></div>
+      <div class="sec" id="sec-gLn"><h3>대표 가지급·가수 약정 <span class="r"><button class="btn sm" onclick="lnNew()">+ 약정 추가</button> <button class="btn sm" onclick="loNew()">+ 상계 등록</button></span></h3>
+        <div class="tb" id="gLnc"></div><h4 style="margin:14px 0 6px">상계</h4><div class="tb" id="gLno"></div></div>
       <div class="sec" id="sec-gAcct"><h3>계정과목 <span class="r"><button class="btn sm" onclick="acctNew()">+ 계정 추가</button></span></h3><div class="tb" id="gAcctM"></div></div>
     </section>
 
@@ -1070,6 +1073,10 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="al-filters" id="alTabs"></div>
       <div id="alerts" style="margin-bottom:18px"></div>
       <div class="sec hide" id="alDetSec"><h3 id="alDetT">상세</h3><div class="desc" id="alDetD" style="margin-bottom:8px"></div><div class="tb" id="gAlDet"></div></div>
+      <div class="sec" id="sec-rp"><h3>특수관계 거래 소명 <span class="cnt" id="rpN"></span></h3>
+        <div class="tb" id="gRpOpen"></div>
+        <h4 style="margin:14px 0 6px">소명 기록 <span class="cnt" id="rpgN"></span></h4>
+        <div class="tb" id="gRpReg"></div></div>
       <div class="sec"><h3>무결성 점검 12종 <span class="tiny dim" style="font-weight:400">DB 차원의 정합성 점검</span></h3><div class="tb" id="gIntg"></div></div>
     </section>
   </main>
@@ -1723,6 +1730,11 @@ async function loadAll(){
     ['sdm',function(){return sb.from('ceo_sd_month').select('*')}],
     ['gap',function(){return sb.from('ceo_sd_fi_gap').select('*').limit(300)}],
     ['di',function(){return sb.from('ceo_deemed_interest').select('*').order('yr')}],
+    ['tro',function(){return sb.from('ceo_tax_risk_open').select('*').order('risk_date',{ascending:false}).limit(2000)}],
+    ['trg',function(){return sb.from('ceo_tax_risk_register').select('*').order('confirmed_on',{ascending:false}).limit(2000)}],
+    ['mj',function(){return sb.from('ceo_journals_manual').select('*').order('journal_date',{ascending:false}).limit(3000)}],
+    ['lnc',function(){return sb.from('ceo_loan_contracts').select('*').order('start_on',{ascending:false})}],
+    ['lno',function(){return sb.from('ceo_loan_offsets').select('*').order('offset_on',{ascending:false})}],
     ['tr',function(){return sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)}],
     ['uacc',function(){return sb.rpc('ceo_erp_accounts')}],
     ['uorp',function(){return sb.rpc('ceo_erp_orphans')}],
@@ -4051,6 +4063,7 @@ async function acctNew(){
 }
 function renderPl(){
   renderAcctM();
+  try{renderMj();renderLn()}catch(e){console.error(e)}
   var t={};D.dash.forEach(function(r){var y=String(r.period_ym).slice(0,4);t[y]=t[y]||{rev:0,op:0};t[y].rev+=+r.revenue_amt||0;t[y].op+=+r.operating_profit||0});
   var ys=Object.keys(t).sort().reverse();
   el('plKpi').innerHTML=ys.map(function(y,i){
@@ -4816,6 +4829,88 @@ function settlePrint(emp){var me=(D.staff||[]).filter(function(x){return x.emplo
     +'<table>'+body+'</table>'
     +'<div class="sg">'+d.slice(0,4)+'년 '+d.slice(5,7)+'월 '+d.slice(8,10)+'일<br>성명 '+esc(me.name||'')+' (서명)</div></body></html>');
   w.document.close();setTimeout(function(){w.print()},300)}
+/* ══════ B4 특수관계 거래 소명 ══════ */
+var RPK={voucher:'전표',bank:'통장',labor_cost_bearer:'공수 부담',pay_rate:'단가 부담'};
+function renderRp(){if(!el('gRpOpen'))return;var sec=el('sec-rp');if(!isOwner()){sec.style.display='none';return}sec.style.display='';
+  var op=D.tro||[],rg=D.trg||[];el('rpN').textContent=op.length?op.length+'건 미소명':'';el('rpgN').textContent=rg.length?rg.length+'건':'';
+  op.forEach(function(r){r._k=RPK[r.risk_kind]||r.risk_kind});
+  grid('gRpOpen',[{k:'risk_date',t:'일자',l:1},{k:'_k',t:'원천',l:1},{k:'from_entity',t:'보낸 쪽',l:1},{k:'to_entity',t:'받은 쪽',l:1},{k:'amount',t:'금액',f:'won',sum:1},{k:'detail',t:'내용',l:1,cls:'tiny'},{k:'legal_basis',t:'근거 조문',l:1,cls:'tiny dim'}],
+    {rows:op,q:['detail','from_entity','to_entity','risk_key'],qph:'내용·엔티티',chips:[{k:'_k',vals:[['','전체']].concat(Object.keys(by(op,'_k')).sort().map(function(x){return [x,x]}))}],foot:true,page:40,onRow:rpOpen,sort:{k:'risk_date',d:-1},empty:'미소명 건 없음'});
+  rg.forEach(function(r){r._k=RPK[r.risk_kind]||r.risk_kind});
+  grid('gRpReg',[{k:'confirmed_on',t:'확인일',l:1},{k:'_k',t:'원천',l:1},{k:'risk_key',t:'대상',l:1,cls:'tiny dim'},{k:'amount',t:'금액',f:'won'},{k:'reason',t:'명목',l:1},{k:'repay_plan',t:'상환계획',l:1,cls:'tiny'},{k:'evidence_url',t:'증빙',l:1,f:function(v){return v?(/^https?:\/\//.test(v)?'<a href="'+esc(v)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">열기</a>':esc(v)):''}},{k:'expires_on',t:'만료',l:1}],
+    {rows:rg,q:['reason','risk_key','repay_plan','memo'],qph:'명목·대상',page:40,onRow:rpOpen,empty:'소명 기록 없음'});
+}
+function rpForm(r){return '<div class="fr"><div class="f"><label>명목</label><input id="rp_reason" class="in" value="'+esc(r.reason||'')+'"></div><div class="f"><label>확인일</label><input id="rp_on" class="in" type="date" value="'+esc(r.confirmed_on||today())+'"></div></div>'
+  +'<div class="f"><label>증빙 링크</label><input id="rp_url" class="in" value="'+esc(r.evidence_url||'')+'"></div>'
+  +'<div class="f"><label>상환계획</label><input id="rp_plan" class="in" value="'+esc(r.repay_plan||'')+'"></div>'
+  +'<div class="fr"><div class="f"><label>만료일</label><input id="rp_exp" class="in" type="date" value="'+esc(r.expires_on||'')+'"></div><div class="f"><label>메모</label><input id="rp_memo" class="in" value="'+esc(r.memo||'')+'"></div></div>'}
+function rpOpen(r){var reg=!!r.register_id;window._RP=r;
+  var body=kv([['원천',esc(RPK[r.risk_kind]||r.risk_kind)],['대상',esc(r.risk_key)],['일자',esc(r.risk_date||'')],['엔티티',esc((r.from_entity||'–')+' → '+(r.to_entity||'–'))],['금액',won(r.amount)],['내용',esc(r.detail||'')],['근거 조문',esc(r.legal_basis||'')]])
+    +'<h4 style="margin:14px 0 6px">소명</h4>'+rpForm(r)
+    +'<button class="btn sm p" onclick="rpSave()">'+(reg?'저장':'소명 등록')+'</button>'+(reg?' <button class="btn sm" onclick="rpUndo('+r.register_id+')">소명 취소</button>':'');
+  drOpen('특수관계 거래 소명',body,'<button class="btn" onclick="drClose()">닫기</button>')}
+async function rpSave(){var r=window._RP||{};var p={reason:(el('rp_reason').value||'').trim(),confirmed_on:el('rp_on').value,evidence_url:(el('rp_url').value||'').trim(),repay_plan:(el('rp_plan').value||'').trim(),expires_on:el('rp_exp').value,memo:(el('rp_memo').value||'').trim()};
+  if(!p.reason){toast('명목을 넣으세요','e');return}
+  if(r.register_id)p.register_id=r.register_id;else{p.risk_kind=r.risk_kind;p.risk_key=r.risk_key;p.from_entity=r.from_entity||'';p.to_entity=r.to_entity||'';p.amount=r.amount}
+  var x=await sb.rpc('ceo_tax_risk_confirm',{p:p});rpcDone(x,'소명 저장')}
+async function rpUndo(id){var ok=await ask('소명 취소','이 소명 기록을 지우면 해당 건이 다시 경보에 나옵니다.',{ok:'취소하기',danger:true});if(!ok)return;var x=await sb.rpc('ceo_tax_risk_unconfirm',{p_register_id:id});rpcDone(x,'소명을 취소했습니다')}
+
+/* ══════ B5 수기 전표 ══════ */
+function renderMj(){if(!el('gMj'))return;var sec=el('sec-gMj');if(!isOwner()){sec.style.display='none';return}sec.style.display='';
+  var g={};(D.mj||[]).forEach(function(l){var j=g[l.journal_no]=g[l.journal_no]||{journal_no:l.journal_no,journal_date:l.journal_date,journal_memo:l.journal_memo,status:l.status,source_kind:l.source_kind,lines:[],dr:0,cr:0,_acc:[]};j.lines.push(l);j.dr+=+l.debit_amt||0;j.cr+=+l.credit_amt||0;if(j._acc.indexOf(l.account_name||l.account_code)<0)j._acc.push(l.account_name||l.account_code)});
+  var rows=Object.keys(g).map(function(k){var j=g[k];j.accs=j._acc.join(' · ');j._st=j.status==='void'?'void':'ok';return j});
+  el('mjN').textContent=rows.filter(function(r){return r._st==='ok'}).length+'건';
+  grid('gMj',[{k:'journal_date',t:'일자',l:1},{k:'journal_no',t:'번호',l:1,cls:'dim'},{k:'journal_memo',t:'적요',l:1},{k:'accs',t:'계정',l:1,cls:'tiny'},{k:'dr',t:'금액',f:'won'},{k:'_st',t:'상태',l:1,f:function(v){return v==='void'?'<span class="dim">취소</span>':''}}],
+    {rows:rows,q:['journal_no','journal_memo','accs'],qph:'번호·적요·계정',chips:[{k:'_st',vals:[['','전체'],['ok','유효'],['void','취소']]}],page:40,onRow:mjOpen,sort:{k:'journal_date',d:-1},empty:'수기 전표 없음'});
+}
+function mjOpen(j){var body=kv([['번호',esc(j.journal_no)],['일자',esc(j.journal_date)],['적요',esc(j.journal_memo||'')],['상태',j.status==='void'?'취소':'유효']])
+  +'<table style="width:100%;margin-top:10px"><thead><tr><th class="l">계정</th><th class="l">거래처</th><th class="l">메모</th><th>차변</th><th>대변</th></tr></thead><tbody>'
+  +j.lines.sort(function(a,b){return a.line_no-b.line_no}).map(function(l){return '<tr><td class="l">'+esc(l.account_code)+' '+esc(l.account_name||'')+'</td><td class="l">'+esc(l.partner_name||'')+'</td><td class="l tiny dim">'+esc(l.line_memo||'')+'</td><td>'+(+l.debit_amt?won(l.debit_amt):'')+'</td><td>'+(+l.credit_amt?won(l.credit_amt):'')+'</td></tr>'}).join('')
+  +'<tr><td class="l" colspan="3"><b>합계</b></td><td><b>'+won(j.dr)+'</b></td><td><b>'+won(j.cr)+'</b></td></tr></tbody></table>';
+  var foot='<button class="btn" onclick="drClose()">닫기</button>'+(j.source_kind==='manual.ceo'&&j.status!=='void'?' <button class="btn d" onclick="mjVoid(\''+esc(j.journal_no)+'\')">전표 취소</button>':'');
+  drOpen('수기 전표',body,foot)}
+function acctOpts(cur){return '<option value=""></option>'+(D.acct||[]).filter(function(a){return a.is_active!==false}).slice().sort(function(a,b){return String(a.account_code).localeCompare(String(b.account_code))}).map(function(a){return '<option value="'+esc(a.account_code)+'"'+(a.account_code===cur?' selected':'')+'>'+esc(a.account_code)+' '+esc(a.account_name)+'</option>'}).join('')}
+function mjLineHtml(i){return '<tr data-i="'+i+'"><td><select class="sel mj_a" style="width:100%">'+acctOpts('')+'</select></td><td><select class="sel mj_p" style="width:100%"><option value=""></option>'+(D.ptn||[]).map(function(p){return '<option value="'+esc(p.partner_id)+'">'+esc(p.name)+'</option>'}).join('')+'</select></td><td><input class="in mj_m"></td><td><input class="in mj_d" type="number" step="1" oninput="mjSum()"></td><td><input class="in mj_c" type="number" step="1" oninput="mjSum()"></td></tr>'}
+function mjNew(){var body='<div class="fr"><div class="f"><label>전표일</label><input id="mj_date" class="in" type="date" value="'+today()+'"></div><div class="f"><label>적요</label><input id="mj_memo" class="in"></div></div>'
+  +'<table style="width:100%"><thead><tr><th class="l">계정</th><th class="l">거래처</th><th class="l">메모</th><th>차변</th><th>대변</th></tr></thead><tbody id="mj_lines">'+mjLineHtml(0)+mjLineHtml(1)+'</tbody><tfoot><tr><td colspan="3" class="l"><button class="btn sm" onclick="mjAddLine()">+ 줄</button></td><td id="mj_dr"></td><td id="mj_cr"></td></tr></tfoot></table>'
+  +'<button class="btn sm p" style="margin-top:8px" onclick="mjSave()">전표 저장</button>';
+  drOpen('수기 전표 추가',body,'<button class="btn" onclick="drClose()">닫기</button>');mjSum()}
+function mjAddLine(){var tb=el('mj_lines');tb.insertAdjacentHTML('beforeend',mjLineHtml(tb.children.length))}
+function mjLines(){return Array.prototype.map.call(el('mj_lines').children,function(tr){return {account_code:tr.querySelector('.mj_a').value,partner_id:tr.querySelector('.mj_p').value,memo:(tr.querySelector('.mj_m').value||'').trim(),debit_amt:Math.round(+tr.querySelector('.mj_d').value||0),credit_amt:Math.round(+tr.querySelector('.mj_c').value||0)}}).filter(function(l){return l.account_code||l.debit_amt||l.credit_amt})}
+function mjSum(){var ls=mjLines(),d=0,c=0;ls.forEach(function(l){d+=l.debit_amt;c+=l.credit_amt});if(el('mj_dr'))el('mj_dr').innerHTML=won(d);if(el('mj_cr'))el('mj_cr').innerHTML=(d!==c?'<span class="neg">'+won(c)+'</span>':won(c));return {d:d,c:c,ls:ls}}
+async function mjSave(){var s=mjSum();
+  if(s.ls.length<2){toast('줄이 2개 이상이어야 합니다','e');return}
+  if(s.ls.some(function(l){return !l.account_code||(l.debit_amt>0)===(l.credit_amt>0)||l.debit_amt<0||l.credit_amt<0})){toast('각 줄에 계정과 차변 또는 대변 한쪽 금액을 넣으세요','e');return}
+  if(s.d!==s.c){toast('차변 합계와 대변 합계가 다릅니다','e');return}
+  var x=await sb.rpc('ceo_journal_add',{p:{journal_date:el('mj_date').value,memo:(el('mj_memo').value||'').trim(),lines:s.ls}});rpcDone(x,'전표 저장')}
+async function mjVoid(no){var ok=await ask('전표 취소',no+' 전표를 취소합니다.',{ok:'취소하기',danger:true});if(!ok)return;var x=await sb.rpc('ceo_journal_void',{p_journal_no:no});rpcDone(x,'전표를 취소했습니다')}
+
+/* ══════ B6 대표 가지급·가수 약정·상계 ══════ */
+var LND={advance:'가지급 (회사→대표)',deposit:'가수·대여 (대표→회사)'};
+function renderLn(){if(!el('gLnc'))return;var sec=el('sec-gLn');if(!isOwner()){sec.style.display='none';return}sec.style.display='';
+  var lc=(D.lnc||[]).map(function(r){r._d=LND[r.direction]||r.direction;r._r=r.rate==null?'':(Math.round(+r.rate*100000)/1000)+'%';return r});
+  grid('gLnc',[{k:'start_on',t:'시작',l:1},{k:'end_on',t:'종료',l:1},{k:'_d',t:'구분',l:1},{k:'principal',t:'원금',f:'won'},{k:'_r',t:'이율',l:1},{k:'repay_plan',t:'상환계획',l:1,cls:'tiny'},{k:'signed_on',t:'서명일',l:1},{k:'doc_ref',t:'서류',l:1,cls:'tiny dim'}],{rows:lc,page:30,onRow:lnOpen,csv:false,empty:'약정 없음'});
+  grid('gLno',[{k:'offset_on',t:'상계일',l:1},{k:'amount',t:'금액',f:'won',sum:1},{k:'journal_no',t:'전표',l:1,cls:'dim'},{k:'doc_ref',t:'서류',l:1,cls:'tiny dim'},{k:'memo',t:'메모',l:1,cls:'tiny'}],{rows:D.lno||[],page:30,csv:false,foot:true,empty:'상계 없음'});
+}
+function lnForm(r){r=r||{};return '<div class="fr"><div class="f"><label>구분</label><select id="ln_dir" class="sel" style="width:100%"'+(r.contract_id?' disabled':'')+'>'+Object.keys(LND).map(function(k){return '<option value="'+k+'"'+(r.direction===k?' selected':'')+'>'+LND[k]+'</option>'}).join('')+'</select></div><div class="f"><label>원금</label><input id="ln_p" class="in" type="number" value="'+esc(r.principal==null?'':r.principal)+'"></div></div>'
+  +'<div class="fr"><div class="f"><label>이율 (%)</label><input id="ln_r" class="in" type="number" step="0.01" value="'+esc(r.rate==null?'':Math.round(+r.rate*100000)/1000)+'"></div><div class="f"><label>서명일</label><input id="ln_sg" class="in" type="date" value="'+esc(r.signed_on||'')+'"></div></div>'
+  +'<div class="fr"><div class="f"><label>시작일</label><input id="ln_s" class="in" type="date" value="'+esc(r.start_on||'')+'"></div><div class="f"><label>종료일</label><input id="ln_e" class="in" type="date" value="'+esc(r.end_on||'')+'"></div></div>'
+  +'<div class="f"><label>상환계획</label><input id="ln_plan" class="in" value="'+esc(r.repay_plan||'')+'"></div>'
+  +'<div class="fr"><div class="f"><label>서류</label><input id="ln_doc" class="in" value="'+esc(r.doc_ref||'')+'"></div><div class="f"><label>메모</label><input id="ln_memo" class="in" value="'+esc(r.memo||'')+'"></div></div>'}
+function lnOpen(r){window._LN=r;drOpen('약정',lnForm(r)+'<button class="btn sm p" onclick="lnSave()">저장</button>','<button class="btn" onclick="drClose()">닫기</button>')}
+function lnNew(){window._LN=null;drOpen('약정 추가',lnForm({})+'<button class="btn sm p" onclick="lnSave()">추가</button>','<button class="btn" onclick="drClose()">닫기</button>')}
+async function lnSave(){var r=window._LN;var rv=el('ln_r').value;var p={principal:el('ln_p').value,rate:rv===''?'':String(+rv/100),start_on:el('ln_s').value,end_on:el('ln_e').value,repay_plan:(el('ln_plan').value||'').trim(),doc_ref:(el('ln_doc').value||'').trim(),signed_on:el('ln_sg').value,memo:(el('ln_memo').value||'').trim()};
+  if(r&&r.contract_id)p.contract_id=r.contract_id;else p.direction=el('ln_dir').value;
+  if(!p.start_on){toast('시작일을 넣으세요','e');return}
+  var x=await sb.rpc('ceo_loan_contract_set',{p:p});rpcDone(x,'약정 저장')}
+function loNew(){var lc=D.lnc||[];drOpen('상계 등록','<div class="fr"><div class="f"><label>상계일</label><input id="lo_on" class="in" type="date" value="'+today()+'"></div><div class="f"><label>금액</label><input id="lo_amt" class="in" type="number" step="1"></div></div>'
+  +'<div class="f"><label>약정</label><select id="lo_ct" class="sel" style="width:100%"><option value=""></option>'+lc.map(function(c){return '<option value="'+c.contract_id+'">'+esc(c.start_on)+' '+esc(LND[c.direction]||c.direction)+(c.principal!=null?' '+Number(c.principal).toLocaleString():'')+'</option>'}).join('')+'</select></div>'
+  +'<div class="fr"><div class="f"><label>서류</label><input id="lo_doc" class="in"></div><div class="f"><label>메모</label><input id="lo_memo" class="in"></div></div>'
+  +'<div class="tiny dim" style="margin:4px 0 8px">전표: (차) Z910 가수금 / (대) Z900 가지급금</div>'
+  +'<button class="btn sm p" onclick="loSave()">상계 등록</button>','<button class="btn" onclick="drClose()">닫기</button>')}
+async function loSave(){var p={offset_on:el('lo_on').value,amount:Math.round(+el('lo_amt').value||0),contract_id:el('lo_ct').value,doc_ref:(el('lo_doc').value||'').trim(),memo:(el('lo_memo').value||'').trim()};
+  if(!p.offset_on||!(p.amount>0)){toast('상계일과 금액을 넣으세요','e');return}
+  var x=await sb.rpc('ceo_loan_offset_add',{p:p});rpcDone(x,'상계 등록')}
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
 async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
@@ -6343,6 +6438,7 @@ function renderAlertCard(r){
 }
 
 function renderAlerts(){
+  try{renderRp()}catch(e){console.error(e)}
   var hot=hotCount(),n=el('alertN');if(n){n.textContent=hot;n.classList.toggle('hide',!hot)}var nm=el('alertNm');if(nm){nm.textContent=hot;nm.classList.toggle('hide',!hot)}
   if(!el('alerts'))return;
 
@@ -6350,7 +6446,7 @@ function renderAlerts(){
   var deemedPayCount = (D.pay||[]).filter(function(r){return ((+r.balance_amt||0)-(mDueMap[r.employment_no]||0))>1000}).length;
   var apOverdueCount = (D.stl||[]).filter(function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)}).length;
   var poOverdueCount = (D.po||[]).filter(function(r){return (+r.age_days||0)>60}).length;
-  var trUnconfCount = (D.tr||[]).filter(function(r){return r.flag||(+r.supply_amt||0)===77000000||(+r.supply_amt||0)===-15000000||String(r.title).includes('감액')}).length;
+  var trUnconfCount = (D.tro||[]).length;
 
   var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
   var all=(D.al||[]).map(function(r){
