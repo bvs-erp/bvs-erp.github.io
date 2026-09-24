@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.51</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.52</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -617,9 +617,9 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
     <div class="ksearch" onclick="cpOpen()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>메뉴·거래처·문서·품목 검색</span><kbd>⌘K</kbd></div>
     <select id="msel" class="sel" onchange="setMonth(this.value)"></select>
     <span class="stamp" id="stamp">–</span>
-    <a href="./ssjg.html" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="주식회사 승승장구컴퍼니 콕핏 이동"><span>🔴</span> SSJG 콕핏</a>
-    <a href="./pyro.html" style="background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="개인사업자 파이로 콕핏 이동"><span>🟢</span> PYRO 콕핏</a>
-    <a href="./worker.html" target="_blank" rel="noopener noreferrer" style="background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="현장 근로자/리드 공수 ERP (새 탭)"><span>👷</span> 공수 ERP</a>
+    <a href="./ssjg.html" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="주식회사 승승장구컴퍼니 콕핏 이동">SSJG 콕핏</a>
+    <a href="./pyro.html" style="background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="개인사업자 파이로 콕핏 이동">PYRO 콕핏</a>
+    <a href="./worker.html" target="_blank" rel="noopener noreferrer" style="background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.3);font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:5px 10px;border-radius:6px;font-size:12px;margin-left:4px" title="현장 근로자/리드 공수 ERP (새 탭)">공수 ERP</a>
     <button class="ibtn" onclick="loadAll()" title="새로고침 (R)"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg></button>
     <button class="btn sm" onclick="toggleTheme()" title="테마 전환 (라이트/다크)" style="font-size:12px;font-weight:600;padding:5px 9px;margin-left:4px">테마</button>
     <button class="ibtn" onclick="doLogout()" title="로그아웃"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg></button>
@@ -650,7 +650,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="kpis" id="homeDayKpi" style="margin-bottom:10px"></div>
         <div class="tb" id="gHomeAtt"></div></div>
       <div class="sec" id="mapSec" style="margin-bottom:16px">
-        <h3><span id="mapTitleText">현장 투입 현황</span> <span class="cnt" id="mapN"></span><span class="r tiny dim" id="mapHint">거점 카드를 누르면 상세 명단이 열립니다</span></h3>
+        <h3><span id="mapTitleText">현장 투입 현황</span> <span class="cnt" id="mapN"></span><span class="r tiny dim" id="mapHint"></span></h3>
         <div id="siteMap"></div>
       </div>
       <div class="grid32">
@@ -730,7 +730,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div id="sdPane_ptn" class="hide">
         <div class="sec">
           <h3>거래처 마스터 <span class="cnt" id="ptnN"></span><button class="btn sm p" style="margin-left:10px" onclick="ptnNew()">+ 거래처 추가</button></h3>
-          <div class="desc" style="margin-bottom:8px">셀을 더블클릭하면 바로 수정됩니다. 인쇄 서식(공급받는자)과 홈택스 자동 연결(사업자번호)에 그대로 쓰입니다.</div>
+          
           <div class="tb" id="gPtn"></div>
         </div>
       </div>
@@ -741,7 +741,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
           <!-- 상단 콕핏 헤더 & 타임라인 셀렉터 -->
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);padding:14px 18px;box-shadow:var(--sh)">
             <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--ac),#0ea5e9);color:#fff;display:grid;place-items:center;font-size:16px;box-shadow:0 2px 6px rgba(30,58,138,0.25)">📊</div>
+              
               <div>
                 <div style="display:flex;align-items:center;gap:8px">
                   <h3 style="margin:0;font-size:16px;letter-spacing:-.01em">월별 실적 AI 듀얼 콕핏</h3>
@@ -767,7 +767,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
                   <span style="font-size:14px;font-weight:700;color:var(--tx)">당월 매출 거래처 실적</span>
                   <span class="cnt" id="sdSalesPtnCnt" style="font-size:12px;font-weight:600;color:var(--info);background:var(--sf);padding:1px 7px;border-radius:10px;border:1px solid var(--ln)"></span>
                 </div>
-                <span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">💡 행 클릭 시 세부 문서 필터</span>
+                <span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">행 클릭 시 세부 문서 필터</span>
               </div>
               <div class="tw" style="max-height:480px" id="gSdSalesPtn"></div>
             </div>
@@ -1131,7 +1131,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.34';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.52';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1713,7 +1713,7 @@ function updateBrandSubtitle(){
   } else if(isPlanning()){
     brandSub.textContent = '비브이에스 · 경영기획팀 📊 (' + (ME.name||'기획') + ')';
   } else if(isEngLead()){
-    brandSub.textContent = '비브이에스 · 엔지니어링 리드 ⚙️ (' + (ME.name||'리드') + ')';
+    brandSub.textContent = '비브이에스 · 엔지니어링 리드 (' + (ME.name||'리드') + ')';
   }
 }
 document.addEventListener('keydown',function(ev){
@@ -2113,7 +2113,7 @@ async function renderGroupPlSummary(){
       <div class="card" style="padding:16px 20px;border-left:4px solid var(--ac);box-shadow:var(--sh)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:16px">🌐</span>
+            
             <b style="font-size:14.5px;letter-spacing:-0.2px">3대 엔티티 당월 손익 실황 (${curYm}) · 발생주의 통합 관제</b>
           </div>
           <div style="font-size:11.5px;color:var(--tx3)">
@@ -2125,7 +2125,7 @@ async function renderGroupPlSummary(){
           <!-- BVS Card -->
           <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-weight:700;color:var(--ac);font-size:13px">🔵 BVS <span class="vbadge" style="background:rgba(59,130,246,0.15);color:var(--ac);border:1px solid rgba(59,130,246,0.4);font-size:10px;padding:2px 6px;margin-left:4px;cursor:help;vertical-align:middle" title="BVS는 미청구 현장공수를 포함한 발생주의 기준입니다. SSJG·PYRO는 원장 기준입니다.">발생주의</span></span>
+              <span style="font-weight:700;color:var(--ac);font-size:13px">BVS <span class="vbadge" style="background:rgba(59,130,246,0.15);color:var(--ac);border:1px solid rgba(59,130,246,0.4);font-size:10px;padding:2px 6px;margin-left:4px;cursor:help;vertical-align:middle" title="BVS는 미청구 현장공수를 포함한 발생주의 기준입니다. SSJG·PYRO는 원장 기준입니다.">발생주의</span></span>
               ${unbilledGap > 0 ? `<span style="background:rgba(59,130,246,0.15);color:var(--ac);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">청구예상 +${Math.round(unbilledGap/10000).toLocaleString()}만 원</span>` : ''}
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
@@ -2146,7 +2146,7 @@ async function renderGroupPlSummary(){
           <!-- PYRO Card -->
           <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-weight:700;color:var(--good);font-size:13px">🟢 PYRO</span>
+              <span style="font-weight:700;color:var(--good);font-size:13px">PYRO</span>
               ${hasPyro ? ((Number(pyroGroup.op_income)||0) >= 0 ? '<span style="background:rgba(16,185,129,0.15);color:var(--good);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">흑자</span>' : '<span style="background:rgba(239,68,68,0.15);color:var(--crit);font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px">적자</span>') : ''}
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
@@ -2164,7 +2164,7 @@ async function renderGroupPlSummary(){
           <!-- SSJG Card -->
           <div style="background:var(--sf2);padding:14px;border-radius:var(--r2);border:1px solid var(--ln)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-weight:700;color:var(--warn);font-size:13px">🔴 SSJG</span>
+              <span style="font-weight:700;color:var(--warn);font-size:13px">SSJG</span>
             </div>
             <div style="font-size:11.5px;color:var(--tx2);margin-bottom:4px">
               당월 매출: <b>${fm(ssjgGroup.revenue, hasSsjg, '만 원')}</b>
@@ -2408,7 +2408,7 @@ function renderChk(){if(!el('gChk'))return;
     {k:'person_name',t:'이름',l:1},
     {k:'site_name',t:'현장',l:1,f:function(v,r){return esc(v||r.site_id||'–')}},
     {k:'work_md',t:'공수',f:'num'},
-    {k:'issue_why',t:'왜 문제인가',l:1,cls:'tiny dim'},
+    {k:'issue_why',t:'원인 및 조치',l:1,cls:'tiny dim'},
     {k:'_a',t:'',l:1,f:function(v,r){return r.issue_kind==='내부 근무가 청구 대상'&&r.entry_id?'<button class="stbtn" onclick="event.stopPropagation();lkSet('+r.entry_id+',\'nonbillable\')">내부로</button>':''}}],
     {rows:rows,q:['person_name','site_name','issue_kind'],csv:true,page:30,
      chips:[{k:'issue_kind',vals:ch}],
@@ -2437,7 +2437,7 @@ function renderPlans(){if(!el('gPlan'))return;var rows=(D.plans||[]).slice();
   grid('gPlan',[{k:'plan_date',t:'일자',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1,f:function(v,r){return esc(v||r.site_id||'–')}},
     {k:'project_code',t:'업무',l:1,f:function(v){return esc(pjNm(v))}},{k:'memo',t:'메모',l:1,cls:'tiny dim'},
     {k:'_x',t:'',l:1,f:function(v,r){return '<button class="stbtn x" onclick="event.stopPropagation();planDel('+r.plan_id+')">삭제</button>'}}],
-    {rows:rows,q:['person_name','site_name'],csv:false,page:40,onRow:planNew,sort:{k:'plan_date',d:1},empty:'앞으로 잡힌 배치 계획이 없습니다 — 「+ 계획 추가」로 넣습니다'});}
+    {rows:rows,q:['person_name','site_name'],csv:false,page:40,onRow:planNew,sort:{k:'plan_date',d:1},empty:'배치 계획이 없습니다'});}
 function renderSite(){
   renderChk();
   try{renderLrv()}catch(e){console.error(e)}
@@ -3510,7 +3510,7 @@ function renderSettle(){
   el('stKpi').innerHTML =
     kpi('미수금 잔액', won(arBal), (arBal > 0 ? ar.filter(function(r){return r.balance_amt>0}).length + '건 · 매출 계산서' : '0건 · 전액 완제'), (arBal > 0 ? 'warn click' : 'click'), ' onclick="stKpiClick(\'ar\')"')
     + kpi('미지급 잔액', won(apBal), (apBal > 0 ? ap.filter(function(r){return r.balance_amt>0}).length + '건 · 매입 계산서' : '0건 · 전액 완제'), (apBal > 0 ? 'warn click' : 'click'), ' onclick="stKpiClick(\'ap\')"')
-    + kpi('🚨 미수금 기한 경과', arOv.length ? '<span class="neg">' + won(sum(arOv, 'balance_amt')) + '</span>' : '<span class="pos">0원</span>', (arOv.length ? arOv.length + '건 · 회수 우선' : '기한 경과 없음'), (arOv.length ? 'crit click' : 'click'), ' onclick="stKpiClick(\'ar_ov\')"')
+    + kpi('미수금 기한 경과', arOv.length ? '<span class="neg">' + won(sum(arOv, 'balance_amt')) + '</span>' : '<span class="pos">0원</span>', (arOv.length ? arOv.length + '건 · 회수 우선' : '기한 경과 없음'), (arOv.length ? 'crit click' : 'click'), ' onclick="stKpiClick(\'ar_ov\')"')
     + kpi('⚠️ 미지급금 기한 경과', apOv.length ? '<span class="wn">' + won(sum(apOv, 'balance_amt')) + '</span>' : '<span class="pos">0원</span>', (apOv.length ? apOv.length + '건 · 송금 우선' : '기한 경과 없음'), (apOv.length ? 'warn click' : 'click'), ' onclick="stKpiClick(\'ap_ov\')"')
     + kpi('초과 수령·지급', won(credit), (credit > 0 ? '계산서보다 많이 받거나 준 금액' : '계산서·통장 100% 일치 (초과 0원)'), (credit > 0 ? 'warn click' : 'click'), ' onclick="stKpiClick(\'over\')"')
     + kpi('발주서 미도착', poOpen.length + '건', '계산서 미도착 발주서 · ' + won(sum(poOpen, 'total_amt')), ((poOpen.some(function(r){return +r.age_days>60}) ? 'warn ' : '') + 'click'), ' onclick="stKpiClick(\'po\')"')
@@ -6638,29 +6638,29 @@ function alActionNote(t){t=String(t||'');
   if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return '⚠️ 법인세법 제52조 부당행위계산부인·대표 상여처분 위험 — 금액·명목·시가 증빙 확보 및 세무사 확인';
   if(/Tax-Risk/.test(t))return '⚠️ 4개 엔티티 간 자금 거래 감지 — 이체 사유 및 세무 위험 점검';
   if(/가지급금/.test(t))return '⚖️ 법인세법상 인정이자 계산 및 익금산입 대상 — 세무 대리인 결산 시 확인 필수';
-  if(/투입 기록 승인 대기|승인 대기/.test(t))return '⚙️ 현장앱 제출 건 — 대표 승인 대기 (미승인 시 월마감 차단 및 노무비 지급 불가)';
-  if(/퇴근 미등록/.test(t))return '⚙️ 출근 후 퇴근 미등록 — 당일 실제 퇴근 시각 확인 후 출퇴근 시간 보정';
-  if(/개인정보|계약·동의|계약서교부|계약.동의 미비/.test(t))return '👥 근로기준법 제17조 및 개인정보보호법 위반(과태료·벌금) — 인력 마스터에서 서약서/동의서 교부 및 서명일 등록';
-  if(/연장수당 소급/.test(t))return '👥 통상시급 대비 법정 최소 미달 — 근로기준법 제56조에 따른 차액 소급 지급 필요';
-  if(/작업 전 안전점검 미제출|안전점검 미제출/.test(t))return '⚙️ 산업안전보건법 증빙 — 현장앱 「안전」 탭에서 근로자 본인 직접 제출 독려';
-  if(/교육 서명 미완료/.test(t))return '⚙️ 법정의무교육 — 교육 마감 전 대상자 본인 전자서명 완료 필요';
-  if(/청구기준/.test(t))return '📑 SD 청구 기준액과 홈택스 발행 세금계산서 불일치 — 세금계산서 확인 및 추가/수정 발행';
-  if(/미도착 60일|발주서 · 계산서/.test(t))return '📑 발주 후 60일간 세금계산서 미수취 — 협력사에 매입세금계산서 발행 독촉';
-  if(/SD 문서 미연결/.test(t))return '📑 홈택스 계산서와 ERP SD 계약/청구 문서 매핑 필요 (매출 누락 방지)';
-  if(/거래처 미등록/.test(t))return '📑 홈택스 사업자번호가 거래처 마스터에 없음 — 거래처 신규 등록 필요';
-  if(/업무문서.*회계전표/.test(t))return '💰 업무 등록 공급가와 회계 전표 공급가 불일치 — 전표 재생성 또는 공급가 수정';
-  if(/차대|차변.*대변/.test(t))return '💰 복식부기 대차평균의 원리 위배 — 전표 라인 차변/대변 금액 대조';
-  if(/헤더|라인합/.test(t))return '💰 전표 헤더 총액과 전표 상세 라인 합계 불일치 — 전표 상세 확인';
-  if(/지급의제/.test(t))return '💰 소득세법상 원천징수 지급의제 대상 미지급 잔액 — 당월 원천세 신고 대상 여부 확인';
-  if(/인박스|계정 미분류/.test(t))return '💰 통장/카드 내역 계정과목 미지정 — 인박스에서 계정 지정하여 전표 반영';
-  if(/홈택스 수집/.test(t))return '💰 대표 PC 수집기 미실행 — 국세청 스크래핑 수집기 점검 필요';
-  if(/상주현장 미지정/.test(t))return '👥 인력 마스터에서 직원의 기본 상주 현장 지정';
-  if(/주민번호·계좌/.test(t))return '👥 시트→DB 보안 통로(syncHrSecrets)를 통해 필수 급여 정보 동기화';
-  if(/휴일·토요일|휴일 근무/.test(t))return '👥 휴일 근로 가산임금(1.5배~2배) 적용 대상 — 투입 실적 점검';
-  if(/이의 신청/.test(t))return '⚙️ 현장 근로자의 공수/수당 이의 제기 건 — 현장 화면에서 소명 확인 후 처리';
-  if(/퇴사 후/.test(t))return '🚨 퇴사일 이후 투입 기록 등록됨 — 투입 실적 오류 또는 퇴사일 정정';
-  if(/비과세 요건/.test(t))return '👥 비과세 한도 및 증빙 요건 점검';
-  return '💡 카드 클릭 시 하단 상세 대상자 목록 및 이동 링크 확인'}
+  if(/투입 기록 승인 대기|승인 대기/.test(t))return '현장앱 제출 건 — 대표 승인 대기 (미승인 시 월마감 차단 및 노무비 지급 불가)';
+  if(/퇴근 미등록/.test(t))return '출근 후 퇴근 미등록 — 당일 실제 퇴근 시각 확인 후 출퇴근 시간 보정';
+  if(/개인정보|계약·동의|계약서교부|계약.동의 미비/.test(t))return '근로기준법 제17조 및 개인정보보호법 위반(과태료·벌금) — 인력 마스터에서 서약서/동의서 교부 및 서명일 등록';
+  if(/연장수당 소급/.test(t))return '통상시급 대비 법정 최소 미달 — 근로기준법 제56조에 따른 차액 소급 지급 필요';
+  if(/작업 전 안전점검 미제출|안전점검 미제출/.test(t))return '산업안전보건법 증빙 — 현장앱 「안전」 탭에서 근로자 본인 직접 제출 독려';
+  if(/교육 서명 미완료/.test(t))return '법정의무교육 — 교육 마감 전 대상자 본인 전자서명 완료 필요';
+  if(/청구기준/.test(t))return 'SD 청구 기준액과 홈택스 발행 세금계산서 불일치 — 세금계산서 확인 및 추가/수정 발행';
+  if(/미도착 60일|발주서 · 계산서/.test(t))return '발주 후 60일간 세금계산서 미수취 — 협력사에 매입세금계산서 발행 독촉';
+  if(/SD 문서 미연결/.test(t))return '홈택스 계산서와 ERP SD 계약/청구 문서 매핑 필요 (매출 누락 방지)';
+  if(/거래처 미등록/.test(t))return '홈택스 사업자번호가 거래처 마스터에 없음 — 거래처 신규 등록 필요';
+  if(/업무문서.*회계전표/.test(t))return '업무 등록 공급가와 회계 전표 공급가 불일치 — 전표 재생성 또는 공급가 수정';
+  if(/차대|차변.*대변/.test(t))return '복식부기 대차평균의 원리 위배 — 전표 라인 차변/대변 금액 대조';
+  if(/헤더|라인합/.test(t))return '전표 헤더 총액과 전표 상세 라인 합계 불일치 — 전표 상세 확인';
+  if(/지급의제/.test(t))return '소득세법상 원천징수 지급의제 대상 미지급 잔액 — 당월 원천세 신고 대상 여부 확인';
+  if(/인박스|계정 미분류/.test(t))return '통장/카드 내역 계정과목 미지정 — 인박스에서 계정 지정하여 전표 반영';
+  if(/홈택스 수집/.test(t))return '대표 PC 수집기 미실행 — 국세청 스크래핑 수집기 점검 필요';
+  if(/상주현장 미지정/.test(t))return '인력 마스터에서 직원의 기본 상주 현장 지정';
+  if(/주민번호·계좌/.test(t))return '시트→DB 보안 통로(syncHrSecrets)를 통해 필수 급여 정보 동기화';
+  if(/휴일·토요일|휴일 근무/.test(t))return '휴일 근로 가산임금(1.5배~2배) 적용 대상 — 투입 실적 점검';
+  if(/이의 신청/.test(t))return '현장 근로자의 공수/수당 이의 제기 건 — 현장 화면에서 소명 확인 후 처리';
+  if(/퇴사 후/.test(t))return '퇴사일 이후 투입 기록 등록됨 — 투입 실적 오류 또는 퇴사일 정정';
+  if(/비과세 요건/.test(t))return '비과세 한도 및 증빙 요건 점검';
+  return '카드 클릭 시 하단 상세 대상자 목록 및 이동 링크 확인'}
 
 /* 카드 → 상세 대상자. ds가 있으면 그 데이터셋을 걸러 표로, 없으면 해당 화면으로 보낸다. */
 function alDetail(t){t=String(t||'');
@@ -6767,7 +6767,7 @@ function alPick(t){ALF.sel=(ALF.sel===t?null:t);renderAlerts();if(ALF.sel){var s
 
 function renderAlertCard(r){
   var dInfo=DOMAINS[r.domain]||{name:r.domain,icon:'📌',color:'dom-fi'};
-  var tName=r.cnt?(r.tier===1?'🚨 긴급':r.tier===2?'⚠️ 주의':'ℹ️ 일반'):'정상';
+  var tName=r.cnt?(r.tier===1?'긴급':r.tier===2?'주의':'일반'):'정상';
   return '<div class="al click t'+(r.cnt?r.tier:0)+(ALF.sel===r.title?' sel':'')+'" onclick="alPick('+JSON.stringify(r.title).replace(/"/g,'&quot;')+')">'
     +'<div class="n">'+r.cnt+'</div>'
     +'<div class="al-body">'
@@ -6851,7 +6851,7 @@ function renderAlerts(){
     +'<span class="al-filter-lbl">긴급도</span>'
     +'<span class="chip'+(ALF.tier===''?' on':'')+'" onclick="alTierTab(\'\')">전체 '+totalHot+'</span>'
     +[1,2,3].map(function(k){
-       var tLabel=k===1?'🚨 긴급':k===2?'⚠️ 주의':'ℹ️ 일반';
+       var tLabel=k===1?'긴급':k===2?'주의':'일반';
        return '<span class="chip'+(ALF.tier===String(k)?' on':'')+'" onclick="alTierTab(\''+k+'\')" title="'+esc(ALT[k].d)+'">'+tLabel+' '+tCnts[k]+'</span>';
      }).join('')
     +'<span class="chip'+(ALF.zero?' on':'')+'" onclick="alZero()" style="margin-left:auto">정상 '+zeros+'건 '+(ALF.zero?'숨기기':'보기')+'</span>'
