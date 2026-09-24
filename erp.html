@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.41 · 대표 콕핏</title>
+<title>BVS ERP v1.42 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.41</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.42</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1749,6 +1749,7 @@ async function loadAll(){
     ['lnc',function(){return sb.from('ceo_loan_contracts').select('*').order('start_on',{ascending:false})}],
     ['lno',function(){return sb.from('ceo_loan_offsets').select('*').order('offset_on',{ascending:false})}],
     ['lrv',function(){return sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000)}],
+    ['pmb',function(){return sb.from('ceo_pay_month_basis').select('*').order('period_ym',{ascending:false}).limit(2000)}],
     ['stk',function(){return sb.from('ceo_stock').select('*').order('item_code').limit(3000)}],
     ['stmv',function(){return sb.from('ceo_stock_moves').select('*').order('move_on',{ascending:false}).limit(3000)}],
     ['ack',function(){return sb.from('ceo_alert_acks').select('*')}],
@@ -4025,7 +4026,7 @@ function renderMoney(){
   var balBy={};D.pay.forEach(function(r){balBy[r.employment_no]=+r.balance_amt||0});
   set.forEach(function(r){r.balance=balBy[r.employment_no]||0});
   el('setN').textContent=set.length+'명';
-  grid('gSet',[{k:'person_name',t:'이름',l:1},{k:'income_type',t:'소속',l:1,f:incPill},{k:'work_md_sum',t:'공수',f:'num',sum:1},{k:'ot_hours_sum',t:'잔업h',f:'num',sum:1},{k:'base_amt',t:'기본',f:'won',sum:1},{k:'ot_amt',t:'연장',f:'won',sum:1},{k:'allowance_amt',t:'수당',f:'won',sum:1},{k:'other_pay_amt',t:'기타',f:'won',sum:1},{k:'payable_amt',t:'지급액',f:function(v,r){return r.team_mode==='full'?'<span class="pill y" title="팀도급: 회사는 팀장에게 팀단가 전액 지급">팀도급</span> '+won(v):won(v)},sum:1},{k:'team_claim_amt',t:'팀장청구',f:function(v,r){return r.team_mode==='full'?won(v)+' <span class="tiny dim">→ '+esc(r.claim_leader_name||'')+'</span>':'<span class="dim">–</span>'},sum:1},{k:'revenue_sum',t:'매출',f:'won',sum:1},{k:'company_margin',t:'회사마진',f:'sgn',sum:1},{k:'balance',t:'누적잔액',f:'sgn'},{k:'is_closed',t:'마감',l:1,f:function(v){return v?'<span class="pill g">마감</span>':'<span class="pill">진행</span>'}}],
+  grid('gSet',[{k:'person_name',t:'이름',l:1},{k:'income_type',t:'소속',l:1,f:incPill},{k:'work_md_sum',t:'공수',f:'num',sum:1},{k:'ot_hours_sum',t:'잔업h',f:'num',sum:1},{k:'base_amt',t:'기본',f:'won',sum:1},{k:'ot_amt',t:'연장',f:'won',sum:1},{k:'allowance_amt',t:'수당',f:'won',sum:1},{k:'other_pay_amt',t:'기타',f:'won',sum:1},{k:'payable_amt',t:'지급액',f:function(v,r){var b=pmbOf(r.employment_no,r.period_ym);return (r.team_mode==='full'?'<span class="pill y" title="팀도급: 회사는 팀장에게 팀단가 전액 지급">팀도급</span> ':'')+won(v)+(b?' <span class="pill b tiny">'+b.counted_days+'/'+b.month_days+'일</span>':'')},sum:1},{k:'team_claim_amt',t:'팀장청구',f:function(v,r){return r.team_mode==='full'?won(v)+' <span class="tiny dim">→ '+esc(r.claim_leader_name||'')+'</span>':'<span class="dim">–</span>'},sum:1},{k:'revenue_sum',t:'매출',f:'won',sum:1},{k:'company_margin',t:'회사마진',f:'sgn',sum:1},{k:'balance',t:'누적잔액',f:'sgn'},{k:'is_closed',t:'마감',l:1,f:function(v){return v?'<span class="pill g">마감</span>':'<span class="pill">진행</span>'}}],
     {rows:set,q:['person_name'],qph:'이름',foot:true,sort:{k:'payable_amt',d:-1},page:60,
      chips:[{k:'_inc',vals:[['','소속 전체'],['wage','정규직(4대보험)'],['business','도급(3.3%)']]},{k:'_neg',vals:[['','마진 전체'],['1','적자만']]}]});
   (function(){var b=el('gSet').querySelector('.tbar');if(b&&!b.querySelector('.negsort'))b.insertAdjacentHTML('beforeend','<button class="btn sm negsort" style="margin-left:6px" onclick="gSort(\'gSet\',\'company_margin\');if(G.gSet.sort.d!==1){G.gSet.sort.d=1;gRender(\'gSet\')}">적자순 정렬</button>')})();
@@ -4733,7 +4734,7 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   var inf=function(v){return v==='infinity'||!v?'현재':esc(v)};
   var body=kv([['사번',esc(emp)+' · '+esc(ETYPE[r.employment_type]||r.employment_type)+' · '+(r.resigned_on?'<span class="neg">퇴사 '+esc(r.resigned_on)+'</span>':'재직 (입사 '+esc(r.hired_on)+')')],['연락처',esc(r.phone||'–')+(r.email?' · '+esc(r.email):'')],['주소',esc(r.address||'–')],['비상연락처',esc(r.emergency_contact||'–')],['생년월일',esc(r.birth_ymd||'–')],['혈액형 / 차량',esc(r.blood_type||'–')+' / '+esc(r.vehicle_no||'없음')],['매출처',esc(r.bill_partner_name||'현장 기준')],['출입 자료','SK ID '+esc(r.sk_id||'–')+' · SS ID '+esc(r.ss_id||'–')+' · 배치 '+esc(r.primary_area||'–')+' · 기본교육 '+esc(r.edu_basic||'–')+' <a href="#" onclick="event.preventDefault();drClose();go(\'crew\')">배치표에서 수정</a>']])
    +'<div class="fr" style="margin-top:10px"><div class="f"><label>주소</label><input id="sf_addr" class="in" value="'+esc(r.address||'')+'"></div><div class="f"><label>비상연락처</label><input id="sf_emg" class="in" value="'+esc(r.emergency_contact||'')+'"></div></div><div class="fr"><div class="f"><label>이메일</label><input id="sf_email" class="in" value="'+esc(r.email||'')+'"></div><div class="f"><label>매출처</label>'+ptnSel('sf_ptn',r.bill_partner_id)+'</div></div><div class="fr"><div class="f"><label>생년월일</label><input id="sf_birth" class="in" type="date" value="'+esc(r.birth_ymd||'')+'"></div><div class="f"><label>고용형태</label><select id="sf_etype" class="sel" style="width:100%">'+Object.keys(ETYPE).map(function(k){return '<option value="'+k+'"'+(r.employment_type===k?' selected':'')+'>'+ETYPE[k]+'</option>'}).join('')+'</select></div></div><div class="fr"><div class="f"><label>혈액형</label><input id="sf_blood" class="in" placeholder="A / B / O / AB (+/-)" value="'+esc(r.blood_type||'')+'"></div><div class="f"><label>차량번호</label><input id="sf_veh" class="in" placeholder="비우면 차량 없음" value="'+esc(r.vehicle_no||'')+'"></div></div><div class="tiny dim" style="margin:-2px 0 8px">혈액형은 민감정보입니다. 고객사 안전·출입 제출 목적으로만 쓰고, 개인정보 동의서 별도 동의 항목에 포함해야 합니다.</div><button class="btn sm" onclick="staffSaveBasic(\''+esc(emp)+'\')">인적사항 저장</button>';
-  if(isOwner())body+=settleHtml(emp,r);
+  if(isOwner())body+=settleHtml(emp,r)+pmbHtml(emp);
   // 단가
   body+='<h4 style="margin:16px 0 6px">단가 이력 <span class="tiny dim">적용일부터 새 단가, 이전 단가는 전날까지</span></h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>방식</th><th>일급</th><th>잔업</th><th>야간</th><th>월급</th><th>팀단가</th><th class="l">메모</th></tr></thead><tbody>'+(rh.length?rh.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td>'+esc(PT[x.payroll_type]||x.payroll_type)+'</td><td>'+won(x.daily_amt)+'</td><td>'+won(x.ot_hourly_amt)+'</td><td>'+won(x.night_hourly_amt)+'</td><td>'+won(x.monthly_amt)+'</td><td>'+(x.team_contract_daily_amt?won(x.team_contract_daily_amt):'<span class="dim">기본</span>')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">단가 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="rt_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>급여 방식</label><select id="rt_pt" class="sel" style="width:100%">'+Object.keys(PT).map(function(k){return '<option value="'+k+'"'+((r.payroll_type||'daily')===k?' selected':'')+'>'+PT[k]+'</option>'}).join('')+'</select></div></div>'
@@ -5062,6 +5063,22 @@ function ptnFlagSave(r,f,v){var p={};var t=String(v).trim();
   else {t=t.toUpperCase();if(t&&['HBS','PYRO','SSJG','BVS'].indexOf(t)<0)return Promise.resolve({ok:false,error:'HBS / PYRO / SSJG / BVS'});p.related_entity=t}
   return sb.rpc('ceo_partner_flags_set',{p_partner_id:r.partner_id,p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok){for(var k in p)r[k]=p[k]}return d})}
 function setgNum(k,def){var r=(D.setg||[]).filter(function(x){return x.setting_key===k})[0];var n=r&&r.value_num!=null?+r.value_num:NaN;return isNaN(n)?def:n}
+/* ══════ 월급제 급여 기산 (월별 기산일·가감 일수) ══════ */
+function pmbOf(emp,ym){return (D.pmb||[]).filter(function(x){return x.employment_no===emp&&x.period_ym===ym})[0]||null}
+function pmbHtml(emp){var rows=(D.pmb||[]).filter(function(x){return x.employment_no===emp}).sort(function(a,b){return String(b.period_ym).localeCompare(String(a.period_ym))});
+  var ym=M();var first=(D.att||[]).filter(function(a){return a.employment_no===emp&&String(a.work_date).slice(0,7)===ym}).map(function(a){return String(a.work_date).slice(0,10)}).sort()[0]||'';
+  return '<h4 style="margin:16px 0 6px">급여 기산</h4><table style="width:100%"><thead><tr><th class="l">귀속월</th><th class="l">기산일</th><th>가감 일수</th><th>산정 일수</th><th>월급</th><th>산정액</th><th class="l">메모</th><th></th></tr></thead><tbody>'
+   +(rows.length?rows.map(function(x){return '<tr><td class="l">'+esc(x.period_ym)+'</td><td class="l">'+esc(x.start_on||'')+'</td><td>'+(+x.adjust_days?((+x.adjust_days>0?'+':'')+x.adjust_days):'')+'</td><td>'+x.counted_days+' / '+x.month_days+'</td><td>'+won(x.monthly_amt)+'</td><td><b>'+won(x.prorated_amt)+'</b></td><td class="l tiny dim">'+esc(x.memo||'')+'</td><td><button class="stbtn" onclick="pmbEdit('+x.basis_id+')">수정</button> <button class="stbtn x" onclick="pmbDel('+x.basis_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="8" class="empty">없음</td></tr>')+'</tbody></table>'
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>귀속월</label><input id="pb_ym" class="in" type="month" value="'+esc(ym)+'"></div><div class="f"><label>기산일</label><input id="pb_on" class="in" type="date" value="'+esc(first)+'"></div></div>'
+   +'<div class="fr"><div class="f"><label>가감 일수</label><input id="pb_adj" class="in" type="number" step="1" value="0"></div><div class="f"><label>메모</label><input id="pb_memo" class="in"></div></div>'
+   +'<button class="btn sm p" onclick="pmbSave(\''+esc(emp)+'\')">저장</button>'}
+async function pmbSave(emp,id){var p={employment_no:emp,period_ym:el('pb_ym').value,start_on:el('pb_on').value,adjust_days:el('pb_adj').value===''?0:parseInt(el('pb_adj').value,10),memo:(el('pb_memo').value||'').trim()};
+  if(!p.period_ym){toast('귀속월을 넣으세요','e');return}
+  if(p.start_on&&p.start_on.slice(0,7)!==p.period_ym){toast('기산일은 귀속월 안의 날짜여야 합니다. 다른 달의 날은 가감 일수로 넣으세요','e');return}
+  if(isNaN(p.adjust_days)){toast('가감 일수는 정수','e');return}
+  var x=await sb.rpc('ceo_pay_basis_set',{p:p});rpcDone(x,'저장했습니다')}
+function pmbEdit(id){var x=(D.pmb||[]).filter(function(b){return b.basis_id===id})[0];if(!x)return;el('pb_ym').value=x.period_ym;el('pb_on').value=x.start_on||'';el('pb_adj').value=x.adjust_days||0;el('pb_memo').value=x.memo||'';el('pb_ym').scrollIntoView({block:'center'})}
+async function pmbDel(id){var ok=await ask('급여 기산 삭제','이 달은 월급 전액으로 돌아갑니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('ceo_pay_basis_delete',{p_basis_id:id});rpcDone(x,'삭제했습니다')}
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
 async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
