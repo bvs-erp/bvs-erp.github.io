@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.40 · 대표 콕핏</title>
+<title>BVS ERP v1.41 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.40</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.41</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1203,7 +1203,7 @@ function ask(title,msg,opt){opt=opt||{};return new Promise(function(res){
 function drOpen(title,body,foot){el('drT').textContent=title;el('drB').innerHTML=body;el('drF').innerHTML=foot||'';el('dr').classList.add('on');el('ovl').classList.add('on')}
 function drClose(){el('dr').classList.remove('on');el('ovl').classList.remove('on')}
 function help(t,h){drOpen(t,'<div class="hlp">'+h+'</div>','<button class="btn" onclick="drClose()">닫기</button>')}
-function kv(pairs){return '<div class="kv">'+pairs.map(function(p){return '<div class="k">'+p[0]+'</div><div class="v">'+(p[1]==null||p[1]===''?'<span class="dim">–</span>':p[1])+'</div>'}).join('')+'</div>'}
+function kv(pairs){return '<div class="kv">'+pairs.filter(function(p){return p&&p[0]!==null}).map(function(p){return '<div class="k">'+p[0]+'</div><div class="v">'+(p[1]==null||p[1]===''?'<span class="dim">–</span>':p[1])+'</div>'}).join('')+'</div>'}
 
 /* ═══════════ 데이터 그리드 ═══════════ */
 /* cols: [{k,t,f:'won'|'num'|'sgn'|'txt'|'date'|fn, l:true(좌측), w:폭}]  opt:{rows,q(검색키),chips:[{k,t,val}],foot:true,page:60,onRow:fn,key,empty} */
@@ -1749,6 +1749,9 @@ async function loadAll(){
     ['lnc',function(){return sb.from('ceo_loan_contracts').select('*').order('start_on',{ascending:false})}],
     ['lno',function(){return sb.from('ceo_loan_offsets').select('*').order('offset_on',{ascending:false})}],
     ['lrv',function(){return sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000)}],
+    ['stk',function(){return sb.from('ceo_stock').select('*').order('item_code').limit(3000)}],
+    ['stmv',function(){return sb.from('ceo_stock_moves').select('*').order('move_on',{ascending:false}).limit(3000)}],
+    ['ack',function(){return sb.from('ceo_alert_acks').select('*')}],
     ['tf',function(){return sb.from('ceo_tax_filings').select('*').order('due_on',{ascending:false}).limit(1000)}],
     ['sadj',function(){return sb.from('ceo_settle_adjustments').select('*').order('adj_on',{ascending:false}).limit(2000)}],
     ['hol',function(){return sb.from('ceo_holidays').select('*').order('holiday_date')}],
@@ -2863,12 +2866,15 @@ function renderSales(){
       {k:'contact_name',t:'담당자',l:1,e:'contact_name',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
       {k:'contact_phone',t:'연락처',l:1,e:'contact_phone',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
       {k:'contact_email',t:'이메일',l:1,e:'contact_email',f:function(v){return v?esc(v):'<span class="dim">-</span>'}},
+      {k:'is_related_party',t:'특수관계',l:1,e:{field:'is_related_party',get:function(r){return r.is_related_party?'예':'아니오'},ph:'예 / 아니오',apply:function(){}},f:function(v,r){return v?'<span class="pill y">'+esc(r.related_entity||'예')+'</span>':'<span class="dim">-</span>'}},
+      {k:'related_entity',t:'관계 엔티티',l:1,e:{field:'related_entity',ph:'HBS / PYRO / SSJG / BVS',apply:function(){}}},
+      {k:'is_active',t:'사용',l:1,e:{field:'is_active',get:function(r){return r.is_active===false?'안 씀':'사용'},ph:'사용 / 안 씀',apply:function(){}},f:function(v){return v===false?'<span class="dim">안 씀</span>':'사용'}},
       {k:'pay_terms_days',t:'결제조건(일)',e:{field:'pay_terms_days',ph:'비우면 기본값'},f:function(v){return v==null||v===''?'<span class="dim">-</span>':esc(v)+'일'}},
       {k:'doc_cnt',t:'문서',f:'int'},
       {k:'last_doc_on',t:'최근거래',l:1,f:function(v){return v?'<span class="tiny dim">'+esc(v)+'</span>':'<span class="dim">-</span>'}},
       {k:'partner_id',t:'코드',l:1,cls:'tiny dim'}
     ],
-      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:function(r,f,v){if(f==='pay_terms_days'){var n=String(v).trim()===''?null:parseInt(v,10);if(n!=null&&!(n>=0&&n<=365))return Promise.resolve({ok:false,error:'0~365일'});return sb.rpc('ceo_partner_terms_set',{p_partner_id:r.partner_id,p_days:n}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok)r.pay_terms_days=n;return d})}return ptnSave(r,f,v)},empty:'거래처 없음'});
+      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:function(r,f,v){if(f==='is_related_party'||f==='related_entity'||f==='is_active')return ptnFlagSave(r,f,v);if(f==='pay_terms_days'){var n=String(v).trim()===''?null:parseInt(v,10);if(n!=null&&!(n>=0&&n<=365))return Promise.resolve({ok:false,error:'0~365일'});return sb.rpc('ceo_partner_terms_set',{p_partner_id:r.partner_id,p_days:n}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok)r.pay_terms_days=n;return d})}return ptnSave(r,f,v)},empty:'거래처 없음'});
   }
   var s=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='tax'});
   var p=cur.filter(function(r){return r.trade_side==='purchase'&&r.doc_kind==='tax'});
@@ -3141,7 +3147,7 @@ async function openDoc(d){
   if(st==='approved')acts+='<button class="btn p" onclick="setStatus(\''+d.doc_no+'\',\'settled\')">정산완료</button>';
   if(st!=='settled'&&st!=='void')acts+='<button class="btn d" onclick="setStatus(\''+d.doc_no+'\',\'void\')">취소</button>';
   if(st==='void')acts+='<button class="btn d" onclick="delDoc(\''+d.doc_no+'\')">완전 삭제</button>';
-  drOpen(d.doc_no,kv([['종류',pillKind(d.doc_kind)+' '+(d.trade_side==='sales'?'매출':'매입')],['일자',d.doc_date],['귀속월',d.period_ym],['거래처',esc(d.partner_name)],['담당',esc(d.contact_name)],['건명',esc(d.title)],['공급가',won(d.supply_amt)],['세액',won(d.tax_amt)],['합계','<b>'+won(d.total_amt)+'</b>'],['라인',d.line_cnt],['상태',pillSt(d.status)],['계산서 승인번호',d.approval_no?esc(d.approval_no)+(st!=='void'?' <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">수정</button>':''):(d.doc_kind==='tax'?'<span class="wn">미발행</span> <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">승인번호 입력</button>':'')],[d.trade_side==='sales'?'매출 구분':'계정',docAcctSel(d)],['증빙',esc(d.evidence_code||'–')]])
+  drOpen(d.doc_no,kv([['종류',pillKind(d.doc_kind)+' '+(d.trade_side==='sales'?'매출':'매입')],['일자',d.doc_date],['귀속월',d.period_ym],['거래처',esc(d.partner_name)],['담당',esc(d.contact_name)],['건명',esc(d.title)],['공급가',won(d.supply_amt)],['세액',won(d.tax_amt)],['합계','<b>'+won(d.total_amt)+'</b>'],['라인',d.line_cnt],['상태',pillSt(d.status)],['계산서 승인번호',d.approval_no?esc(d.approval_no)+(st!=='void'?' <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">수정</button>':''):(d.doc_kind==='tax'?'<span class="wn">미발행</span> <button class="stbtn" onclick="setDocAppNo(\''+d.doc_no+'\')">승인번호 입력</button>':'')],[d.trade_side==='sales'?'매출 구분':'계정',docAcctSel(d)],[(d.doc_kind==='quote'&&d.trade_side==='sales'&&isOwner())?'견적 결과':null,(d.doc_kind==='quote'&&d.trade_side==='sales'&&isOwner())?qOutHtml(d):''],['증빙',esc(d.evidence_code||'–')]])
     +'<h4 style="margin:14px 0 6px;font-size:13px">품목 '+lines.length+'줄</h4>'+(lines.length?'<div class="lwrap"><table class="lines"><thead><tr><th class="l">품명</th><th class="l">규격</th><th>수량</th><th class="l">단위</th><th>단가</th><th>금액</th></tr></thead><tbody>'+lines.map(function(l){return '<tr><td class="l">'+esc(l.item_name)+'</td><td class="l tiny dim">'+esc(l.spec)+'</td><td class="num">'+num(l.qty)+'</td><td class="l">'+esc(l.unit)+'</td><td class="num">'+won(l.unit_price)+'</td><td class="num">'+won(l.supply_amt)+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="dim tiny">라인 없음</div>')
     +chain+'<p class="tiny dim" style="margin-top:14px">정산완료 문서는 취소 외 상태 변경이 안 됩니다. 라인 수정은 「새 버전」으로 발행하십시오.</p>',acts);
 }
@@ -4122,7 +4128,7 @@ function pmTab(t){
 
 function renderPm(){
   if(!ST.pm) ST.pm='mat';
-  D.mat = D.mat || [];
+  D.mat = (D.stk||[]).map(function(x){return {mat_code:x.item_code,mat_group:x.item_group,name_ko:x.name_ko,spec:x.spec,unit:x.unit,qty_bvs:+x.on_hand||0,qty_icheon:0,qty_cheongju:0,safe_qty:x.safety_qty,last_move_on:x.last_move_on,move_cnt:x.move_cnt}});
   D.mat.forEach(function(r){
     r.qty_total = (+r.qty_bvs||0) + (+r.qty_icheon||0) + (+r.qty_cheongju||0);
     r._alert = r.qty_total < (+r.safe_qty||0);
@@ -4135,7 +4141,6 @@ function renderPm(){
   el('pmKpi').innerHTML=
     kpi('현장 자재·재고', D.mat.length+'<small>종</small>', '총 보유량 '+sum(D.mat,'qty_total').toLocaleString()+'점', 'hl click', ' onclick="pmKpiClick(\'mat\')"')
     +kpi('안전재고 부족', matLack?'<span class="neg">'+matLack+'종</span>':'0', matLack?'긴급 발주 필요':(D.mat.length?'정상 보유':'–'), (matLack?'crit ':'')+'click', ' onclick="pmKpiClick(\'lack\')"')
-    +kpi('입고 대기', sum(D.mat,'pending_in').toLocaleString()+'<small>점</small>', '발주 후 운송 중', 'click', ' onclick="pmKpiClick(\'mat\')"')
     +kpi('구매 단가 품목', D.items.length+'<small>종</small>', '단가 보유 '+D.items.filter(function(r){return +r.supplier_cnt>0}).length+'종', 'click', ' onclick="pmKpiClick(\'items\')"')
     +kpi('협상 품목(10%↑)', gapN?'<span class="wn">'+gapN+'</span>':'0', '공급사별 단가차', 'click', ' onclick="pmKpiClick(\'gap\')"');
 
@@ -4149,15 +4154,14 @@ function renderPm(){
       return '<b class="'+(r._alert?'neg':'pos')+'">'+num(v)+'</b>';
     }, sum:1},
     {k:'safe_qty', t:'안전재고', f:'int'},
-    {k:'pending_in', t:'입고대기', f:function(v){return (+v)?'<span class="wn">+'+v+'</span>':'<span class="dim">–</span>'}},
-    {k:'last_partner', t:'주 거래처/공급처', l:1},
+    {k:'last_move_on', t:'최근 입출고', l:1},
     {k:'status', t:'상태', l:1, f:function(v,r){
       return r._alert?'<span class="pill r">부족(발주요망)</span>':'<span class="pill g">적정</span>';
     }}
   ], {
     rows: D.mat,
-    q:['mat_code','name_ko','mat_group','spec','last_partner'],
-    qph:'코드·품명·분류·규격·거래처',
+    q:['mat_code','name_ko','mat_group','spec'],
+    qph:'코드·품명·분류·규격',
     chips:[{k:'mat_group', vals:[['','전체 분류']].concat(Object.keys(by(D.mat,'mat_group')).filter(function(g){return g&&g!=='undefined'}).sort().map(function(g){return [g,g]}))}],
     foot:true,
     page:30,
@@ -4175,22 +4179,23 @@ function renderPm(){
 }
 
 function openMatDr(m){
-  var it = typeof m==='string' ? D.mat.filter(function(x){return x.mat_code===m})[0] : m;
-  if(!it) return;
-  drOpen(it.name_ko+' ('+it.mat_code+')',
-    kv([
-      ['자재코드', it.mat_code],
-      ['분류', it.mat_group],
-      ['규격/사양', it.spec],
-      ['단위', it.unit],
-      ['총 보유재고', '<b>'+num(it.qty_total)+' '+it.unit+'</b> '+(it._alert?'<span class="pill r">안전재고 부족</span>':'<span class="pill g">적정</span>')],
-      ['안전재고 기준', num(it.safe_qty)+' '+it.unit],
-      ['발주/입고대기', num(it.pending_in)+' '+it.unit],
-      ['주 공급/거래처', it.last_partner]
-    ]),
-    '<button class="btn" onclick="drClose()">닫기</button>');
+  var code=typeof m==='string'?m:m.mat_code;var it=(D.stk||[]).filter(function(x){return x.item_code===code})[0];if(!it)return;
+  var mv=(D.stmv||[]).filter(function(x){return x.item_code===code});var MK={in:'입고',out:'출고',adjust:'조정'};
+  var body=kv([['품목',esc(it.item_code)+' · '+esc(it.name_ko||'')],['규격',esc(it.spec||'')],['보유',num(it.on_hand)+' '+esc(it.unit||'')],['안전재고',it.safety_qty==null?'':num(it.safety_qty)]])
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>안전재고</label><div style="display:flex;gap:6px"><input id="sk_safe" class="in" type="number" step="any" value="'+esc(it.safety_qty==null?'':it.safety_qty)+'" style="flex:1"><button class="btn" onclick="stkSafe(\''+esc(code)+'\')">저장</button></div></div><div class="f"></div></div>'
+   +'<h4 style="margin:14px 0 6px">입출고</h4><table style="width:100%"><thead><tr><th class="l">일자</th><th class="l">구분</th><th>수량</th><th>단가</th><th class="l">발주·현장</th><th class="l">메모</th><th></th></tr></thead><tbody>'
+   +(mv.length?mv.map(function(x){return '<tr><td class="l">'+esc(x.move_on)+'</td><td class="l">'+esc(MK[x.kind]||x.kind)+'</td><td>'+num(x.qty)+'</td><td>'+(x.unit_price!=null?won(x.unit_price):'')+'</td><td class="l tiny">'+esc(x.po_no||x.site_name||'')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td><td><button class="stbtn x" onclick="stkDel('+x.move_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">기록 없음</td></tr>')+'</tbody></table>'
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>일자</label><input id="sk_on" class="in" type="date" value="'+today()+'"></div><div class="f"><label>구분</label><select id="sk_k" class="sel" style="width:100%"><option value="in">입고</option><option value="out">출고</option><option value="adjust">조정(±)</option></select></div></div>'
+   +'<div class="fr"><div class="f"><label>수량</label><input id="sk_q" class="in" type="number" step="any"></div><div class="f"><label>단가</label><input id="sk_p" class="in" type="number"></div></div>'
+   +'<div class="fr"><div class="f"><label>발주서</label><select id="sk_po" class="sel" style="width:100%"><option value=""></option>'+(D.po||[]).map(function(p){return '<option value="'+esc(p.po_no)+'">'+esc(p.po_no)+' '+esc(p.title||'')+'</option>'}).join('')+'</select></div><div class="f"><label>현장</label><select id="sk_site" class="sel" style="width:100%"><option value=""></option>'+(D.sites||[]).map(function(x){return '<option value="'+esc(x.site_id)+'">'+esc(x.site_name)+'</option>'}).join('')+'</select></div></div>'
+   +'<div class="f"><label>메모</label><input id="sk_m" class="in"></div><button class="btn sm p" onclick="stkAdd(\''+esc(code)+'\')">입출고 추가</button>';
+  drOpen(it.name_ko||code,body,'<button class="btn" onclick="drClose()">닫기</button>');
 }
-
+async function stkAdd(code){var p={item_code:code,move_on:el('sk_on').value,kind:el('sk_k').value,qty:el('sk_q').value,unit_price:el('sk_p').value,po_no:el('sk_po').value,site_id:el('sk_site').value,memo:(el('sk_m').value||'').trim()};
+  var q=+p.qty;if(!p.move_on||!q||(p.kind!=='adjust'&&q<0)){toast('일자와 수량을 확인하세요','e');return}
+  var x=await sb.rpc('ceo_stock_move_add',{p:p});rpcDone(x,'입출고 추가')}
+async function stkDel(id){var ok=await ask('입출고 삭제','이 기록을 지웁니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('ceo_stock_move_delete',{p_move_id:id});rpcDone(x,'삭제했습니다')}
+async function stkSafe(code){var v=el('sk_safe').value;var x=await sb.rpc('ceo_item_safety_set',{p_item_code:code,p_qty:v===''?null:+v});rpcDone(x,'안전재고 저장')}
 function matApply(code){ /* v1.36: 브라우저 메모리만 바꾸고 저장되지 않아 비활성화 */ return; }
 function openItem(it){var full=D.items.filter(function(r){return r.item_code===it.item_code})[0]||it;
   drOpen(full.name_ko||full.item_code,kv([['코드',full.item_code],['그룹',esc(full.item_group)],['단위',esc(full.unit)],['재질',esc(full.material)],['공급사 수',full.supplier_cnt],['최저가',won(full.best_price)+' · '+esc(full.best_supplier)],['최고가',won(full.worst_price)],['가격차',won(full.price_spread)+(full.spread_pct!=null?' ('+num(full.spread_pct)+'%)':'')],['판매가',won(full.price_sell)],['단가 범위',won(full.price_min)+' ~ '+won(full.price_max)]]))}
@@ -4742,6 +4747,7 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   // 팀
   body+='<h4 style="margin:16px 0 6px">팀 배정 이력</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th class="l">팀장</th><th>방식</th><th class="l">메모</th></tr></thead><tbody>'+(th.length?th.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td class="l">'+esc(x.leader_name||x.leader_no)+'</td><td>'+(x.contract_mode==='full'?'<span class="pill y tiny">팀도급</span>':'마진')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="5" class="empty">팀 없음 (본인 단가로 직접 정산)</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="tm_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>팀장 (비우면 팀 해제)</label>'+staffSel('tm_leader',r.leader_no,emp)+'</div></div><div class="fr"><div class="f"><label>정산 방식</label><select id="tm_mode" class="sel" style="width:100%"><option value="margin"'+(r.contract_mode!=='full'?' selected':'')+'>마진 — 회사가 팀원에게 직접 지급, 팀장은 (팀단가−팀원단가) 차액</option><option value="full"'+(r.contract_mode==='full'?' selected':'')+'>팀도급 — 회사는 팀장에게 팀단가 전액, 팀원 직접 지급 없음</option></select></div><div class="f"><label>메모</label><input id="tm_memo" class="in"></div></div><button class="btn sm p" onclick="teamSave(\''+esc(emp)+'\')">팀 저장</button>';
+  if(isOwner())body+=histEditHtml(emp,rh,ph,th);
   // 서류·동의
   var ct=(D.ctr||[]).filter(function(x){return x.employment_no===emp});
   var KINDS=['근로계약서','비밀유지서약서','개인정보동의서','연봉계약서','기타'];
@@ -5017,6 +5023,45 @@ function renderLrv(){var sec=el('sec-gLrv');if(!sec)return;if(!isOwner()){sec.st
 }
 async function loadLrv(){var r=await sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000);
   if(r.error){toast(r.error.message,'e');return}D.lrv=r.data||[];renderLrv()}
+/* ══════ B11 이력 정리 ══════ */
+function histEditHtml(emp,rh,ph,th){var inf=function(v){return v==null||v==='infinity'?'현재':esc(v)};
+  var rows=[];
+  var add=function(kind,lbl,arr,idk,sumf){var srt=arr.slice().sort(function(a,b){return String(a.valid_from).localeCompare(String(b.valid_from))});srt.forEach(function(x,i){rows.push({kind:kind,lbl:lbl,id:x[idk],from:x.valid_from,to:x.valid_to,last:i===srt.length-1,only:srt.length===1,sum:sumf(x)})})};
+  add('rate','단가',rh,'rate_id',function(x){return (PT[x.payroll_type]||x.payroll_type||'')+' '+(x.daily_amt?won(x.daily_amt):'')+(x.monthly_amt?' / 월 '+won(x.monthly_amt):'')});
+  add('period','소득구분',ph,'period_id',function(x){return INC[x.income_type]||x.income_type||''});
+  add('team','팀',th,'assign_id',function(x){return (x.leader_name||x.leader_no||'')+' '+(x.contract_mode==='full'?'팀도급':'마진')});
+  if(!rows.length)return '';
+  return '<h4 style="margin:16px 0 6px">이력 정리</h4><table style="width:100%"><thead><tr><th class="l">구분</th><th class="l">적용</th><th class="l">종료</th><th class="l">내용</th><th></th></tr></thead><tbody>'
+   +rows.map(function(r){var ok=r.id!=null;return '<tr><td class="l">'+r.lbl+'</td><td class="l">'+esc(r.from)+'</td><td class="l">'+inf(r.to)+'</td><td class="l tiny">'+r.sum+'</td><td>'
+     +(ok&&r.last?'<button class="stbtn" onclick="histEnd(\''+r.kind+'\','+r.id+',\''+esc(r.to||'')+'\')">종료일</button> ':'')
+     +(ok&&!r.only?'<button class="stbtn x" onclick="histDel(\''+r.kind+'\','+r.id+')">삭제</button>':'')+'</td></tr>'}).join('')+'</tbody></table>'}
+async function histEnd(kind,id,cur){var v=await ask('종료일','비우면 종료 없음(현재까지)으로 됩니다.',{ok:'저장',html:'<input id="he_to" class="in" type="date" value="'+(cur&&cur!=='infinity'?esc(cur):'')+'">'});if(!v)return;
+  var to=el('he_to').value||null;var x=await sb.rpc('ceo_history_edit',{p_kind:kind,p_id:id,p_action:'end',p_valid_to:to});histDone(x,'종료일 저장')}
+async function histDel(kind,id){var ok=await ask('이력 삭제','이 행을 지우고 앞 행 기간을 이어 붙입니다.',{ok:'삭제',danger:true});if(!ok)return;
+  var x=await sb.rpc('ceo_history_edit',{p_kind:kind,p_id:id,p_action:'delete'});histDone(x,'삭제했습니다')}
+function histDone(x,msg){var d=x.data||{};if(!x.error&&d.ok&&+d.draft_affected>0)msg+=' · 미승인 공수 '+d.draft_affected+'건 단가 재계산 대상';return rpcDone(x,msg)}
+
+/* ══════ B12 경보 확인 ══════ */
+function alAckHtml(r){var a=r.ack;return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">'
+  +(r.acked?'<span class="pill g">확인함 · '+esc(String(a.acked_at||'').slice(0,10))+'</span>':(a?'<span class="pill y">확인 후 건수 변동 '+a.acked_cnt+' → '+r.cnt+'</span>':''))
+  +'<input id="ak_memo" class="in" style="flex:1" value="'+esc(a&&a.memo||'')+'" placeholder="메모">'
+  +'<button class="btn sm p" onclick="alAck('+JSON.stringify(r.title).replace(/"/g,'&quot;')+','+(+r.cnt||0)+')">확인함</button>'
+  +(a?'<button class="btn sm" onclick="alUnack('+JSON.stringify(r.title).replace(/"/g,'&quot;')+')">확인 해제</button>':'')+'</div>'}
+async function alAck(t,c){var x=await sb.rpc('ceo_alert_ack_set',{p_title:t,p_cnt:c,p_memo:(el('ak_memo').value||'').trim()});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인함','g');loadAll()}
+async function alUnack(t){var x=await sb.rpc('ceo_alert_ack_delete',{p_title:t});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인 해제','g');loadAll()}
+
+/* ══════ B13 견적 결과 · 거래처 특수관계 ══════ */
+function qOutHtml(d){var x=(D.pipe||[]).filter(function(z){return z.doc_no===d.doc_no})[0]||{};var cur=x.outcome||'';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><select id="qo_o" class="sel"><option value=""'+(cur===''?' selected':'')+'>자동 판정</option><option value="won"'+(cur==='won'?' selected':'')+'>수주</option><option value="lost"'+(cur==='lost'?' selected':'')+'>실주</option></select>'
+   +'<input id="qo_on" class="in" type="date" value="'+esc(x.outcome_on||today())+'" style="width:140px"><input id="qo_r" class="in" placeholder="실주 사유" value="'+esc(x.lost_reason||'')+'" style="flex:1;min-width:120px">'
+   +'<button class="btn sm" onclick="qOutSave(\''+esc(d.doc_no)+'\')">저장</button></div>'}
+async function qOutSave(no){var o=el('qo_o').value;var x=await sb.rpc('ceo_quote_outcome_set',{p_doc_no:no,p_outcome:o||null,p_on:el('qo_on').value||null,p_reason:(el('qo_r').value||'').trim()});rpcDone(x,'저장했습니다')}
+function ptnFlagSave(r,f,v){var p={};var t=String(v).trim();
+  if(f==='is_related_party'){if(!/^(예|아니오|y|n|true|false|1|0)$/i.test(t))return Promise.resolve({ok:false,error:'예 / 아니오'});p.is_related_party=/^(예|y|true|1)$/i.test(t)}
+  else if(f==='is_active'){if(!/^(사용|안 씀|안씀)$/.test(t))return Promise.resolve({ok:false,error:'사용 / 안 씀'});p.is_active=(t==='사용')}
+  else {t=t.toUpperCase();if(t&&['HBS','PYRO','SSJG','BVS'].indexOf(t)<0)return Promise.resolve({ok:false,error:'HBS / PYRO / SSJG / BVS'});p.related_entity=t}
+  return sb.rpc('ceo_partner_flags_set',{p_partner_id:r.partner_id,p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok){for(var k in p)r[k]=p[k]}return d})}
+function setgNum(k,def){var r=(D.setg||[]).filter(function(x){return x.setting_key===k})[0];var n=r&&r.value_num!=null?+r.value_num:NaN;return isNaN(n)?def:n}
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
 async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
@@ -6472,7 +6517,7 @@ function alDetail(t){t=String(t||'');
   if(/가지급금/.test(t))return d('di',C.di,function(r){return (+r.deemed_interest||0)>0},'법인세법상 인정이자 대상입니다. 세무사 확인이 필요합니다.','pl');
   if(/인박스|계정 미분류/.test(t))return d('inbox',C.inbox,null,'행을 누르면 계정을 지정할 수 있습니다.','ht');
   if(/청구기준/.test(t))return d('mrev',C.mrev,function(r){return Math.abs(+r.diff_amt||0)>=1},'청구 기준 금액과 발행한 계산서 금액이 다릅니다.','close');
-  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>60},'발주는 나갔는데 60일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
+  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)},'발주는 나갔는데 60일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
   if(/거래처 미등록/.test(t))return d('ht',C.ht,function(r){return !r.partner_id},'거래처 마스터에 등록하면 자동으로 연결됩니다.','ht');
   if(/SD 문서 미연결/.test(t))return d('ht',C.ht,function(r){return !r.matched_doc_no},'홈택스 계산서와 업무 문서가 연결되지 않았습니다.','ht');
   if(/안전점검 미제출/.test(t))return {rows:sfMiss(),cols:C.sfk,note:'투입 기록은 있는데 그날 작업 전 안전점검 제출이 없는 사람입니다. 현장앱 「안전」 탭에서 본인이 제출합니다 — 대표가 대신 넣지 않는 편이 증빙으로서 낫습니다.',go:'safety'};
@@ -6517,9 +6562,11 @@ function renderAlertCard(r){
     +  '<div class="al-head">'
     +    '<span class="al-badge '+dInfo.color+'">'+dInfo.icon+' '+r.domain+'</span>'
     +    '<span class="al-badge tier-'+(r.cnt?r.tier:0)+'">'+tName+(r.intg?' · 무결성':'')+'</span>'
+    +    (r.acked?'<span class="al-badge">확인함</span>':'')
     +  '</div>'
     +  '<div class="al-ttl">'+esc(r.title)+'</div>'
     +  '<div class="al-act">'+esc(r.action)+'</div>'
+    +  (r.ack&&r.ack.memo?'<div class="tiny dim">'+esc(r.ack.memo)+'</div>':'')
     +'</div>'
     +'</div>';
 }
@@ -6532,7 +6579,7 @@ function renderAlerts(){
   var mDueMap={};(D.set||[]).filter(function(s){return s.period_ym===M()}).forEach(function(s){mDueMap[s.employment_no]=+s.payable_amt||0});
   var deemedPayCount = (D.pay||[]).filter(function(r){return ((+r.balance_amt||0)-(mDueMap[r.employment_no]||0))>1000}).length;
   var apOverdueCount = (D.stl||[]).filter(function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)}).length;
-  var poOverdueCount = (D.po||[]).filter(function(r){return (+r.age_days||0)>60}).length;
+  var poOverdueCount = (D.po||[]).filter(function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)}).length;
   var trUnconfCount = (D.tro||[]).length;
 
   var hasGapInAl = (D.al||[]).some(function(r){ return /업무문서.*회계전표|헤더|차대|라인합/.test(r.title); });
@@ -6564,12 +6611,13 @@ function renderAlerts(){
     .concat((D.al||[]).some(function(r){return /퇴근 미등록/.test(r.title)})?[]:[{title:NOOUTT,cnt:noOutRows().length,tier:2,domain:'OP',action:alActionNote(NOOUTT)}])
     .concat([{title:SFT,cnt:sfMiss().length,tier:2,domain:'OP',action:alActionNote(SFT)},{title:EDT,cnt:edUnsigned().length,tier:2,domain:'OP',action:alActionNote(EDT)}]);
 
+  all.forEach(function(r){var a=(D.ack||[]).filter(function(x){return x.alert_title===r.title})[0];r.ack=a||null;r.acked=!!(a&&r.cnt>0&&+a.acked_cnt===+r.cnt)});
   /* 카운트 집계 */
   var dCnts={TAX:0,HR:0,OP:0,SD:0,FI:0};
   var tCnts={1:0,2:0,3:0};
   var totalHot=0;
   all.forEach(function(r){
-    if(r.cnt){
+    if(r.cnt&&!r.acked){
       dCnts[r.domain]=(dCnts[r.domain]||0)+1;
       tCnts[r.tier]=(tCnts[r.tier]||0)+1;
       totalHot++;
@@ -6608,7 +6656,7 @@ function renderAlerts(){
 
   /* 정렬: 발생여부(건수>0 우선) -> 티어순(1>2>3) -> 건수내림차순 */
   list.sort(function(a,b){
-    return (b.cnt?1:0)-(a.cnt?1:0)||a.tier-b.tier||b.cnt-a.cnt;
+    return ((b.cnt&&!b.acked)?1:0)-((a.cnt&&!a.acked)?1:0)||(b.cnt?1:0)-(a.cnt?1:0)||a.tier-b.tier||b.cnt-a.cnt;
   });
 
   /* 렌더링 */
@@ -6624,7 +6672,7 @@ function renderAlerts(){
       var domItems=list.filter(function(r){return r.domain===k});
       if(!domItems.length)return;
       var d=DOMAINS[k];
-      var dHot=domItems.filter(function(r){return r.cnt>0}).length;
+      var dHot=domItems.filter(function(r){return r.cnt>0&&!r.acked}).length;
       htmlGroups+='<div class="al-grp">'
         +'<div class="al-grp-hdr">'
         +  '<span>'+d.icon+' '+d.name+'</span>'
@@ -6658,7 +6706,8 @@ function renderAlerts(){
     var dd=alDetail(ALF.sel),hit=(all.filter(function(r){return r.title===ALF.sel})[0]||{}).cnt;
     sec.classList.remove('hide');
     el('alDetT').innerHTML=esc(ALF.sel)+' <span class="cnt">'+(dd.rows.length?dd.rows.length+'건':(hit?hit+'건':''))+'</span>';
-    el('alDetD').innerHTML=esc(dd.note||'')+(dd.go?' <a href="#" onclick="event.preventDefault();go(\''+dd.go+'\')">해당 화면으로 이동 →</a>':'');
+    var selR=all.filter(function(r){return r.title===ALF.sel})[0]||{};
+    el('alDetD').innerHTML=(isOwner()&&selR.cnt?alAckHtml(selR):'')+esc(dd.note||'')+(dd.go?' <a href="#" onclick="event.preventDefault();go(\''+dd.go+'\')">해당 화면으로 이동 →</a>':'');
     grid('gAlDet',dd.cols,{rows:dd.rows,foot:dd.rows.length>0,page:50,csv:dd.rows.length>0,onRow:dd.onRow,empty:'이 경보는 표로 보여 줄 목록이 없습니다 — 위 안내를 따르십시오'});
   } else {
     sec.classList.add('hide');
