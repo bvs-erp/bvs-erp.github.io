@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.46 · 대표 콕핏</title>
+<title>BVS ERP v1.47 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.46</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.47</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1130,7 +1130,7 @@ function getAllowedPages(){
   if(isOwner()) return ['home', 'alerts', 'sales', 'close', 'site', 'crew', 'pm', 'hr', 'money', 'safety', 'ht', 'settle', 'pl', 'tax'];
   return [];
 }
-var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
+var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr'.split(' ').forEach(function(k){D[k]=[]});
 var APPVER='1.34';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
@@ -1770,8 +1770,8 @@ async function loadAll(){
     ['pjr',function(){return sb.from('ceo_project_rates').select('*').order('valid_from',{ascending:false}).limit(2000)}],
     ['pjq',function(){return sb.from('ceo_project_qty').select('*').order('work_date',{ascending:false}).limit(8000)}],
     ['pjs',function(){return sb.from('ceo_project_day_sites').select('*').order('work_date',{ascending:false}).limit(6000)}],
-    ['pjd',function(){return sb.from('ceo_project_daily').select('*').order('work_date',{ascending:false}).limit(4000)}],
-    ['pjm',function(){return sb.from('ceo_project_month').select('*').order('period_ym',{ascending:false}).limit(600)}],
+    ['pjk',function(){return sb.from('ceo_project_locks').select('*')}],
+    ['cm',function(){return sb.from('ceo_closed_months').select('*')}],
     ['lm',function(){return sb.from('ceo_labor_month').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').limit(4000)}],
     ['sites',function(){return sb.from('ceo_sites').select('*').order('site_name')}],
     ['srate',function(){return sb.from('ceo_site_rates').select('*').order('valid_from',{ascending:false}).limit(2000)}],
@@ -4750,7 +4750,7 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   drOpen(r.name+' · 인력 마스터',body,'<button class="btn" onclick="drClose()">닫기</button>');
 }
 /* ══════ B1 현장 관리 (대표 입력) ══════ */
-function srateOf(sid){return (D.srate||[]).filter(function(x){return x.site_id===sid&&(x.job_grade||'default')==='default'}).sort(function(a,b){return String(b.valid_from).localeCompare(String(a.valid_from))})}
+function srateOf(sid){return (D.srate||[]).filter(function(x){return x.site_id===sid&&(x.job_grade||'default')==='default'&&!x.employment_no}).sort(function(a,b){return String(b.valid_from).localeCompare(String(a.valid_from))})}
 function srateCur(sid,d){d=d||today();return srateOf(sid).filter(function(x){return String(x.valid_from)<=d&&(x.valid_to==null||x.valid_to==='infinity'||d<String(x.valid_to))})[0]||null}
 function renderSiteM(){var sec=el('sec-gSiteM');if(!sec)return;if(!isOwner()){sec.style.display='none';return}sec.style.display='';
   var rows=(D.sites||[]).map(function(r){var c=srateCur(r.site_id);r._d=c?+c.contract_daily_amt:null;r._ot=c?+c.contract_ot_hourly_amt:null;r._act=r.is_active===false?'0':'1';return r});
@@ -4767,20 +4767,33 @@ function siteForm(r){r=r||{};return '<div class="fr"><div class="f"><label>코�
   +'<div class="fr"><div class="f"><label>지역 코드</label><input id="st_reg" class="in" value="'+esc(r.region_code||'')+'"></div><div class="f"><label>주소</label><input id="st_addr" class="in" value="'+esc(r.address||'')+'"></div></div>'
   +'<div class="f"><label>메모</label><input id="st_memo" class="in" value="'+esc(r.memo||'')+'"></div>'}
 function siteFormVal(){return {site_id:(el('st_id').value||'').trim(),site_name:(el('st_name').value||'').trim(),partner_id:el('st_ptn').value,is_active:el('st_act').value==='true',opened_on:el('st_open').value,closed_on:el('st_close').value,region_code:(el('st_reg').value||'').trim(),address:(el('st_addr').value||'').trim(),memo:(el('st_memo').value||'').trim()}}
-function siteOpen(r){var sid=r.site_id,h=srateOf(sid),inf=function(v){return v==null||v==='infinity'?'현재':esc(v)};
+function srInf(v){return v==null||v==='infinity'?'현재':esc(v)}
+function siteOpen(r){var sid=r.site_id,h=srateOf(sid);
+  var ph=(D.srate||[]).filter(function(x){return x.site_id===sid&&(x.job_grade||'default')==='default'&&x.employment_no}).sort(function(a,b){return String(a.person_name||'').localeCompare(String(b.person_name||''),'ko')||String(b.valid_from).localeCompare(String(a.valid_from))});
+  var ppl={};(D.staff||[]).filter(function(s){return !s.resigned_on}).forEach(function(s){ppl[s.employment_no]=s.name});ph.forEach(function(x){if(!ppl[x.employment_no])ppl[x.employment_no]=x.person_name||x.employment_no});
+  var po=Object.keys(ppl).sort(function(a,b){return String(ppl[a]).localeCompare(String(ppl[b]),'ko')}).map(function(k){return '<option value="'+esc(k)+'">'+esc(ppl[k])+'</option>'}).join('');
+  var row=function(x,who){return '<tr>'+(who?'<td class="l">'+esc(x.person_name||x.employment_no)+'</td>':'')+'<td class="l">'+esc(x.valid_from)+'</td><td class="l">'+srInf(x.valid_to)+'</td><td>'+won(x.contract_daily_amt)+'</td><td>'+won(x.contract_ot_hourly_amt)+'</td><td class="l tiny">'+esc(x.memo||'')+'</td><td><button class="stbtn" onclick="srEdit('+x.rate_id+')">수정</button> <button class="stbtn x" onclick="srDel('+x.rate_id+')">삭제</button></td></tr>'};
   var body=siteForm(r)+'<button class="btn sm p" onclick="siteSave()">저장</button>'
-   +'<h4 style="margin:16px 0 6px">청구 단가 이력</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>일단가</th><th>잔업 시급</th></tr></thead><tbody>'
-   +(h.length?h.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td>'+won(x.contract_daily_amt)+'</td><td>'+won(x.contract_ot_hourly_amt)+'</td></tr>'}).join(''):'<tr><td colspan="4" class="empty">없음</td></tr>')+'</tbody></table>'
-   +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="sr_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>일단가</label><input id="sr_d" class="in" type="number" step="10000"></div></div>'
-   +'<div class="fr"><div class="f"><label>잔업 시급</label><input id="sr_ot" class="in" type="number" step="1000"></div><div class="f"></div></div>'
+   +'<h4 style="margin:16px 0 6px">청구 단가 (현장 기본)</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>일단가</th><th>잔업 시급</th><th class="l">메모</th><th></th></tr></thead><tbody>'
+   +(h.length?h.map(function(x){return row(x,0)}).join(''):'<tr><td colspan="6" class="empty">없음</td></tr>')+'</tbody></table>'
+   +'<h4 style="margin:16px 0 6px">사람별 단가</h4><table style="width:100%"><thead><tr><th class="l">사람</th><th class="l">적용</th><th class="l">종료</th><th>일단가</th><th>잔업 시급</th><th class="l">메모</th><th></th></tr></thead><tbody>'
+   +(ph.length?ph.map(function(x){return row(x,1)}).join(''):'<tr><td colspan="7" class="empty">없음</td></tr>')+'</tbody></table>'
+   +'<h4 style="margin:16px 0 6px">단가 넣기</h4>'
+   +'<div class="fr"><div class="f"><label>대상</label><select id="sr_emp" class="sel" style="width:100%"><option value="">현장 기본</option>'+po+'</select></div><div class="f"><label>적용일</label><input id="sr_from" class="in" type="date" value="'+today()+'"></div></div>'
+   +'<div class="fr"><div class="f"><label>일단가</label><input id="sr_d" class="in" type="number" step="10000"></div><div class="f"><label>잔업 시급</label><input id="sr_ot" class="in" type="number" step="1000"></div></div>'
+   +'<div class="f"><label>메모</label><input id="sr_memo" class="in"></div>'
    +'<button class="btn sm p" onclick="siteRateSave(\''+esc(sid)+'\')">단가 저장</button>';
   drOpen((r.site_name||sid)+' · 현장',body,'<button class="btn" onclick="drClose()">닫기</button>')}
+function srEdit(id){var x=(D.srate||[]).filter(function(y){return y.rate_id===id})[0];if(!x)return;el('sr_emp').value=x.employment_no||'';el('sr_from').value=x.valid_from;el('sr_d').value=x.contract_daily_amt;el('sr_ot').value=x.contract_ot_hourly_amt||0;el('sr_memo').value=x.memo||'';el('sr_d').focus()}
+async function srDel(id){var x=(D.srate||[]).filter(function(y){return y.rate_id===id})[0];if(!x)return;
+  var ok=await ask('단가 삭제',esc(x.person_name||'현장 기본')+' · '+esc(x.valid_from)+' 적용 '+won(x.contract_daily_amt)+'. 지우면 직전 단가가 이 기간을 이어받습니다.',{ok:'삭제',danger:true});if(!ok)return;
+  var r=await sb.rpc('ceo_site_rate_remove',{p_rate_id:id});rpcDone(r,'삭제했습니다')}
 async function siteSave(){var p=siteFormVal();if(!p.site_id||!p.site_name){toast('코드와 현장명을 넣으세요','e');return}
   var r=await sb.rpc('ceo_site_set',{p:p});rpcDone(r,'저장했습니다')}
 async function siteNew(){drOpen('현장 추가',siteForm({})+'<button class="btn sm p" onclick="siteSave()">추가</button>','<button class="btn" onclick="drClose()">닫기</button>')}
 async function siteRateSave(sid){var f=el('sr_from').value,d=el('sr_d').value,o=el('sr_ot').value;
-  if(!f||d===''){toast('적용일과 일단가를 넣으세요','e');return}
-  var r=await sb.rpc('ceo_site_rate_set',{p_site_id:sid,p_valid_from:f,p_daily:+d,p_ot:o===''?0:+o});rpcDone(r,'단가 저장')}
+  if(!f||d===''||+d<0){toast('적용일과 0 이상 일단가를 넣으세요','e');return}
+  var r=await sb.rpc('ceo_site_rate_save',{p:{site_id:sid,employment_no:el('sr_emp').value||null,valid_from:f,daily:+d,ot:o===''?0:+o,memo:(el('sr_memo').value||'').trim()}});rpcDone(r,'단가 저장')}
 
 /* ══════ B3 정산 (대표 입력) ══════ */
 var ADJK={deduction:'공제',other_pay:'기타지급',advance:'가불'};
@@ -5099,11 +5112,30 @@ var PJMODE={md:'공수만',qty:'수량만',max:'하루 단위 큰 쪽'};
 function pjList(){var l=(D.pjl&&D.pjl.length?D.pjl:(D.pj||[])).slice();return l.sort(function(a,b){return (+a.sort_no||0)-(+b.sort_no||0)||String(a.project_name).localeCompare(String(b.project_name),'ko')})}
 function pjNm(c){if(!c)return '';var p=pjList().filter(function(x){return x.project_code===c})[0];return p?p.project_name:c}
 function pjMap(keep,all){var o={};pjList().forEach(function(p){if(all||p.is_active!==false||p.project_code===keep)o[p.project_code]=p.project_name});if(keep&&!o[keep])o[keep]=keep;return o}
+/* 현장별 하루(ceo_project_day_sites) → 일별·월별 합산 (DB 뷰 대신 화면에서) */
+function pjDerive(){if(D._pjSrc===D.pjs&&D._pjK===D.pjk&&D._pjQ===D.pjq)return;D._pjSrc=D.pjs;D._pjK=D.pjk;D._pjQ=D.pjq;
+  var lk={};(D.pjk||[]).forEach(function(x){lk[x.project_code+'|'+String(x.work_date).slice(0,10)]=1});
+  var cm={};(D.cm||[]).forEach(function(x){cm[x.period_ym]=1});
+  var qt={};(D.pjq||[]).forEach(function(x){var k=x.project_code+'|'+String(x.work_date).slice(0,10);var o=qt[k]=qt[k]||{};var n=x.item_name||x.item_code;o[n]=(o[n]||0)+(+x.qty||0)});
+  var dd={},out=[];
+  (D.pjs||[]).forEach(function(x){var d=String(x.work_date).slice(0,10),k=x.project_code+'|'+d;var r=dd[k];
+    if(!r){r=dd[k]={project_code:x.project_code,project_name:x.project_name,billing_mode:x.billing_mode,work_date:d,period_ym:x.period_ym||d.slice(0,7),md:0,md_amt:0,guarantee_amt:0,qty_amt:0,makeup_amt:0,billed_amt:0,override_amt:null,_rs:[],_st:[],invoiced:false};out.push(r)}
+    ['md','md_amt','guarantee_amt','qty_amt','makeup_amt','billed_amt'].forEach(function(f){r[f]+=(+x[f]||0)});
+    if(x.override_amt!=null){r.override_amt=(r.override_amt||0)+(+x.override_amt);if(x.override_reason)r._rs.push(x.override_reason)}
+    var sn=x.site_name||x.site_id;if(sn&&r._st.indexOf(sn)<0)r._st.push(sn);if(x.invoiced)r.invoiced=true});
+  out.forEach(function(r){r.override_reason=r._rs.join(' / ')||null;r.sites=r._st.sort().join(', ');r.site_cnt=r._st.length;
+    var q=qt[r.project_code+'|'+r.work_date];r.qty_text=q?Object.keys(q).map(function(n){return n+' '+(+q[n]).toLocaleString('ko-KR')}).join(', '):'';
+    r.erp_locked=!!lk[r.project_code+'|'+r.work_date];r.frozen_reason=cm[r.period_ym]?'마감된 달입니다. 마감을 풀고 고치세요.':r.invoiced?'계산서가 발행된 날입니다.':null});
+  out.sort(function(a,b){return b.work_date.localeCompare(a.work_date)});D.pjd=out;
+  var mm={},mo=[];out.forEach(function(r){var k=r.project_code+'|'+r.period_ym;var m=mm[k];
+    if(!m){m=mm[k]={project_code:r.project_code,project_name:r.project_name,billing_mode:r.billing_mode,period_ym:r.period_ym,work_days:0,md_sum:0,guarantee_amt:0,qty_amt:0,makeup_amt:0,billed_amt:0,erp_days:0,has_frozen:false};mo.push(m)}
+    if(r.md>0)m.work_days++;m.md_sum+=r.md;m.guarantee_amt+=r.guarantee_amt;m.qty_amt+=r.qty_amt;m.makeup_amt+=r.makeup_amt;m.billed_amt+=r.billed_amt;if(r.erp_locked)m.erp_days++;if(r.frozen_reason)m.has_frozen=true});
+  mo.sort(function(a,b){return b.period_ym.localeCompare(a.period_ym)});D.pjm=mo}
 function pjOf(c){return (D.pj||[]).filter(function(p){return p.project_code===c})[0]||null}
 function pjCur(){var l=(D.pj||[]).slice().sort(function(a,b){return (+a.sort_no||0)-(+b.sort_no||0)});var c=ST.pj;
   if(!c||!pjOf(c)){var b=l.filter(function(p){return p.billing_mode!=='md'&&p.is_active!==false})[0]||l[0];c=b?b.project_code:''}ST.pj=c;return c}
 function pjSt(r){return r.frozen_reason?'<span class="pill g">'+(r.invoiced?'계산서':'마감')+'</span>':r.erp_locked?'<span class="pill b" title="ERP에서 고친 날 · 시트 동기화 제외">ERP 수정</span>':''}
-function renderPj(){if(!el('gPjD'))return;var c=pjCur(),P=pjOf(c);
+function renderPj(){if(!el('gPjD'))return;pjDerive();var c=pjCur(),P=pjOf(c);
   var l=(D.pj||[]).slice().sort(function(a,b){return (a.is_active===false)-(b.is_active===false)||(+a.sort_no||0)-(+b.sort_no||0)});
   el('pjSel').innerHTML=l.length?l.map(function(p){return '<option value="'+esc(p.project_code)+'"'+(p.project_code===c?' selected':'')+'>'+esc(p.project_name)+(p.is_active===false?' (종료)':'')+'</option>'}).join(''):'<option value="">프로젝트 없음</option>';
   if(!P){el('pjInfo').innerHTML='';el('pjDayT').textContent='';grid('gPjM',[{k:'period_ym',t:'월',l:1}],{rows:[],csv:false,empty:'프로젝트 없음'});grid('gPjD',[{k:'work_date',t:'일자',l:1}],{rows:[],csv:false,empty:'프로젝트 없음'});return}
@@ -5129,7 +5161,7 @@ function renderPj(){if(!el('gPjD'))return;var c=pjCur(),P=pjOf(c);
   grid('gPjD',dc,{rows:dr,csv:true,foot:true,page:40,sort:{k:'work_date',d:-1},empty:'이 달 기록 없음',onRow:function(r){pjDay(r)}});
 }
 /* 하루: 수량 줄 추가·수정·삭제 + 협의 보전 + 시트 값으로 되돌리기 */
-function pjDay(r){var c=ST.pj,P=pjOf(c);if(!P)return;
+function pjDay(r){pjDerive();var c=ST.pj,P=pjOf(c);if(!P)return;
   if(!r){drOpen(esc(P.project_name)+' · 날짜 추가','<div class="f"><label>일자</label><input id="pjd_new" class="in" type="date"></div>','<button class="btn p" onclick="var d=el(\'pjd_new\').value;if(!d){toast(\'일자를 넣으세요\',\'e\');return}pjDay({project_code:ST.pj,work_date:d,_new:1})">열기</button>');return}
   var d=String(r.work_date).slice(0,10);
   var ex=(D.pjd||[]).filter(function(x){return x.project_code===c&&String(x.work_date).slice(0,10)===d})[0];if(ex)r=ex;
@@ -6504,7 +6536,7 @@ function helpClose(){help('월간 청구·마감 — 계산 기준',
  +'<p><b>계산서 − 청구</b>가 0이 아니면 아래 거래처별 표에서 해당 거래처를 눌러 내역을 봅니다.</p>')}
 function mrevOpen(r){
   var ls=(D.mrevl||[]).filter(function(x){return x.period_ym===r.period_ym&&(x.partner_id||'')===(r.partner_id||'')}).sort(function(a,b){return String(a.project).localeCompare(String(b.project),'ko')||(a.is_holiday?1:-1)});
-  var pjs=(D.pj||[]).filter(function(p){return p.billing_mode!=='md'&&(p.partner_id||'')===(r.partner_id||'')}).map(function(p){return p.project_code});
+  pjDerive();var pjs=(D.pj||[]).filter(function(p){return p.billing_mode!=='md'&&(p.partner_id||'')===(r.partner_id||'')}).map(function(p){return p.project_code});
   var pump=(D.pjm||[]).filter(function(x){return x.period_ym===r.period_ym&&pjs.indexOf(x.project_code)>=0});
   var body=kv([['귀속월',r.period_ym],['거래처',esc(r.partner_name||'–')],['청구기준 합계','<b>'+won(r.billing_amt)+'</b> = 공수 '+won(r.labor_amt)+' + 휴일가산 '+won(r.holiday_premium)+' + 프로젝트 '+won(r.pump_billed)],['계산서 공급가',won(r.sd_supply)+' ('+(r.sd_docs||0)+'건 '+esc(r.sd_doc_nos||'')+')'],['차이',r.diff_amt==null?'<span class="dim">투입 기록 없음 · 문서 기준</span>':(+r.diff_amt)?'<b class="'+((+r.diff_amt)>0?'wn':'neg')+'">'+won(r.diff_amt)+'</b>':'<span class="pos">0 · 일치</span>']])
    +'<h4 style="margin:14px 0 6px">프로젝트 · 휴일별 내역</h4><table class="mini" style="width:100%"><thead><tr><th class="l">프로젝트</th><th class="l">구분</th><th>건</th><th>공수</th><th>연장h</th><th>공수매출</th><th>휴일가산</th></tr></thead><tbody>'
