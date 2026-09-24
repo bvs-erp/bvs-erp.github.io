@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.16 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.17 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -258,7 +258,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.16</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.17</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -318,8 +318,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="tax-banner" id="taxBanner">
       <div class="tax-icon">!</div>
       <div class="tax-body" style="flex:1">
-        <h4>⚠️ Tax-Risk Guard 경고: 특수관계인(BVS ↔ SSJG) 내부거래 2건 감지</h4>
-        <p>헌법 제5조에 의거, BVS 법인과 SSJG 법인 간 자금 이체 2건(총 2,750만 원)이 실측 포착되었습니다. 가지급금 및 부당행위계산부인 방지를 위해 증빙 및 반증자료(계약서, 세금계산서)를 상시 대조하십시오.</p>
+        <h4>⚠️ Tax-Risk Guard 경고: 특수관계인(BVS ↔ SSJG) 내부거래 <span id="trCnt"></span>건 감지</h4>
+        <p>헌법 제5조에 의거, BVS 법인과 SSJG 법인 간 자금 이체 <span id="trCnt2"></span>건(총 <span id="trSum"></span>만 원)이 실측 포착되었습니다. 가지급금 및 부당행위계산부인 방지를 위해 증빙 및 반증자료(계약서, 세금계산서)를 상시 대조하십시오.</p>
         <table class="tax-table">
           <thead>
             <tr><th>거래일자</th><th>거래처</th><th>구분</th><th>금액</th><th>잔액</th><th>적요</th></tr>
@@ -725,28 +725,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <div class="kpi-card green">
-        <div class="kpi-label">네이버 스마트스토어 (주력 81%)</div>
-        <div class="kpi-val">36.3%</div>
-        <div class="kpi-sub">출고 221건 · 차익 325만 원</div>
-      </div>
-      <div class="kpi-card blue">
-        <div class="kpi-label">하프클럽 (패션/제휴)</div>
-        <div class="kpi-val">38.5%</div>
-        <div class="kpi-sub">출고 39건 · 차익 80만 원</div>
-      </div>
-      <div class="kpi-card amber">
-        <div class="kpi-label">네이버페이 지정결제</div>
-        <div class="kpi-val">43.0%</div>
-        <div class="kpi-sub">출고 1건 · 차익 1.3만 원</div>
-      </div>
-      <div class="kpi-card purple">
-        <div class="kpi-label">모바일웹 자사몰</div>
-        <div class="kpi-val">12.8%</div>
-        <div class="kpi-sub">출고 2건 · 차익 1.0만 원</div>
-      </div>
-    </div>
+    <div class="kpi-grid" id="chKpiGrid"></div>
 
     <div class="panel">
       <div class="panel-head">
@@ -1489,6 +1468,13 @@ async function loadAllData(){
 
     // 1. Load Tax-Risk Rows
     var { data: taxData } = await sb.from('ssjg_tax_risk').select('*');
+    if(taxData){
+      var trSum = taxData.reduce((a, r) => a + (Number(r.deposit_amt) > 0 ? Number(r.deposit_amt) : Number(r.withdraw_amt) || 0), 0);
+      document.getElementById('trCnt').innerText = taxData.length;
+      document.getElementById('trCnt2').innerText = taxData.length;
+      document.getElementById('trSum').innerText = Math.round(trSum / 10000).toLocaleString('ko-KR');
+      document.getElementById('taxBanner').style.display = taxData.length ? '' : 'none';
+    }
     if(taxData && taxData.length > 0){
       document.getElementById('taxRiskRows').innerHTML = taxData.map(r => `
         <tr>
@@ -1554,6 +1540,7 @@ async function loadAllData(){
 
     if(chRes.data){
       allChannelPl = chRes.data;
+      renderChannelKpi(allChannelPl);
       renderChannelPl(allChannelPl);
     }
 
@@ -1618,6 +1605,25 @@ function renderMgmtPl(plRows, sgaRows){
 }
 
 // ── 채널별 수익성 렌더러 (WO-22) ──
+function renderChannelKpi(rows){
+  var g = document.getElementById('chKpiGrid'); if(!g) return;
+  var m = {}, tot = 0;
+  (rows || []).forEach(r => {
+    var k = r.channel || '-';
+    m[k] = m[k] || {ch: k, n: 0, pay: 0, gross: 0};
+    m[k].n += Number(r.ship_cnt) || 0; m[k].pay += Number(r.pay_incl_vat) || 0; m[k].gross += Number(r.gross_after_ship) || 0;
+    tot += Number(r.pay_incl_vat) || 0;
+  });
+  var man = v => Math.abs(v) >= 100000 ? Math.round(v / 10000).toLocaleString('ko-KR') : (v / 10000).toFixed(1);
+  var cls = ['green', 'blue', 'amber', 'purple'];
+  g.innerHTML = Object.values(m).sort((a, b) => b.pay - a.pay).slice(0, 4).map((o, i) => `
+      <div class="kpi-card ${cls[i]}">
+        <div class="kpi-label">${o.ch} (비중 ${tot > 0 ? Math.round(o.pay / tot * 100) : 0}%)</div>
+        <div class="kpi-val">${o.pay > 0 ? (o.gross / o.pay * 100).toFixed(1) : '0.0'}%</div>
+        <div class="kpi-sub">출고 ${o.n.toLocaleString('ko-KR')}건 · 차익 ${man(o.gross)}만 원</div>
+      </div>`).join('');
+}
+
 function renderChannelPl(rows){
   var tbody = document.getElementById('channelPlTableRows');
   if(!rows || rows.length === 0){
