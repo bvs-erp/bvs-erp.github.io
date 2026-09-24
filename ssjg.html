@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.17 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.18 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -258,7 +258,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.17</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.18</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -338,7 +338,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
             <h4 style="color:#fca5a5;margin:0">원천세 법정 신고·납부기한 도과 경고 (WO-26)</h4>
-            <span class="badge" style="background:#dc2626;color:#fff;font-weight:700">D+11 초과 미신고</span>
+            <span class="badge" style="background:#dc2626;color:#fff;font-weight:700" id="wo26Dday"></span>
           </div>
           <span style="font-size:11px;color:#fca5a5;font-weight:600">세무사 기한후신고 필수</span>
         </div>
@@ -353,24 +353,24 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <!-- KPI Grid -->
     <div class="kpi-grid">
       <div class="kpi-card green">
-        <div class="kpi-label">누적 총 입금액 (2021~2025)</div>
-        <div class="kpi-val" id="kpiDeposit">13억 3,580만</div>
-        <div class="kpi-sub">원장 총 1,335,808,399 원</div>
+        <div class="kpi-label">누적 총 입금액<span class="bkPeriod"></span></div>
+        <div class="kpi-val" id="kpiDeposit"></div>
+        <div class="kpi-sub" id="kpiDepositSub"></div>
       </div>
       <div class="kpi-card red">
-        <div class="kpi-label">누적 총 출금액 (2021~2025)</div>
-        <div class="kpi-val" id="kpiWithdraw">13억 3,730만</div>
-        <div class="kpi-sub">원장 총 1,337,308,778 원</div>
+        <div class="kpi-label">누적 총 출금액<span class="bkPeriod"></span></div>
+        <div class="kpi-val" id="kpiWithdraw"></div>
+        <div class="kpi-sub" id="kpiWithdrawSub"></div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">통장 거래 총 건수</div>
-        <div class="kpi-val" id="kpiCount">2,720 건</div>
-        <div class="kpi-sub">IBK기업은행 원장 100% 적재 완료</div>
+        <div class="kpi-val" id="kpiCount"></div>
+        <div class="kpi-sub" id="kpiCountSub"></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">최신 통장 마감 잔액</div>
-        <div class="kpi-val" id="kpiBalance">0 원</div>
-        <div class="kpi-sub">2025-12-31 결산 마감 기준</div>
+        <div class="kpi-val" id="kpiBalance"></div>
+        <div class="kpi-sub" id="kpiBalanceSub"></div>
       </div>
     </div>
 
@@ -1465,6 +1465,30 @@ async function loadAllData(){
         }
       }
     } catch(compEx){ console.warn('ssjg_company fetch error:', compEx); }
+
+    // 0. 통장 KPI (public.ssjg_bank_kpi) · 원천세 D+
+    try {
+      var { data: bk } = await sb.from('ssjg_bank_kpi').select('*').limit(1);
+      if(bk && bk[0]){
+        var k = bk[0], eok = v => { v = Math.trunc(Number(v) || 0); var e = Math.trunc(v / 100000000), m = Math.trunc((v % 100000000) / 10000); return (e ? e + '억 ' : '') + m.toLocaleString('ko-KR') + '만'; };
+        var per = (k.first_date && k.last_date) ? ' (' + String(k.first_date).slice(0, 4) + '~' + String(k.last_date).slice(0, 4) + ')' : '';
+        document.querySelectorAll('.bkPeriod').forEach(e => e.innerText = per);
+        document.getElementById('kpiDeposit').innerText = eok(k.tot_deposit);
+        document.getElementById('kpiDepositSub').innerText = '원장 총 ' + fmt(k.tot_deposit) + ' 원';
+        document.getElementById('kpiWithdraw').innerText = eok(k.tot_withdraw);
+        document.getElementById('kpiWithdrawSub').innerText = '원장 총 ' + fmt(k.tot_withdraw) + ' 원';
+        document.getElementById('kpiCount').innerText = fmt(k.txn_cnt) + ' 건';
+        document.getElementById('kpiCountSub').innerText = (k.first_date || '') + ' ~ ' + (k.last_date || '');
+        document.getElementById('kpiBalance').innerText = fmt(k.last_balance) + ' 원';
+        document.getElementById('kpiBalanceSub').innerText = (k.last_date || '') + ' 기준';
+      }
+    } catch(bkEx){ console.warn('ssjg_bank_kpi fetch error:', bkEx); }
+    (function(){
+      var el = document.getElementById('wo26Dday'); if(!el) return;
+      var now = new Date(Date.now() + 9 * 3600000), today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      var d = Math.round((today - Date.UTC(2026, 8, 10)) / 86400000);
+      el.innerText = d > 0 ? 'D+' + d + ' 초과 미신고' : (d === 0 ? 'D-DAY 미신고' : 'D' + d + ' 미신고');
+    })();
 
     // 1. Load Tax-Risk Rows
     var { data: taxData } = await sb.from('ssjg_tax_risk').select('*');
