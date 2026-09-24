@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.44 · 대표 콕핏</title>
+<title>BVS ERP v1.45 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.44</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.45</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -818,6 +818,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
         <div class="sec" id="sec-gLdr"><h3>팀장 정산 <span class="cnt" id="ldrN"></span></h3><div class="tb" id="gLdr"></div></div>
       </div>
       <div class="sec" id="sec-gApay"><h3>지급기록 자동 생성 (통장 출금) <span class="cnt" id="apayN"></span><button class="btn sm p" style="margin-left:10px" onclick="apRun()">통장 출금 → 지급기록 생성</button></h3><div class="tb" id="gApay"></div></div>
+      <div class="sec" id="sec-gPmb"><h3>급여 기산 (월급제) <span class="cnt" id="pmbN"></span></h3><div class="tb" id="gPmb"></div></div>
+      <div class="sec"><h3>법정 연장수당 소급 대상</h3><div class="tb" id="gRetro"></div></div>
     </section>
 
     <!-- 손익 -->
@@ -846,53 +848,43 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 
     <!-- 인사 -->
     <section class="page" id="p-hr">
-      <div class="ph"><h2>인사 · 근로계약</h2></div>
+      <div class="ph"><h2>인사 · 근로계약</h2>
+        <div class="act" style="display:flex;gap:6px"><span class="chip on" data-t="people" onclick="hrTab('people')">인력</span><span class="chip" data-t="doc" onclick="hrTab('doc')">계약 · 서명</span><span class="chip" data-t="pay" onclick="hrTab('pay')">급여 기준</span><span class="chip" data-t="conf" onclick="hrTab('conf')">설정</span></div></div>
       <div class="kpis" id="hrKpi"></div>
-      <div class="sec"><h3>ERP 계정 <span class="cnt" id="acctN"></span><span class="r"><button class="btn sm" onclick="acctReload()">새로고침</button></span></h3>
-        <div class="desc" style="margin-bottom:8px">누가 현장앱·ERP에 들어올 수 있는지. 계정 만들기 · 이메일 변경 · 비밀번호 재발급 · 삭제를 여기서 합니다.<button class="hbtn" onclick="helpAcct()">?</button></div>
-        <div class="kpis" id="acctKpi"></div>
-        <div class="tb" id="gAcct"></div></div>
+      <div class="hrt" data-t="people">
       <div class="sec"><h3>인력 마스터 <span class="cnt" id="staffN"></span><span class="r"><button class="btn sm p" onclick="staffNew()">+ 신규 인력</button></span></h3>
-        <div class="desc" style="margin-bottom:8px">한 사람의 인적사항 · 단가 · 소득구분 · 팀 · 교육 · 서류<button class="hbtn" onclick="helpStaff()">?</button></div>
         <div class="tb" id="gStaff"></div></div>
+      </div>
+      <div class="hrt hide" data-t="doc">
+      <div class="sec" id="hr-esign"><h3>근로계약 전자서명 <span class="cnt" id="esgN"></span></h3>
+        <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn sm" onclick="copyWorkerAppLink()">현장앱 주소 복사</button><button class="btn sm" onclick="window.open('worker.html','_blank')">현장앱 열기</button></div>
+        <div class="kpis" id="esgKpi"></div>
+        <div class="tb" id="gEsgTodo"></div>
+        <div style="height:10px"></div>
+        <div class="tb" id="gEsg"></div></div>
+      <div class="sec"><h3>계약·동의 미비 <span class="cnt" id="consN"></span></h3><div class="tb" id="gCons"></div></div>
       <div class="sec"><h3>고객사 출입신청 명단 <span class="cnt" id="rosN"></span><span class="r"><button class="btn sm p" onclick="rosExport()">내보내기 · 제공대장 기록</button></span></h3>
         <div id="rosPick" style="margin-bottom:8px"></div>
         <div class="tb" id="gRos"></div></div>
       <div class="sec"><h3>개인정보 제공대장 <span class="cnt" id="dlogN"></span></h3>
         <div class="tb" id="gDlog"></div></div>
-      <div class="sec"><h3>급여 기준 (월급제) <span class="cnt" id="payN"></span><span class="r"><button class="btn sm" onclick="payHelp()">산식·상수</button></span></h3><div class="tb" id="gPayProf"></div></div>
-      <div class="grid2">
-        <div class="sec"><h3>계약·동의 미비 <span class="cnt" id="consN"></span></h3><div class="tb" id="gCons"></div></div>
-        <div class="sec"><h3>법정 연장수당 소급 대상</h3><div class="tb" id="gRetro"></div></div>
       </div>
-      <div class="sec" id="hr-esign"><h3>근로계약 전자서명 <span class="cnt" id="esgN"></span></h3>
-        <div id="workerAppBox" style="background:var(--sf2);border:1.5px solid var(--ac);border-radius:12px;padding:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-weight:700;font-size:14px;color:var(--ac);margin-bottom:4px">📱 근로자 전용 모바일 현장앱 (계약서 열람 및 전자서명 포털)</div>
-            <div style="font-size:12.5px;color:var(--tx2)">근로자 접속 주소: <code style="font-size:12px;background:var(--sf);padding:2px 6px;border-radius:4px;border:1px solid var(--ln);user-select:all">https://bvs-erp.github.io/worker.html</code></div>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn sm p" onclick="copyWorkerAppLink()">현장앱 주소 복사</button>
-            <button class="btn sm" onclick="window.open('worker.html','_blank')">현장앱 새 창 열기</button>
-          </div>
-        </div>
-        <div class="kpis" id="esgKpi"></div>
-        <div class="tb" id="gEsgTodo"></div>
-        <div style="height:10px"></div>
-        <div class="tb" id="gEsg"></div></div>
+      <div class="hrt hide" data-t="pay">
+      <div class="sec"><h3>급여 기준 (월급제) <span class="cnt" id="payN"></span><span class="r"><button class="btn sm" onclick="payHelp()">산식·상수</button></span></h3><div class="tb" id="gPayProf"></div></div>
+      <div class="sec"><h3>수당 마스터</h3><div class="tb" id="gAlw"></div></div>
       <div class="sec" id="hr-grade"><h3>기술등급 · 승급 심사 <span class="cnt" id="grdN"></span></h3>
         <div class="kpis" id="grdKpi"></div>
         <div class="tb" id="gGrade"></div></div>
-      <div class="sec"><h3>수당 마스터</h3><div class="tb" id="gAlw"></div></div>
-      <div class="sec"><h3>펌프실 수량제 (일 단위 MAX 보전)</h3><div class="tb" id="gPump"></div></div>
-      <div class="sec"><h3>기준값 설정 <span class="cnt" id="setgN"></span></h3>
-        <div class="desc" style="margin-bottom:8px">급여·정산·교육 판정에 쓰이는 상수입니다. 값 칸을 두 번 눌러 고칩니다. 고치면 그 값을 쓰는 화면이 바로 따라 바뀌므로, 과거 정산에 영향이 있는 값은 월 마감 뒤에 바꾸십시오.</div>
-        <div class="tb" id="gSetg"></div>
-        <h4 style="margin:14px 0 6px">적용일부터 새 값 <span class="r"><button class="btn sm p" onclick="sethOpen({})">+ 새 값 · 새 키</button></span></h4>
-        <div class="tb" id="gSeth"></div>
-        <h4 style="margin:14px 0 6px">공휴일 <span class="cnt" id="holN"></span><span class="r"><button class="btn sm" onclick="holOpen({})">+ 공휴일</button></span></h4>
+      </div>
+      <div class="hrt hide" data-t="conf">
+      <div class="sec"><h3>기준값 <span class="cnt" id="setgN"></span><span class="r"><button class="btn sm p" onclick="sethOpen({})">+ 새 값 · 새 키</button></span></h3>
+        <div class="tb" id="gSetg"></div></div>
+      <div class="sec"><h3>공휴일 <span class="cnt" id="holN"></span><span class="r"><button class="btn sm" onclick="holOpen({})">+ 공휴일</button></span></h3>
         <div class="tb" id="gHol"></div></div>
-      <div class="sec"><h3>펌프실 일별 (최근 120일) <span class="cnt" id="pumpdN"></span></h3><div class="desc" style="margin-bottom:8px">수량은 업무보고 시트 OP작업보고에서 30분마다 동기화 · 보전 = 인원×최소보장 − 수량매출 · 고객사와 따로 합의한 날은 "협의 보전"에 금액을 더블클릭으로 넣으면 그 금액으로 청구(사유 필수). 비우면 자동 계산으로 복귀.</div><div class="tb" id="gPumpDay"></div></div>
+      <div class="sec"><h3>ERP 계정 <span class="cnt" id="acctN"></span><span class="r"><button class="btn sm" onclick="acctReload()">새로고침</button></span></h3>
+        <div class="kpis" id="acctKpi"></div>
+        <div class="tb" id="gAcct"></div></div>
+      </div>
     </section>
 
     <!-- 인력배치 -->
@@ -987,6 +979,8 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="kpis" id="closeKpi"></div>
       <div class="sec" id="sec-gClose"><h3>월별 청구 마감 요약</h3><div class="tb" id="gClose"></div></div>
       <div class="sec" id="sec-gMrev"><h3>거래처별 청구 vs 계산서 <span class="cnt" id="mrevN"></span></h3><div class="tb" id="gMrev"></div></div>
+      <div class="sec"><h3>펌프실 수량제</h3><div class="tb" id="gPump"></div></div>
+      <div class="sec"><h3>펌프실 일별 <span class="cnt" id="pumpdN"></span></h3><div class="tb" id="gPumpDay"></div></div>
     </section>
 
     <!-- 세무사 제출 -->
@@ -1926,13 +1920,13 @@ function renderPage(p){
     if(p === 'home') { renderHome(); }
     else if(p === 'site') { renderSite(); renderPlans(); }
     else if(p === 'sales') { renderSales(); }
-    else if(p === 'money') { renderMoney(); }
+    else if(p === 'money') { renderMoney(); try{renderHr()}catch(e){console.error(e)} try{renderPmbM()}catch(e){console.error(e)} }
     else if(p === 'pl') { renderPl(); }
     else if(p === 'pm') { renderPm(); }
     else if(p === 'hr') { renderHr(); }
     else if(p === 'safety') { renderSafety(); }
     else if(p === 'crew') { renderCrew(); }
-    else if(p === 'close') { renderClose(); }
+    else if(p === 'close') { renderClose(); try{renderHr()}catch(e){console.error(e)} }
     else if(p === 'tax') { renderTax(); }
     else if(p === 'ht') { renderHt(); }
     else if(p === 'settle') { renderSettle(); }
@@ -4467,7 +4461,7 @@ function renderGrade(){
      chips:[{k:'judge',vals:[['','전체'],['심사 대상','심사 대상'],['체류기간 미충족','체류기간 미충족']]}],
      empty:'기술등급이 부여된 사람이 없습니다'});
 }
-function renderHr(){renderAcct();renderEsign();renderGrade();try{renderSeth();renderHol()}catch(e){console.error(e)}
+function renderHr(){try{hrTab(ST.hrTab||'people',1)}catch(e){}renderAcct();renderEsign();renderGrade();try{renderSeth();renderHol()}catch(e){console.error(e)}
   var retro=sum(D.retro,'ot_shortfall_amt');
   el('hrKpi').innerHTML=kpi('계약·동의 미비',D.cons.length?'<span class="wn">'+D.cons.length+'</span>':'0','명 · 눌러서 그 사람만 보기',(D.cons.length?'warn ':'')+'click',' onclick="staffConsOnly()"')
     +kpi('연장수당 소급',retro?'<span class="wn">'+won(retro)+'</span>':'0',D.retro.length+'건','click',' onclick="subScroll(\'gRetro\')"')
@@ -4476,15 +4470,13 @@ function renderHr(){renderAcct();renderEsign();renderGrade();try{renderSeth();re
   el('consN').textContent=D.cons.length?D.cons.length+'명':'';
   grid('gCons',[{k:'employment_no',t:'ID',l:1,cls:'dim'},{k:'person_name',t:'이름',l:1},{k:'work_site_id',t:'현장',l:1},{k:'has_third_party',t:'3자제공',l:1,f:'yn'},{k:'has_sensitive',t:'민감정보',l:1,f:'yn'},{k:'contract_delivered',t:'계약교부',l:1,f:function(v){return yn((+v||0)>0)}}],{rows:D.cons,q:['person_name'],csv:false,empty:'전원 동의·교부 완료'});
   (function(){var rows=(D.setg||[]).slice();el('setgN').textContent=rows.length?rows.length+'개':'';
-    grid('gSetg',[{k:'setting_key',t:'키',l:1,cls:'tiny'},
-      {k:'value_text',t:'값(문자)',l:1,e:{field:'value_text',ph:'문자 값'}},
-      {k:'value_num',t:'값(숫자)',f:function(v){return v==null?'<span class="dim">–</span>':(+v).toLocaleString('ko-KR')},e:{field:'value_num',ph:'숫자 값'}},
-      {k:'valid_from',t:'적용일',l:1},{k:'memo',t:'설명',l:1,cls:'tiny dim',e:{field:'memo',ph:'설명'}}],
-      {rows:rows,q:['setting_key','memo'],qph:'키·설명',csv:false,page:60,
-       save:function(r,field,v){return sb.rpc('ceo_setting_set',{p_key:r.setting_key,p_text:field==='value_text'?v:null,p_num:field==='value_num'?(v===''?null:+v):null,p_memo:field==='memo'?v:null})
-         .then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false,error:'실패'}})},
-       afterSave:function(){loadAll()}});
-    edHint('gSetg')})();
+    var isSys=function(r){return /^auth_/.test(r.setting_key)||/_json$/.test(r.setting_key)||/^[\[{]/.test(String(r.value_text||'').trim())};
+    var sysN=rows.filter(isSys).length;rows=ST.setgSys?rows.filter(isSys):rows.filter(function(r){return !isSys(r)});
+    el('setgN').innerHTML=rows.length+'개'+(sysN?' <button class="btn sm" onclick="ST.setgSys=!ST.setgSys;renderHr()">'+(ST.setgSys?'업무 값 보기':'시스템 값 '+sysN+'개 보기')+'</button>':'');
+    grid('gSetg',[{k:'memo',t:'설명',l:1,f:function(v,r){return v?esc(v):'<span class="dim">'+esc(r.setting_key)+'</span>'}},
+      {k:'_v',t:'값',l:1,f:function(v,r){var t=r.value_num!=null&&r.value_num!==''?(+r.value_num).toLocaleString('ko-KR'):String(r.value_text==null?'':r.value_text);return t.length>60?'<span title="'+esc(t)+'">'+esc(t.slice(0,60))+'…</span>':esc(t)}},
+      {k:'valid_from',t:'적용일',l:1},{k:'setting_key',t:'키',l:1,cls:'tiny dim'}],
+      {rows:rows,q:['setting_key','memo'],qph:'설명·키',csv:false,page:60,onRow:sethOpen,empty:'없음'});})();
   grid('gRetro',[{k:'period_ym',t:'월',l:1},{k:'person_name',t:'이름',l:1},{k:'ordinary_hourly',t:'통상시급',f:'won'},{k:'legal_ot_hourly_min',t:'법정 최소',f:'won'},{k:'current_ot_hourly',t:'현행',f:'won'},{k:'ot_hours_sum',t:'잔업h',f:'num'},{k:'ot_shortfall_amt',t:'부족액',f:'won',cls:'wn',sum:1}],{rows:D.retro,csv:false,foot:true,empty:'소급 대상 없음'});
   var bapply=function(k){return function(r,v){r[k]=/^(o|y|1|true|과세|유|예)$/i.test(v)}};
   grid('gAlw',[{k:'allowance_code',t:'코드',l:1,cls:'dim'},{k:'allowance_name',t:'수당',l:1,e:'allowance_name'},{k:'calc_basis',t:'기준',l:1,f:function(v){return esc(BASIS[v]||v)}},{k:'default_unit_amt',t:'단가',f:'won',e:'default_unit_amt'},{k:'cap_monthly',t:'월상한',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},e:'cap_monthly'},{k:'nontax_limit_monthly',t:'비과세한도',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},e:'nontax_limit_monthly'},{k:'is_taxable',t:'과세',l:1,f:function(v){return v?'과세':'<span class="pos">비과세</span>'},e:{field:'is_taxable',ph:'과세 / 비과세',apply:bapply('is_taxable')}},{k:'include_in_ordinary_wage',t:'통상',l:1,f:'yn',e:{field:'include_in_ordinary_wage',ph:'O / X',apply:bapply('include_in_ordinary_wage')}},{k:'include_in_average_wage',t:'평균',l:1,f:'yn',e:{field:'include_in_average_wage',ph:'O / X',apply:bapply('include_in_average_wage')}},{k:'legal_basis',t:'근거',l:1,cls:'tiny dim',e:'legal_basis'},{k:'_x',t:'',l:1,f:function(v,r){return delBtn('allowance',r.allowance_code,r.allowance_name)}}],{rows:D.alw,csv:false,save:ceoSave('allowance','allowance_code')});
@@ -4978,11 +4970,18 @@ function payDay(){var r=setgRow('pay_day_of_month');var n=r&&r.value_num!=null?+
 function renderSeth(){if(!el('gSeth'))return;var inf=function(v){return v==null||v==='infinity'?'현재':esc(v)};
   grid('gSeth',[{k:'setting_key',t:'키',l:1},{k:'valid_from',t:'적용',l:1},{k:'valid_to',t:'종료',l:1,f:inf},{k:'value_text',t:'텍스트 값',l:1},{k:'value_num',t:'숫자 값',f:function(v){return v==null||v===''?'<span class="dim">–</span>':(+v).toLocaleString('ko-KR')}},{k:'memo',t:'설명',l:1,cls:'tiny dim'}],
     {rows:D.seth||[],q:['setting_key','memo'],qph:'키·설명',page:40,csv:false,onRow:sethOpen,empty:'이력 없음'})}
-function sethOpen(r){var keys=Object.keys(by(D.seth||[],'setting_key')).sort();
-  var body='<div class="fr"><div class="f"><label>키</label><input id="sh_k" class="in" list="sh_keys" value="'+esc(r.setting_key||'')+'"><datalist id="sh_keys">'+keys.map(function(k){return '<option value="'+esc(k)+'">'}).join('')+'</datalist></div><div class="f"><label>적용일</label><input id="sh_from" class="in" type="date" value="'+today()+'"></div></div>'
+function sethOpen(r){var keys=Object.keys(by(D.seth||[],'setting_key')).sort();var k=r.setting_key||'';
+  var hist=(D.seth||[]).filter(function(x){return x.setting_key===k}).sort(function(a,b){return String(b.valid_from).localeCompare(String(a.valid_from))});
+  var inf=function(v){return v==null||v==='infinity'?'현재':esc(v)};
+  var body=(k?'<table style="width:100%;margin-bottom:10px"><thead><tr><th class="l">적용</th><th class="l">종료</th><th class="l">값</th></tr></thead><tbody>'+(hist.length?hist.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td class="l tiny">'+esc(x.value_num!=null&&x.value_num!==''?String(x.value_num):String(x.value_text||'')).slice(0,200)+'</td></tr>'}).join(''):'<tr><td colspan="3" class="empty">없음</td></tr>')+'</tbody></table>':'')
+   +'<div class="fr"><div class="f"><label>키</label><input id="sh_k" class="in" list="sh_keys" value="'+esc(k)+'"'+(k?' disabled':'')+'><datalist id="sh_keys">'+keys.map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist></div><div class="f"><label>적용일</label><input id="sh_from" class="in" type="date" value="'+today()+'"></div></div>'
    +'<div class="fr"><div class="f"><label>텍스트 값</label><input id="sh_t" class="in" value="'+esc(r.value_text||'')+'"></div><div class="f"><label>숫자 값</label><input id="sh_n" class="in" type="number" step="any" value="'+esc(r.value_num==null?'':r.value_num)+'"></div></div>'
-   +'<div class="f"><label>설명</label><input id="sh_m" class="in" value="'+esc(r.memo||'')+'"></div><button class="btn sm p" onclick="sethSave()">적용일부터 저장</button>';
-  drOpen('설정값',body,'<button class="btn" onclick="drClose()">닫기</button>')}
+   +'<div class="f"><label>설명</label><input id="sh_m" class="in" value="'+esc(r.memo||'')+'"></div>'
+   +(k?'<button class="btn sm" onclick="sethNow()">현재 값 고치기</button> ':'')+'<button class="btn sm p" onclick="sethSave()">적용일부터 새 값</button>';
+  drOpen(r.memo||k||'새 값 · 새 키',body,'<button class="btn" onclick="drClose()">닫기</button>')}
+async function sethNow(){var k=(el('sh_k').value||'').trim(),t=el('sh_t').value,n=el('sh_n').value;
+  var x=await sb.rpc('ceo_setting_set',{p_key:k,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});
+  if(x.error||(x.data&&x.data.ok===false)){toast((x.error&&x.error.message)||(x.data&&x.data.error)||'실패','e');return}toast('저장했습니다','g');drClose();loadAll()}
 async function sethSave(){var k=(el('sh_k').value||'').trim(),f=el('sh_from').value,t=el('sh_t').value,n=el('sh_n').value;
   if(!k||!f){toast('키와 적용일을 넣으세요','e');return}if(t===''&&n===''){toast('값을 넣으세요','e');return}
   var x=await sb.rpc('ceo_setting_set_from',{p_key:k,p_from:f,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});rpcDone(x,'저장했습니다')}
@@ -5075,6 +5074,28 @@ async function pmbSave(emp,id){var p={employment_no:emp,period_ym:el('pb_ym').va
 function pmbEdit(id){var x=(D.pmb||[]).filter(function(b){return b.basis_id===id})[0];if(!x)return;el('pb_ym').value=x.period_ym;el('pb_on').value=x.start_on||'';el('pb_adj').value=x.adjust_days||0;el('pb_memo').value=x.memo||'';el('pb_ym').scrollIntoView({block:'center'})}
 async function pmbDel(id){var ok=await ask('급여 기산 삭제','이 달은 월급 전액으로 돌아갑니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('ceo_pay_basis_delete',{p_basis_id:id});rpcDone(x,'삭제했습니다')}
 function ceoName(){var co=(D.co||[]).filter(function(c){return c.entity==='BVS'})[0]||{};return co.ceo_name||''}
+function hrTab(t,silent){ST.hrTab=t;document.querySelectorAll('#p-hr .ph .chip').forEach(function(c){c.classList.toggle('on',c.dataset.t===t)});document.querySelectorAll('#p-hr .hrt').forEach(function(x){x.classList.toggle('hide',x.dataset.t!==t)})}
+function renderPmbM(){if(!el('gPmb'))return;var sec=el('sec-gPmb');if(!isOwner()){sec.style.display='none';return}sec.style.display='';var ym=M();
+  var first={};(D.att||[]).forEach(function(a){var d=String(a.work_date).slice(0,10);if(d.slice(0,7)===ym&&(+a.work_md>0||a.work_md==null)){if(!first[a.employment_no]||d<first[a.employment_no])first[a.employment_no]=d}});
+  var rows=(D.staff||[]).filter(function(x){return x.payroll_type==='monthly'&&(!x.resigned_on||String(x.resigned_on).slice(0,7)>=ym)&&(!x.hired_on||String(x.hired_on).slice(0,7)<=ym)}).map(function(x){var b=pmbOf(x.employment_no,ym)||{};
+    return {employment_no:x.employment_no,name:x.name,first_on:first[x.employment_no]||'',basis_id:b.basis_id||null,start_on:b.start_on||'',adjust_days:b.basis_id?b.adjust_days:'',counted:b.basis_id?b.counted_days+' / '+b.month_days:'',monthly_amt:b.basis_id?b.monthly_amt:(x.monthly_amt||null),prorated_amt:b.basis_id?b.prorated_amt:null,memo:b.memo||''}});
+  el('pmbN').textContent=ym+' · '+rows.filter(function(r){return r.basis_id}).length+'/'+rows.length+'명 기록';
+  var sv=function(f){return function(r,v){var p={employment_no:r.employment_no,period_ym:ym,start_on:f==='start_on'?v:r.start_on,adjust_days:f==='adjust_days'?(v===''?0:parseInt(v,10)):(r.adjust_days===''?0:+r.adjust_days),memo:f==='memo'?v:r.memo};
+    if(p.start_on&&!/^\d{4}-\d{2}-\d{2}$/.test(p.start_on))return Promise.resolve({ok:false,error:'YYYY-MM-DD'});
+    if(p.start_on&&p.start_on.slice(0,7)!==ym)return Promise.resolve({ok:false,error:'기산일은 '+ym+' 안의 날짜. 다른 달의 날은 가감 일수로'});
+    if(isNaN(p.adjust_days))return Promise.resolve({ok:false,error:'가감 일수는 정수'});
+    return sb.rpc('ceo_pay_basis_set',{p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data||{ok:false,error:'실패'}})}};
+  var ap=function(){setTimeout(loadPmb,50)};
+  grid('gPmb',[{k:'name',t:'이름',l:1},{k:'first_on',t:'첫 투입일',l:1},
+    {k:'start_on',t:'기산일',l:1,e:{field:'start_on',ph:'YYYY-MM-DD',save:sv('start_on'),apply:ap}},
+    {k:'adjust_days',t:'가감 일수',e:{field:'adjust_days',ph:'±일',save:sv('adjust_days'),apply:ap},f:function(v){return v===''||v==null?'':((+v>0?'+':'')+v)}},
+    {k:'counted',t:'산정 일수',l:1,f:function(v){return v?esc(v):'<span class="dim">전액</span>'}},
+    {k:'monthly_amt',t:'월급',f:'won'},{k:'prorated_amt',t:'산정액',f:function(v){return v==null?'':'<b>'+won(v)+'</b>'},sum:1},
+    {k:'memo',t:'메모',l:1,cls:'tiny',e:{field:'memo',save:sv('memo'),apply:ap}},
+    {k:'basis_id',t:'',f:function(v){return v?'<button class="stbtn x" onclick="event.stopPropagation();pmbDel('+v+')">전액으로</button>':''}}],
+    {rows:rows,q:['name'],qph:'이름',page:60,csv:false,empty:ym+' 월급제 인원 없음'});
+}
+async function loadPmb(){var r=await sb.from('ceo_pay_month_basis').select('*').order('period_ym',{ascending:false}).limit(2000);if(r.error){toast(r.error.message,'e');return}D.pmb=r.data||[];renderPmbM()}
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
 async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
