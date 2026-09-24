@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.42 · 대표 콕핏</title>
+<title>BVS ERP v1.43 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.42</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.43</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -2542,7 +2542,7 @@ function calForm(r){var sites=(D.sites||[]).filter(function(s){return s.is_activ
     '<div class="fr"><div class="f"><label>업무 유형</label><select id="cf_pc" class="sel" style="width:100%">'+po+'</select></div><div class="f"><label>공수 (1 = 8시간, 0.5 = 반일)</label><input id="cf_md" class="in" type="number" step="0.25" value="'+(r._new?'1':(+r.work_md||0))+'"></div></div>'+
     '<div class="fr"><div class="f"><label>잔업 h</label><input id="cf_ot" class="in" type="number" step="0.5" value="'+(+r.ot_hours||0)+'"></div><div class="f"><label>야간 h</label><input id="cf_nt" class="in" type="number" step="0.5" value="'+(+r.night_hours||0)+'"></div></div>'+
     '<div class="fr"><div class="f"><label>출근</label><input id="cf_st" class="in" type="time" value="'+(hhmm(r.work_start)==='–'?'':hhmm(r.work_start))+'"></div><div class="f"><label>퇴근</label><input id="cf_et" class="in" type="time" value="'+(hhmm(r.work_end)==='–'?'':hhmm(r.work_end))+'"></div></div>'+
-    '<div class="fr"><div class="f"><label>지급단가 조정 (비우면 단가표)</label><input id="cf_ro" class="in" type="number" step="1000" value="'+(r.rate_override_daily_amt||'')+'" placeholder="예: 200000"></div><div class="f"><label>조정 사유 (조정 시 필수)</label><input id="cf_rr" class="in" value="'+esc(r.rate_override_reason||'')+'" placeholder="예: 야간 특근 합의"></div></div>'+
+    '<div class="fr"><div class="f"><label>지급단가 조정 (비우면 단가표)</label><input id="cf_ro" class="in" type="number" step="1000" value="'+(r.rate_override_daily_amt||'')+'"></div><div class="f"><label>조정 사유 (조정 시 필수)</label><input id="cf_rr" class="in" value="'+esc(r.rate_override_reason||'')+'"></div></div>'+
     '<div class="f"><label>메모</label><input id="cf_wd" class="in" value="'+esc(r.work_desc||'')+'"></div>'+
     (r.payroll_type==='monthly'||r.team_mode==='full'?'<div class="tiny dim">'+(r.team_mode==='full'?'팀도급 팀원: 지급단가 조정은 팀원 원단가 참고치만 바꾸고 회사 부담(팀단가)은 바뀌지 않습니다. 팀단가는 단가표에서.':'월급제: 지급단가 조정은 적용되지 않습니다. 월급은 급여 기준표에서.')+'</div>':''),
     '<button class="btn" onclick="drClose()">닫기</button>'+(r._new||r.settled_ym?'':'<button class="btn d" onclick="drClose();delRow(\'labor\','+r.entry_id+',\''+esc(r.person_name+' '+r.work_date)+'\')">삭제</button>')+'<button class="btn p" onclick="calSave('+(r._new?'null':r.entry_id)+',\''+esc(r.employment_no)+'\',\''+r.work_date+'\')">저장</button>');
@@ -2785,7 +2785,7 @@ function edNew(id){
   var staff=(D.staff||[]).filter(function(x){return !x.resigned_on}).map(function(x){
     return '<label class="sw2"><input type="checkbox" class="edEmp" value="'+esc(x.employment_no)+'"'+(((r.target_emps||[]).indexOf(x.employment_no)>=0)?' checked':'')+'> '+esc(x.name)+'</label>'}).join('');
   drOpen(id?'교육 수정':'교육 등록',
-     '<div class="f"><label>교육명</label><input id="ed_name" class="in" value="'+esc(r.course_name||'')+'" placeholder="예: 정기 안전보건교육 (3분기)"></div>'
+     '<div class="f"><label>교육명</label><input id="ed_name" class="in" value="'+esc(r.course_name||'')+'"></div>'
     +'<div class="fr"><div class="f"><label>구분</label><input id="ed_cat" class="in" value="'+esc(r.category||'')+'" placeholder="정기 · 채용시 · 특별 · 관리감독자"></div><div class="f"><label>실시일</label><input id="ed_date" class="in" type="date" value="'+esc(r.held_on||today())+'"></div></div>'
     +'<div class="fr"><div class="f"><label>시작</label><input id="ed_st" class="in" type="time" value="'+String(r.start_time||'').slice(0,5)+'"></div><div class="f"><label>종료</label><input id="ed_et" class="in" type="time" value="'+String(r.end_time||'').slice(0,5)+'"></div></div>'
     +'<div class="fr"><div class="f"><label>시간 수</label><input id="ed_hr" class="in" type="number" step="0.5" value="'+(r.hours!=null?r.hours:'')+'"></div><div class="f"><label>장소</label><input id="ed_pl" class="in" value="'+esc(r.place||'')+'"></div></div>'
@@ -2833,7 +2833,7 @@ async function edDelete(id){
 
 /* ═══════════ 매출·문서 ═══════════ */
 function ptnSave(r,f,v){var p={partner_id:r.partner_id};p[f]=v;return sb.rpc('ceo_set_partner',{p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data})}
-function ptnNew(){drOpen('새 거래처','<div class="f"><label>거래처명 (상호)</label><input id="pn_name" class="in" placeholder="예: 주식회사 OOO"></div><div class="fr"><div class="f"><label>사업자번호</label><input id="pn_biz" class="in" placeholder="000-00-00000"></div><div class="f"><label>대표자</label><input id="pn_ceo" class="in"></div></div><div class="f"><label>주소</label><input id="pn_addr" class="in"></div><div class="fr"><div class="f"><label>담당</label><input id="pn_ct" class="in"></div><div class="f"><label>연락처</label><input id="pn_tel" class="in"></div></div><div class="tiny dim" style="margin-top:6px">코드(C0000)는 자동 부여. 나머지 항목은 저장 후 표에서 더블클릭으로 채울 수 있습니다.</div>',
+function ptnNew(){drOpen('새 거래처','<div class="f"><label>거래처명 (상호)</label><input id="pn_name" class="in"></div><div class="fr"><div class="f"><label>사업자번호</label><input id="pn_biz" class="in" placeholder="000-00-00000"></div><div class="f"><label>대표자</label><input id="pn_ceo" class="in"></div></div><div class="f"><label>주소</label><input id="pn_addr" class="in"></div><div class="fr"><div class="f"><label>담당</label><input id="pn_ct" class="in"></div><div class="f"><label>연락처</label><input id="pn_tel" class="in"></div></div><div class="tiny dim" style="margin-top:6px">코드(C0000)는 자동 부여. 나머지 항목은 저장 후 표에서 더블클릭으로 채울 수 있습니다.</div>',
   '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="ptnCreate()">저장</button>');setTimeout(function(){el('pn_name').focus()},60)}
 async function ptnCreate(){var nm=el('pn_name').value.trim();if(!nm){toast('거래처명을 입력하십시오','e');return}
   var r=await sb.rpc('ceo_set_partner',{p:{name:nm,biz_no:el('pn_biz').value,ceo_name:el('pn_ceo').value,address:el('pn_addr').value,contact_name:el('pn_ct').value,contact_phone:el('pn_tel').value}});
@@ -3257,10 +3257,10 @@ function newDoc(pid){WL=[{item_name:'',spec:'',qty:1,unit:'EA',unit_price:0}];
     +'<div class="f"><label>일자</label><input id="w_date" class="in" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div></div>'
     +'<div class="fr"><div class="f"><label>구분</label><select id="w_side" class="sel" style="width:100%"><option value="sales">매출</option><option value="purchase">매입</option></select></div>'
     +'<div class="f"><label>거래처</label><select id="w_ptn" class="sel" style="width:100%"><option value="">(선택)</option>'+D.ptn.map(function(p){return '<option value="'+esc(p.partner_id)+'"'+(p.partner_id===pid?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select></div></div>'
-    +'<div class="fr"><div class="f"><label>건명</label><input id="w_title" class="in" placeholder="예: P3 라인 셋업 9월분"></div><div class="f"><label>담당 (수신처)</label><input id="w_contact" class="in" placeholder="담당자"></div></div><input type="hidden" id="w_prev">'
+    +'<div class="fr"><div class="f"><label>건명</label><input id="w_title" class="in"></div><div class="f"><label>담당 (수신처)</label><input id="w_contact" class="in" placeholder="담당자"></div></div><input type="hidden" id="w_prev">'
     +'<div class="fr"><div class="f"><label>결제조건</label><input id="w_terms" class="in" placeholder="익월 말 현금"></div><div class="f"><label>&nbsp;</label><label class="tiny"><input type="checkbox" id="w_free" onchange="wRenderSum()"> 면세 (세액 0)</label></div></div>'
     +'<div class="fr"><div class="f"><label>견적 유효일수</label><input id="w_valid" class="in" type="number" value="'+setgNum('quote_valid_days',30)+'" min="1"></div><div class="f"><label>납기 (비우면 협의된 납기)</label><input id="w_deliv" class="in" type="date"></div></div>'
-    +'<div class="f"><label>문서 비고 — 인쇄물에 그대로 나갑니다 (내부 메모 아님)</label><textarea id="w_note" class="in" rows="2" placeholder="예: 상기 금액은 자재비 포함 · 설치 후 시운전 별도"></textarea></div>'
+    +'<div class="f"><label>문서 비고 — 인쇄물에 그대로 나갑니다 (내부 메모 아님)</label><textarea id="w_note" class="in" rows="2"></textarea></div>'
     +'<div style="display:flex;align-items:center;margin:8px 0 4px;gap:6px"><b class="tiny">품목</b><span class="tiny dim">품명에 등록 품목을 고르면 규격·단위·판매가가 채워집니다</span><button class="btn sm" style="margin-left:auto" onclick="itemForm(true)">품목 등록</button><button class="btn sm" onclick="wAddLine()">+ 줄 추가</button></div>'
     +'<div class="lwrap"><table class="lines"><thead><tr><th class="l">품명</th><th class="l">규격</th><th>수량</th><th class="l">단위</th><th>단가</th><th>금액</th><th>매입가</th><th>마진</th><th></th></tr></thead><tbody id="wline"></tbody></table></div>'
     +'<div class="sumbox" id="w_sum"></div><div id="w_msg" class="tiny" style="margin-top:8px"></div>',
@@ -3301,10 +3301,10 @@ async function wSave(st){var m=el('w_msg');
 }
 /* ── 품목 등록 ── */
 function itemForm(fromDoc){var keep=fromDoc?{t:el('drT').textContent,b:el('drB').innerHTML,f:el('drF').innerHTML,wl:WL.slice()}:null;
-  drOpen('품목 등록','<div class="fr"><div class="f"><label>품목코드 <span class="dim tiny">(비우면 자동)</span></label><input id="it_code" class="in" placeholder="예: STS-PS02-A1100"></div><div class="f"><label>그룹</label><input id="it_group" class="in" placeholder="예: 프레임·볼트·부속품" list="grouplist"></div></div>'
-    +'<div class="f"><label>품명 *</label><input id="it_name" class="in" placeholder="예: MAIN FRAME"></div>'
-    +'<div class="fr"><div class="f"><label>규격</label><input id="it_spec" class="in" placeholder="예: 1100×600×40t"></div><div class="f"><label>단위</label><input id="it_unit" class="in" value="EA"></div></div>'
-    +'<div class="fr"><div class="f"><label>재질</label><input id="it_mat" class="in" placeholder="예: SUS304"></div><div class="f"><label>판매 단가</label><input id="it_price" class="in" placeholder="원" inputmode="numeric"></div></div>'
+  drOpen('품목 등록','<div class="fr"><div class="f"><label>품목코드 <span class="dim tiny">(비우면 자동)</span></label><input id="it_code" class="in"></div><div class="f"><label>그룹</label><input id="it_group" class="in" list="grouplist"></div></div>'
+    +'<div class="f"><label>품명 *</label><input id="it_name" class="in"></div>'
+    +'<div class="fr"><div class="f"><label>규격</label><input id="it_spec" class="in"></div><div class="f"><label>단위</label><input id="it_unit" class="in" value="EA"></div></div>'
+    +'<div class="fr"><div class="f"><label>재질</label><input id="it_mat" class="in"></div><div class="f"><label>판매 단가</label><input id="it_price" class="in" placeholder="원" inputmode="numeric"></div></div>'
     +'<div id="it_msg" class="tiny" style="margin-top:6px"></div>',
     '<button class="btn" onclick="'+(fromDoc?'itemBack()':'drClose()')+'">'+(fromDoc?'문서로 돌아가기':'닫기')+'</button><button class="btn p" onclick="itemSave('+(fromDoc?'true':'false')+')">등록</button>');
   window.__itKeep=keep;var gl=el('grouplist');if(!gl){gl=document.createElement('datalist');gl.id='grouplist';document.body.appendChild(gl)}gl.innerHTML=Object.keys(by(D.pick||[],'item_group')).filter(function(g){return g&&g!=='null'}).sort().map(function(g){return '<option value="'+esc(g)+'">'}).join('');
@@ -3775,15 +3775,11 @@ async function renderTax(){
 
   // 1. VAT (부가가치세) 집계표 계산 (2026 최신순)
   var qMap = {};
-  var quarters = [
-    { q: '2026-Q3', name: '2026년 2기 예정', months: ['2026-07','2026-08','2026-09'], due: '2026-10-25' },
-    { q: '2026-Q2', name: '2026년 1기 확정', months: ['2026-04','2026-05','2026-06'], due: '2026-07-25' },
-    { q: '2026-Q1', name: '2026년 1기 예정', months: ['2026-01','2026-02','2026-03'], due: '2026-04-25' },
-    { q: '2025-Q4', name: '2025년 2기 확정', months: ['2025-10','2025-11','2025-12'], due: '2026-01-25' },
-    { q: '2025-Q3', name: '2025년 2기 예정', months: ['2025-07','2025-08','2025-09'], due: '2025-10-25' },
-    { q: '2025-Q2', name: '2025년 1기 확정', months: ['2025-04','2025-05','2025-06'], due: '2025-07-25' },
-    { q: '2025-Q1', name: '2025년 1기 예정', months: ['2025-01','2025-02','2025-03'], due: '2025-04-25' }
-  ];
+  var quarters = (function(){var ms={};(D.sd||[]).forEach(function(d){if(d.doc_kind!=='tax'||d.status==='void')return;var ym=d.period_ym||(d.doc_date?String(d.doc_date).slice(0,7):'');if(ym)ms[ym]=1});
+    var qs={};Object.keys(ms).forEach(function(ym){var y=ym.slice(0,4),q=Math.ceil(+ym.slice(5,7)/3);qs[y+'-Q'+q]={y:y,q:q}});
+    var NM={1:'1기 예정',2:'1기 확정',3:'2기 예정',4:'2기 확정'};
+    return Object.keys(qs).sort().reverse().map(function(k){var o=qs[k],st=(o.q-1)*3+1;var months=[0,1,2].map(function(i){return o.y+'-'+String(st+i).padStart(2,'0')});var nm=o.y+'년 '+NM[o.q];
+      var f=(D.tf||[]).filter(function(x){return x.tax_kind==='vat'&&x.period_label===nm})[0];return {q:k,name:nm,months:months,due:f&&f.due_on?f.due_on:''}})})();
 
   quarters.forEach(function(qi){
     qMap[qi.q] = {
@@ -3823,12 +3819,11 @@ async function renderTax(){
     return item;
   });
 
-  var curVat = vatRows.filter(function(r){ return quarters.some(function(qi){ return qi.q === r.quarter && qi.months.indexOf(m) >= 0; }); })[0] || vatRows[0];
+  var curVat = vatRows.filter(function(r){ return quarters.some(function(qi){ return qi.q === r.quarter && qi.months.indexOf(m) >= 0; }); })[0] || vatRows[0] || {name:m,sales_supply:0,sales_tax:0,purch_supply:0,purch_tax:0,card_deduct_tax:0,net_tax:0,due_date:''};
   el('vatKpi').innerHTML =
     kpi(curVat.name + ' 매출과표', won(curVat.sales_supply), '매출세액 '+won(curVat.sales_tax), 'hl click', ' onclick="taxTab(\'vat\')"')
     + kpi('매입세액 공제액', won(curVat.purch_tax), '매입과표 '+won(curVat.purch_supply), 'click', ' onclick="taxTab(\'vat\')"')
-    + kpi('예상 납부세액', won(curVat.net_tax), '신고기한 '+curVat.due_date, (curVat.net_tax>0?'wn ':'pos ')+'click', ' onclick="taxTab(\'vat\')"')
-    + kpi('세무 대리인', '세무법인 미송', '원클릭 ZIP 팩 인계 가능', 'click', ' onclick="taxZip()"');
+    + kpi('예상 납부세액', won(curVat.net_tax), (curVat.due_date?'신고기한 '+curVat.due_date:''), (curVat.net_tax>0?'wn ':'pos ')+'click', ' onclick="taxTab(\'vat\')"');
 
   grid('gVatSum', [
     {k:'quarter', t:'과세기간', l:1, cls:'dim'},
@@ -3840,7 +3835,7 @@ async function renderTax(){
     {k:'net_tax', t:'납부(환급)세액', f:function(v){
       return '<b class="'+((+v)>0?'wn':'pos')+'">'+won(v)+'</b>';
     }, sum:1},
-    {k:'due_date', t:'법정 신고기한', l:1, cls:'tiny'},
+    {k:'due_date', t:'신고기한', l:1, cls:'tiny'},
     {k:'status', t:'진행 상태', l:1, f:function(v){
       return '<span class="dim">'+esc(v||'–')+'</span>';
     }}
@@ -3905,7 +3900,7 @@ function htOpen(r){var items=(r.items||[]);
     +'<div><b>금액</b> 공급가 '+won(r.supply_amt)+' · 세액 '+won(r.tax_amt)+' · 합계 '+won(r.total_amt)+'</div>'+(r.note?'<div><b>비고</b> '+esc(r.note)+'</div>':'')+'</div>'
     +'<table class="lines" style="margin-top:10px"><thead><tr><th class="l">품목</th><th class="l">규격</th><th>수량</th><th>단가</th><th>공급가액</th><th>세액</th></tr></thead><tbody>'+(items.length?items.map(function(i){return '<tr><td class="l">'+esc(i.name||'')+'</td><td class="l">'+esc(i.spec||'')+'</td><td>'+(i.qty==null?'':num(i.qty))+'</td><td>'+won(i.unit_price)+'</td><td>'+won(i.supply_amt)+'</td><td>'+won(i.tax_amt)+'</td></tr>'}).join(''):'<tr><td colspan="6" class="empty">품목 없음</td></tr>')+'</tbody></table>'
     +'<div class="sec" style="margin-top:12px"><h3>SD 문서 연결</h3><div>'+(r.matched_doc_no?'현재 <b>'+esc(r.matched_doc_no)+'</b> ('+esc(r.match_how||'')+(r.matched_title?' · '+esc(r.matched_title):'')+') <button class="btn sm" onclick="htMatch(\''+esc(r.approval_no)+'\',\'\')">해제</button>':'<span class="neg">미연결</span>')+'</div>'
-    +'<div class="fr" style="margin-top:8px"><div class="f"><label>문서번호 직접 입력</label><input id="ht_doc" class="in" placeholder="예: B26083101"></div><div class="f"><label>&nbsp;</label><button class="btn p" onclick="htMatch(\''+esc(r.approval_no)+'\',el(\'ht_doc\').value)">연결</button></div></div>'
+    +'<div class="fr" style="margin-top:8px"><div class="f"><label>문서번호 직접 입력</label><input id="ht_doc" class="in"></div><div class="f"><label>&nbsp;</label><button class="btn p" onclick="htMatch(\''+esc(r.approval_no)+'\',el(\'ht_doc\').value)">연결</button></div></div>'
     +(cands.length?'<div class="tiny dim" style="margin-top:6px">같은 거래처 후보</div>'+cands.map(function(d){return '<div class="row click" onclick="htMatch(\''+esc(r.approval_no)+'\',\''+esc(d.doc_no)+'\')" style="padding:4px 0;border-bottom:1px solid var(--ln)">'+esc(d.doc_no)+' · '+esc(KIND[d.doc_kind]||d.doc_kind)+' · '+esc(d.doc_date)+' · '+won(d.supply_amt)+(d.supply_amt===r.supply_amt?' <span class="pill g">금액 일치</span>':'')+'</div>'}).join(''):'')+'</div>',
     '<button class="btn" onclick="drClose()">닫기</button>');
 }
@@ -4511,7 +4506,7 @@ function renderHr(){renderAcct();renderEsign();renderGrade();try{renderSeth();re
     if(field==='override_reason'&&amt==null)return Promise.resolve({ok:true,local:true});   // 사유만 먼저 적어두고 금액을 넣으면 그때 저장
     if(field==='override_amt'&&amt!=null&&!reason)return Promise.resolve({ok:false,error:'사유를 먼저 넣으세요 (사유 칸 더블클릭 → 금액)'});
     return sb.rpc('ceo_pump_override',{p_date:r.work_date,p_site:r.sites,p_amt:amt,p_reason:reason||null}).then(function(res){if(res.error)return {ok:false,error:res.error.message};return res.data||{ok:false}})};
-  grid('gPumpDay',[{k:'work_date',t:'일자',l:1},{k:'sites',t:'현장',l:1},{k:'md',t:'공수',f:'num'},{k:'guarantee_amt',t:'최소보장',f:'won',cls:'dim'},{k:'qty_amt',t:'수량매출',f:'won',sum:1},{k:'makeup_amt',t:'보전',f:function(v,r){return (+v||0)>0?won(v)+(r.override_amt!=null?' <span class="pill y tiny">협의</span>':''):'<span class="dim">–</span>'},sum:1},{k:'billed_amt',t:'청구',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'override_reason',t:'협의 사유',l:1,cls:'tiny',e:{field:'override_reason',ph:'예: 5대뿐이라 인건비 반반 합의'}},{k:'override_amt',t:'협의 보전',f:function(v){return v==null?'<span class="dim">자동</span>':won(v)},e:{field:'override_amt',ph:'금액 (비우면 자동)'}},{k:'verdict',t:'판정',l:1,cls:'tiny dim'}],
+  grid('gPumpDay',[{k:'work_date',t:'일자',l:1},{k:'sites',t:'현장',l:1},{k:'md',t:'공수',f:'num'},{k:'guarantee_amt',t:'최소보장',f:'won',cls:'dim'},{k:'qty_amt',t:'수량매출',f:'won',sum:1},{k:'makeup_amt',t:'보전',f:function(v,r){return (+v||0)>0?won(v)+(r.override_amt!=null?' <span class="pill y tiny">협의</span>':''):'<span class="dim">–</span>'},sum:1},{k:'billed_amt',t:'청구',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'override_reason',t:'협의 사유',l:1,cls:'tiny',e:{field:'override_reason'}},{k:'override_amt',t:'협의 보전',f:function(v){return v==null?'<span class="dim">자동</span>':won(v)},e:{field:'override_amt',ph:'금액 (비우면 자동)'}},{k:'verdict',t:'판정',l:1,cls:'tiny dim'}],
     {rows:pd,q:['sites','override_reason','verdict'],qph:'현장·사유',foot:true,page:40,save:pdSave,afterSave:function(r,c){if(c.k==='override_amt'||r.override_amt!=null)loadAll();else toast('사유를 적어두었습니다. 협의 보전 금액을 넣으면 저장됩니다.')},empty:'최근 펌프실 투입 없음'});
   edHint('gPumpDay');
   grid('gPump',[{k:'period_ym',t:'월',l:1},{k:'work_days',t:'일수',f:'int'},{k:'md_sum',t:'공수',f:'num'},{k:'guarantee_amt',t:'공수보장',f:'won',cls:'dim'},{k:'qty_amt',t:'수량청구',f:'won',sum:1},{k:'makeup_amt',t:'보전',f:function(v){return (+v||0)>0?won(v):'<span class="dim">–</span>'},sum:1},{k:'billed_amt',t:'청구액',f:function(v){return '<b>'+won(v)+'</b>'},sum:1},{k:'check_amt',t:'점검',l:1,f:function(v,r){return (+v||0)>0?'<span class="wn">'+won(v)+' ('+(+r.check_days||0)+'일)</span>':'<span class="dim">없음</span>'}}],{rows:D.pump,csv:false,foot:true});
@@ -4569,7 +4564,7 @@ async function rosExport(){var rows=rosRows(),cols=rosCols();
   drOpen('출입신청 명단 내보내기',
     '<div class="tiny dim" style="margin-bottom:8px">아래 내용 그대로 제공대장에 기록되고 CSV가 내려받아집니다.</div>'
     +kv([['대상',rows.length+'명 (재직'+(ROS.only?' · 3자 제공 동의자만':' 전원')+')'],['제공 항목',esc(items)],['서식',esc(ROSSET[ROS.set].t)]])
-    +'<div class="fr" style="margin-top:10px"><div class="f"><label>제공받는 곳 *</label><input id="dl_to" class="in" placeholder="예: SK하이닉스 이천 M14"></div><div class="f"><label>제공 일자</label><input id="dl_on" class="in" type="date" value="'+today()+'"></div></div>'
+    +'<div class="fr" style="margin-top:10px"><div class="f"><label>제공받는 곳 *</label><input id="dl_to" class="in"></div><div class="f"><label>제공 일자</label><input id="dl_on" class="in" type="date" value="'+today()+'"></div></div>'
     +'<div class="f"><label>제공 목적 *</label><input id="dl_why" class="in" value="고객사 현장 출입 신청 및 출입증 발급"></div>'
     +'<div class="fr"><div class="f"><label>제공 방법</label><input id="dl_how" class="in" value="파일(CSV) 이메일 전달"></div><div class="f"><label>메모</label><input id="dl_memo" class="in" placeholder="담당자·회신 기한 등"></div></div>'
     +(ROS.set==='full'?'<div class="tiny" style="margin-top:6px"><span class="wn">「전체」 서식은 내부 확인용입니다.</span> 고객사 제출이면 필요한 항목만 있는 서식으로 바꾸십시오.</div>':''),
@@ -4738,13 +4733,13 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
   // 단가
   body+='<h4 style="margin:16px 0 6px">단가 이력 <span class="tiny dim">적용일부터 새 단가, 이전 단가는 전날까지</span></h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>방식</th><th>일급</th><th>잔업</th><th>야간</th><th>월급</th><th>팀단가</th><th class="l">메모</th></tr></thead><tbody>'+(rh.length?rh.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td>'+esc(PT[x.payroll_type]||x.payroll_type)+'</td><td>'+won(x.daily_amt)+'</td><td>'+won(x.ot_hourly_amt)+'</td><td>'+won(x.night_hourly_amt)+'</td><td>'+won(x.monthly_amt)+'</td><td>'+(x.team_contract_daily_amt?won(x.team_contract_daily_amt):'<span class="dim">기본</span>')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="9" class="empty">단가 없음 — 아래에서 등록</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="rt_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>급여 방식</label><select id="rt_pt" class="sel" style="width:100%">'+Object.keys(PT).map(function(k){return '<option value="'+k+'"'+((r.payroll_type||'daily')===k?' selected':'')+'>'+PT[k]+'</option>'}).join('')+'</select></div></div>'
-   +'<div class="fr"><div class="f"><label>일급 (1공수)</label><input id="rt_d" class="in" type="number" step="10000" value="'+(r.daily_amt||'')+'" placeholder="예: 190000"></div><div class="f"><label>잔업 시급</label><input id="rt_ot" class="in" type="number" step="1000" value="'+(r.ot_hourly_amt||20000)+'"></div></div>'
+   +'<div class="fr"><div class="f"><label>일급 (1공수)</label><input id="rt_d" class="in" type="number" step="10000" value="'+(r.daily_amt||'')+'"></div><div class="f"><label>잔업 시급</label><input id="rt_ot" class="in" type="number" step="1000" value="'+(r.ot_hourly_amt==null?'':r.ot_hourly_amt)+'"></div></div>'
    +'<div class="fr"><div class="f"><label>야간 시급</label><input id="rt_nt" class="in" type="number" step="1000" value="'+(r.night_hourly_amt||0)+'"></div><div class="f"><label>월급 (월급제)</label><input id="rt_m" class="in" type="number" step="10000" value="'+(r.monthly_amt||'')+'" placeholder="월급제는 급여 기준표 우선"></div></div>'
-   +'<div class="fr"><div class="f"><label>팀단가 (팀장 정산용, 비우면 기본 190,000)</label><input id="rt_tc" class="in" type="number" step="10000" value="'+(r.team_contract_daily_amt||'')+'"></div><div class="f"><label>메모</label><input id="rt_memo" class="in" placeholder="예: 9월부터 단가 인상"></div></div><button class="btn sm p" onclick="rateSave(\''+esc(emp)+'\')">단가 저장</button>'
+   +'<div class="fr"><div class="f"><label>팀단가 (팀장 정산용, 비우면 기본값)</label><input id="rt_tc" class="in" type="number" step="10000" value="'+(r.team_contract_daily_amt||'')+'"></div><div class="f"><label>메모</label><input id="rt_memo" class="in"></div></div><button class="btn sm p" onclick="rateSave(\''+esc(emp)+'\')">단가 저장</button>'
    +(r.payroll_type==='monthly'?'<div class="tiny dim" style="margin-top:4px">월급제: 월급은 급여 기준표(등급·직책·수당)에서 계산되어 단가표에 동기화됩니다. 여기서 월급을 넣으면 기준표 동기화 때 덮어씌워질 수 있으니 기준표를 쓰세요.</div>':'');
   // 소득구분
   body+='<h4 style="margin:16px 0 6px">소득구분 이력</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>구분</th><th class="l">사유</th></tr></thead><tbody>'+(ph.length?ph.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td>'+esc(INC[x.income_type]||x.income_type)+'</td><td class="l tiny dim">'+esc(x.change_reason||'')+'</td></tr>'}).join(''):'<tr><td colspan="4" class="empty">없음 — 정산이 기본 \'사업\'으로 계산됩니다</td></tr>')+'</tbody></table>'
-   +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="pd_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>구분</label><select id="pd_inc" class="sel" style="width:100%">'+Object.keys(INC).map(function(k){return '<option value="'+k+'"'+((r.income_type||'business')===k?' selected':'')+'>'+INC[k]+'</option>'}).join('')+'</select></div></div><div class="f"><label>사유</label><input id="pd_why" class="in" placeholder="예: 정규직 전환"></div><button class="btn sm p" onclick="periodSave(\''+esc(emp)+'\')">소득구분 저장</button>';
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="pd_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>구분</label><select id="pd_inc" class="sel" style="width:100%">'+Object.keys(INC).map(function(k){return '<option value="'+k+'"'+((r.income_type||'business')===k?' selected':'')+'>'+INC[k]+'</option>'}).join('')+'</select></div></div><div class="f"><label>사유</label><input id="pd_why" class="in"></div><button class="btn sm p" onclick="periodSave(\''+esc(emp)+'\')">소득구분 저장</button>';
   // 팀
   body+='<h4 style="margin:16px 0 6px">팀 배정 이력</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th class="l">팀장</th><th>방식</th><th class="l">메모</th></tr></thead><tbody>'+(th.length?th.map(function(x){return '<tr><td class="l">'+esc(x.valid_from)+'</td><td class="l">'+inf(x.valid_to)+'</td><td class="l">'+esc(x.leader_name||x.leader_no)+'</td><td>'+(x.contract_mode==='full'?'<span class="pill y tiny">팀도급</span>':'마진')+'</td><td class="l tiny dim">'+esc(x.memo||'')+'</td></tr>'}).join(''):'<tr><td colspan="5" class="empty">팀 없음 (본인 단가로 직접 정산)</td></tr>')+'</tbody></table>'
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>적용일</label><input id="tm_from" class="in" type="date" value="'+today()+'"></div><div class="f"><label>팀장 (비우면 팀 해제)</label>'+staffSel('tm_leader',r.leader_no,emp)+'</div></div><div class="fr"><div class="f"><label>정산 방식</label><select id="tm_mode" class="sel" style="width:100%"><option value="margin"'+(r.contract_mode!=='full'?' selected':'')+'>마진 — 회사가 팀원에게 직접 지급, 팀장은 (팀단가−팀원단가) 차액</option><option value="full"'+(r.contract_mode==='full'?' selected':'')+'>팀도급 — 회사는 팀장에게 팀단가 전액, 팀원 직접 지급 없음</option></select></div><div class="f"><label>메모</label><input id="tm_memo" class="in"></div></div><button class="btn sm p" onclick="teamSave(\''+esc(emp)+'\')">팀 저장</button>';
@@ -4758,10 +4753,10 @@ function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(functi
    +'<div class="fr" style="margin-top:8px"><div class="f"><label>서류</label><select id="ct_kind" class="sel" style="width:100%">'+KINDS.map(function(k){return '<option value="'+k+'">'+k+'</option>'}).join('')+'</select></div><div class="f"><label>판(버전)</label><input id="ct_ver" class="in" value="v1"></div></div>'
    +'<div class="fr"><div class="f"><label>서명일</label><input id="ct_signed" class="in" type="date" value="'+today()+'"></div><div class="f"><label>교부일 (근로계약서는 교부가 의무)</label><input id="ct_deliv" class="in" type="date"></div></div>'
    +'<div class="fr"><div class="f"><label>제3자 제공 동의 (고객사 출입)</label><select id="ct_tp" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div><div class="f"><label>민감정보 동의 (건강진단 등)</label><select id="ct_sn" class="sel" style="width:100%"><option value="">해당 없음</option><option value="true">동의</option><option value="false">거부</option></select></div></div>'
-   +'<div class="f"><label>메모</label><input id="ct_memo" class="in" placeholder="예: 스캔본 드라이브 32 HR 폴더"></div><button class="btn sm p" onclick="ctrSave(\''+esc(emp)+'\')">서류 기록 저장</button>';
+   +'<div class="f"><label>메모</label><input id="ct_memo" class="in"></div><button class="btn sm p" onclick="ctrSave(\''+esc(emp)+'\')">서류 기록 저장</button>';
   // 교육
   body+='<h4 style="margin:16px 0 6px">교육 이수 <span class="tiny dim">업무보고 시트 ED이수현황은 30분마다 자동 반영</span></h4><table style="width:100%"><thead><tr><th class="l">일자</th><th class="l">과정</th><th class="l">구분</th><th>시간</th><th class="l">장소</th><th class="l">유효</th><th></th></tr></thead><tbody>'+(tr.length?tr.slice(0,30).map(function(x){return '<tr><td class="l">'+esc(x.trained_on)+'</td><td class="l">'+esc(x.course_name)+(x.attended===false?' <span class="pill r tiny">불참</span>':'')+'</td><td class="l tiny">'+esc(x.category||'')+'</td><td>'+(x.hours!=null?num(x.hours):'')+'</td><td class="l tiny">'+esc(x.place||'')+'</td><td class="l tiny">'+(x.expires_on?esc(x.expires_on):'')+'</td><td><button class="stbtn x" onclick="trnDel('+x.training_id+')">삭제</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">교육 이력 없음</td></tr>')+'</tbody></table>'
-   +'<div class="fr" style="margin-top:8px"><div class="f"><label>일자</label><input id="tr_date" class="in" type="date" value="'+today()+'"></div><div class="f"><label>과정명</label><input id="tr_name" class="in" placeholder="예: 팹 출입 안전교육"></div></div><div class="fr"><div class="f"><label>구분</label><input id="tr_cat" class="in" placeholder="법정교육 / 고객사교육 / 현장교육"></div><div class="f"><label>시간</label><input id="tr_hours" class="in" type="number" step="0.5" placeholder="2"></div></div><div class="fr"><div class="f"><label>장소</label><input id="tr_place" class="in"></div><div class="f"><label>유효기간 (있으면)</label><input id="tr_exp" class="in" type="date"></div></div><button class="btn sm p" onclick="trnSave(\''+esc(emp)+'\')">교육 추가</button>';
+   +'<div class="fr" style="margin-top:8px"><div class="f"><label>일자</label><input id="tr_date" class="in" type="date" value="'+today()+'"></div><div class="f"><label>과정명</label><input id="tr_name" class="in"></div></div><div class="fr"><div class="f"><label>구분</label><input id="tr_cat" class="in" placeholder="법정교육 / 고객사교육 / 현장교육"></div><div class="f"><label>시간</label><input id="tr_hours" class="in" type="number" step="0.5" placeholder="2"></div></div><div class="fr"><div class="f"><label>장소</label><input id="tr_place" class="in"></div><div class="f"><label>유효기간 (있으면)</label><input id="tr_exp" class="in" type="date"></div></div><button class="btn sm p" onclick="trnSave(\''+esc(emp)+'\')">교육 추가</button>';
   drOpen(r.name+' · 인력 마스터',body,'<button class="btn" onclick="drClose()">닫기</button>');
 }
 /* ══════ B1 현장 관리 (대표 입력) ══════ */
@@ -5100,9 +5095,9 @@ function staffNew(){drOpen('신규 인력 등록',
   '<div class="fr"><div class="f"><label>이름 *</label><input id="sn_name" class="in"></div><div class="f"><label>연락처</label><input id="sn_phone" class="in" placeholder="010-0000-0000"></div></div>'
   +'<div class="fr"><div class="f"><label>입사일 *</label><input id="sn_hired" class="in" type="date" value="'+today()+'"></div><div class="f"><label>고용형태</label><select id="sn_etype" class="sel" style="width:100%" onchange="snType()"><option value="service">용역 (사업소득 3.3% · 일급)</option><option value="regular">정규직 (근로소득 · 월급)</option></select></div></div>'
   +'<div class="fr"><div class="f"><label>직책</label><input id="sn_job" class="in" placeholder="파트리드·팀리드·그룹리드·총괄리드 (비움 가능)"></div><div class="f"><label>매출처</label>'+ptnSel('sn_ptn','')+'</div></div>'
-  +'<div id="sn_daily"><div class="fr"><div class="f"><label>일급 (1공수) *</label><input id="sn_d" class="in" type="number" step="10000" placeholder="예: 170000"></div><div class="f"><label>잔업 시급</label><input id="sn_ot" class="in" type="number" step="1000" value="20000"></div></div>'
+  +'<div id="sn_daily"><div class="fr"><div class="f"><label>일급 (1공수) *</label><input id="sn_d" class="in" type="number" step="10000"></div><div class="f"><label>잔업 시급</label><input id="sn_ot" class="in" type="number" step="1000"></div></div>'
   +'<div class="fr"><div class="f"><label>팀장 (있으면)</label>'+staffSel('sn_leader','',null)+'</div><div class="f"><label>팀 정산 방식</label><select id="sn_mode" class="sel" style="width:100%"><option value="margin">마진 (회사가 직접 지급)</option><option value="full">팀도급 (팀장이 전액 수령)</option></select></div></div></div>'
-  +'<div id="sn_monthly" class="hide"><div class="f"><label>월급 (세전, 기준표 확정 전 임시)</label><input id="sn_m" class="in" type="number" step="10000" placeholder="예: 2500000"></div><div class="tiny dim">등록 후 급여 기준표에 등급·직책을 넣으면 기준표 금액으로 동기화됩니다.</div></div>'
+  +'<div id="sn_monthly" class="hide"><div class="f"><label>월급 (세전, 기준표 확정 전 임시)</label><input id="sn_m" class="in" type="number" step="10000"></div><div class="tiny dim">등록 후 급여 기준표에 등급·직책을 넣으면 기준표 금액으로 동기화됩니다.</div></div>'
   +'<h4 style="margin:12px 0 6px">출입 자료</h4><div class="fr"><div class="f"><label>혈액형</label><input id="sn_blood" class="in" placeholder="A / B / O / AB"></div><div class="f"><label>차량번호</label><input id="sn_veh" class="in" placeholder="없으면 비움"></div></div><div class="fr"><div class="f"><label>생년월일</label><input id="sn_birth" class="in" type="date"></div><div class="f"><label>비상연락처</label><input id="sn_emg" class="in"></div></div><div class="f"><label>주소</label><input id="sn_addr" class="in"></div>'
   +'<div class="tiny dim">주민번호·계좌번호는 여기서 받지 않습니다 (시트→DB 통로, 대표 전용). 혈액형·차량·교육이력 수집 근거는 고객사 출입 신청 — 개인정보 동의서 항목에 포함해야 합니다.</div>',
   '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="staffCreate()">등록</button>');setTimeout(function(){el('sn_name').focus()},60)}
@@ -5182,14 +5177,14 @@ function isDateMatchSchedule(dateStr, scheduleDateStr){
     var m1 = parts[0].match(/(\d{2})[\/\-](\d{2})/);
     var m2 = parts[1].match(/(\d{2})[\/\-](\d{2})/);
     if(m1 && m2){
-      var startStr = '2026-' + m1[1] + '-' + m1[2];
-      var endStr = '2026-' + m2[1] + '-' + m2[2];
+      var startStr = (CAL_CUR_YM||ymNow()).slice(0,5) + m1[1] + '-' + m1[2];
+      var endStr = (CAL_CUR_YM||ymNow()).slice(0,5) + m2[1] + '-' + m2[2];
       return dateStr >= startStr && dateStr <= endStr;
     }
   }
   var m = scheduleDateStr.match(/(\d{2})[\/\-](\d{2})/);
   if(m){
-    return dateStr === ('2026-' + m[1] + '-' + m[2]);
+    return dateStr === ((CAL_CUR_YM||ymNow()).slice(0,5) + m[1] + '-' + m[2]);
   }
   return false;
 }
@@ -5376,7 +5371,7 @@ function renderMonthlyCal(ym){
     var evList = getDayEvents(dStr);
     var attList = attMap[dStr] || [];
 
-    var isChuseok = (dStr >= '2026-09-24' && dStr <= '2026-09-26');
+    var isChuseok = false;
     var cellClasses = ['mcal-cell'];
     if(isSun) cellClasses.push('sun');
     if(isSat) cellClasses.push('sat');
@@ -5860,18 +5855,18 @@ function openAbsenceEditModal(id, initialDateStr){
       var m1 = p[0].match(/(\d{2})[\/\-](\d{2})/);
       var m2 = p[1].match(/(\d{2})[\/\-](\d{2})/);
       if(m1 && m2){
-        PICKER_STATE.startDate = '2026-' + m1[1] + '-' + m1[2];
-        PICKER_STATE.endDate = '2026-' + m2[1] + '-' + m2[2];
+        PICKER_STATE.startDate = (CAL_CUR_YM||ymNow()).slice(0,5) + m1[1] + '-' + m1[2];
+        PICKER_STATE.endDate = (CAL_CUR_YM||ymNow()).slice(0,5) + m2[1] + '-' + m2[2];
         PICKER_STATE.mode = 'range';
-        PICKER_STATE.ym = '2026-' + m1[1];
+        PICKER_STATE.ym = (CAL_CUR_YM||ymNow()).slice(0,5) + m1[1];
       }
     } else {
       var m = item.date.match(/(\d{2})[\/\-](\d{2})/);
       if(m){
-        PICKER_STATE.startDate = '2026-' + m[1] + '-' + m[2];
+        PICKER_STATE.startDate = (CAL_CUR_YM||ymNow()).slice(0,5) + m[1] + '-' + m[2];
         PICKER_STATE.endDate = null;
         PICKER_STATE.mode = 'single';
-        PICKER_STATE.ym = '2026-' + m[1];
+        PICKER_STATE.ym = (CAL_CUR_YM||ymNow()).slice(0,5) + m[1];
       }
     }
   } else {
@@ -5956,10 +5951,10 @@ function openAbsenceEditModal(id, initialDateStr){
     + '</div>'
 
     + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">소속 현장 / 거점</label>'
-    + '<input id="absSite" class="in" value="' + esc(item.site || '') + '" placeholder="예: 일반 현장 (SK이천), TES 용인 현장, SK청주 등"></div>'
+    + '<input id="absSite" class="in" value="' + esc(item.site || '') + '"></div>'
 
     + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">상세 내용 / 사유</label>'
-    + '<input id="absDesc" class="in" value="' + esc(item.desc || '') + '" placeholder="예: 연차 휴가 (2일간), 청주 SK하이닉스 중량물 취급 안전교육 등"></div>'
+    + '<input id="absDesc" class="in" value="' + esc(item.desc || '') + '"></div>'
 
     + '<div class="f"><label style="font-weight:700;font-size:12.5px;color:var(--tx)">대체 / 백업 방안</label>'
     + '<input id="absBackup" class="in" value="' + esc(item.backup || '') + '" placeholder="대체 / 백업 방안"></div>'
@@ -6520,11 +6515,7 @@ function alDetail(t){t=String(t||'');
      {k:'supply_amt',t:'공급가액',f:'won',sum:1},
      {k:'tax_amt',t:'세액',f:'won',sum:1},
      {k:'title',t:'적요/전표내용',l:1},
-     {k:'_guide',t:'세무 리스크 및 소명 가이드',l:1,f:function(v,r){
-       if((+r.supply_amt||0)===77000000) return '<span class="pill r"><b>설계비 지출증빙</b>: 세액 0원(부가세 분리 확인) · 용역산출물/도면 구비 필수</span>';
-       if((+r.supply_amt||0)===-15000000) return '<span class="pill y"><b>(-) 감액 수정전표</b>: t301 감액 · 수정계산서 대사 및 사유서 구비</span>';
-       return '<span class="wn">'+esc(r.flag||'특수관계인 거래 소명자료 구비')+'</span>';
-     }}
+     {k:'_rp',t:'소명',l:1,f:function(v,r){var g=(D.trg||[]).filter(function(x){return x.risk_key===r.voucher_no})[0];return g?esc(g.reason):'<span class="wn">미소명</span>'}}
    ]
   };
   function d(ds,cols,filt,note,go){return {rows:(D[ds]||[]).filter(filt||function(){return true}),cols:cols,note:note,go:go}}
@@ -6534,13 +6525,13 @@ function alDetail(t){t=String(t||'');
   if(/가지급금/.test(t))return d('di',C.di,function(r){return (+r.deemed_interest||0)>0},'법인세법상 인정이자 대상입니다. 세무사 확인이 필요합니다.','pl');
   if(/인박스|계정 미분류/.test(t))return d('inbox',C.inbox,null,'행을 누르면 계정을 지정할 수 있습니다.','ht');
   if(/청구기준/.test(t))return d('mrev',C.mrev,function(r){return Math.abs(+r.diff_amt||0)>=1},'청구 기준 금액과 발행한 계산서 금액이 다릅니다.','close');
-  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)},'발주는 나갔는데 60일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
+  if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)},'발주는 나갔는데 '+setgNum('po_overdue_days',60)+'일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
   if(/거래처 미등록/.test(t))return d('ht',C.ht,function(r){return !r.partner_id},'거래처 마스터에 등록하면 자동으로 연결됩니다.','ht');
   if(/SD 문서 미연결/.test(t))return d('ht',C.ht,function(r){return !r.matched_doc_no},'홈택스 계산서와 업무 문서가 연결되지 않았습니다.','ht');
   if(/안전점검 미제출/.test(t))return {rows:sfMiss(),cols:C.sfk,note:'투입 기록은 있는데 그날 작업 전 안전점검 제출이 없는 사람입니다. 현장앱 「안전」 탭에서 본인이 제출합니다 — 대표가 대신 넣지 않는 편이 증빙으로서 낫습니다.',go:'safety'};
   if(/교육 서명 미완료/.test(t))return {rows:edUnsigned(),cols:C.edg,note:'진행 중인 교육의 대상자 가운데 아직 서명하지 않은 사람입니다. 교육을 마감하면 더는 서명할 수 없습니다.',go:'safety'};
   if(/승인 대기/.test(t))return {rows:pendRows(),cols:C.pend,note:'현장앱에서 제출됐지만 아직 승인 전입니다. 현장 화면에서 날짜별로 일괄 승인하거나, 줄을 눌러 내용을 고친 뒤 승인하십시오.',go:'site',onRow:attOpen};
-  if(/Tax-Risk 미확인/.test(t))return d('tr',C.tr_unconf,function(r){return r.flag||(+r.supply_amt||0)===77000000||(+r.supply_amt||0)===-15000000||String(r.title).includes('감액')},'4대 엔티티 간 거래 중 세무 소명 증빙이 필요한 미확인 거래입니다. 법인세법 제52조 부당행위계산부인 대비 계약서 및 거래 증빙을 구비하십시오.','tax');
+  if(/Tax-Risk 미확인/.test(t))return {rows:(D.tro||[]).map(function(r){r._k=RPK[r.risk_kind]||r.risk_kind;return r}),cols:[{k:'risk_date',t:'일자',l:1},{k:'_k',t:'원천',l:1},{k:'from_entity',t:'보낸 쪽',l:1},{k:'to_entity',t:'받은 쪽',l:1},{k:'amount',t:'금액',f:'won',sum:1},{k:'detail',t:'내용',l:1,cls:'tiny'},{k:'legal_basis',t:'근거 조문',l:1,cls:'tiny dim'}],note:'행을 눌러 소명을 입력합니다.',go:'alerts',onRow:rpOpen};
   if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
   if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
