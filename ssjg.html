@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.20 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.21 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -290,7 +290,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.20</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.21</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -305,9 +305,9 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <span style="color:var(--green)">●</span> PYRO 제조 콕핏
     </a>
     <a href="./worker.html" target="_blank" rel="noopener noreferrer" class="nav-btn" style="border-color:rgba(59,130,246,0.5);color:#60a5fa" title="현장 근로자/리드 공수 ERP (새 탭)">
-      <span>👷</span> 공수 ERP
+      공수 ERP
     </a>
-    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">🌓 테마</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
     <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
       <span style="font-size:16px">●</span> DB 정상 연동
     </div>
@@ -463,33 +463,31 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="kpi-grid">
       <div class="kpi-card green">
         <div class="kpi-label">완제품 3PL 실사 (2개입 박스)</div>
-        <div class="kpi-val" id="invKpiFg">179 박스</div>
-        <div class="kpi-sub">프리미엄 148박스 + 슈퍼 31박스 (차이 0박스 ✅)</div>
+        <div class="kpi-val" id="invKpiFg">-</div>
+        <div class="kpi-sub" id="invKpiFgSub"></div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">포장 부자재 실사 (파우치)</div>
-        <div class="kpi-val" id="invKpiPouch">12,070 장</div>
-        <div class="kpi-sub">슈퍼 8,117장 + 프리미엄 3,953장 (차이 0 ✅)</div>
+        <div class="kpi-val" id="invKpiPouch">-</div>
+        <div class="kpi-sub" id="invKpiPouchSub"></div>
       </div>
       <div class="kpi-card amber">
         <div class="kpi-label">포장 부자재 실사 (박스)</div>
-        <div class="kpi-val" id="invKpiBox">577 개</div>
-        <div class="kpi-sub">2입 387개 + 1입 190개 (차이 0 ✅)</div>
+        <div class="kpi-val" id="invKpiBox">-</div>
+        <div class="kpi-sub" id="invKpiBoxSub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">3PL(이지어드민) 실사 기준일</div>
-        <div class="kpi-val" style="font-size:18px">2026-09-02</div>
-        <div class="kpi-sub">제이엘씨엔티 물류센터 실사 확정</div>
+        <div class="kpi-label">실사 기준일</div>
+        <div class="kpi-val" style="font-size:18px" id="invKpiDate">-</div>
+        <div class="kpi-sub" id="invKpiDateSub"></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">📦 레드캣 벤토나이트 품목 재고 원장 (public.ssjg_inventory 13품목)</div>
-          <div style="font-size:11.5px;color:var(--text-muted)">※ 1P/4P 단품은 2개입 박스로 통합 관리되는 판매 단위이므로 재고 0으로 고정 표시됩니다.</div>
+          <div class="panel-title">품목별 재고</div>
         </div>
-        <span class="badge" style="font-size:11.5px">원천: raw.sheet_current</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -682,31 +680,30 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="kpi-grid">
       <div class="kpi-card green">
         <div class="kpi-label">2026 누적 매출액 (Ⅰ)</div>
-        <div class="kpi-val" id="kpiMgmtRev">15,076,516 원</div>
+        <div class="kpi-val" id="kpiMgmtRev">-</div>
         <div class="kpi-sub">계산서 + 채널 + 배송 - 할인</div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">2026 누적 매출원가 (5120)</div>
-        <div class="kpi-val" id="kpiMgmtCogs">7,289,932 원</div>
+        <div class="kpi-val" id="kpiMgmtCogs">-</div>
         <div class="kpi-sub">출고수량 × 품목별 표준원가</div>
       </div>
       <div class="kpi-card amber">
-        <div class="kpi-label">2026 누적 판관비 (4개 원천 합산)</div>
-        <div class="kpi-val" id="kpiMgmtSga">8,452,197 원</div>
+        <div class="kpi-label">2026 누적 판관비</div>
+        <div class="kpi-val" id="kpiMgmtSga">-</div>
         <div class="kpi-sub">전표 + 수기 + 통장(SMS등) + 샘플원가</div>
       </div>
       <div class="kpi-card red">
         <div class="kpi-label">2026 누적 영업이익</div>
-        <div class="kpi-val" id="kpiMgmtOp" style="color:var(--red)">-665,613 원</div>
-        <div class="kpi-sub">월매출 200만 대비 고정비 부담</div>
+        <div class="kpi-val" id="kpiMgmtOp">-</div>
+        <div class="kpi-sub"></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">📈 월별 관리손익 집계 원장 (public.ssjg_pl_month 직결)</div>
-          <div style="font-size:11px;color:var(--text-muted)">1~8월 시트 전 항목 ±0원 일치 검증 완료 (3·7월 잔차는 WO-10 적재 키 반영 시 자동 해소)</div>
+          <div class="panel-title">월별 관리손익</div>
         </div>
       </div>
       <div class="table-wrap" style="max-height:550px;overflow-y:auto">
@@ -739,23 +736,11 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 
   <!-- TAB: 채널별 수익성 분석 (WO-22) -->
   <div id="tab-channel-pl" class="tab-pane">
-    <!-- 주의보 배너 -->
-    <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:14px 18px;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-size:18px">⚠️</span>
-        <b style="color:var(--amber);font-size:13.5px">채널 간 수익성 비교 전용 분석 안내 (관리손익 합산 금지)</b>
-      </div>
-      <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
-        본 화면의 차익(마진율)은 각 채널 출고 시 발생한 <b>실배송비가 이미 차감된 지표</b>입니다.<br>
-        실배송비는 관리손익의 판관비(8420 운반비)와 중복되므로, <b>관리손익과 절대 단순 합산하지 마십시오.</b>
-      </div>
-    </div>
-
     <div class="kpi-grid" id="chKpiGrid"></div>
 
     <div class="panel">
       <div class="panel-head">
-        <div class="panel-title">🛍️ 판매 채널별 출고·정산·마진율 원장</div>
+        <div class="panel-title">채널별 출고·정산·마진율</div>
         <div class="filter-bar">
           <input type="text" id="channelSearch" class="input" placeholder="채널/연월 검색..." onkeyup="filterChannelPl()">
         </div>
@@ -789,8 +774,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">💳 판매대행(PG) 및 카드매출 채널별 정산 원장</div>
-          <div style="font-size:11px;color:var(--text-muted)">⚠️ AGENT(채널상세)와 CARD(홈택스집계) 자료 분리 관제 (합산 중복 방지)</div>
+          <div class="panel-title">채널 매출정산</div>
         </div>
         <div class="filter-bar">
           <select id="settleSrcFilter" class="select" onchange="filterSettlements()">
@@ -827,36 +811,36 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div id="tab-tax-invoices" class="tab-pane">
     <div class="kpi-grid">
       <div class="kpi-card red">
-        <div class="kpi-label">🔴 미송금 매입계산서</div>
-        <div class="kpi-val" id="kpiUnpaidBuy">47 건 · 234만 원</div>
+        <div class="kpi-label">미송금 매입계산서</div>
+        <div class="kpi-val" id="kpiUnpaidBuy">-</div>
         <div class="kpi-sub">지급 예정 외상매입금</div>
       </div>
       <div class="kpi-card amber">
-        <div class="kpi-label">🔴 미수금 매출계산서</div>
-        <div class="kpi-val" id="kpiUncollectedSales">14 건 · 63만 원</div>
+        <div class="kpi-label">미수금 매출계산서</div>
+        <div class="kpi-val" id="kpiUncollectedSales">-</div>
         <div class="kpi-sub">회수 대기 매출채권</div>
       </div>
       <div class="kpi-card green">
-        <div class="kpi-label">🟢 정산 완료 계산서</div>
-        <div class="kpi-val" id="kpiSettledInvoices">57 건</div>
-        <div class="kpi-sub">통장 입출금 1:1 대사 완료</div>
+        <div class="kpi-label">정산 완료 계산서</div>
+        <div class="kpi-val" id="kpiSettledInvoices">-</div>
+        <div class="kpi-sub"></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-head">
-        <div class="panel-title">📑 전자세금계산서 정산 상태별 원장</div>
+        <div class="panel-title">세금계산서</div>
         <div class="filter-bar">
           <select id="tiFlowFilter" class="select" onchange="filterTaxInvoices()">
-            <option value="">매출/매입 전체</option>
-            <option value="매출">매출만</option>
-            <option value="매입">매입만</option>
+            <option value="">매출·매입</option>
+            <option value="매출">매출</option>
+            <option value="매입">매입</option>
           </select>
           <select id="tiStatusFilter" class="select" onchange="filterTaxInvoices()">
-            <option value="">정산상태 전체</option>
-            <option value="🔴미송금">🔴 미송금만</option>
-            <option value="🔴미수금">🔴 미수금만</option>
-            <option value="🟢입금완료">🟢 입금완료만</option>
+            <option value="">상태 전체</option>
+            <option value="미송금">미송금</option>
+            <option value="미수금">미수금</option>
+            <option value="입금완료">입금완료</option>
           </select>
           <input type="text" id="tiSearch" class="input" placeholder="거래처/품목 검색..." onkeyup="filterTaxInvoices()">
         </div>
@@ -891,8 +875,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">⚖️ 거래처별 청구 vs 입금 미수금 대사 원장</div>
-          <div style="font-size:11px;color:var(--text-muted)">승인번호 기준 계산서-통장 118/118 완전 정합 검증 완료</div>
+          <div class="panel-title">거래처별 청구·입금 대사</div>
         </div>
         <div class="filter-bar">
           <input type="text" id="arSearch" class="input" placeholder="거래처 검색..." onkeyup="filterArRecon()">
@@ -926,8 +909,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <div class="panel">
       <div class="panel-head">
         <div>
-          <div class="panel-title">IBK기업은행 통장 거래 원장 전수</div>
-          <div style="font-size:11px;color:var(--text-muted)">계좌: IBK-SSJG · 자연키 유니크 제약 100% 검증 완료</div>
+          <div class="panel-title">IBK기업은행 통장 원장</div>
         </div>
         <div class="filter-bar">
           <input type="text" id="bankSearch" class="input" placeholder="거래처/적요 검색..." onkeyup="filterBankRows()">
@@ -970,8 +952,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div id="tab-monthly" class="tab-pane">
     <div class="panel">
       <div class="panel-head">
-        <div class="panel-title">2021년 ~ 2025년 전 기간 월별 손익 및 자금 수지 총괄</div>
-        <span style="font-size:12px;color:var(--text-muted)">총 58개 정산월 집계</span>
+        <div class="panel-title">월별 자금 추이 <span id="monthRange" style="font-weight:500;color:var(--text-muted)"></span></div>
+        <span style="font-size:12px;color:var(--text-muted)" id="monthCount"></span>
       </div>
       <div class="table-wrap">
         <table>
@@ -1027,7 +1009,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div id="tab-governance" class="tab-pane">
     <div class="gov-grid">
       <div class="gov-card">
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🏢 주식회사 승승장구컴퍼니 거버넌스 정보</h3>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인 정보</h3>
         <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span id="govCorpNo">134811-0530752</span></div>
         <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span id="govBizNo">772-87-02119</span></div>
         <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영 (지분율 100%, 40,000주)</span></div>
@@ -1039,22 +1021,18 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div class="gov-info-row" style="background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;padding-left:8px">
           <span class="gov-info-label" style="color:#fca5a5;font-weight:700">임원 보수 한도 결의</span>
           <div>
-            <span class="badge" style="background:#dc2626;color:#ffffff;font-weight:700;font-size:11px">🔴 미결의 (의사록 부재)</span>
-            <div style="font-size:11px;color:var(--text-muted);line-height:1.4;margin-top:4px">
-              ※ 법인세법 시행령 제43조: 주주총회 또는 정관에 의한 임원보수한도 결의 의사록 필수.<br>
-              미비 시 2026-02 대표이사 보수(87만) 등 손금부인 과세 리스크 (1인 주주 총회 의사록 작성 권고)
-            </div>
+            <span class="badge" style="background:#dc2626;color:#ffffff;font-weight:700;font-size:11px">미결의 · 의사록 없음</span>
           </div>
         </div>
       </div>
       <div class="gov-card">
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🔏 법인 공식 인감</h3>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인인감</h3>
         <div class="seal-box">
           <div id="sealLoadingBox" style="font-size:11px;color:var(--text-muted);padding:24px 10px">
-            🔐 보안 알림: 로그인 후 DB(core.company_info)에서 정본 인감을 안전하게 불러옵니다.
+            -
           </div>
           <img id="govSealImg" src="" alt="SSJG 법인인감" class="seal-img" style="display:none;max-height:100px;margin:0 auto;filter:drop-shadow(0 2px 8px rgba(239,68,68,0.25))">
-          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감 (DB 암호화 정본)</div>
+          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감</div>
         </div>
       </div>
     </div>
@@ -1293,13 +1271,14 @@ var COL_KO = {
   bill_ym:'정산월', bill_date:'청구일자'
 };
 var GRID = {};
+function noEmo(s){return String(s==null?'':s).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/gu,'').trim()}
 function gEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function gToast(msg,bad){var t=document.getElementById('gToast');if(!t){t=document.createElement('div');t.id='gToast';document.body.appendChild(t)}
   t.textContent=msg;t.className='g-toast'+(bad?' bad':'');t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none'},2600)}
 function gIsNum(tp){return /^(integer|bigint|smallint|numeric|real|double precision)/.test(tp||'')}
 function gIsDate(tp){return /^(date|timestamp)/.test(tp||'')}
 function gCell(v,tp){if(v==null)return '';if(gIsNum(tp)&&v!=='')return Number(v).toLocaleString('ko-KR');
-  if(/^timestamp/.test(tp||''))return String(v).replace('T',' ').slice(0,16);if(typeof v==='object')return JSON.stringify(v);return v}
+  if(/^timestamp/.test(tp||''))return String(v).replace('T',' ').slice(0,16);if(typeof v==='object')return JSON.stringify(v);return typeof v==='string'?noEmo(v):v}
 
 function gridMount(host){
   var tb=host.getAttribute('data-grid');if(GRID[tb])return;
@@ -1641,6 +1620,9 @@ async function loadAllData(){
       document.getElementById('dashMonthlyRows').innerHTML = mData.slice(0, 12).map(r => renderMonthRow(r)).join('');
       // All monthly table
       document.getElementById('allMonthlyRows').innerHTML = mData.map(r => renderMonthRow(r)).join('');
+      var yms = mData.map(r => String(r.period_ym || '')).filter(Boolean).sort();
+      document.getElementById('monthRange').innerText = yms.length ? yms[0] + ' ~ ' + yms[yms.length - 1] : '';
+      document.getElementById('monthCount').innerText = mData.length + '개월';
     }
 
     // 3. Load Bank Txns
@@ -1873,7 +1855,7 @@ function renderTaxInvoices(rows){
       <td class="amt-neutral">${fmt(r.supply_amt)}</td>
       <td class="amt-neutral">${fmt(r.vat_amt)}</td>
       <td style="font-weight:700;text-align:right">${fmt(r.total_amt)}</td>
-      <td><span class="tag" style="${r.settle_status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${r.settle_status}</span></td>
+      <td><span class="tag" style="${r.settle_status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.settle_status))}</span></td>
       <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
     </tr>
   `).join('');
@@ -1907,7 +1889,7 @@ function renderArRecon(rows){
       <td class="amt-neutral">${fmt(r.total_amt)}</td>
       <td class="amt-plus">${fmt(r.collect_amt)}</td>
       <td class="${Number(r.ar_balance) > 0 ? 'amt-minus' : 'amt-neutral'}">${fmt(r.ar_balance)}</td>
-      <td><span class="tag" style="${r.status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${r.status}</span></td>
+      <td><span class="tag" style="${r.status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.status))}</span></td>
       <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
     </tr>
   `).join('');
@@ -1976,15 +1958,15 @@ function filterBankRows(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 🚚 SSJG 유통·택배 자동화 3단계 통합 엔진 (SheetJS 기반)
+// SSJG 출고 처리 3단계 (SheetJS)
 // ══════════════════════════════════════════════════════════════════════════
 
-// ── 0단계: 카페24 주문서 ➡️ 이지어드민 대량발주등록 변환 ──
+// ── 1단계: 카페24 주문 → 이지어드민 주문등록 ──
 var rawCafe24Rows = [];
 
 function handleCafe24File(file){
   if(!file) return;
-  document.getElementById('cafe24DropText').innerHTML = '⏳ 카페24 주문서 분석 중... (' + file.name + ')';
+  document.getElementById('cafe24DropText').innerHTML = '읽는 중 (' + file.name + ')';
 
   var reader = new FileReader();
   reader.onload = function(e){
@@ -2035,12 +2017,12 @@ function handleCafe24File(file){
       });
 
       document.getElementById('cafe24ParsedCount').innerText = rawCafe24Rows.length + ' 건';
-      document.getElementById('cafe24DropText').innerHTML = '✅ 카페24 파싱 완료: ' + file.name + ' (' + rawCafe24Rows.length + '건)';
+      document.getElementById('cafe24DropText').innerHTML = file.name + ' · ' + rawCafe24Rows.length + '건';
       document.getElementById('btnDownloadEzadminOrder').disabled = false;
 
     } catch(err) {
       alert('카페24 엑셀 파싱 오류: ' + err.message);
-      document.getElementById('cafe24DropText').innerHTML = '❌ 파싱 실패: 다시 시도해 주십시오';
+      document.getElementById('cafe24DropText').innerHTML = '읽기 실패';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2063,13 +2045,13 @@ function downloadEzadminOrderExcel(){
   XLSX.writeFile(wb, fileName);
 }
 
-// ── 1단계 & 2단계: 이지어드민 ➡️ 로젠택배 & 송장 피드백 ──
+// ── 2·3단계: 이지어드민 → 로젠 접수, 로젠 송장 → 이지어드민 ──
 var rawDeliveryRows = [];
 var matchedInvoices = [];
 
 function handleEzadminFile(file){
   if(!file) return;
-  document.getElementById('ezadminDropText').innerHTML = '⏳ 엑셀 파싱 중... (' + file.name + ')';
+  document.getElementById('ezadminDropText').innerHTML = '읽는 중 (' + file.name + ')';
   
   var reader = new FileReader();
   reader.onload = function(e){
@@ -2115,7 +2097,7 @@ function handleEzadminFile(file){
       renderDeliveryTable();
       recalcDeliveryKpi();
 
-      document.getElementById('ezadminDropText').innerHTML = '✅ 파싱 완료: ' + file.name + ' (' + rawDeliveryRows.length + '건)';
+      document.getElementById('ezadminDropText').innerHTML = file.name + ' · ' + rawDeliveryRows.length + '건';
       document.getElementById('btnDownloadLogen').disabled = false;
       document.getElementById('btnSaveToDb').disabled = false;
       document.getElementById('kpiDelivMatched').innerHTML = '접수 준비완료';
@@ -2123,7 +2105,7 @@ function handleEzadminFile(file){
 
     } catch(err) {
       alert('엑셀 파싱 오류: ' + err.message);
-      document.getElementById('ezadminDropText').innerHTML = '❌ 오류 발생: 다시 시도해 주십시오';
+      document.getElementById('ezadminDropText').innerHTML = '읽기 실패';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2258,7 +2240,7 @@ function downloadLogenExcel(){
 
 function handleInvoiceFile(file){
   if(!file) return;
-  document.getElementById('invoiceDropText').innerHTML = '⏳ 송장 파일 분석 중... (' + file.name + ')';
+  document.getElementById('invoiceDropText').innerHTML = '읽는 중 (' + file.name + ')';
 
   var reader = new FileReader();
   reader.onload = function(e){
@@ -2290,14 +2272,14 @@ function handleInvoiceFile(file){
 
       renderDeliveryTable();
       document.getElementById('invoiceMatchCount').innerText = matchedCount + ' 건 매칭 완료 (전체 ' + rawDeliveryRows.length + '건 중)';
-      document.getElementById('invoiceDropText').innerHTML = '✅ 송장 연동 완료: ' + file.name + ' (' + matchedCount + '건)';
+      document.getElementById('invoiceDropText').innerHTML = file.name + ' · 매칭 ' + matchedCount + '건';
       document.getElementById('btnDownloadEzadmin').disabled = (matchedCount === 0);
       document.getElementById('kpiDelivMatched').innerHTML = matchedCount + '건 완료';
       document.getElementById('kpiDelivStatusSub').innerHTML = '이지어드민 송장등록 엑셀 출력 가능';
 
     } catch(err) {
       alert('송장 파일 처리 오류: ' + err.message);
-      document.getElementById('invoiceDropText').innerHTML = '❌ 송장 파일 분석 실패';
+      document.getElementById('invoiceDropText').innerHTML = '읽기 실패';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2333,13 +2315,13 @@ async function saveDeliveryToSupabase(){
     return;
   }
   if(!sb){
-    alert('Supabase DB 연결이 활성화되지 않았습니다. 로그인을 확인해 주십시오.');
+    alert('DB 연결 없음');
     return;
   }
 
   var btn = document.getElementById('btnSaveToDb');
   btn.disabled = true;
-  btn.innerText = '💾 저장 중...';
+  btn.innerText = '저장 중';
 
   try {
     var freight = Number(document.getElementById('cfgFreight').value) || 4150;
@@ -2371,7 +2353,7 @@ async function saveDeliveryToSupabase(){
     alert('저장 오류: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.innerText = '💾 DB 원장 보관';
+    btn.innerText = 'DB 저장';
   }
 }
 
@@ -2403,6 +2385,14 @@ function renderInventory(rows){
   var elFg = document.getElementById('invKpiFg'); if(elFg) elFg.textContent = fmt(Number(p148) + Number(p31)) + ' 박스';
   var elPouch = document.getElementById('invKpiPouch'); if(elPouch) elPouch.textContent = fmt(Number(pouchPre) + Number(pouchSpr)) + ' 장';
   var elBox = document.getElementById('invKpiBox'); if(elBox) elBox.textContent = fmt(Number(box2p) + Number(box1p)) + ' 개';
+  var setT = (id, t) => { var e = document.getElementById(id); if(e) e.textContent = t; };
+  setT('invKpiFgSub', '프리미엄 ' + fmt(p148) + ' · 슈퍼 ' + fmt(p31));
+  setT('invKpiPouchSub', '프리미엄 ' + fmt(pouchPre) + ' · 슈퍼 ' + fmt(pouchSpr));
+  setT('invKpiBoxSub', '2입 ' + fmt(box2p) + ' · 1입 ' + fmt(box1p));
+  var cd = rows.map(r => String(r.count_date || '').slice(0, 10)).filter(Boolean).sort().pop() || '-';
+  setT('invKpiDate', cd);
+  var dN = rows.filter(r => Number(r.diff_qty) !== 0 && r.diff_qty !== null && r.diff_qty !== undefined).length;
+  setT('invKpiDateSub', dN ? '차이 ' + dN + '품목' : '차이 없음');
 
   tbody.innerHTML = rows.map(r => {
     var isSubUnit = r.item_code.endsWith('1P') || r.item_code.endsWith('4P');
