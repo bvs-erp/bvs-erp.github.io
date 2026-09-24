@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.19 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.20 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -78,6 +78,38 @@ header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20p
 .main{flex:1;min-width:0}
 .menu-btn{display:none;background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;width:34px;height:34px;font-size:18px;cursor:pointer}
 .side-dim{display:none}
+.side-badge{display:inline-block;min-width:18px;margin-left:6px;padding:0 6px;border-radius:9px;background:#dc2626;color:#fff;font-size:11px;line-height:18px;text-align:center}
+.side-badge:empty{display:none}
+.alert-line{display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:8px;border:1px solid rgba(239,68,68,.35);border-left:3px solid #dc2626;border-radius:8px;background:rgba(239,68,68,.06);font-size:13px}
+.alert-line .al-dot{width:8px;height:8px;border-radius:50%;background:#dc2626;flex:0 0 8px}
+.alert-line .al-text{flex:1;min-width:0}
+.al-btn{flex:0 0 auto;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer}
+.alert-box{margin:-4px 0 12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);overflow-x:auto}
+.al-detail{font-size:12.5px;color:var(--text)}
+.td-cnt{display:inline-block;margin-left:6px;padding:0 8px;border-radius:10px;background:#dc2626;color:#fff;font-size:12px;line-height:20px}
+.td-cnt:empty{display:none}
+.td-empty{text-align:center;padding:22px;color:var(--text-muted)}
+.td-kind{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;background:rgba(239,68,68,.12);color:#ef4444}
+.td-kind.warn{background:rgba(245,158,11,.14);color:#d97706}
+#tdIssueRows tr[data-ord]{cursor:pointer}
+#tdIssueRows tr[data-ord]:hover td{background:rgba(148,163,184,.08)}
+.kpi-card.alarm .kpi-val{color:#ef4444}
+.td-chart{width:100%;overflow-x:auto}
+.td-chart svg{display:block;min-width:560px;width:100%;height:auto}
+.td-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+.td-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:8px}
+.td-sw-now{background:var(--blue)}
+.td-sw-prev{background:#64748b;opacity:.45}
+.step-no{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700}
+.step-panel{margin-bottom:20px}
+.step-meta{font-size:13px;margin:0 0 12px;color:var(--text-muted)}
+.step-meta span{font-weight:700;color:var(--text)}
+.chk-ok{color:var(--green);font-weight:700}
+.chk-err{color:#ef4444;font-weight:700;white-space:nowrap}
+.chk-warn{color:#d97706;font-weight:700;white-space:nowrap}
+tr.row-err td{background:rgba(239,68,68,.08)}
+tr.row-warn td{background:rgba(245,158,11,.07)}
+#tab-today .table-wrap table{min-width:640px}
 @media (max-width:900px){
   .menu-btn{display:flex;align-items:center;justify-content:center}
   .side{position:fixed;left:0;top:0;height:100vh;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.4)}
@@ -258,7 +290,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.19</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.20</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -285,69 +317,94 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 <div class="side-dim" id="sideDim" onclick="toggleSide(false)"></div>
 <div class="shell">
 <aside class="side" id="side">
-  <div class="side-grp">현황</div>
-  <div class="tab-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">📊 종합 상황실</div>
-  <div class="side-grp">운영·물류</div>
-  <div class="tab-item" data-tab="inventory" onclick="switchTab('inventory',this)">📦 OP재고 관리</div>
-  <div class="tab-item" data-tab="delivery" onclick="switchTab('delivery',this)">🚚 택배·출고 자동화</div>
-  <div class="tab-item" data-tab="logistics" onclick="switchTab('logistics',this)">📦 3PL 물류·용역비 정산</div>
+  <div class="side-grp">출고</div>
+  <div class="tab-item active" data-tab="today" onclick="switchTab('today',this)">오늘 출고</div>
+  <div class="tab-item" data-tab="delivery" onclick="switchTab('delivery',this)">출고 처리</div>
+  <div class="tab-item" data-tab="shiplog" onclick="switchTab('shiplog',this)">출고 내역</div>
+  <div class="tab-item" data-tab="inventory" onclick="switchTab('inventory',this)">재고</div>
+  <div class="side-grp">정산</div>
+  <div class="tab-item" data-tab="dashboard" onclick="switchTab('dashboard',this)">자금·세무 현황<span class="side-badge" id="sideTaxBadge"></span></div>
+  <div class="tab-item" data-tab="logistics" onclick="switchTab('logistics',this)">3PL·택배비</div>
+  <div class="tab-item" data-tab="settlements" onclick="switchTab('settlements',this)">채널 매출정산</div>
+  <div class="tab-item" data-tab="tax-invoices" onclick="switchTab('tax-invoices',this)">세금계산서</div>
+  <div class="tab-item" data-tab="ar-recon" onclick="switchTab('ar-recon',this)">미수금 대사</div>
+  <div class="tab-item" data-tab="bank" onclick="switchTab('bank',this)">통장 원장</div>
   <div class="side-grp">손익</div>
-  <div class="tab-item" data-tab="mgmt-pl" onclick="switchTab('mgmt-pl',this)">📈 월별 관리손익</div>
-  <div class="tab-item" data-tab="channel-pl" onclick="switchTab('channel-pl',this)">🛍️ 채널별 수익성 (마진분석)</div>
-  <div class="tab-item" data-tab="monthly" onclick="switchTab('monthly',this)">📈 월별 손익·자금 추이</div>
-  <div class="side-grp">정산·세무</div>
-  <div class="tab-item" data-tab="settlements" onclick="switchTab('settlements',this)">💳 채널별 매출정산</div>
-  <div class="tab-item" data-tab="tax-invoices" onclick="switchTab('tax-invoices',this)">📑 세금계산서 정산</div>
-  <div class="tab-item" data-tab="ar-recon" onclick="switchTab('ar-recon',this)">⚖️ 미수금 대사</div>
-  <div class="side-grp">자금·법인</div>
-  <div class="tab-item" data-tab="bank" onclick="switchTab('bank',this)">🏦 기업은행 통장 원장</div>
-  <div class="tab-item" data-tab="governance" onclick="switchTab('governance',this)">🏛️ 법인 정보 & 인감</div>
-  <div class="side-grp">원장·기준정보</div>
-  <div class="tab-item" data-tab="items" onclick="switchTab('items',this)">🏷️ 품목 마스터</div>
-  <div class="tab-item" data-tab="journal" onclick="switchTab('journal',this)">🧾 전표</div>
-  <div class="tab-item" data-tab="cards" onclick="switchTab('cards',this)">💳 카드·현금영수증</div>
+  <div class="tab-item" data-tab="mgmt-pl" onclick="switchTab('mgmt-pl',this)">월별 관리손익</div>
+  <div class="tab-item" data-tab="channel-pl" onclick="switchTab('channel-pl',this)">채널별 수익성</div>
+  <div class="tab-item" data-tab="monthly" onclick="switchTab('monthly',this)">월별 자금 추이</div>
+  <div class="side-grp">기준정보</div>
+  <div class="tab-item" data-tab="items" onclick="switchTab('items',this)">품목</div>
+  <div class="tab-item" data-tab="journal" onclick="switchTab('journal',this)">전표</div>
+  <div class="tab-item" data-tab="cards" onclick="switchTab('cards',this)">카드·현금영수증</div>
+  <div class="tab-item" data-tab="governance" onclick="switchTab('governance',this)">법인 정보·인감</div>
 </aside>
 <div class="main">
 
 <div class="container">
 
   <!-- TAB 1: 종합 대시보드 -->
-  <div id="tab-dashboard" class="tab-pane active">
-    
-    <!-- Tax-Risk Guard Alert -->
-    <div class="tax-banner" id="taxBanner">
-      <div class="tax-icon">!</div>
-      <div class="tax-body" style="flex:1">
-        <h4>⚠️ Tax-Risk Guard 경고: 특수관계인(BVS ↔ SSJG) 내부거래 <span id="trCnt"></span>건 감지</h4>
-        <p>헌법 제5조에 의거, BVS 법인과 SSJG 법인 간 자금 이체 <span id="trCnt2"></span>건(총 <span id="trSum"></span>만 원)이 실측 포착되었습니다. 가지급금 및 부당행위계산부인 방지를 위해 증빙 및 반증자료(계약서, 세금계산서)를 상시 대조하십시오.</p>
-        <table class="tax-table">
-          <thead>
-            <tr><th>거래일자</th><th>거래처</th><th>구분</th><th>금액</th><th>잔액</th><th>적요</th></tr>
-          </thead>
-          <tbody id="taxRiskRows">
-            <tr><td colspan="6">조회 중...</td></tr>
-          </tbody>
+  <div id="tab-today" class="tab-pane active">
+    <div class="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-label">오늘 출고</div>
+        <div class="kpi-val" id="tdBoxes">-</div>
+        <div class="kpi-sub" id="tdBoxesSub"></div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">이번 달 출고</div>
+        <div class="kpi-val" id="tdMonth">-</div>
+        <div class="kpi-sub" id="tdMonthSub"></div>
+      </div>
+      <div class="kpi-card" id="tdWaitCard">
+        <div class="kpi-label">출고 대기</div>
+        <div class="kpi-val" id="tdWait">-</div>
+        <div class="kpi-sub" id="tdWaitSub"></div>
+      </div>
+      <div class="kpi-card" id="tdTrkCard">
+        <div class="kpi-label">송장 누락</div>
+        <div class="kpi-val" id="tdTrk">-</div>
+        <div class="kpi-sub" id="tdTrkSub"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">확인 필요 <span class="td-cnt" id="tdIssueCnt"></span></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>구분</th><th>일자</th><th>주문번호</th><th>채널</th><th>받는 사람 / 품목</th><th style="text-align:right">박스</th></tr></thead>
+          <tbody id="tdIssueRows"><tr><td colspan="6" class="td-empty">-</td></tr></tbody>
         </table>
       </div>
     </div>
-
-    <!-- WO-26: 원천세 미신고 및 법정 납부기한 도과 경고 배너 -->
-    <div class="tax-banner" style="background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.45);margin-bottom:20px">
-      <div class="tax-icon" style="background:#dc2626">🚨</div>
-      <div class="tax-body" style="flex:1">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <h4 style="color:#fca5a5;margin:0">원천세 법정 신고·납부기한 도과 경고 (WO-26)</h4>
-            <span class="badge" style="background:#dc2626;color:#fff;font-weight:700" id="wo26Dday"></span>
-          </div>
-          <span style="font-size:11px;color:#fca5a5;font-weight:600">세무사 기한후신고 필수</span>
-        </div>
-        <p style="margin-top:6px;font-size:12px;color:var(--text);line-height:1.5">
-          • <b>대상 거래</b>: <code>public.ssjg_manual_journal</code> 2026-08-21 김나연 프리랜서 외주용역비 (사업소득 3.3%)<br>
-          • <b>지급 금액</b>: 총지급 1,300,000원 · 통장 실지급 1,257,100원 · <b>원천징수세액 42,900원</b><br>
-          • <b>법정 납기</b>: <b>2026-09-10</b> (지급월 익월 10일)이나 현재 미신고 상태입니다. 가산세 방지를 위해 즉시 세무대리인을 통해 기한후신고 및 자진납부하시기 바랍니다.
-        </p>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">월별 출고 박스</div>
+        <div class="td-legend"><span class="td-sw td-sw-now"></span><span id="tdLgNow"></span><span class="td-sw td-sw-prev"></span><span id="tdLgPrev"></span></div>
       </div>
+      <div id="tdChart" class="td-chart"></div>
+    </div>
+  </div>
+
+  <div id="tab-dashboard" class="tab-pane">
+    
+    <div class="alert-line" id="taxBanner">
+      <span class="al-dot"></span>
+      <span class="al-text">특수관계인 내부거래 <b><span id="trCnt"></span>건</b> · <b><span id="trSum"></span>만 원</b><span id="trCnt2" style="display:none"></span></span>
+      <button class="al-btn" onclick="toggleAlert('taxRiskBox',this)">상세</button>
+    </div>
+    <div class="alert-box" id="taxRiskBox" style="display:none">
+      <table class="tax-table">
+        <thead><tr><th>거래일자</th><th>거래처</th><th>구분</th><th>금액</th><th>잔액</th><th>적요</th></tr></thead>
+        <tbody id="taxRiskRows"><tr><td colspan="6">-</td></tr></tbody>
+      </table>
+    </div>
+    <div class="alert-line">
+      <span class="al-dot"></span>
+      <span class="al-text">원천세 <b id="wo26Dday"></b> · 2026-08-21 김나연 외주용역비 원천세 <b>42,900원</b> · 납기 2026-09-10</span>
+      <button class="al-btn" onclick="toggleAlert('wo26Box',this)">상세</button>
+    </div>
+    <div class="alert-box" id="wo26Box" style="display:none">
+      <div class="al-detail">총지급 1,300,000원 · 통장 실지급 1,257,100원 · 원천징수 42,900원 (사업소득 3.3%) · 세무대리인 기한후신고·자진납부</div>
     </div>
 
     <!-- KPI Grid -->
@@ -462,58 +519,36 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div id="tab-delivery" class="tab-pane">
     <div class="kpi-grid">
       <div class="kpi-card green">
-        <div class="kpi-label">출고 대기 주문</div>
+        <div class="kpi-label">올린 출고 주문</div>
         <div class="kpi-val" id="kpiDelivOrders">0 건</div>
-        <div class="kpi-sub" id="kpiDelivBoxes">총 0 박스 (수량 합계)</div>
+        <div class="kpi-sub" id="kpiDelivBoxes">0 박스</div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">로젠택배 예상 운임</div>
         <div class="kpi-val" id="kpiDelivFreight">0 원</div>
-        <div class="kpi-sub">건당 4,150원 (신용 10 기본 적용)</div>
+        <div class="kpi-sub" id="kpiDelivFreightSub"></div>
       </div>
       <div class="kpi-card red">
-        <div class="kpi-label">송장 매칭 상태</div>
-        <div class="kpi-val" id="kpiDelivMatched">대기 중</div>
-        <div class="kpi-sub" id="kpiDelivStatusSub">출고데이터 업로드 대기</div>
+        <div class="kpi-label">검사</div>
+        <div class="kpi-val" id="kpiDelivMatched">-</div>
+        <div class="kpi-sub" id="kpiDelivStatusSub"></div>
       </div>
     </div>
 
-    <div data-grid="ssjg_shipments"></div>
-    <div data-grid="ssjg_orders"></div>
-    <div data-grid="ssjg_order_lines"></div>
-
-    <!-- 0단계: 카페24 -> 이지어드민 변환 카드 (최우선 배치) -->
-    <div class="panel" style="border-left:4px solid var(--accent);margin-bottom:20px">
-      <div class="panel-head" style="background:rgba(239,68,68,0.05)">
-        <div class="panel-title">
-          <span>0️⃣ [주문 수집] 카페24 주문서 ➡️ 이지어드민 발주등록 엑셀 변환 (1초 자동화)</span>
-        </div>
-        <span class="badge" style="background:var(--accent);color:#fff">핵심 업무</span>
+    <div class="panel step-panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="step-no">1</span>카페24 주문 → 이지어드민 주문등록</div>
       </div>
       <div style="padding:16px">
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
-          <b>카페24 관리자</b>에서 다운로드받은 주문 내역 엑셀 파일(18개 컬럼)을 업로드하십시오. 이지어드민에 대량 주문등록할 수 있는 표준 발주 엑셀 양식으로 즉시 1초 만에 매핑 변환합니다.
-        </p>
         <div class="dropzone" id="dropCafe24" onclick="document.getElementById('fileCafe24').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleCafe24File(event.dataTransfer.files[0])">
-          <div class="drop-icon">🛍️</div>
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="cafe24DropText">카페24 주문 다운로드 엑셀 드래그 또는 클릭</div>
-          <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls (카페24 주문서 18개 컬럼 자동 인식)</div>
+          <div style="font-weight:600;font-size:13px" id="cafe24DropText">카페24 주문 엑셀</div>
           <input type="file" id="fileCafe24" style="display:none" accept=".xlsx,.xls" onchange="handleCafe24File(this.files[0])">
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
-          <div>
-            <span style="color:var(--text-muted)">카페24 파싱 주문건수: </span>
-            <span id="cafe24ParsedCount" style="font-weight:700;color:var(--green)">0 건</span>
-          </div>
-          <div>
-            <span style="color:var(--text-muted)">출력 규격: </span>
-            <span style="font-family:monospace;color:var(--accent)">YYMMDD_SSJG_이지어드민_주문등록_v1.0.xlsx</span>
-          </div>
-        </div>
+        <div class="step-meta">주문 <span id="cafe24ParsedCount">0 건</span></div>
 
         <button class="btn btn-primary" id="btnDownloadEzadminOrder" onclick="downloadEzadminOrderExcel()" style="width:100%;padding:12px;font-size:14px;font-weight:700;background:var(--accent)" disabled>
-          🚀 이지어드민 대량주문등록 엑셀 (.xlsx) 즉시 생성 및 다운로드
+          이지어드민 주문등록 파일 받기
         </button>
       </div>
     </div>
@@ -523,22 +558,16 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <!-- 1단계: 이지어드민 -> 로젠택배 변환 -->
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">1️⃣ 1단계: 이지어드민 ➡️ 로젠택배 대량접수 변환</div>
-          <span class="badge">출고 접수</span>
+          <div class="panel-title"><span class="step-no">2</span>이지어드민 출고 → 로젠 접수</div>
         </div>
         <div style="padding:16px">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
-            쇼핑몰(스마트스토어/쿠팡 등)에서 다운받은 <b>출고데이터(이지어드민 엑셀)</b>를 업로드하십시오. 로젠택배 i-Logen 16개 표준 컬럼 양식으로 1초 만에 자동 변환합니다.
-          </p>
           <div class="dropzone" id="dropEzadmin" onclick="document.getElementById('fileEzadmin').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEzadminFile(event.dataTransfer.files[0])">
-            <div class="drop-icon">📥</div>
-            <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="ezadminDropText">이지어드민 출고데이터 엑셀 드래그 또는 클릭</div>
-            <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls (CONFIRMED)</div>
+            <div style="font-weight:600;font-size:13px" id="ezadminDropText">이지어드민 출고 엑셀</div>
             <input type="file" id="fileEzadmin" style="display:none" accept=".xlsx,.xls" onchange="handleEzadminFile(this.files[0])">
           </div>
           
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
-            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">⚙️ 로젠택배 접수 기본 설정</div>
+            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">로젠 접수 설정</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <div>
                 <label style="color:var(--text-muted);display:block;margin-bottom:2px">택배 계약단가 (원)</label>
@@ -559,17 +588,17 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
               </div>
               <div>
                 <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 연락처</label>
-                <input type="text" id="cfgSenderPhone" class="input" value="" placeholder="DB 로딩 중..." style="padding:4px 8px;width:100%">
+                <input type="text" id="cfgSenderPhone" class="input" value="" style="padding:4px 8px;width:100%">
               </div>
             </div>
             <div style="margin-top:8px">
               <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 출하지 주소</label>
-              <input type="text" id="cfgSenderAddr" class="input" value="" placeholder="DB 로딩 중..." style="padding:4px 8px;width:100%">
+              <input type="text" id="cfgSenderAddr" class="input" value="" style="padding:4px 8px;width:100%">
             </div>
           </div>
 
           <button class="btn btn-primary" id="btnDownloadLogen" onclick="downloadLogenExcel()" style="width:100%;padding:11px;font-size:13px;font-weight:700" disabled>
-            📦 로젠택배 대량접수 엑셀 (.xlsx) 즉시 생성 및 다운로드
+            로젠 접수 파일 받기
           </button>
         </div>
       </div>
@@ -577,22 +606,16 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <!-- 2단계: 로젠택배 송장 -> 이지어드민 송장등록 변환 -->
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">2️⃣ 2단계: 로젠 송장번호 ➡️ 이지어드민 업로드 변환</div>
-          <span class="badge" style="background:rgba(59,130,246,0.12);color:var(--blue);border-color:rgba(59,130,246,0.3)">배송중 처리</span>
+          <div class="panel-title"><span class="step-no">3</span>로젠 송장 → 이지어드민 송장등록</div>
         </div>
         <div style="padding:16px">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
-            로젠택배에서 송장 출력 후 발급받은 <b>송장 엑셀 파일</b>을 업로드하십시오. 주문번호와 송장번호를 1:1 매칭하여 이지어드민에 바로 올릴 수 있는 송장등록 엑셀을 자동 생성합니다.
-          </p>
           <div class="dropzone" id="dropInvoice" onclick="document.getElementById('fileInvoice').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleInvoiceFile(event.dataTransfer.files[0])">
-            <div class="drop-icon">📋</div>
-            <div style="font-weight:600;font-size:13px;margin-bottom:4px" id="invoiceDropText">로젠택배 발급 송장 파일 드래그 또는 클릭</div>
-            <div style="font-size:11px;color:var(--text-muted)">지원: .xlsx, .xls</div>
+            <div style="font-weight:600;font-size:13px" id="invoiceDropText">로젠 송장 엑셀</div>
             <input type="file" id="fileInvoice" style="display:none" accept=".xlsx,.xls" onchange="handleInvoiceFile(this.files[0])">
           </div>
 
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
-            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">🚚 택배사 매핑 정보</div>
+            <div style="font-weight:700;margin-bottom:8px;color:var(--text)">송장 매칭</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <div>
                 <label style="color:var(--text-muted);display:block;margin-bottom:2px">지정 택배사</label>
@@ -603,14 +626,10 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
                 <div id="invoiceMatchCount" style="padding:6px 8px;font-weight:700;color:var(--green)">0 건 매칭 완료</div>
               </div>
             </div>
-            <div style="margin-top:8px">
-              <label style="color:var(--text-muted);display:block;margin-bottom:2px">매칭 방식</label>
-              <div style="font-size:11px;color:var(--text-muted)">주문번호 또는 수하인명+연락처 기준 1:1 자동 매칭</div>
-            </div>
           </div>
 
           <button class="btn" id="btnDownloadEzadmin" onclick="downloadEzadminUploadExcel()" style="width:100%;padding:11px;font-size:13px;font-weight:700;background:var(--blue);color:#fff" disabled>
-            📤 이지어드민 송장등록 엑셀 (.xlsx) 즉시 다운로드
+            이지어드민 송장등록 파일 받기
           </button>
         </div>
       </div>
@@ -619,9 +638,9 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <!-- 변환 미리보기 데이터 테이블 -->
     <div class="panel">
       <div class="panel-head">
-        <div class="panel-title">📦 출고 변환 데이터 실시간 검증 테이블 (<span id="delivTableCount">0</span>건)</div>
+        <div class="panel-title">올린 출고 <span id="delivTableCount">0</span>건</div>
         <div style="display:flex;gap:8px">
-          <button class="btn" onclick="saveDeliveryToSupabase()" id="btnSaveToDb" style="padding:4px 10px;font-size:11px;background:#334155;color:#fff" disabled>💾 DB 원장 보관</button>
+          <button class="btn" onclick="saveDeliveryToSupabase()" id="btnSaveToDb" style="padding:4px 10px;font-size:11px;background:#334155;color:#fff" disabled>DB 저장</button>
           <button class="btn" onclick="clearDeliveryData()" style="padding:4px 10px;font-size:11px;background:#1e293b;color:var(--text-muted);border:1px solid var(--border)">초기화</button>
         </div>
       </div>
@@ -630,6 +649,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
           <thead>
             <tr>
               <th>#</th>
+              <th>검사</th>
               <th>주문번호</th>
               <th>수하인명</th>
               <th>연락처</th>
@@ -642,7 +662,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
             </tr>
           </thead>
           <tbody id="delivTableBody">
-            <tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted)">이지어드민 출고데이터 엑셀 파일을 상단에 업로드해 주십시오.</td></tr>
+            <tr><td colspan="11" class="td-empty">-</td></tr>
           </tbody>
         </table>
       </div>
@@ -651,6 +671,12 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
 
   
   
+  <div id="tab-shiplog" class="tab-pane">
+    <div data-grid="ssjg_shipments"></div>
+    <div data-grid="ssjg_orders"></div>
+    <div data-grid="ssjg_order_lines"></div>
+  </div>
+
   <!-- TAB: 월별 관리손익 (WO-14: 8개월 ±0원 일치) -->
   <div id="tab-mgmt-pl" class="tab-pane">
     <div class="kpi-grid">
@@ -1214,6 +1240,7 @@ async function startApp(){
   } catch(e){ console.warn('my_status error:', e); }
 
   await loadAllData();
+  loadToday();
   gridInitIn(document.querySelector('.tab-pane.active'));
 }
 
@@ -1414,6 +1441,105 @@ function switchTab(tabId, el){
   if(tabId==='logistics')b3Init();
   toggleSide(false);
   window.scrollTo(0, 0);
+}
+
+function toggleAlert(id, btn){
+  var b = document.getElementById(id); if(!b) return;
+  var on = b.style.display === 'none';
+  b.style.display = on ? '' : 'none';
+  if(btn) btn.innerText = on ? '접기' : '상세';
+}
+
+async function tdFetchAll(table, cols, orderCol){
+  var out = [];
+  for(var f = 0; ; f += 1000){
+    var q = sb.from(table).select(cols).range(f, f + 999);
+    if(orderCol) q = q.order(orderCol, { ascending: true });
+    var r = await q;
+    if(r.error) throw r.error;
+    out = out.concat(r.data || []);
+    if(!r.data || r.data.length < 1000) break;
+  }
+  return out;
+}
+
+function tdKst(){ var n = new Date(Date.now() + 9 * 3600000); return n.toISOString().slice(0, 10); }
+function tdDay(v){ return String(v || '').slice(0, 10); }
+function tdBox(r){ var b = Number(r.boxes); return b > 0 ? b : (Number(r.qty) > 0 ? Number(r.qty) : 1); }
+
+function openShip(ord){
+  switchTab('shiplog');
+  setTimeout(function(){ try { var g = GRID && GRID['ssjg_shipments']; if(g){ gridSearch('ssjg_shipments', ord); var inp = document.querySelector('[data-grid="ssjg_shipments"] input'); if(inp) inp.value = ord; } } catch(e){} }, 900);
+}
+
+async function loadToday(){
+  var today = tdKst(), ym = today.slice(0, 7), y = Number(today.slice(0, 4));
+  var ships, orders;
+  try {
+    ships = await tdFetchAll('ssjg_shipments', 'order_no,ship_date,order_date,channel,mall,item_name,boxes,qty,tracking_no,ship_status,ship_method', 'ship_date');
+    orders = await tdFetchAll('ssjg_orders', 'order_no,ordered_at,channel,mall,receiver', null);
+  } catch(e){
+    console.warn('loadToday error:', e);
+    document.getElementById('tdIssueRows').innerHTML = '<tr><td colspan="6" class="td-empty">불러오지 못했습니다: ' + gEsc(e.message || e) + '</td></tr>';
+    return;
+  }
+  // 오늘 · 이번 달
+  var tRows = ships.filter(r => tdDay(r.ship_date) === today);
+  var tBox = tRows.reduce((a, r) => a + tdBox(r), 0), tOrd = new Set(tRows.map(r => r.order_no)).size;
+  var lastDay = ships.reduce((m, r) => tdDay(r.ship_date) > m ? tdDay(r.ship_date) : m, '');
+  document.getElementById('tdBoxes').innerText = tBox.toLocaleString('ko-KR') + ' 박스';
+  document.getElementById('tdBoxesSub').innerText = tRows.length ? '주문 ' + tOrd + '건' : '최근 출고 ' + (lastDay || '-');
+  var byM = {};
+  ships.forEach(r => { var m = tdDay(r.ship_date).slice(0, 7); if(!m) return; byM[m] = byM[m] || { box: 0, ord: new Set() }; byM[m].box += tdBox(r); byM[m].ord.add(r.order_no); });
+  var cur = byM[ym] || { box: 0, ord: new Set() }, prevY = byM[(y - 1) + ym.slice(4)];
+  var pm = new Date(Date.UTC(y, Number(ym.slice(5)) - 2, 1)).toISOString().slice(0, 7), prevM = byM[pm];
+  document.getElementById('tdMonth').innerText = cur.box.toLocaleString('ko-KR') + ' 박스';
+  document.getElementById('tdMonthSub').innerText = '주문 ' + cur.ord.size + '건 · 지난달 ' + (prevM ? prevM.box : 0) + ' · 전년 ' + (prevY ? prevY.box : 0);
+  // 출고 대기: 주문은 있는데 출고가 없는 것 (최근 60일)
+  var shipped = new Set(ships.map(r => String(r.order_no || '').trim()));
+  var from60 = new Date(Date.now() + 9 * 3600000 - 60 * 86400000).toISOString().slice(0, 10);
+  var waits = orders.filter(o => o.order_no && !shipped.has(String(o.order_no).trim()) && tdDay(o.ordered_at) >= from60);
+  var d2 = new Date(Date.now() + 9 * 3600000 - 2 * 86400000).toISOString().slice(0, 10);
+  var late = waits.filter(o => tdDay(o.ordered_at) && tdDay(o.ordered_at) <= d2);
+  document.getElementById('tdWait').innerText = waits.length + ' 건';
+  document.getElementById('tdWaitSub').innerText = late.length ? '2일 넘음 ' + late.length + '건' : '';
+  document.getElementById('tdWaitCard').classList.toggle('alarm', late.length > 0);
+  // 송장 누락: 올해 출고 중 송장 없고 '송장없이배송완료'도 아닌 것
+  var noTrk = ships.filter(r => tdDay(r.ship_date).slice(0, 4) === String(y) && !String(r.tracking_no || '').trim() && String(r.ship_status || '').trim() !== '송장없이배송완료');
+  document.getElementById('tdTrk').innerText = noTrk.length + ' 건';
+  document.getElementById('tdTrkSub').innerText = y + '년 출고 기준';
+  document.getElementById('tdTrkCard').classList.toggle('alarm', noTrk.length > 0);
+  // 확인 필요 목록
+  var issues = late.map(o => ({ k: '출고 지연', w: false, d: tdDay(o.ordered_at), o: o.order_no, c: o.channel || o.mall || '', t: o.receiver || '', b: '' }))
+    .concat(waits.filter(o => late.indexOf(o) < 0).map(o => ({ k: '출고 대기', w: true, d: tdDay(o.ordered_at), o: o.order_no, c: o.channel || o.mall || '', t: o.receiver || '', b: '' })))
+    .concat(noTrk.map(r => ({ k: '송장 누락', w: false, d: tdDay(r.ship_date), o: r.order_no, c: r.channel || r.mall || '', t: r.item_name || '', b: tdBox(r) })));
+  issues.sort((a, b) => (a.w - b.w) || (a.d < b.d ? 1 : -1));
+  var errN = issues.filter(i => !i.w).length;
+  document.getElementById('tdIssueCnt').innerText = errN ? errN : '';
+  document.getElementById('tdIssueRows').innerHTML = issues.length ? issues.map(i => '<tr data-ord="' + gEsc(i.o) + '" onclick="openShip(this.dataset.ord)"><td><span class="td-kind' + (i.w ? ' warn' : '') + '">' + i.k + '</span></td><td>' + gEsc(i.d) + '</td><td style="font-variant-numeric:tabular-nums">' + gEsc(i.o) + '</td><td>' + gEsc(i.c) + '</td><td>' + gEsc(i.t) + '</td><td style="text-align:right">' + (i.b === '' ? '' : i.b) + '</td></tr>').join('') : '<tr><td colspan="6" class="td-empty">없음</td></tr>';
+  // 월별 박스 막대: 최근 12개월 + 전년 같은 달
+  var months = [];
+  for(var i = 11; i >= 0; i--){ months.push(new Date(Date.UTC(y, Number(ym.slice(5)) - 1 - i, 1)).toISOString().slice(0, 7)); }
+  var vals = months.map(m => (byM[m] || {}).box || 0), prev = months.map(m => (byM[(Number(m.slice(0, 4)) - 1) + m.slice(4)] || {}).box || 0);
+  var mx = Math.max(1, ...vals, ...prev), W = 720, H = 220, pl = 34, pb = 26, pt = 14, bw = (W - pl - 10) / 12;
+  var yv = v => pt + (H - pt - pb) * (1 - v / mx), step = Math.max(1, Math.ceil(mx / 4 / 10) * 10);
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="월별 출고 박스">';
+  for(var g = 0; g <= mx; g += step){ svg += '<line x1="' + pl + '" x2="' + (W - 6) + '" y1="' + yv(g) + '" y2="' + yv(g) + '" stroke="currentColor" stroke-opacity=".12"/><text x="' + (pl - 6) + '" y="' + (yv(g) + 4) + '" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".55">' + g + '</text>'; }
+  months.forEach((m, i) => {
+    var x = pl + i * bw, w = bw * 0.36;
+    svg += '<rect x="' + (x + bw * 0.12) + '" y="' + yv(prev[i]) + '" width="' + w + '" height="' + (H - pb - yv(prev[i])) + '" rx="2" fill="#64748b" fill-opacity=".45"><title>' + (Number(m.slice(0, 4)) - 1) + m.slice(4) + ' ' + prev[i] + '박스</title></rect>';
+    svg += '<rect x="' + (x + bw * 0.12 + w + 2) + '" y="' + yv(vals[i]) + '" width="' + w + '" height="' + (H - pb - yv(vals[i])) + '" rx="2" fill="var(--blue)"><title>' + m + ' ' + vals[i] + '박스</title></rect>';
+    if(vals[i]) svg += '<text x="' + (x + bw * 0.12 + w * 1.5 + 2) + '" y="' + (yv(vals[i]) - 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">' + vals[i] + '</text>';
+    svg += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".6">' + Number(m.slice(5)) + '월</text>';
+  });
+  svg += '</svg>';
+  document.getElementById('tdChart').innerHTML = svg;
+  document.getElementById('tdLgNow').innerText = months[0].slice(0, 4) === months[11].slice(0, 4) ? months[11].slice(0, 4) : months[0].slice(2, 4) + '~' + months[11].slice(2, 4);
+  document.getElementById('tdLgPrev').innerText = '전년 같은 달';
+  // 사이드바 뱃지: 자금·세무 경고 건수
+  var trN = Number((document.getElementById('trCnt') || {}).innerText) || 0;
+  var wo = (document.getElementById('wo26Dday') || {}).innerText ? 1 : 0;
+  document.getElementById('sideTaxBadge').innerText = (trN + wo) ? String(trN + wo) : '';
 }
 
 function toggleSide(force){
@@ -2003,20 +2129,54 @@ function handleEzadminFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// 로젠 접수 전 검사: 오류(err)는 파일 생성을 막고, 확인(warn)은 확인창을 띄운다
+function delivCheck(){
+  var digits = v => String(v || '').replace(/[^0-9]/g, '');
+  var seen = {}, seenOrd = {};
+  rawDeliveryRows.forEach(r => {
+    var k = r.receiver + '|' + digits(r.phone1) + '|' + r.address.replace(/\s+/g, '');
+    seen[k] = (seen[k] || 0) + 1;
+    seenOrd[r.order_no] = (seenOrd[r.order_no] || 0) + 1;
+    r._k = k;
+  });
+  var nErr = 0, nWarn = 0;
+  rawDeliveryRows.forEach(r => {
+    var e = [], w = [], p = digits(r.phone1), p2 = digits(r.phone2);
+    if(!r.receiver) e.push('받는 사람 없음');
+    if(!r.address) e.push('주소 없음');
+    else if(r.address.replace(/\s+/g, '').length < 8) e.push('주소 짧음');
+    if(!p && !p2) e.push('전화 없음');
+    else if(!/^0\d{8,10}$/.test(p || p2)) e.push('전화 형식');
+    if(!(r.qty >= 1) || Math.floor(r.qty) !== r.qty) e.push('수량 오류');
+    else if(r.qty > 10) w.push('수량 ' + r.qty);
+    if(seen[r._k] > 1) w.push('같은 받는 사람 ' + seen[r._k] + '건');
+    if(seenOrd[r.order_no] > 1) w.push('주문번호 중복');
+    if(/^\s*(제주|제주특별자치도)/.test(r.address) || /울릉|백령|연평|흑산|거문|추자|가파|마라/.test(r.address)) w.push('도서산간');
+    r._err = e; r._warn = w;
+    if(e.length) nErr++; else if(w.length) nWarn++;
+  });
+  return { err: nErr, warn: nWarn };
+}
+
 function renderDeliveryTable(){
   var tbody = document.getElementById('delivTableBody');
   document.getElementById('delivTableCount').innerText = rawDeliveryRows.length;
 
   if(rawDeliveryRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted)">이지어드민 출고데이터 엑셀 파일을 상단에 업로드해 주십시오.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="td-empty">-</td></tr>';
     return;
   }
+  var ck = delivCheck();
+  var mEl = document.getElementById('kpiDelivMatched'), mSub = document.getElementById('kpiDelivStatusSub');
+  if(mEl){ mEl.innerText = ck.err ? '오류 ' + ck.err + '건' : (ck.warn ? '확인 ' + ck.warn + '건' : '통과'); mEl.style.color = ck.err ? '#ef4444' : (ck.warn ? '#d97706' : 'var(--green)'); }
+  if(mSub) mSub.innerText = ck.err ? '로젠 파일 차단' : '';
 
   var freight = Number(document.getElementById('cfgFreight').value) || 4150;
 
   tbody.innerHTML = rawDeliveryRows.map(r => `
-    <tr>
+    <tr class="${r._err.length ? 'row-err' : (r._warn.length ? 'row-warn' : '')}">
       <td>${r.idx}</td>
+      <td>${r._err.length ? '<span class="chk-err">' + gEsc(r._err.join(' · ')) + '</span>' : (r._warn.length ? '<span class="chk-warn">' + gEsc(r._warn.join(' · ')) + '</span>' : '<span class="chk-ok">통과</span>')}</td>
       <td style="font-weight:600;font-variant-numeric:tabular-nums">${r.order_no}</td>
       <td style="font-weight:700">${r.receiver}</td>
       <td style="font-size:12px;color:var(--text-muted)">${r.phone1}</td>
@@ -2037,14 +2197,27 @@ function recalcDeliveryKpi(){
   var totalFreight = totalBoxes * freight;
 
   document.getElementById('kpiDelivOrders').innerText = count.toLocaleString() + ' 건';
-  document.getElementById('kpiDelivBoxes').innerText = '총 ' + totalBoxes.toLocaleString() + ' 박스 (수량 합계)';
+  document.getElementById('kpiDelivBoxes').innerText = totalBoxes.toLocaleString() + ' 박스';
   document.getElementById('kpiDelivFreight').innerText = totalFreight.toLocaleString() + ' 원';
+  var fsEl = document.getElementById('kpiDelivFreightSub');
+  if(fsEl) fsEl.innerText = '박스당 ' + freight.toLocaleString('ko-KR') + '원 · 운임구분 ' + (document.getElementById('cfgFreightType').value || '10');
 }
 
 function downloadLogenExcel(){
   if(rawDeliveryRows.length === 0){
     alert('출고 데이터가 없습니다.');
     return;
+  }
+  var ck = delivCheck();
+  renderDeliveryTable();
+  if(ck.err){
+    var bad = rawDeliveryRows.filter(r => r._err.length).slice(0, 8).map(r => r.idx + '번 ' + (r.receiver || r.order_no) + ' : ' + r._err.join(', '));
+    alert('로젠 파일을 만들지 않았습니다. 오류 ' + ck.err + '건\n\n' + bad.join('\n') + (ck.err > 8 ? '\n…' : ''));
+    return;
+  }
+  if(ck.warn){
+    var wl = rawDeliveryRows.filter(r => r._warn.length).slice(0, 8).map(r => r.idx + '번 ' + (r.receiver || r.order_no) + ' : ' + r._warn.join(', '));
+    if(!confirm('확인 ' + ck.warn + '건\n\n' + wl.join('\n') + (ck.warn > 8 ? '\n…' : '') + '\n\n이대로 로젠 파일을 만들까요?')) return;
   }
 
   var freight = Number(document.getElementById('cfgFreight').value) || 4150;
