@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.13 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.14 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -109,6 +109,17 @@ td.g-ed:hover{outline:1px dashed var(--border)}
 .g-toast{display:none;position:fixed;bottom:20px;right:20px;background:#064e3b;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:95}
 .g-toast.bad{background:#7f1d1d}
 html[data-theme="light"] .g-ref,html[data-theme="light"] .g-pg .btn{background:#fff;color:#0f172a}
+
+/* 3PL bill entry (v1.14) */
+.b3-head{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.b3-head label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)}
+.b3-tbl input{width:100%;min-width:70px;background:transparent;border:1px solid transparent;color:var(--text);padding:5px 6px;border-radius:4px;font-size:12px}
+.b3-tbl input:focus{border-color:var(--accent);outline:none;background:#0f172a}
+.b3-tbl td{padding:3px 4px}
+.b3-tbl td.num input{text-align:right}
+.b3-tbl tfoot td{font-weight:700;padding:9px 10px;border-top:1px solid var(--border)}
+.b3-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+html[data-theme="light"] .b3-tbl input:focus{background:#fff}
 
 /* Container */
 .container{max-width:1440px;margin:0 auto;padding:20px}
@@ -247,7 +258,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.13</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.14</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -985,44 +996,30 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <!-- TAB 4: 3PL 물류·용역비 정산 -->
   <div id="tab-logistics" class="tab-pane">
     <div class="panel">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">2026년 08월 물류용역비 청구서 대사 원장</div>
-          <div style="font-size:11px;color:var(--text-muted)">공급자: 주식회사 제이엘씨엔티 · 공급받는자: (주)승승장구컴퍼니 (대표 이세영)</div>
-        </div>
-        <div class="badge">청구일자: 2026-09-01</div>
+      <div class="panel-head"><div class="panel-title">3PL 정산서 입력</div></div>
+      <div class="b3-head">
+        <label>정산월<input type="month" id="b3Ym" class="input"></label>
+        <label>청구일자<input type="date" id="b3Date" class="input"></label>
+        <label>공급자<input type="text" id="b3Vendor" class="input" list="b3VendorList" style="width:220px"><datalist id="b3VendorList"></datalist></label>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>정산 항목</th>
-              <th style="text-align:right">수량</th>
-              <th>단위</th>
-              <th style="text-align:right">단가</th>
-              <th style="text-align:right">공급가액</th>
-              <th style="text-align:right">세액 (VAT)</th>
-              <th style="text-align:right">합계금액</th>
-              <th>비고</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>택배 출고료</td><td style="text-align:right">86</td><td>원/BOX</td><td style="text-align:right">700</td><td style="text-align:right">60,200</td><td style="text-align:right">6,020</td><td style="text-align:right;font-weight:600">66,220</td><td>-</td></tr>
-            <tr><td>쿠팡 작업비</td><td style="text-align:right">31</td><td>원/BOX</td><td style="text-align:right">500</td><td style="text-align:right">15,500</td><td style="text-align:right">1,550</td><td style="text-align:right;font-weight:600">17,050</td><td>쿠팡 로켓입고 라벨링</td></tr>
-            <tr><td>택배비</td><td style="text-align:right">86</td><td>원/BOX</td><td>실비 청구</td><td style="text-align:right">181,818</td><td style="text-align:right">18,182</td><td style="text-align:right;font-weight:600">200,000</td><td>로젠택배 실비</td></tr>
-            <tr><td>보관비</td><td style="text-align:right">173</td><td>PLT/일</td><td style="text-align:right">700</td><td style="text-align:right">121,100</td><td style="text-align:right">12,110</td><td style="text-align:right;font-weight:600">133,210</td><td>레드캣 모래 팔레트 보관</td></tr>
-            <tr><td>기타 (삽지 작업)</td><td style="text-align:right">251</td><td>BOX/개</td><td style="text-align:right">200</td><td style="text-align:right">50,200</td><td style="text-align:right">5,020</td><td style="text-align:right;font-weight:600">55,220</td><td>홍보물 삽지</td></tr>
-            <tr style="background:#1e1e2f;font-weight:700">
-              <td colspan="4" style="text-align:center">합계 (청구 확정액)</td>
-              <td style="text-align:right">428,818</td>
-              <td style="text-align:right">42,882</td>
-              <td style="text-align:right;color:var(--accent);font-size:14px">471,700 원</td>
-              <td>VAT 포함 518,870원</td>
-            </tr>
-          </tbody>
+      <div class="table-wrap" style="max-height:none">
+        <table class="b3-tbl">
+          <thead><tr><th>정산 항목</th><th style="text-align:right">수량</th><th>단위</th><th style="text-align:right">단가</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th><th>비고</th><th></th></tr></thead>
+          <tbody id="b3Body"></tbody>
+          <tfoot><tr><td colspan="4" style="text-align:right">합계</td><td id="b3Sup" style="text-align:right"></td><td id="b3Vat" style="text-align:right"></td><td colspan="2" id="b3Tot" style="color:var(--accent)"></td></tr></tfoot>
         </table>
       </div>
+      <div class="b3-foot">
+        <button class="btn g-ref" onclick="b3AddRow()">＋ 줄 추가</button>
+        <button class="btn g-ref" onclick="b3Reset()">비우기</button>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="b3Save()">일괄 저장</button>
+      </div>
     </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">월별 합계</div></div>
+      <div class="table-wrap"><table><thead><tr><th>정산월</th><th>공급자</th><th style="text-align:right">줄 수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th><th style="text-align:right">합계금액</th></tr></thead><tbody id="b3Sum"><tr><td colspan="6"></td></tr></tbody></table></div>
+    </div>
+    <div data-grid="ssjg_3pl_bills"></div>
   </div>
 
   <!-- TAB 5: 거버넌스 & 인감 -->
@@ -1276,7 +1273,7 @@ var GRID_TABLES = {
   ssjg_pl_month:{t:'월별 관리손익'}, ssjg_sga_month:{t:'월별 판관비'}, ssjg_channel_pl:{t:'채널별 손익'},
   ssjg_month_summary:{t:'월별 손익·자금'}, ssjg_settlements:{t:'채널 매출정산'},
   ssjg_tax_invoices:{t:'세금계산서'}, ssjg_ar_recon:{t:'미수금 대사'}, ssjg_bank_txns:{t:'통장 거래',o:'txn_at'},
-  ssjg_company:{t:'법인 정보'}, ssjg_journal:{t:'전표',o:'doc_date'}, ssjg_manual_journal:{t:'수기 전표'},
+  ssjg_company:{t:'법인 정보'}, ssjg_3pl_bills:{t:'3PL 정산 원장',o:'bill_ym'}, ssjg_journal:{t:'전표',o:'doc_date'}, ssjg_manual_journal:{t:'수기 전표'},
   ssjg_card_purchases:{t:'카드 매입'}, ssjg_cash_receipts:{t:'현금영수증'}
 };
 var COL_KO = {
@@ -1290,7 +1287,8 @@ var COL_KO = {
   shipment_id:'출고ID', key_source:'키 출처', match_status:'매칭상태', line_ids:'라인ID', box_count_override:'박스수(수동)', src_row:'원본행', entity:'법인', option_code:'옵션코드', mall_product_no:'쇼핑몰상품번호', ordered_name:'주문상품명', sales_type:'매출구분', row_no:'순번',
   line_order_no:'품목별주문번호', sales_kind:'매출구분', units:'유닛수', price:'판매가', order_paid:'주문결제액', paid_alloc:'결제배분', ship_alloc:'배송비배분', ship_real:'실배송비', ship_est:'예상배송비', boxes:'박스수', ship_method:'발송방식',
   buyer:'주문자', receiver:'받는사람', ship_fee_type:'배송비구분', qty_unit:'수량단위', alloc_pay:'결제배분', alloc_ship:'배송비배분', cat1:'대분류', cat2:'중분류', cat3:'소분류', unit:'단위', buy_price:'매입가', sell_price:'판매가', pl3_code:'3PL코드', pl3_barcode:'3PL바코드', std_cost:'표준원가',
-  doc_no:'문서번호', doc_date:'문서일자', yr:'연도', mo:'월', flow:'구분', pl_code:'계정코드', pl_account:'계정과목', src:'출처', title:'적요', partner:'거래처', vendor:'공급처', item:'품목', vat_amt:'세액', approval_no:'승인번호'
+  doc_no:'문서번호', doc_date:'문서일자', yr:'연도', mo:'월', flow:'구분', pl_code:'계정코드', pl_account:'계정과목', src:'출처', title:'적요', partner:'거래처', vendor:'공급처', item:'품목', vat_amt:'세액', approval_no:'승인번호',
+  bill_ym:'정산월', bill_date:'청구일자'
 };
 var GRID = {};
 function gEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -1389,6 +1387,47 @@ async function gridAddSave(tb){
 }
 function gridInitIn(pane){if(!pane||!sb)return;pane.querySelectorAll('[data-grid]').forEach(gridMount)}
 
+/* ═══ v1.14 3PL 정산서 일괄 입력 ═══ */
+var B3_COLS=['item','qty','unit','unit_price','supply_amt','vat_amt','memo'];
+function b3Num(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');return v===''?null:Number(v)}
+function b3Row(vals){vals=vals||{};var tr=document.createElement('tr');
+  tr.innerHTML=B3_COLS.map(function(c){var num=['qty','unit_price','supply_amt','vat_amt'].indexOf(c)>=0;
+    return '<td'+(num?' class="num"':'')+'><input data-c="'+c+'" value="'+gEsc(vals[c]==null?'':vals[c])+'"></td>'}).join('')
+    +'<td><button class="btn g-del" onclick="this.closest(\'tr\').remove();b3Calc()">×</button></td>';
+  tr.querySelectorAll('input').forEach(function(i){i.addEventListener('input',b3Calc);i.addEventListener('paste',b3Paste)});
+  document.getElementById('b3Body').appendChild(tr);return tr}
+function b3AddRow(){b3Row();b3Calc()}
+function b3Reset(){document.getElementById('b3Body').innerHTML='';for(var i=0;i<5;i++)b3Row();b3Calc()}
+function b3Paste(e){var t=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(t))return;e.preventDefault();
+  var lines=t.replace(/\r/g,'').split('\n');while(lines.length&&lines[lines.length-1].trim()==='')lines.pop();
+  var tr=e.target.closest('tr'),c0=B3_COLS.indexOf(e.target.getAttribute('data-c'));
+  lines.forEach(function(line,li){if(!tr)tr=b3Row();var cells=line.split('\t');
+    cells.forEach(function(v,ci){var c=B3_COLS[c0+ci];if(!c)return;var inp=tr.querySelector('input[data-c="'+c+'"]');if(inp)inp.value=v.trim()});
+    tr=tr.nextElementSibling});
+  b3Calc()}
+function b3Rows(){var out=[];document.querySelectorAll('#b3Body tr').forEach(function(tr){var o={},any=false;
+  tr.querySelectorAll('input').forEach(function(i){o[i.getAttribute('data-c')]=i.value.trim();if(i.value.trim()!=='')any=true});if(any)out.push(o)});return out}
+function b3Calc(){var sup=0,vat=0;b3Rows().forEach(function(r){var s=b3Num(r.supply_amt);if(s==null&&b3Num(r.qty)!=null&&b3Num(r.unit_price)!=null)s=Math.round(b3Num(r.qty)*b3Num(r.unit_price));
+  var v=b3Num(r.vat_amt);if(v==null&&s!=null)v=Math.round(s*0.1);sup+=s||0;vat+=v||0});
+  document.getElementById('b3Sup').textContent=sup.toLocaleString('ko-KR');document.getElementById('b3Vat').textContent=vat.toLocaleString('ko-KR');
+  document.getElementById('b3Tot').textContent=(sup+vat).toLocaleString('ko-KR')+' 원'}
+async function b3Save(replace){
+  var ym=document.getElementById('b3Ym').value,dt=document.getElementById('b3Date').value||null,vd=document.getElementById('b3Vendor').value.trim(),rows=b3Rows();
+  if(!ym){gToast('정산월을 고르세요',true);return}if(!vd){gToast('공급자를 넣으세요',true);return}if(!rows.length){gToast('입력한 항목이 없습니다',true);return}
+  var r=await sb.rpc('ssjg_3pl_bulk',{p_ym:ym,p_date:dt,p_vendor:vd,p_rows:rows,p_replace:!!replace});
+  if(r.data&&r.data.exists&&!replace){if(confirm(r.data.error+'. 새로 입력한 내용으로 바꿉니까? (기존 줄은 삭제 보관함에 남습니다)'))return b3Save(true);return}
+  if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);return}
+  gToast(ym+' '+r.data.inserted+'줄 저장 · 합계 '+Number(r.data.total).toLocaleString('ko-KR')+'원');b3Reset();b3Load();if(GRID.ssjg_3pl_bills)gridLoad('ssjg_3pl_bills')}
+async function b3Load(){if(!sb)return;var r=await sb.from('ssjg_3pl_bills').select('bill_ym,vendor,supply_amt,vat_amt,total_amt').order('bill_ym',{ascending:false}).limit(5000);
+  var body=document.getElementById('b3Sum');if(r.error){body.innerHTML='<tr><td colspan="6">'+gEsc(r.error.message)+'</td></tr>';return}
+  var m={},vs={};(r.data||[]).forEach(function(x){var k=x.bill_ym+'|'+x.vendor;vs[x.vendor]=1;m[k]=m[k]||{ym:x.bill_ym,v:x.vendor,n:0,s:0,t:0,a:0};m[k].n++;m[k].s+=+x.supply_amt||0;m[k].t+=+x.vat_amt||0;m[k].a+=+x.total_amt||0});
+  var ks=Object.keys(m).sort().reverse();
+  body.innerHTML=ks.length?ks.map(function(k){var o=m[k];return '<tr><td>'+gEsc(o.ym)+'</td><td>'+gEsc(o.v)+'</td><td style="text-align:right">'+o.n+'</td><td style="text-align:right">'+o.s.toLocaleString('ko-KR')+'</td><td style="text-align:right">'+o.t.toLocaleString('ko-KR')+'</td><td style="text-align:right;font-weight:600">'+o.a.toLocaleString('ko-KR')+'</td></tr>'}).join(''):'<tr><td colspan="6">자료 없음</td></tr>';
+  var dl=document.getElementById('b3VendorList');dl.innerHTML=Object.keys(vs).map(function(v){return '<option value="'+gEsc(v)+'">'}).join('');
+  var vi=document.getElementById('b3Vendor');if(!vi.value&&ks.length)vi.value=m[ks[0]].v}
+function b3Init(){if(document.getElementById('b3Body').children.length===0){b3Reset();var d=new Date();d.setMonth(d.getMonth()-1);
+  document.getElementById('b3Ym').value=d.toISOString().slice(0,7)}b3Load()}
+
 function switchTab(tabId, el){
   document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
@@ -1397,6 +1436,7 @@ function switchTab(tabId, el){
   var target = document.getElementById('tab-' + tabId);
   if(target) target.classList.add('active');
   gridInitIn(target);
+  if(tabId==='logistics')b3Init();
   toggleSide(false);
   window.scrollTo(0, 0);
 }
