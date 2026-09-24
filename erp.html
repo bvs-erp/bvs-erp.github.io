@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.48 · 대표 콕핏</title>
+<title>BVS ERP v1.47 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.48</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.47</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -1378,7 +1378,7 @@ function tab(p){ go(p); }
 function go(p){
   var allowed = getAllowedPages();
   if(allowed.indexOf(p) < 0) p = allowed[0] || 'site';
-  ST.page=p;try{lqBump(p)}catch(e){}
+  ST.page=p;
   document.querySelectorAll('.ni,#mnav .mi').forEach(function(t){t.classList.toggle('on',t.dataset.p===p)});
   document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('on',x.id==='p-'+p)});
   el('ttl').textContent=TITLE[p]||p;el('crumb').textContent=TITLE[p]||p;el('main').scrollTop=0;
@@ -1726,32 +1726,9 @@ document.addEventListener('input',function(ev){if(!ev.target)return;
 
 /* ═══════════ 로드 ═══════════ */
 var LOADING=false;
-/* 조회 순서: 지금 보는 화면에 필요한 것 먼저 → 나머지는 뒤에서. 저장 뒤 다시 부르면 진행 중인 조회 순서를 새로 짬 */
-var PAGE_KEYS={
-  _global:['dash','sdm','set','pay','stl','al','intg','gap','tr','sfk','edg','att','attk','hol','setg','sites','staff','co','ptn'],
-  home:['abs','esgt','plans','sd'],
-  site:['chk','disp','lm','lrv','plans','srate','rateh','perh','teamh','pjl','trn','ctr','pick','roster'],
-  sales:['pipe','sd','items','pick'],
-  money:['alw','apay','cons','dlog','esg','esgt','grd','ldr','payp','retro','roster','tclaim','uacc','uorp','pmb','padj','sadj','seth','teamh','bank','rateh','perh','tgr'],
-  pl:['di','acct','lnc','lno','mj'],
-  pm:['items','pgap','stk','sup','pick'],
-  hr:['alw','cons','dlog','esg','esgt','grd','payp','retro','roster','uacc','uorp','seth','trn','ctr','tgr','rateh','perh','teamh'],
-  safety:['eds','trn'],
-  crew:['abs','carpool','crew'],
-  close:['close','cm','mrev','mrevl','pj','pjl','pji','pjr','pjk','pjq','pjs','sd','pumpd'],
-  tax:['sd','tf','di'],
-  ht:['bank','bunm','card','cash','ht','htm','htr','htv','inbox','acct'],
-  settle:['bunm','pcash','po','stl','stm','stp','stmv','sd'],
-  alerts:['ack','po','trg','tro','pumpd','stmv']
-};
-var LQ={gen:0,queue:[],fns:{},done:{},busy:0,errs:[],t0:0,rendered:{},waiters:[]};
-function lqPageKeys(p){return (PAGE_KEYS._global||[]).concat(PAGE_KEYS[p]||[])}
-function lqBump(p){if(!LOADING)return;var want={};lqPageKeys(p).forEach(function(k){want[k]=1});
-  var a=LQ.queue.filter(function(k){return want[k]}),b=LQ.queue.filter(function(k){return !want[k]});LQ.queue=a.concat(b)}
-function lqPageReady(p){return lqPageKeys(p).every(function(k){return !LQ.fns[k]||LQ.done[k]})}
 async function loadAll(){
-  var gen=++LQ.gen;LOADING=true;
-  var t0=performance.now();LQ.t0=t0;el('stamp').textContent='불러오는 중…';if(el('errbox'))el('errbox').innerHTML='';
+  if(LOADING)return;LOADING=true;
+  var t0=performance.now();el('stamp').textContent='불러오는 중…';if(el('errbox'))el('errbox').innerHTML='';
   var Q=[
     ['att',function(){return sb.from('ceo_attendance').select('*').order('work_date',{ascending:false}).limit(3000)}],
     ['attk',function(){return sb.from('ceo_attendance_keys').select('*').order('work_date',{ascending:false}).limit(3000)}],
@@ -1850,70 +1827,84 @@ async function loadAll(){
     ['plans',function(){return sb.from('ceo_deploy_plans').select('*').gte('plan_date',new Date().toISOString().slice(0,10)).order('plan_date')}]
   ];
 
+  var errs=[];
+  async function runOne(q, retries){
+    retries = retries || 0;
+    try{
+      var p = typeof q[1] === 'function' ? q[1]() : q[1];
+      var r = await p;
+      if(r && r.error){
+        if(retries < 2 && (r.error.code === '57014' || /timeout|canceled|canceling/i.test(r.error.message||''))){
+          await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
+          return runOne(q, retries + 1);
+        }
+        errs.push(q[0]+': '+r.error.message);
+        return;
+      }
+      D[q[0]]=(r&&r.data)||[];
+    }catch(e){
+      if(retries < 2){
+        await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
+        return runOne(q, retries + 1);
+      }
+      errs.push(q[0]+': '+(e&&e.message||e));
+    }
+  }
+
+  function pool(list,n){
+    var i=0;
+    return Promise.all(Array.apply(null,{length:Math.min(n,list.length)}).map(function(){
+      return (async function(){
+        while(i<list.length){
+          var item=list[i++];
+          if(item) await runOne(item);
+        }
+      })();
+    }));
+  }
+
   // 엔지니어링 리드 접속 시 재무·세무·급여·계약 등 민감 쿼리 원천 차단
   if(isEngLead()){
     var LEAD_ALLOW = {hol:1, pjl:1, att:1, attk:1, sfk:1, eds:1, edg:1, lm:1, sites:1, staff:1, roster:1, crew:1, carpool:1, plans:1, items:1, pick:1, sup:1, chk:1, disp:1, tgr:1, co:1};
     Q = Q.filter(function(q){ return LEAD_ALLOW[q[0]]; });
   }
-  var fns={};Q.forEach(function(q){fns[q[0]]=q[1]});
-  var first={};lqPageKeys(ST.page||'home').forEach(function(k){first[k]=1});
-  var keys=Q.map(function(q){return q[0]});
-  LQ.fns=fns;LQ.done={};LQ.errs=[];LQ.rendered={};
-  LQ.queue=keys.filter(function(k){return first[k]}).concat(keys.filter(function(k){return !first[k]}));
-  if(LQ.busy>0)return new Promise(function(res){LQ.waiters.push(res)});   // 이미 돌고 있는 일꾼들이 새 순서로 이어서 가져감 · 끝나면 알림
 
-  async function runOne(k, fn, g, retries){
-    retries = retries || 0;
-    try{
-      var r = await fn();
-      if(g!==LQ.gen)return;   // 도중에 다시 불렀으면 옛 결과는 버림(새 순서에 다시 들어 있음)
-      if(r && r.error){
-        if(retries < 2 && (r.error.code === '57014' || /timeout|canceled|canceling/i.test(r.error.message||''))){
-          await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
-          return runOne(k, fn, g, retries + 1);
-        }
-        LQ.errs.push(k+': '+r.error.message);LQ.done[k]=1;
-        return;
-      }
-      D[k]=(r&&r.data)||[];LQ.done[k]=1;
-    }catch(e){
-      if(retries < 2){
-        await new Promise(function(res){ setTimeout(res, 400 * (retries + 1)); });
-        return runOne(k, fn, g, retries + 1);
-      }
-      if(g===LQ.gen){LQ.errs.push(k+': '+(e&&e.message||e));LQ.done[k]=1}
-    }
-  }
-  function afterOne(){
-    var p=ST.page||'home';
-    if(!LQ.rendered[p+'@'+LQ.gen]&&lqPageReady(p)){LQ.rendered[p+'@'+LQ.gen]=1;
-      try{buildMonths();_dirtyPages[p]=true;renderPage(p);updateAlertBadge()}catch(e){console.error(e)}
-      el('stamp').textContent='화면 '+Math.round(performance.now()-LQ.t0)+'ms · 나머지 불러오는 중…'}
-  }
-  async function worker(){
-    LQ.busy++;
-    try{
-      while(LQ.queue.length){
-        var k=LQ.queue.shift(),g=LQ.gen,fn=LQ.fns[k];
-        if(!fn||LQ.done[k])continue;
-        await runOne(k,fn,g);
-        afterOne();
-      }
-    }finally{LQ.busy--}
-  }
-  await Promise.all([worker(),worker(),worker(),worker(),worker(),worker()]);
-  if(LQ.queue.length||LQ.busy>0)return new Promise(function(res){LQ.waiters.push(res)});
+  // 1단계: 첫 화면 골격(Shell) 즉시 렌더링 (병렬 6)
+  var T1={dash:1,sites:1,staff:1,co:1,ptn:1,sdm:1,pipe:1,plans:1,setg:1,chk:1,esgt:1,grd:1};
+  var t1=Q.filter(function(q){return T1[q[0]]});
+  await pool(t1,6);
+  buildMonths();
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
+  el('stamp').textContent='1차 '+Math.round(performance.now()-t0)+'ms · 현장 투입 로딩 중…';
+
+  // 2단계: 현장 출퇴근 및 영업·계약 실황 (병렬 6)
+  var T2={att:1,attk:1,sd:1,gap:1,di:1,tr:1,uacc:1,uorp:1,sfk:1,eds:1,edg:1,alw:1,cons:1};
+  var t2=Q.filter(function(q){return T2[q[0]]});
+  await pool(t2,6);
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
+  el('stamp').textContent='2차 '+Math.round(performance.now()-t0)+'ms · 손익 분석 집계 중…';
+
+  // 3단계: 무거운 분석 뷰 (전용 슬롯 병렬 3 - DB 타임아웃 방지 및 안전 실행)
+  var T3={set:1,pay:1,al:1,retro:1,lm:1,ldr:1};
+  var t3=Q.filter(function(q){return T3[q[0]]});
+  await pool(t3,3);
+  try{ renderPage(ST.page||'home'); updateAlertBadge(); }catch(e){}
+  el('stamp').textContent='3차 '+Math.round(performance.now()-t0)+'ms · 세부 원장 보강 중…';
+
+  // 4단계: 백그라운드 원장 및 과거 아카이브 (병렬 6)
+  var doneKeys={};
+  [t1,t2,t3].forEach(function(arr){arr.forEach(function(x){doneKeys[x[0]]=1})});
+  var t4=Q.filter(function(q){return !doneKeys[q[0]]});
+  await pool(t4,6);
+
   LOADING=false;
   _lastLoadTime=Date.now();
-  var errs=LQ.errs;
-  var ms=Math.round(performance.now()-LQ.t0);
-  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 점검 완료 · <span class="pos">🟢 24h 관제</span> ('+ms+'ms)'+(errs.length?' <span class="wn">· '+errs.length+'건 실패</span>':'');
+  var ms=Math.round(performance.now()-t0);
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 점검 완료 · <span class="pos">🟢 24h 관제</span> ('+ms+'ms)'+(errs.length?' <span class="wn">·'+errs.length+'건 실패</span>':'');
   buildMonths();
   renderAll();
-  LASTERR=errs;
-  if(errs.length){toast('조회 '+errs.length+'건 실패 — 자세히: 콘솔 LASTERR','e')}
-  if(!D.dash.length&&!errs.length&&!isEngLead())toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
-  var w=LQ.waiters;LQ.waiters=[];w.forEach(function(f){try{f()}catch(e){}});
+  if(errs.length){LASTERR=errs;toast('조회 '+errs.length+'건 실패 — 자세히: 콘솔 LASTERR','e')}
+  if(!D.dash.length&&!errs.length)toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
 }
 var LASTERR=[];
 
