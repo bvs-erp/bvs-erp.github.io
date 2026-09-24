@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SSJG ERP v1.12 · 승승장구 콕핏</title>
+<title>SSJG ERP v1.13 · 승승장구 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -86,6 +86,29 @@ header{background:#111827;border-bottom:1px solid var(--border);padding:10px 20p
   header{flex-wrap:wrap;gap:8px}
   .nav-links{flex-wrap:wrap}
 }
+
+/* Ledger grid (v1.13) */
+.g-bar{display:flex;gap:6px;align-items:center}
+.g-bar .input{width:180px}
+.g-cnt{font-size:12px;color:var(--text-muted);font-weight:600;margin-left:6px}
+.g-add{background:var(--accent);color:#fff;padding:6px 12px}
+.g-ref{background:#1e293b;color:var(--text);border:1px solid var(--border);padding:6px 10px}
+.g-del{background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:3px 8px;font-size:11px}
+.g-del:hover{color:var(--red);border-color:var(--red)}
+td.g-ed{cursor:cell}
+.g-panel th,.g-panel td{white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+td.g-ed:hover{outline:1px dashed var(--border)}
+.g-in{width:100%;min-width:90px;padding:4px 6px}
+.g-pg{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;font-size:12px;color:var(--text-muted)}
+.g-pg .btn{background:#1e293b;color:var(--text);border:1px solid var(--border);padding:3px 10px}
+.g-mod{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;align-items:center;justify-content:center;padding:16px}
+.g-mod-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;width:640px;max-width:100%;max-height:88vh;overflow-y:auto}
+.g-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.g-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)}
+.g-form .input,.g-form .select{width:100%}
+.g-toast{display:none;position:fixed;bottom:20px;right:20px;background:#064e3b;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:95}
+.g-toast.bad{background:#7f1d1d}
+html[data-theme="light"] .g-ref,html[data-theme="light"] .g-pg .btn{background:#fff;color:#0f172a}
 
 /* Container */
 .container{max-width:1440px;margin:0 auto;padding:20px}
@@ -224,7 +247,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
     <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
     <div class="logo">SS</div>
     <div>
-      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.12</span></div>
+      <div class="brand-title">승승장구 콕핏 <span class="badge">SSJG v1.13</span></div>
       <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
     </div>
   </div>
@@ -268,6 +291,10 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
   <div class="side-grp">자금·법인</div>
   <div class="tab-item" data-tab="bank" onclick="switchTab('bank',this)">🏦 기업은행 통장 원장</div>
   <div class="tab-item" data-tab="governance" onclick="switchTab('governance',this)">🏛️ 법인 정보 & 인감</div>
+  <div class="side-grp">원장·기준정보</div>
+  <div class="tab-item" data-tab="items" onclick="switchTab('items',this)">🏷️ 품목 마스터</div>
+  <div class="tab-item" data-tab="journal" onclick="switchTab('journal',this)">🧾 전표</div>
+  <div class="tab-item" data-tab="cards" onclick="switchTab('cards',this)">💳 카드·현금영수증</div>
 </aside>
 <div class="main">
 
@@ -417,6 +444,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_inventory"></div>
   </div>
 
   <!-- TAB: 택배·출고 자동화 -->
@@ -438,6 +466,10 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         <div class="kpi-sub" id="kpiDelivStatusSub">출고데이터 업로드 대기</div>
       </div>
     </div>
+
+    <div data-grid="ssjg_shipments"></div>
+    <div data-grid="ssjg_orders"></div>
+    <div data-grid="ssjg_order_lines"></div>
 
     <!-- 0단계: 카페24 -> 이지어드민 변환 카드 (최우선 배치) -->
     <div class="panel" style="border-left:4px solid var(--accent);margin-bottom:20px">
@@ -664,6 +696,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_pl_month"></div>
+    <div data-grid="ssjg_sga_month"></div>
   </div>
 
   <!-- TAB: 채널별 수익성 분석 (WO-22) -->
@@ -731,6 +765,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_channel_pl"></div>
   </div>
 
   <!-- TAB: 채널별 매출정산 (WO-11) -->
@@ -769,6 +804,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_settlements"></div>
   </div>
 
   <!-- TAB: 세금계산서 정산관리 (WO-11) -->
@@ -831,6 +867,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_tax_invoices"></div>
   </div>
 
   <!-- TAB: 미수금 대사 (WO-11) -->
@@ -865,6 +902,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_ar_recon"></div>
   </div>
 
   <!-- TAB 2: 기업은행 통장 원장 -->
@@ -913,6 +951,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_bank_txns"></div>
   </div>
 
   <!-- TAB 3: 월별 손익·자금 추이 -->
@@ -940,6 +979,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </table>
       </div>
     </div>
+      <div data-grid="ssjg_month_summary"></div>
   </div>
 
   <!-- TAB 4: 3PL 물류·용역비 정산 -->
@@ -1020,6 +1060,19 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
         </div>
       </div>
     </div>
+      <div data-grid="ssjg_company"></div>
+  </div>
+
+  <div id="tab-items" class="tab-pane">
+    <div data-grid="ssjg_items"></div>
+  </div>
+  <div id="tab-journal" class="tab-pane">
+    <div data-grid="ssjg_journal"></div>
+    <div data-grid="ssjg_manual_journal"></div>
+  </div>
+  <div id="tab-cards" class="tab-pane">
+    <div data-grid="ssjg_card_purchases"></div>
+    <div data-grid="ssjg_cash_receipts"></div>
   </div>
 
 </div>
@@ -1189,6 +1242,7 @@ async function startApp(){
   } catch(e){ console.warn('my_status error:', e); }
 
   await loadAllData();
+  gridInitIn(document.querySelector('.tab-pane.active'));
 }
 
 document.addEventListener('keydown', function(ev){
@@ -1214,6 +1268,127 @@ function initSupabase(){
   }
 }
 
+
+/* ═══ v1.13 공통 원장 편집 (BVS 방식: 추가 · 셀 더블클릭 수정 · 삭제) ═══ */
+var GRID_TABLES = {
+  ssjg_shipments:{t:'출고 내역',o:'ship_date'}, ssjg_orders:{t:'주문',o:'ordered_at'}, ssjg_order_lines:{t:'주문 라인'},
+  ssjg_inventory:{t:'재고'}, ssjg_items:{t:'품목 마스터'},
+  ssjg_pl_month:{t:'월별 관리손익'}, ssjg_sga_month:{t:'월별 판관비'}, ssjg_channel_pl:{t:'채널별 손익'},
+  ssjg_month_summary:{t:'월별 손익·자금'}, ssjg_settlements:{t:'채널 매출정산'},
+  ssjg_tax_invoices:{t:'세금계산서'}, ssjg_ar_recon:{t:'미수금 대사'}, ssjg_bank_txns:{t:'통장 거래',o:'txn_at'},
+  ssjg_company:{t:'법인 정보'}, ssjg_journal:{t:'전표',o:'doc_date'}, ssjg_manual_journal:{t:'수기 전표'},
+  ssjg_card_purchases:{t:'카드 매입'}, ssjg_cash_receipts:{t:'현금영수증'}
+};
+var COL_KO = {
+  shipped_at:'발송일', ship_date:'발송일', tracking_no:'운송장번호', tracking_note:'운송장 비고', ship_status:'상태', method:'발송방식',
+  order_id:'주문ID', order_no:'주문번호', market_order_no:'마켓주문번호', ordered_at:'주문일', order_date:'주문일', channel:'채널', mall:'쇼핑몰', shop_name:'쇼핑몰',
+  buyer_name:'주문자', receiver_name:'받는사람', receiver_zip:'우편번호', receiver_addr:'주소', receiver_tel:'전화', receiver_mobile:'휴대폰',
+  pay_method:'결제수단', pay_total:'결제금액', line_id:'라인ID', item_code:'품목코드', item_name:'품명', product_name:'상품명', option_name:'옵션',
+  qty:'수량', unit_price:'단가', box_count:'박스수', actual_fee:'실배송비', expected_fee:'예상배송비', freight_amt:'운임', courier_name:'택배사',
+  status:'상태', memo:'메모', note:'비고', ym:'연월', amount:'금액', supply_amt:'공급가액', tax_amt:'세액', total_amt:'합계', write_date:'작성일자',
+  txn_at:'거래일시', created_at:'등록일시', updated_at:'수정일시', source_file:'원본파일', name:'이름',
+  shipment_id:'출고ID', key_source:'키 출처', match_status:'매칭상태', line_ids:'라인ID', box_count_override:'박스수(수동)', src_row:'원본행', entity:'법인', option_code:'옵션코드', mall_product_no:'쇼핑몰상품번호', ordered_name:'주문상품명', sales_type:'매출구분', row_no:'순번',
+  line_order_no:'품목별주문번호', sales_kind:'매출구분', units:'유닛수', price:'판매가', order_paid:'주문결제액', paid_alloc:'결제배분', ship_alloc:'배송비배분', ship_real:'실배송비', ship_est:'예상배송비', boxes:'박스수', ship_method:'발송방식',
+  buyer:'주문자', receiver:'받는사람', ship_fee_type:'배송비구분', qty_unit:'수량단위', alloc_pay:'결제배분', alloc_ship:'배송비배분', cat1:'대분류', cat2:'중분류', cat3:'소분류', unit:'단위', buy_price:'매입가', sell_price:'판매가', pl3_code:'3PL코드', pl3_barcode:'3PL바코드', std_cost:'표준원가',
+  doc_no:'문서번호', doc_date:'문서일자', yr:'연도', mo:'월', flow:'구분', pl_code:'계정코드', pl_account:'계정과목', src:'출처', title:'적요', partner:'거래처', vendor:'공급처', item:'품목', vat_amt:'세액', approval_no:'승인번호'
+};
+var GRID = {};
+function gEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function gToast(msg,bad){var t=document.getElementById('gToast');if(!t){t=document.createElement('div');t.id='gToast';document.body.appendChild(t)}
+  t.textContent=msg;t.className='g-toast'+(bad?' bad':'');t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none'},2600)}
+function gIsNum(tp){return /^(integer|bigint|smallint|numeric|real|double precision)/.test(tp||'')}
+function gIsDate(tp){return /^(date|timestamp)/.test(tp||'')}
+function gCell(v,tp){if(v==null)return '';if(gIsNum(tp)&&v!=='')return Number(v).toLocaleString('ko-KR');
+  if(/^timestamp/.test(tp||''))return String(v).replace('T',' ').slice(0,16);if(typeof v==='object')return JSON.stringify(v);return v}
+
+function gridMount(host){
+  var tb=host.getAttribute('data-grid');if(GRID[tb])return;
+  var g=GRID[tb]={tb:tb,host:host,rows:[],cols:[],pk:null,edit:false,page:0,q:''};
+  host.className='panel g-panel';
+  host.innerHTML='<div class="panel-head"><div class="panel-title">'+gEsc((GRID_TABLES[tb]||{}).t||tb)+' <span class="g-cnt" id="gc_'+tb+'"></span></div>'
+    +'<div class="g-bar"><input class="input" placeholder="검색" oninput="gridSearch(\''+tb+'\',this.value)">'
+    +'<button class="btn g-add hide" id="ga_'+tb+'" onclick="gridAdd(\''+tb+'\')">＋ 추가</button>'
+    +'<button class="btn g-ref" onclick="gridLoad(\''+tb+'\')">↻</button></div></div>'
+    +'<div class="table-wrap"><table><thead id="gh_'+tb+'"></thead><tbody id="gb_'+tb+'"><tr><td>불러오는 중…</td></tr></tbody></table></div>'
+    +'<div class="g-pg" id="gp_'+tb+'"></div>';
+  gridLoad(tb);
+}
+async function gridLoad(tb){
+  var g=GRID[tb];if(!g||!sb)return;
+  var m=await sb.rpc('ssjg_table_meta',{p_table:tb});
+  if(m.data&&m.data.ok){g.pk=m.data.pk;g.cols=m.data.cols||[];g.edit=true}else{g.pk=null;g.edit=false;g.cols=[]}
+  document.getElementById('ga_'+tb).classList.toggle('hide',!g.edit);
+  var ord=(GRID_TABLES[tb]||{}).o||null;if(!ord)g.cols.forEach(function(c){if(!ord&&gIsDate(c.type))ord=c.name});
+  var all=[],from=0;
+  while(true){
+    var q=sb.from(tb).select('*').range(from,from+999);if(ord)q=q.order(ord,{ascending:false,nullsFirst:false});
+    var r=await q;if(r.error){document.getElementById('gb_'+tb).innerHTML='<tr><td>'+gEsc(r.error.message)+'</td></tr>';return}
+    all=all.concat(r.data||[]);if(!r.data||r.data.length<1000||all.length>=20000)break;from+=1000;
+  }
+  all.forEach(function(r,i){Object.defineProperty(r,'__i',{value:i,enumerable:false,configurable:true,writable:true})});
+  g.rows=all;
+  if(!g.cols.length&&all.length)g.cols=Object.keys(all[0]).map(function(k){return {name:k,type:''}});
+  g.page=0;gridRender(tb);
+}
+function gridSearch(tb,v){var g=GRID[tb];g.q=(v||'').trim().toLowerCase();g.page=0;gridRender(tb)}
+function gridRows(g){if(!g.q)return g.rows;return g.rows.filter(function(r){for(var k in r){if(r[k]!=null&&String(r[k]).toLowerCase().indexOf(g.q)>=0)return true}return false})}
+function gridRender(tb){
+  var g=GRID[tb],rows=gridRows(g),PS=100,n=rows.length,pages=Math.max(1,Math.ceil(n/PS));if(g.page>=pages)g.page=pages-1;
+  document.getElementById('gc_'+tb).textContent=n.toLocaleString('ko-KR')+'건';
+  document.getElementById('gh_'+tb).innerHTML='<tr>'+g.cols.map(function(c){return '<th title="'+gEsc(c.name)+'">'+gEsc(COL_KO[c.name]||c.name)+'</th>'}).join('')+(g.edit?'<th></th>':'')+'</tr>';
+  var slice=rows.slice(g.page*PS,g.page*PS+PS);
+  document.getElementById('gb_'+tb).innerHTML=slice.length?slice.map(function(r){
+    var ri=r.__i;
+    return '<tr>'+g.cols.map(function(c){var ed=g.edit&&c.name!==g.pk;
+      return '<td'+(ed?' class="g-ed" ondblclick="gridEdit(this,\''+tb+'\','+ri+',\''+c.name+'\')"':'')+(gIsNum(c.type)?' style="text-align:right"':'')+'>'+gEsc(gCell(r[c.name],c.type))+'</td>'}).join('')
+      +(g.edit?'<td><button class="btn g-del" onclick="gridDel(\''+tb+'\','+ri+')">삭제</button></td>':'')+'</tr>'}).join('')
+    :'<tr><td colspan="'+(g.cols.length+1)+'">자료 없음</td></tr>';
+  var pg=document.getElementById('gp_'+tb);
+  pg.innerHTML=pages>1?'<button class="btn" onclick="gridPage(\''+tb+'\',-1)">‹</button> '+(g.page+1)+' / '+pages+' <button class="btn" onclick="gridPage(\''+tb+'\',1)">›</button>':'';
+}
+function gridPage(tb,d){var g=GRID[tb];g.page=Math.max(0,g.page+d);gridRender(tb)}
+function gridEdit(td,tb,ri,field){
+  if(td.querySelector('input'))return;var g=GRID[tb],row=g.rows[ri];if(!row||!g.pk)return;var key=String(row[g.pk]);
+  var col=g.cols.filter(function(c){return c.name===field})[0]||{},v=row[field];
+  var inp=document.createElement('input');inp.className='input g-in';
+  if(/^date$/.test(col.type))inp.type='date';else if(gIsNum(col.type))inp.type='number';
+  inp.value=v==null?'':(typeof v==='object'?JSON.stringify(v):String(/^date$/.test(col.type)?String(v).slice(0,10):v));
+  var old=td.innerHTML;td.innerHTML='';td.appendChild(inp);inp.focus();inp.select&&inp.select();
+  var done=false;
+  async function save(){if(done)return;done=true;
+    if(inp.value===(v==null?'':String(v))){td.innerHTML=old;return}
+    var r=await sb.rpc('ssjg_update_row',{p_table:tb,p_key:key,p_field:field,p_value:inp.value});
+    if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);td.innerHTML=old;return}
+    row[field]=inp.value===''?null:inp.value;td.innerHTML=gEsc(gCell(row[field],col.type));gToast('저장됨')}
+  inp.onkeydown=function(e){if(e.key==='Enter')save();if(e.key==='Escape'){done=true;td.innerHTML=old}};
+  inp.onblur=save;
+}
+async function gridDel(tb,ri){
+  var g=GRID[tb],row=g.rows[ri];if(!row||!g.pk)return;var key=String(row[g.pk]);
+  if(!confirm('이 행을 삭제합니다. 사본은 삭제 보관함에 남습니다.'))return;
+  var r=await sb.rpc('ssjg_delete_row',{p_table:tb,p_key:key,p_reason:'ERP 화면 삭제'});
+  if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'삭제 실패',true);return}
+  gToast('삭제됨');gridLoad(tb);
+}
+function gridAdd(tb){
+  var g=GRID[tb];var f=g.cols.filter(function(c){return !(c.auto&&c.name===g.pk)});
+  var h='<div class="g-mod-box"><div class="panel-title" style="margin-bottom:12px">'+gEsc((GRID_TABLES[tb]||{}).t||tb)+' 추가</div><div class="g-form">'
+    +f.map(function(c){var t=/^date$/.test(c.type)?'date':(/^timestamp/.test(c.type)?'datetime-local':(gIsNum(c.type)?'number':'text'));
+      if(/^boolean/.test(c.type))return '<label>'+gEsc(COL_KO[c.name]||c.name)+(c.required?' *':'')+'<select class="select" data-f="'+c.name+'"><option value=""></option><option value="true">예</option><option value="false">아니오</option></select></label>';
+      return '<label>'+gEsc(COL_KO[c.name]||c.name)+(c.required?' *':'')+'<input class="input" type="'+t+'"'+(t==='number'?' step="any"':'')+' data-f="'+c.name+'"></label>'}).join('')
+    +'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn g-ref" onclick="gridModClose()">닫기</button><button class="btn btn-primary" style="padding:7px 16px" onclick="gridAddSave(\''+tb+'\')">저장</button></div></div>';
+  var m=document.getElementById('gMod');if(!m){m=document.createElement('div');m.id='gMod';m.className='g-mod';m.onclick=function(e){if(e.target===m)gridModClose()};document.body.appendChild(m)}
+  m.innerHTML=h;m.style.display='flex';
+}
+function gridModClose(){var m=document.getElementById('gMod');if(m)m.style.display='none'}
+async function gridAddSave(tb){
+  var p={};document.querySelectorAll('#gMod [data-f]').forEach(function(i){if(i.value!=='')p[i.getAttribute('data-f')]=i.value});
+  var r=await sb.rpc('ssjg_insert_row',{p_table:tb,p_row:p});
+  if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);return}
+  gridModClose();gToast('추가됨');gridLoad(tb);
+}
+function gridInitIn(pane){if(!pane||!sb)return;pane.querySelectorAll('[data-grid]').forEach(gridMount)}
+
 function switchTab(tabId, el){
   document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
@@ -1221,6 +1396,7 @@ function switchTab(tabId, el){
   if(item) item.classList.add('active');
   var target = document.getElementById('tab-' + tabId);
   if(target) target.classList.add('active');
+  gridInitIn(target);
   toggleSide(false);
   window.scrollTo(0, 0);
 }
