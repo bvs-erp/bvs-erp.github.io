@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.39 · 대표 콕핏</title>
+<title>BVS ERP v1.40 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.39</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.40</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -685,6 +685,10 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
       <div class="sec" id="site-cal"><h3>월 투입 달력 <span class="cnt" id="calN"></span><span class="r"><span class="chipgrp" id="calChips"><span class="chip on" onclick="calMode('all',this)">전체</span><span class="chip" onclick="calMode('site',this)">현장별 색</span></span> <button class="btn sm" onclick="calAdd()">+ 투입 추가</button></span></h3>
         <div class="desc" style="margin-bottom:8px" id="calDesc"><span class="lg" style="background:color-mix(in srgb,var(--s2) 40%,transparent)"></span>일급(본인 지급)  <span class="lg" style="background:color-mix(in srgb,var(--warn) 45%,transparent)"></span>팀도급(팀장 청구)  <span class="lg" style="background:color-mix(in srgb,var(--s1) 35%,transparent)"></span>월급제(월급÷소정근로일 일할)  <span class="lg" style="background:color-mix(in srgb,var(--tx3) 30%,transparent)"></span>교육·휴무</div>
         <div class="cal" id="calBox"><div class="dim" style="padding:20px">불러오는 중…</div></div></div>
+
+      <div class="sec" id="sec-gLrv" style="display:none"><h3>투입 · 매출 원장 <span class="cnt" id="lrvN"></span></h3>
+        <div class="kpis" id="lrvKpi"></div>
+        <div class="tb" id="gLrv"></div></div>
 
       <!-- 배치 계획 (앞으로) -->
       <div class="sec" id="sec-gPlan"><h3>배치 계획 (앞으로) <span class="cnt" id="planN"></span><span class="r"><button class="btn sm p" onclick="planNew()">+ 계획 추가</button></span></h3>
@@ -1247,7 +1251,7 @@ function gRender(id){var g=G[id],o=g.opt,box=el(id),rows=gData(id);
     var op=o.expand?(g._exp&&g._exp[i]):false;
     var tr='<tr class="row'+(o.onRow||o.expand?' click':'')+(op?' on':'')+'"'+(o.expand?' onclick="gToggle(\''+id+'\','+i+')"':(o.onRow?' onclick="G[\''+id+'\'].opt.onRow(G[\''+id+'\']._v['+i+'])"':''))+'>'
       +(o.expand?'<td class="cae">'+(op?'▾':'▸')+'</td>':'')
-      +g.cols.map(function(c,ci){return '<td class="'+(c.l?'l':'')+(c.cls?' '+c.cls:'')+(c.e?' ed':'')+'"'+(c.e?' title="더블클릭하여 수정" ondblclick="event.stopPropagation();gEdit(\''+id+'\','+i+','+ci+',this)"':'')+'>'+fmtCell(c,r)+'</td>'}).join('')+'</tr>';
+      +g.cols.map(function(c,ci){return '<td class="'+(c.l?'l':'')+(c.cls?' '+c.cls:'')+(canEd(c,r)?' ed':'')+'"'+(canEd(c,r)?' title="더블클릭하여 수정" ondblclick="event.stopPropagation();gEdit(\''+id+'\','+i+','+ci+',this)"':'')+'>'+fmtCell(c,r)+'</td>'}).join('')+'</tr>';
     if(op)tr+='<tr class="exp"><td colspan="'+(g.cols.length+1)+'"><div class="expbox">'+o.expand(r)+'</div></td></tr>';
     return tr}).join('')
     :'<tr><td colspan="'+(g.cols.length+(o.expand?1:0))+'" class="empty">'+esc(o.empty||'데이터 없음')+'</td></tr>';
@@ -1271,7 +1275,8 @@ function gRender(id){var g=G[id],o=g.opt,box=el(id),rows=gData(id);
   else more.classList.add('hide');
 }
 /* 셀 인라인 편집: col.e = {field, get(row)->text, save(row,text)->Promise<{ok,error,apply}>} 또는 col.e = fieldName(문자열) + opt.save(row,field,text) */
-function gEdit(id,i,ci,td){var g=G[id],c=g.cols[ci],r=g._v[i];if(!c||!c.e||td.querySelector('input'))return;
+function canEd(c,r){return !!c.e&&(typeof c.e==='string'||!c.e.can||!!c.e.can(r))}
+function gEdit(id,i,ci,td){var g=G[id],c=g.cols[ci],r=g._v[i];if(!c||!canEd(c,r)||td.querySelector('input'))return;
   var e=typeof c.e==='string'?{field:c.e}:c.e;var cur=e.get?e.get(r):String(r[c.k]==null?'':r[c.k]);
   var old=td.innerHTML;td.innerHTML='<input class="cell" value="'+esc(cur)+'"'+(e.ph?' placeholder="'+esc(e.ph)+'"':'')+'>';var inp=td.querySelector('input');inp.focus();inp.select();
   var done=false;
@@ -1743,6 +1748,7 @@ async function loadAll(){
     ['mj',function(){return sb.from('ceo_journals_manual').select('*').order('journal_date',{ascending:false}).limit(3000)}],
     ['lnc',function(){return sb.from('ceo_loan_contracts').select('*').order('start_on',{ascending:false})}],
     ['lno',function(){return sb.from('ceo_loan_offsets').select('*').order('offset_on',{ascending:false})}],
+    ['lrv',function(){return sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000)}],
     ['tf',function(){return sb.from('ceo_tax_filings').select('*').order('due_on',{ascending:false}).limit(1000)}],
     ['sadj',function(){return sb.from('ceo_settle_adjustments').select('*').order('adj_on',{ascending:false}).limit(2000)}],
     ['hol',function(){return sb.from('ceo_holidays').select('*').order('holiday_date')}],
@@ -2397,6 +2403,7 @@ function renderPlans(){if(!el('gPlan'))return;var rows=(D.plans||[]).slice();
     {rows:rows,q:['person_name','site_name'],csv:false,page:40,onRow:planNew,sort:{k:'plan_date',d:1},empty:'앞으로 잡힌 배치 계획이 없습니다 — 「+ 계획 추가」로 넣습니다'});}
 function renderSite(){
   renderChk();
+  try{renderLrv()}catch(e){console.error(e)}
   try{renderSiteM()}catch(e){console.error(e)}
   var ds=Object.keys(by(D.att,'work_date')).sort().reverse();
   var td=today();
@@ -4988,6 +4995,28 @@ function holOpen(r){var body='<div class="fr"><div class="f"><label>날짜</labe
 async function holSave(){var d=el('hl_d').value,n=(el('hl_n').value||'').trim();if(!d||!n){toast('날짜와 이름을 넣으세요','e');return}
   var x=await sb.rpc('ceo_holiday_set',{p_date:d,p_name:n,p_statutory:el('hl_s').value==='true'});rpcDone(x,'저장했습니다')}
 async function holDel(d){var ok=await ask('공휴일 삭제',d+' 을(를) 공휴일에서 뺍니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('ceo_holiday_delete',{p_date:d});rpcDone(x,'삭제했습니다')}
+/* ══════ 투입·매출 원장 (대표 입력: 매출처·매출액) ══════ */
+function lrvLocked(r){return !!r.is_locked}
+function renderLrv(){var sec=el('sec-gLrv');if(!sec)return;if(!isOwner()){sec.style.display='none';return}sec.style.display='';
+  var rows=(D.lrv||[]).map(function(r){r._pn=r.partner_name||'내부';r._lk=lrvLocked(r)?'1':'0';r._ov=r.revenue_override_amt!=null&&r.revenue_override_amt!==''?'1':'0';return r});
+  var m=M(),byP=by(rows,'_pn');
+  el('lrvN').textContent=m+' · '+rows.length+'건'+(rows.some(function(r){return r._lk==='1'})?' · 마감 '+rows.filter(function(r){return r._lk==='1'}).length+'건':'');
+  el('lrvKpi').innerHTML=Object.keys(byP).sort(function(a,b){return sum(byP[b],'revenue_amt')-sum(byP[a],'revenue_amt')}).map(function(p){return kpi(p,won(sum(byP[p],'revenue_amt')),'공수 '+num(sum(byP[p],'work_md'))+' · '+byP[p].length+'건','click',' onclick="if(G.gLrv){G.gLrv.chip={_pn:\''+esc(p).replace(/'/g,"\\'")+'\'};gRender(\'gLrv\')}"')}).join('');
+  grid('gLrv',[{k:'work_date',t:'일자',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},
+    {k:'_pn',t:'매출처',l:1,f:function(v){return v==='내부'?'<span class="dim">내부</span>':esc(v)},e:{field:'partner',ph:'거래처명 (비우면 현장 기준)',get:function(r){return r.partner_name||''},can:function(r){return !lrvLocked(r)},
+      save:function(r,v){return sb.rpc('ceo_set_labor_partner',{p_entry_id:r.entry_id,p_partner:v}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data||{ok:false,error:'실패'}})},
+      apply:function(r,v){r.partner_name=v||null;r._pn=v||'내부';setTimeout(loadLrv,50)}}},
+    {k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'잔업h',f:'num',sum:1},
+    {k:'revenue_amt',t:'매출액',f:function(v,r){return won(v)+(r._ov==='1'?' <span class="pill y tiny">직접</span>':'')},sum:1,
+      e:{field:'revenue',ph:'금액 (비우면 단가 계산)',get:function(r){return r._ov==='1'?String(r.revenue_override_amt):''},can:function(r){return !lrvLocked(r)},
+      save:function(r,v){var t=String(v).replace(/[,\s원]/g,'');if(t!==''&&!/^\d+$/.test(t))return Promise.resolve({ok:false,error:'숫자만 넣으세요'});
+        return sb.rpc('ceo_labor_revenue_set',{p_entry_id:r.entry_id,p_amount:t===''?null:+t}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data||{ok:false,error:'실패'}})},
+      apply:function(r,v){setTimeout(loadLrv,50)}}},
+    {k:'_lk',t:'상태',l:1,f:function(v){return v==='1'?'<span class="dim">마감</span>':''}}],
+    {rows:rows,q:['person_name','site_name','_pn'],qph:'이름·현장·매출처',chips:[{k:'_pn',vals:[['','매출처 전체']].concat(Object.keys(byP).sort().map(function(x){return [x,x]}))},{k:'_lk',vals:[['','전체'],['0','수정 가능'],['1','마감']]}],foot:true,page:100,sort:{k:'work_date',d:1},empty:m+' 투입 없음'});
+}
+async function loadLrv(){var r=await sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000);
+  if(r.error){toast(r.error.message,'e');return}D.lrv=r.data||[];renderLrv()}
 function rpcDone(r,okMsg){if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return false}toast(okMsg,'g');drClose();loadAll();return true}
 async function staffSaveBasic(emp){var f=[['address',el('sf_addr').value],['emergency_contact',el('sf_emg').value],['email',el('sf_email').value],['bill_partner_id',el('sf_ptn').value],['birth_ymd',el('sf_birth').value],['employment_type',el('sf_etype').value],['blood_type',el('sf_blood').value.trim().toUpperCase()],['vehicle_no',el('sf_veh').value.trim()]];
   for(var i=0;i<f.length;i++){var r=await sb.rpc('ceo_staff_set',{p_emp:emp,p_field:f[i][0],p_value:f[i][1]});if(r.error){toast(r.error.message,'e');return}}toast('인적사항 저장','g');drClose();loadAll()}
