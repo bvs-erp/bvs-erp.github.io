@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BVS ERP v1.50 · 대표 콕핏</title>
+<title>BVS ERP v1.51 · 대표 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -606,7 +606,7 @@ td.saved{background:var(--goodbg)!important;transition:background .6s}
 <!-- ── 앱 셸 ── -->
 <div id="app" class="hide">
   <aside id="sb">
-    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.50</span><small>비브이에스 · 대표</small></div></div>
+    <div class="brand"><div class="lg">BV</div><div class="nm">BVS ERP<span class="vbadge" id="appVer">v1.51</span><small>비브이에스 · 대표</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="sbf"><button class="ibtn" onclick="toggleSb()" title="사이드바 접기/펴기"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   </aside>
@@ -2408,7 +2408,8 @@ function renderChk(){if(!el('gChk'))return;
     {k:'person_name',t:'이름',l:1},
     {k:'site_name',t:'현장',l:1,f:function(v,r){return esc(v||r.site_id||'–')}},
     {k:'work_md',t:'공수',f:'num'},
-    {k:'issue_why',t:'왜 문제인가',l:1,cls:'tiny dim'}],
+    {k:'issue_why',t:'왜 문제인가',l:1,cls:'tiny dim'},
+    {k:'_a',t:'',l:1,f:function(v,r){return r.issue_kind==='내부 근무가 청구 대상'&&r.entry_id?'<button class="stbtn" onclick="event.stopPropagation();lkSet('+r.entry_id+',\'nonbillable\')">내부로</button>':''}}],
     {rows:rows,q:['person_name','site_name','issue_kind'],csv:true,page:30,
      chips:[{k:'issue_kind',vals:ch}],
      sort:{k:'severity'},
@@ -5046,6 +5047,7 @@ function renderLrv(){var sec=el('sec-gLrv');if(!sec)return;if(!isOwner()){sec.st
     {k:'_pn',t:'매출처',l:1,f:function(v){return v==='내부'?'<span class="dim">내부</span>':esc(v)},e:{field:'partner',ph:'거래처명 (비우면 현장 기준)',get:function(r){return r.partner_name||''},can:function(r){return !lrvLocked(r)},
       save:function(r,v){return sb.rpc('ceo_set_labor_partner',{p_entry_id:r.entry_id,p_partner:v}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data||{ok:false,error:'실패'}})},
       apply:function(r,v){r.partner_name=v||null;r._pn=v||'내부';setTimeout(loadLrv,50)}}},
+    {k:'revenue_kind',t:'청구',l:1,f:function(v,r){var b=v==='billable';return lrvLocked(r)?(b?'청구':'<span class="dim">내부</span>'):'<button class="stbtn'+(b?'':' x')+'" onclick="event.stopPropagation();lkSet('+r.entry_id+',\''+(b?'nonbillable':'billable')+'\')">'+(b?'청구':'내부')+'</button>'}},
     {k:'work_md',t:'공수',f:'num',sum:1},{k:'ot_hours',t:'잔업h',f:'num',sum:1},
     {k:'revenue_amt',t:'매출액',f:function(v,r){return won(v)+(r._ov==='1'?' <span class="pill y tiny">직접</span>':'')},sum:1,
       e:{field:'revenue',ph:'금액 (비우면 단가 계산)',get:function(r){return r._ov==='1'?String(r.revenue_override_amt):''},can:function(r){return !lrvLocked(r)},
@@ -5055,6 +5057,9 @@ function renderLrv(){var sec=el('sec-gLrv');if(!sec)return;if(!isOwner()){sec.st
     {k:'_lk',t:'상태',l:1,f:function(v){return v==='1'?'<span class="dim">마감</span>':''}}],
     {rows:rows,q:['person_name','site_name','_pn'],qph:'이름·현장·매출처',chips:[{k:'_pn',vals:[['','매출처 전체']].concat(Object.keys(byP).sort().map(function(x){return [x,x]}))},{k:'_lk',vals:[['','전체'],['0','수정 가능'],['1','마감']]}],foot:true,page:100,sort:{k:'work_date',d:1},empty:m+' 투입 없음'});
 }
+async function lkSet(id,kind){var x=await sb.rpc('ceo_labor_kind_set',{p_entry_id:id,p_kind:kind});
+  if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||(x.data&&x.data.error)||'실패','e');return}
+  toast(kind==='billable'?'청구로 바꿨습니다':'내부로 바꿨습니다','g');loadAll()}
 async function loadLrv(){var r=await sb.from('ceo_labor_revenue').select('*').gte('work_date',M()+'-01').lt('work_date',ymNext(M())).order('work_date').order('person_name').limit(5000);
   if(r.error){toast(r.error.message,'e');return}D.lrv=r.data||[];renderLrv()}
 /* ══════ B11 이력 정리 ══════ */
