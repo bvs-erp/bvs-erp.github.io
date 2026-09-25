@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.45">
+<meta name="app-version" content="1.47">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -413,6 +413,33 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 #tab-vat-sum tfoot td{font-weight:600}
 #tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
 #tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
+/* v1.46 채권·채무 명세 · 거래처 별칭 */
+#tab-arap td.n,#alPanel td.n,#apMod td.n{text-align:right}
+#tab-arap tfoot td{font-weight:600}
+#tab-arap tr.ap-un td:nth-child(3),#alUn td:first-child{color:var(--danger,#c0392b)}
+.al-sel{min-width:220px}
+.ap-box{width:820px}
+body.perm-ro #alUn button,body.perm-ro #alRows button,body.perm-ro .al-sel{display:none!important}
+/* v1.47 전표 출력 */
+#vpBox{display:none}
+@media print{
+  body.vp-on>*:not(#vpBox){display:none!important}
+  body.vp-on #vpBox{display:block!important;color:#000;font-size:9.5pt}
+  #vpBox .vp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5mm}
+  #vpBox .vp-t{font-size:18pt;font-weight:700;letter-spacing:10px;padding-top:6mm}
+  #vpBox table{width:100%;border-collapse:collapse}
+  #vpBox th,#vpBox td{border:0.7px solid #000!important;padding:2px 5px!important;background:#fff!important;color:#000!important;position:static!important}
+  #vpBox th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-weight:600;text-align:center}
+  #vpBox .vp-sign{width:auto}
+  #vpBox .vp-sign th{width:20mm;font-size:8.5pt}
+  body.vp-on #vpBox .vp-sign td{height:15mm!important}
+  #vpBox .vp-info{margin-bottom:3mm}
+  #vpBox .vp-info th{width:22mm}
+  #vpBox td.n{text-align:right}
+  #vpBox tfoot td{font-weight:700}
+  #vpBox .vp-foot{display:flex;justify-content:space-between;margin-top:3mm;font-size:8pt;color:#333}
+  #vpBox tr{page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -1341,6 +1368,27 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
   </div>
   <div id="tab-partners" class="tab-pane">
     <div data-grid="ssjg_partners"></div>
+    <div class="panel" id="alPanel">
+      <div class="panel-head"><div class="panel-title">미연결 장부 거래처명 <span class="g-cnt" id="alUnCnt"></span></div></div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>장부 거래처명</th><th style="text-align:right">줄수</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th>연결할 거래처</th><th></th></tr></thead><tbody id="alUn"><tr><td colspan="6" class="td-empty">-</td></tr></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">거래처 별칭 <span class="g-cnt" id="alCnt"></span></div></div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>별칭</th><th>거래처</th><th>구분</th><th></th></tr></thead><tbody id="alRows"><tr><td colspan="4" class="td-empty">-</td></tr></tbody></table></div>
+    </div>
+  </div>
+  <div id="tab-arap" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">채권·채무 명세 <span class="g-cnt" id="apCnt"></span></div></div>
+      <div class="b3-head">
+        <label>기준일<input type="date" id="apAsof" class="input"></label>
+        <label>계정<select id="apAcct" class="select"><option value="">전체</option><option value="108">108 외상매출금</option><option value="251">251 외상매입금</option><option value="253">253 미지급금</option></select></label>
+        <label>표시<select id="apShow" class="select"><option value="bal">잔액 있음</option><option value="">전체</option><option value="un">미연결</option></select></label>
+        <button class="btn btn-primary" onclick="apLoad()">조회</button>
+      </div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>계정</th><th>거래처</th><th>연결</th><th style="text-align:right">잔액</th><th style="text-align:right">30일 이내</th><th style="text-align:right">31~60일</th><th style="text-align:right">61~90일</th><th style="text-align:right">90일 초과</th><th>최종 거래일</th></tr></thead>
+        <tbody id="apRows"><tr><td colspan="9" class="td-empty">-</td></tr></tbody><tfoot id="apFoot"></tfoot></table></div>
+    </div>
   </div>
   <div id="tab-items" class="tab-pane">
     <div data-grid="ssjg_items"></div>
@@ -1837,7 +1885,7 @@ var MENU = [
     { n: '전표', i: [['journal', '전표'], ['jv-find', '전표 조회'], ['tax-jv', '세금계산서 전표']] },
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
-    { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
+    { n: '자금', i: [['arap', '채권·채무 명세'], ['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
     { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] },
@@ -3806,14 +3854,14 @@ async function drOpen(doc, o){
   var L = (r.data || []).slice().sort(function(a, b){ return (Number(b.dr) > 0) - (Number(a.dr) > 0) || Number(a.line_no) - Number(b.line_no); });
   if(!L.length){ box.textContent = '전표 없음'; return; }
   var h = L[0], sd = 0, sc = 0;
-  DR.doc = doc; DR.o = h.origin || o || '';
+  DR.doc = doc; DR.o = h.origin || o || ''; DR.lines = L;
   var rows = L.map(function(x){ sd += Number(x.dr || 0); sc += Number(x.cr || 0);
     return '<tr><td>' + (Number(x.dr) > 0 ? '차변' : '대변') + '</td><td>' + gEsc(x.acct_code) + '</td><td>' + gEsc(x.acct_name || '') + '</td><td>' + gEsc(x.partner || '') + '</td><td class="n">' + glN(x.dr) + '</td><td class="n">' + glN(x.cr) + '</td><td>' + gEsc(x.memo || '') + '</td></tr>'; }).join('');
   box.innerHTML = '<div class="dr-hd"><b>전표번호</b><span>' + gEsc(h.doc_no) + '</span><b>일자</b><span>' + gEsc(h.doc_date || '') + '</span><b>원천</b><span>' + gEsc(h.origin || '') + '</span><b>구분</b><span>' + gEsc([h.src, h.flow].filter(Boolean).join(' ')) + '</span>'
     + '<b>적요</b><span style="grid-column:span 5">' + gEsc(h.title || '') + '</span><b>승인번호</b><span>' + gEsc(h.approval_no || '') + '</span></div>'
     + '<div class="table-wrap"><table data-foot="1"><thead><tr><th>구분</th><th>계정</th><th>계정명</th><th>거래처</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th>적요</th></tr></thead><tbody>' + rows + '</tbody>'
     + '<tfoot><tr><td colspan="4">합계' + (Math.round(sd) === Math.round(sc) ? '' : ' (차대 불일치)') + '</td><td class="n">' + glN(sd) + '</td><td class="n">' + glN(sc) + '</td><td></td></tr></tfoot></table></div>'
-    + '<div class="dr-ft">' + (DR.o === '입력전표' ? '<button class="btn" id="drJv" onclick="drToJv()">전표입력에서 열기</button>' : '') + '<button class="btn" onclick="drClose()">닫기</button></div>';
+    + '<div class="dr-ft"><button class="btn" onclick="vpPrint()">출력</button>' + (DR.o === '입력전표' ? '<button class="btn" id="drJv" onclick="drToJv()">전표입력에서 열기</button>' : '') + '<button class="btn" onclick="drClose()">닫기</button></div>';
 }
 function drToJv(){
   var no = DR.doc; drClose(); switchTab('journal');
@@ -4107,6 +4155,156 @@ document.addEventListener('click', function(e){
 function coaCacheReset(){ try { if(CH && CH.cache) delete CH.cache.acct; } catch(e){} try { JV.coa = null; } catch(e){} try { GL.coa = null; GL.month = null; GL.acct = {}; } catch(e){} }
 var _gridLoad145 = gridLoad;
 gridLoad = function(tb){ if(tb === 'ssjg_accounts') coaCacheReset(); return _gridLoad145.apply(this, arguments); };
+
+// ── 채권·채무 명세 (v1.46): 108 차변 증가, 251·253 대변 증가, 감소분은 먼저 생긴 잔액부터 상계 ──
+var AP = { groups: [], asof: '' };
+function apN(v){ v = Math.round(Number(v || 0)); return v ? v.toLocaleString('ko-KR') : ''; }
+function apToday(){ return new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10); }
+function apDays(a, b){ return Math.floor((Date.parse(b) - Date.parse(a)) / 86400000); }
+function apOpen(){ var d = document.getElementById('apAsof'); if(!d.value){ d.value = apToday(); apLoad(); } }
+async function apLoad(){
+  if(!sb) return;
+  var asof = document.getElementById('apAsof').value || apToday(), ac = document.getElementById('apAcct').value, show = document.getElementById('apShow').value;
+  var body = document.getElementById('apRows'); body.innerHTML = '<tr><td colspan="9" class="td-empty">불러오는 중</td></tr>';
+  var all = [], from = 0, r;
+  try {
+    while(true){
+      var q = sb.from('ssjg_arap_lines').select('doc_date,doc_no,line_no,acct_code,acct_name,dr,cr,raw_partner,partner_id,partner_name,linked,origin').lte('doc_date', asof);
+      if(ac) q = q.eq('acct_code', ac);
+      r = await q.order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(from, from + 999);
+      if(r.error) throw r.error;
+      all = all.concat(r.data || []); if(!r.data || r.data.length < 1000) break; from += 1000;
+    }
+  } catch(e){ body.innerHTML = '<tr><td colspan="9">' + gEsc(e.message || e) + '</td></tr>'; return; }
+  var g = {};
+  all.forEach(function(x){
+    var k = x.acct_code + '|' + (x.partner_id != null ? 'p' + x.partner_id : 'r' + (x.raw_partner || ''));
+    if(!g[k]) g[k] = { acct: x.acct_code, an: x.acct_name, name: x.partner_name || x.raw_partner || '(없음)', linked: !!x.linked, items: [], last: '' };
+    var o = g[k], inc = x.acct_code === '108' ? Number(x.dr || 0) - Number(x.cr || 0) : Number(x.cr || 0) - Number(x.dr || 0);
+    o.last = x.doc_date || o.last;
+    if(inc > 0){ o.items.push({ d: x.doc_date, doc: x.doc_no, o: x.origin, raw: x.raw_partner, amt: inc, rest: inc }); return; }
+    var dec = -inc;
+    for(var i = 0; i < o.items.length && dec > 0; i++){ var it = o.items[i]; if(it.rest <= 0) continue; var u = Math.min(it.rest, dec); it.rest -= u; dec -= u; }
+    if(dec > 0) o.items.push({ d: x.doc_date, doc: x.doc_no, o: x.origin, raw: x.raw_partner, amt: -dec, rest: -dec });
+  });
+  var list = Object.keys(g).map(function(k){
+    var o = g[k]; o.b = [0, 0, 0, 0]; o.bal = 0;
+    o.items.forEach(function(it){ if(!it.rest) return; o.bal += it.rest; var dd = apDays(it.d, asof); o.b[dd <= 30 ? 0 : dd <= 60 ? 1 : dd <= 90 ? 2 : 3] += it.rest; });
+    return o;
+  }).filter(function(o){ return show === 'bal' ? Math.round(o.bal) !== 0 : show === 'un' ? !o.linked : true; })
+    .sort(function(a, b){ return a.acct === b.acct ? Math.abs(b.bal) - Math.abs(a.bal) : (a.acct < b.acct ? -1 : 1); });
+  AP.groups = list; AP.asof = asof;
+  var TS = {};
+  document.getElementById('apCnt').textContent = list.length + '건';
+  body.innerHTML = list.length ? list.map(function(o, i){
+    var T = TS[o.acct] = TS[o.acct] || { an: o.an, v: [0, 0, 0, 0, 0] }; T.v[0] += o.bal; for(var j = 0; j < 4; j++) T.v[j + 1] += o.b[j];
+    return '<tr class="dr-row' + (o.linked ? '' : ' ap-un') + '" data-i="' + i + '"><td>' + gEsc(o.acct + ' ' + (o.an || '')) + '</td><td>' + gEsc(o.name) + '</td><td>' + (o.linked ? '연결' : '미연결') + '</td>'
+      + '<td class="n">' + apN(o.bal) + '</td><td class="n">' + apN(o.b[0]) + '</td><td class="n">' + apN(o.b[1]) + '</td><td class="n">' + apN(o.b[2]) + '</td><td class="n">' + apN(o.b[3]) + '</td><td>' + gEsc(o.last || '') + '</td></tr>';
+  }).join('') : '<tr><td colspan="9" class="td-empty">해당 없음</td></tr>';
+  document.getElementById('apFoot').innerHTML = Object.keys(TS).sort().map(function(k){ return '<tr><td colspan="3">합계 ' + gEsc(k + ' ' + (TS[k].an || '')) + '</td>' + TS[k].v.map(function(v){ return '<td class="n">' + apN(v) + '</td>'; }).join('') + '<td></td></tr>'; }).join('');
+}
+function apDetail(i){
+  var o = AP.groups[i]; if(!o) return;
+  var m = document.getElementById('apMod');
+  if(!m){ m = document.createElement('div'); m.id = 'apMod'; m.className = 'g-mod'; document.body.appendChild(m); m.onclick = function(e){ if(e.target === m) m.style.display = 'none'; }; }
+  var open = o.items.filter(function(it){ return Math.round(it.rest) !== 0; });
+  m.innerHTML = '<div class="g-mod-box ap-box"><div class="panel-title">' + gEsc(o.acct + ' ' + (o.an || '') + ' · ' + o.name) + ' 미결 내역 (' + gEsc(AP.asof) + ')</div>'
+    + '<div class="table-wrap" style="margin-top:10px"><table data-foot="1"><thead><tr><th>일자</th><th>전표번호</th><th>원천</th><th>장부 거래처명</th><th style="text-align:right">발생액</th><th style="text-align:right">미결 잔액</th><th style="text-align:right">경과일</th></tr></thead><tbody id="apModRows">'
+    + (open.length ? open.map(function(it){ return '<tr class="dr-row" data-doc="' + gEsc(it.doc) + '" data-o="' + gEsc(it.o || '') + '"><td>' + gEsc(it.d || '') + '</td><td>' + gEsc(it.doc) + '</td><td>' + gEsc(it.o || '') + '</td><td>' + gEsc(it.raw || '') + '</td><td class="n">' + apN(it.amt) + '</td><td class="n">' + apN(it.rest) + '</td><td class="n">' + apDays(it.d, AP.asof) + '</td></tr>'; }).join('') : '<tr><td colspan="7" class="td-empty">미결 없음</td></tr>')
+    + '</tbody><tfoot><tr><td colspan="5">합계</td><td class="n">' + apN(o.bal) + '</td><td></td></tr></tfoot></table></div>'
+    + '<div class="dr-ft"><button class="btn" onclick="document.getElementById(\'apMod\').style.display=\'none\'">닫기</button></div></div>';
+  m.style.display = 'flex';
+}
+document.addEventListener('dblclick', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('tr.dr-row'); if(!tr) return;
+  var tb = tr.parentNode && tr.parentNode.id;
+  if(tb === 'apRows') apDetail(Number(tr.dataset.i));
+  else if(tb === 'apModRows') drOpen(tr.dataset.doc, tr.dataset.o || '');
+});
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  var d = document.getElementById('drMod'); if(d && d.style.display === 'flex') return;
+  var m = document.getElementById('apMod'); if(m && m.style.display === 'flex'){ e.preventDefault(); m.style.display = 'none'; }
+});
+document.addEventListener('change', function(e){ var id = e.target && e.target.id; if(id === 'apAcct' || id === 'apShow' || id === 'apAsof') apLoad(); });
+// ── 거래처 별칭 (v1.46) ──
+var AL = { parts: null, un: [] };
+async function alParts(){ if(AL.parts) return AL.parts; var r = await sb.from('ssjg_partners').select('id,name').limit(5000); AL.parts = r.data || []; return AL.parts; }
+async function alLoad(){
+  if(!sb || !document.getElementById('alUn')) return;
+  AL.parts = null; var ps = await alParts(), byId = {}; ps.forEach(function(p){ byId[p.id] = p.name; });
+  var u = await sb.from('ssjg_alias_candidates').select('alias,lines,dr,cr,candidates').limit(5000);
+  var a = await sb.from('ssjg_partner_alias').select('alias,partner_id,source').order('alias').limit(5000);
+  if(u.error){ document.getElementById('alUn').innerHTML = '<tr><td colspan="6">' + gEsc(u.error.message) + '</td></tr>'; return; }
+  AL.un = (u.data || []).sort(function(x, y){ return Number(y.lines) - Number(x.lines); });
+  document.getElementById('alUnCnt').textContent = AL.un.length + '건';
+  document.getElementById('alUn').innerHTML = AL.un.length ? AL.un.map(function(x, i){
+    var c = x.candidates || [];
+    return '<tr><td>' + gEsc(x.alias) + '</td><td class="n">' + apN(x.lines) + '</td><td class="n">' + apN(x.dr) + '</td><td class="n">' + apN(x.cr) + '</td>'
+      + '<td><select class="select al-sel" id="alSel' + i + '"><option value="">' + (c.length ? '후보 선택' : '') + '</option>' + c.map(function(p){ return '<option value="' + p.id + '">' + gEsc(p.name) + '</option>'; }).join('') + '<option value="?">다른 거래처 찾기</option></select></td>'
+      + '<td><button class="btn" onclick="alLink(' + i + ')">연결</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" class="td-empty">미연결 없음</td></tr>';
+  var al = a.data || [];
+  document.getElementById('alCnt').textContent = al.length + '건';
+  document.getElementById('alRows').innerHTML = al.length ? al.map(function(x){
+    return '<tr><td>' + gEsc(x.alias) + '</td><td>' + gEsc(byId[x.partner_id] || x.partner_id) + '</td><td>' + (x.source === 'auto' ? '자동' : '수동') + '</td><td><button class="btn" data-a="' + gEsc(x.alias) + '" onclick="alDel(this.dataset.a)">해제</button></td></tr>';
+  }).join('') : '<tr><td colspan="4" class="td-empty">-</td></tr>';
+}
+async function alSet(alias, pid){
+  if(typeof permDeny === 'function' && permDeny()) return;
+  var r = await sb.rpc('ssjg_alias_set', { p_alias: alias, p_partner_id: Number(pid) });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '연결 실패', true); return; }
+  gToast(alias + ' → ' + r.data.partner); alLoad(); AP.groups = [];
+}
+async function alLink(i){
+  var x = AL.un[i]; if(!x) return;
+  var v = document.getElementById('alSel' + i).value;
+  if(v && v !== '?'){ alSet(x.alias, v); return; }
+  var ps = await alParts();
+  chOpen('partner', '', function(p){
+    var nm = p.v || p.n || p.c, hit = ps.find(function(q){ return q.name === nm; });
+    if(!hit){ gToast('거래처 마스터에 없는 이름입니다: ' + nm, true); return; }
+    alSet(x.alias, hit.id);
+  });
+}
+async function alDel(alias){
+  if(typeof permDeny === 'function' && permDeny()) return;
+  if(!confirm(alias + ' 별칭 연결을 해제합니다')) return;
+  var r = await sb.rpc('ssjg_alias_del', { p_alias: alias });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '해제 실패', true); return; }
+  gToast('해제 ' + alias); alLoad();
+}
+document.addEventListener('change', function(e){ var t = e.target; if(t && t.classList && t.classList.contains('al-sel') && t.value === '?'){ alLink(Number(t.id.replace('alSel', ''))); t.value = ''; } });
+var _switchTab146 = switchTab; switchTab = function(tabId){ var r = _switchTab146.apply(this, arguments); if(tabId === 'arap') apOpen(); if(tabId === 'partners') alLoad(); return r; };
+
+// ── 전표 출력 (v1.47) ──
+var VP_SIGN = ['담당', '검토', '승인'];
+async function vpPrint(){
+  var L = DR.lines || []; if(!L.length){ gToast('출력할 전표가 없습니다', true); return; }
+  var co = { name: '', bizno: '' }; try { co = await prtCompany(); } catch(e){}
+  var h = L[0], sd = 0, sc = 0, n = function(v){ v = Math.round(Number(v || 0)); return v ? v.toLocaleString('ko-KR') : ''; };
+  var rows = L.map(function(x){
+    var d = Number(x.dr || 0) > 0; sd += Number(x.dr || 0); sc += Number(x.cr || 0);
+    var ac = gEsc(x.acct_code + ' ' + (x.acct_name || ''));
+    return '<tr><td>' + (d ? ac : '') + '</td><td class="n">' + (d ? n(x.dr) : '') + '</td><td>' + (d ? '' : ac) + '</td><td class="n">' + (d ? '' : n(x.cr)) + '</td><td>' + gEsc(x.partner || '') + '</td><td>' + gEsc(x.memo || x.title || '') + '</td></tr>';
+  }).join('');
+  var now = new Date(Date.now() + 9 * 3600000).toISOString().replace('T', ' ').slice(0, 16);
+  var box = document.getElementById('vpBox');
+  if(!box){ box = document.createElement('div'); box.id = 'vpBox'; document.body.appendChild(box); }
+  box.innerHTML = '<div class="vp-top"><div class="vp-t">전 표</div>'
+    + '<table class="vp-sign"><tr>' + VP_SIGN.map(function(s){ return '<th>' + gEsc(s) + '</th>'; }).join('') + '</tr><tr>' + VP_SIGN.map(function(){ return '<td></td>'; }).join('') + '</tr></table></div>'
+    + '<table class="vp-info"><tr><th>회사</th><td>' + gEsc(co.name || '') + (co.bizno ? ' (' + gEsc(co.bizno) + ')' : '') + '</td><th>전표번호</th><td>' + gEsc(h.doc_no) + '</td></tr>'
+    + '<tr><th>일자</th><td>' + gEsc(h.doc_date || '') + '</td><th>구분</th><td>' + gEsc([h.origin, h.src, h.flow].filter(Boolean).join(' ')) + '</td></tr>'
+    + '<tr><th>적요</th><td colspan="3">' + gEsc(h.title || '') + (h.approval_no ? ' · 승인번호 ' + gEsc(h.approval_no) : '') + '</td></tr></table>'
+    + '<table><thead><tr><th style="width:24%">차변 계정</th><th style="width:13%">차변 금액</th><th style="width:24%">대변 계정</th><th style="width:13%">대변 금액</th><th style="width:12%">거래처</th><th>적요</th></tr></thead><tbody>' + rows + '</tbody>'
+    + '<tfoot><tr><td>합계</td><td class="n">' + n(sd) + '</td><td></td><td class="n">' + n(sc) + '</td><td colspan="2">' + (Math.round(sd) === Math.round(sc) ? '' : '차대 불일치') + '</td></tr></tfoot></table>'
+    + '<div class="vp-foot"><span>' + gEsc(co.name || '') + '</span><span>출력 ' + now + '</span></div>';
+  document.body.classList.add('vp-on');
+  var done = function(){ document.body.classList.remove('vp-on'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 1500);
+}
 
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
