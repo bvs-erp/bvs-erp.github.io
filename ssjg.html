@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.44">
+<meta name="app-version" content="1.45">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1336,6 +1336,9 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
       <div data-grid="ssjg_company"></div>
   </div>
 
+  <div id="tab-coa" class="tab-pane">
+    <div data-grid="ssjg_accounts"></div>
+  </div>
   <div id="tab-partners" class="tab-pane">
     <div data-grid="ssjg_partners"></div>
   </div>
@@ -1658,7 +1661,7 @@ function initSupabase(){
 /* ═══ v1.13 공통 원장 편집 (BVS 방식: 추가 · 셀 더블클릭 수정 · 삭제) ═══ */
 var GRID_TABLES = {
   ssjg_shipments:{t:'출고 내역',o:'ship_date'}, ssjg_orders:{t:'주문',o:'ordered_at'}, ssjg_order_lines:{t:'주문 라인'},
-  ssjg_inventory:{t:'재고'}, ssjg_partners:{t:'거래처',o:'code'}, ssjg_items:{t:'품목 마스터'},
+  ssjg_inventory:{t:'재고'}, ssjg_partners:{t:'거래처',o:'code'}, ssjg_accounts:{t:'계정과목',o:'acct_code'}, ssjg_items:{t:'품목 마스터'},
   ssjg_pl_month:{t:'월별 관리손익'}, ssjg_sga_month:{t:'월별 판관비'}, ssjg_channel_pl:{t:'채널별 손익'},
   ssjg_month_summary:{t:'월별 손익·자금'}, ssjg_settlements:{t:'채널 매출정산'},
   ssjg_tax_invoices:{t:'세금계산서'}, ssjg_ar_recon:{t:'미수금 대사'}, ssjg_bank_txns:{t:'통장 거래',o:'txn_at'},
@@ -1677,7 +1680,7 @@ var COL_KO = {
   line_order_no:'품목별주문번호', sales_kind:'매출구분', units:'유닛수', price:'판매가', order_paid:'주문결제액', paid_alloc:'결제배분', ship_alloc:'배송비배분', ship_real:'실배송비', ship_est:'예상배송비', boxes:'박스수', ship_method:'발송방식',
   buyer:'주문자', receiver:'받는사람', ship_fee_type:'배송비구분', qty_unit:'수량단위', alloc_pay:'결제배분', alloc_ship:'배송비배분', cat1:'대분류', cat2:'중분류', cat3:'소분류', unit:'단위', buy_price:'매입가', sell_price:'판매가', pl3_code:'3PL코드', pl3_barcode:'3PL바코드', std_cost:'표준원가',
   doc_no:'문서번호', doc_date:'문서일자', yr:'연도', mo:'월', flow:'구분', pl_code:'계정코드', pl_account:'계정과목', src:'출처', title:'적요', partner:'거래처', vendor:'공급처', item:'품목', vat_amt:'세액', approval_no:'승인번호',
-  bill_ym:'정산월', bill_date:'청구일자'
+  bill_ym:'정산월', bill_date:'청구일자', acct_code:'계정코드', acct_name:'계정명', acct_class:'분류', normal_side:'차대', id:'번호'
 };
 var GRID = {};
 function noEmo(s){return String(s==null?'':s).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/gu,'').trim()}
@@ -1840,7 +1843,7 @@ var MENU = [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] },
     { n: '부가세', i: [['vat-sum', '부가세 신고 보조']] } ] },
   { m: '시스템설정', g: [
-    { n: '기초정보', i: [['governance', '회사정보·인감'], ['partners', '거래처'], ['items', '품목']] } ] }
+    { n: '기초정보', i: [['governance', '회사정보·인감'], ['coa', '계정과목'], ['partners', '거래처'], ['items', '품목']] } ] }
 ];
 var MENU_IDX = {};
 MENU.forEach(function(mo, mi){ mo.g.forEach(function(gr){ gr.i.forEach(function(it){ MENU_IDX[it[0]] = { m: mi, t: it[1] }; }); }); });
@@ -4099,6 +4102,11 @@ document.addEventListener('click', function(e){
   tr.parentNode.querySelectorAll('tr.sel').forEach(function(x){ if(x !== tr) x.classList.remove('sel'); });
   tr.classList.add('sel');
 });
+
+// ── 계정과목 (v1.45): 변경 후 코드도움·장부 계정 목록 새로 읽기 ──
+function coaCacheReset(){ try { if(CH && CH.cache) delete CH.cache.acct; } catch(e){} try { JV.coa = null; } catch(e){} try { GL.coa = null; GL.month = null; GL.acct = {}; } catch(e){} }
+var _gridLoad145 = gridLoad;
+gridLoad = function(tb){ if(tb === 'ssjg_accounts') coaCacheReset(); return _gridLoad145.apply(this, arguments); };
 
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
