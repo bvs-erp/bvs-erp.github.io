@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.53">
+<meta name="app-version" content="1.54">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -416,6 +416,8 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 /* v1.46 채권·채무 명세 · 거래처 별칭 */
 #tab-sales-recon td.n,#tab-sales-recon th.n{text-align:right}
 #tab-sales-recon tfoot td{font-weight:600}
+#tab-sales-recon td.sq-dup{color:var(--text-muted)}
+#tab-sales-recon td.sq-bad{color:var(--danger,#c0392b);font-weight:600}
 #tab-pt-month td.n,#tab-pt-month th.n{text-align:right}
 #tab-pt-month tfoot td{font-weight:600}
 #tab-pt-month .pm-tbl td:first-child{white-space:nowrap}
@@ -1410,6 +1412,11 @@ body.perm-ro #tmType{display:none}
       </div>
       <div class="table-wrap"><table data-foot="1"><thead><tr><th>월</th><th class="n">정산 요약행 판매대행</th><th class="n">정산 요약행 신용카드</th><th class="n">정산 상세행 판매대행</th><th class="n">정산 상세행 신용카드</th><th class="n">정산 요약행 공급가</th><th class="n">정산 상세행 공급가</th><th class="n">세금계산서 공급가</th><th class="n">장부 매출</th></tr></thead>
         <tbody id="srRows"><tr><td colspan="9" class="td-empty">-</td></tr></tbody><tfoot id="srFoot"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">분기별 요약행·상세행 대조</div></div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>분기</th><th>유형</th><th>요약행 기록월</th><th class="n">요약행</th><th class="n">상세행 월수</th><th class="n">상세행</th><th class="n">차이</th><th>판정</th></tr></thead>
+        <tbody id="sqRows"><tr><td colspan="8" class="td-empty">-</td></tr></tbody><tfoot id="sqFoot"></tfoot></table></div>
     </div>
   </div>
   <div id="tab-pt-month" class="tab-pane">
@@ -4610,6 +4617,35 @@ async function srLoad(){
 }
 var _switchTab153 = switchTab; switchTab = function(tabId){ var r = _switchTab153.apply(this, arguments); if(tabId === 'sales-recon') srOpen(); return r; };
 document.addEventListener('change', function(e){ if(e.target && e.target.id === 'srYear') srLoad(); });
+// ── 분기별 요약행·상세행 대조 (v1.54) ──
+// 초기 이관 요약행(src_file 빈 값)은 기록월 01~04가 1~4분기 합계를 뜻함(-128 실측: 2024-04-01 = 2024Q4 상세 합계)
+function sqQtr(x){ var d = String(x.ym || ''), m = Number(d.slice(5, 7)); if(!String(x.src_file || '')) return m >= 1 && m <= 4 ? m : Math.ceil(m / 3); return Math.ceil(m / 3); }
+async function sqLoad(y, st){
+  var G = {};
+  st.forEach(function(x){
+    var q = sqQtr(x), k = stKind(x), key = q + '|' + k, o = G[key] || (G[key] = { q: q, k: k, sm: [], s: 0, ns: 0, dm: {}, d: 0 });
+    var a = Number(x.amt || 0);
+    if(String(x.src_file || '')){ o.d += a; o.dm[String(x.ym || '').slice(0, 7)] = 1; } else { o.s += a; o.ns++; o.sm.push(String(x.ym || '').slice(5, 7) + '월'); }
+  });
+  var ks = Object.keys(G).sort(), T = { s: 0, d: 0, dup: 0 };
+  document.getElementById('sqRows').innerHTML = ks.length ? ks.map(function(key){
+    var o = G[key], dn = Object.keys(o.dm).length, df = o.d - o.s, j, c = '';
+    if(o.ns && dn){ if(Math.round(df) === 0){ j = dn >= 3 ? '중복(상세와 동일)' : '중복(상세 ' + dn + '개월)'; c = 'sq-dup'; T.dup += o.s; } else { j = '불일치'; c = 'sq-bad'; } }
+    else if(o.ns) j = '요약행만'; else j = '상세행만';
+    T.s += o.s; T.d += o.d;
+    return '<tr><td>' + y + ' ' + o.q + '분기</td><td>' + o.k + '</td><td>' + gEsc(o.sm.join(', ')) + '</td><td class="n">' + glN(o.s) + '</td><td class="n">' + (dn || '') + '</td><td class="n">' + glN(o.d) + '</td><td class="n' + (c === 'sq-bad' ? ' sq-bad' : '') + '">' + (o.ns && dn ? glN(df) : '') + '</td><td class="' + c + '">' + j + '</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="td-empty">정산 자료 없음</td></tr>';
+  document.getElementById('sqFoot').innerHTML = ks.length ? '<tr><td colspan="3">합계 · 중복 요약행 ' + fmt(Math.round(T.dup)) + '</td><td class="n">' + glN(T.s) + '</td><td></td><td class="n">' + glN(T.d) + '</td><td></td><td></td></tr>' : '';
+}
+var _srLoad154 = srLoad;
+srLoad = async function(){
+  var r = await _srLoad154.apply(this, arguments);
+  var y = document.getElementById('srYear').value || glNowYm().slice(0, 4), st;
+  try { st = await pmAll(function(){ return sb.from('ssjg_settlements').select('ym,channel,amt,src_file').gte('ym', y + '-01-01').lt('ym', (Number(y) + 1) + '-01-01').order('ym', { ascending: true }); }); }
+  catch(e){ document.getElementById('sqRows').innerHTML = '<tr><td colspan="8">' + gEsc(e.message || e) + '</td></tr>'; return r; }
+  await sqLoad(y, st);
+  return r;
+};
 // ── 고정자산 · 감가상각 (v1.51) ──
 var FA = { rows: [], calc: [], ym: '' };
 var FA_MAP = { '206': ['207', '818', '기계장치'], '208': ['209', '818', '차량운반구'], '212': ['213', '818', '비품'], '240': ['240', '840', '소프트웨어'] };
