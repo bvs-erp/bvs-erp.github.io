@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.27">
+<meta name="app-version" content="1.28">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -306,6 +306,23 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
   html[data-theme="light"] .side{top:0;height:100vh}
   html[data-theme="light"] header{height:auto;padding:6px 10px}
 }
+/* v1.28 화면 공통 틀 */
+.pgbar{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:48px;z-index:40}
+.pg-t{font-size:14px;font-weight:700;white-space:nowrap}
+.pg-path{font-size:11.5px;color:var(--text-muted);white-space:nowrap}
+.pg-btns{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.pg-btns .btn{padding:4px 12px;min-width:52px}
+.pg-btns .btn.pg-q{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pg-btns .btn:disabled{opacity:.4}
+.pg-hid{display:none!important}
+@media (max-width:900px){.pgbar{top:0;flex-wrap:wrap}}
+@media print{
+  header,.side,.side-dim,.modbar,.mtabs,.pgbar .pg-btns,footer,.px-btn,.g-bar,.g-pg,.b3-head .btn,.g-del{display:none!important}
+  .shell{display:block}.pgbar{position:static;border:none;padding:0 0 6px}
+  .container{padding:0!important}.panel{border:none!important;padding:0!important}
+  .table-wrap{max-height:none!important;overflow:visible!important;border:none}
+  th{position:static}body{background:#fff}
+}
 </style>
 </head>
 <body>
@@ -410,6 +427,7 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 <div class="main">
 <div class="modbar" id="modbar"></div>
 <div class="mtabs" id="mtabs"></div>
+<div class="pgbar" id="pgbar"><span class="pg-t" id="pgT"></span><span class="pg-path" id="pgPath"></span><div class="pg-btns"><button class="btn pg-q" id="pgQ" onclick="pgAct('q')">조회</button><button class="btn" id="pgN" onclick="pgAct('n')">신규</button><button class="btn" id="pgD" onclick="pgAct('d')">삭제</button><button class="btn" id="pgX" onclick="pgAct('x')">엑셀</button><button class="btn" id="pgP" onclick="pgAct('p')">인쇄</button></div></div>
 
 <div class="container">
 
@@ -1715,6 +1733,7 @@ function switchTab(tabId, el){
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
   if(MENU_IDX[tabId] && MENU_IDX[tabId].m !== CUR_MOD) selectModule(MENU_IDX[tabId].m);
+  pgUpdate(tabId);
   window.scrollTo(0, 0);
 }
 
@@ -2955,6 +2974,38 @@ document.addEventListener('click', function(e){
   var tb = tr.parentNode; tb.querySelectorAll('tr.sel').forEach(function(x){ if(x !== tr) x.classList.remove('sel'); });
   tr.classList.add('sel');
 });
+// ── 화면 공통 틀 (v1.28) ──
+function pgPane(){ return document.querySelector('.tab-pane.active'); }
+function pgFind(p, re){ var b = null; p.querySelectorAll('button').forEach(function(x){ if(!b && re.test((x.innerText || '').trim()) && !x.closest('.pgbar')) b = x; }); return b; }
+function pgAct(k){
+  var p = pgPane(); if(!p) return;
+  var grids = Array.prototype.slice.call(p.querySelectorAll('[data-grid]')).map(function(g){ return g.getAttribute('data-grid'); });
+  if(k === 'q'){ var b = pgFind(p, /^조회$/); if(b) b.click(); else grids.forEach(function(t){ gridLoad(t); }); }
+  else if(k === 'n'){ var a = p.querySelector('.g-add:not(.hide)'); if(a) a.click(); else if(p.id === 'tab-logistics') b3AddRow(); }
+  else if(k === 'd'){ var s = p.querySelector('tr.sel .g-del'); if(s) s.click(); else gToast('삭제할 행을 먼저 선택하세요', true); }
+  else if(k === 'x'){ if(grids.length) gridExcel(grids[0]); else { var e = p.querySelector('.px-btn'); if(e) e.click(); } }
+  else if(k === 'p'){ window.print(); }
+}
+function pgUpdate(id){
+  var bar = document.getElementById('pgbar'); if(!bar) return;
+  var mi = MENU_IDX[id] || {}, mo = MENU[mi.m] || { g: [] }, grp = '';
+  mo.g.forEach(function(gr){ gr.i.forEach(function(it){ if(it[0] === id) grp = gr.n; }); });
+  document.getElementById('pgT').innerText = mi.t || '';
+  document.getElementById('pgPath').innerText = (mo.m || '') + (grp ? ' > ' + grp : '');
+  var p = document.getElementById('tab-' + id);
+  if(p){ p.querySelectorAll('.b3-head button, .filter-bar button').forEach(function(x){ if(/^조회$/.test((x.innerText || x.textContent || '').trim())) x.classList.add('pg-hid'); }); }
+  function chk(){
+    if(!p) return;
+    var hasGrid = !!p.querySelector('[data-grid]');
+    var q = !!pgFind(p, /^조회$/) || hasGrid;
+    var n = hasGrid && !!p.querySelector('.g-add:not(.hide)') || id === 'logistics';
+    var d = !!p.querySelector('.g-del');
+    var x = hasGrid || !!p.querySelector('.px-btn');
+    var f = p.querySelector('.panel .px-btn'); if(f && !hasGrid && p.querySelectorAll('.panel table').length === 1) f.classList.add('pg-hid');
+    [['pgQ', q], ['pgN', n], ['pgD', d], ['pgX', x]].forEach(function(z){ var e = document.getElementById(z[0]); if(e) e.disabled = !z[1]; });
+  }
+  setTimeout(chk, 400); setTimeout(chk, 1800);
+}
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
@@ -2972,6 +3023,7 @@ function toggleTheme(){
 })();
 buildMenu();
 renderTabs('today');
+pgUpdate('today');
 document.querySelector('.tab-item[data-tab="today"]') && document.querySelector('.tab-item[data-tab="today"]').classList.add('active');
 addPanelExcel();
 watchTables();
