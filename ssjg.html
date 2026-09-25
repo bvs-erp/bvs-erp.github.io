@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.58">
+<meta name="app-version" content="1.59">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3832,7 +3832,7 @@ var _switchTab1 = switchTab;
 switchTab = function(id, el){ var r = _switchTab1(id, el); setTimeout(gsInitPlain, 300); return r; };
 // ── 세금계산서 전표 (v1.36) ──
 var TJV = { rows: [], partners: null };
-function tjvNorm(s){ return String(s || '').toLowerCase().replace(/\(주\)|㈜|주식회사|\(유\)|유한회사|\(사\)|사단법인/g, '').replace(/[\s()\[\].,\-·]/g, ''); }
+function tjvNorm(s){ s = String(s || ''); try { s = s.normalize('NFKC'); } catch(e){} return s.toLowerCase().replace(/\(주\)|㈜|주식회사|\(유\)|유한회사|\(사\)|사단법인/g, '').replace(/[\s()\[\].,\-·]/g, ''); }
 async function tjvPartners(){
   if(TJV.partners) return TJV.partners;
   var m = {};
