@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.42">
+<meta name="app-version" content="1.43">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -408,6 +408,11 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 .jf-row .jf-n{width:110px;text-align:right}
 #tab-jv-find td.n{text-align:right}
 #tab-jv-find tfoot td{font-weight:600}
+/* v1.43 부가세 신고 보조 */
+#tab-vat-sum td.n{text-align:right}
+#tab-vat-sum tfoot td{font-weight:600}
+#tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
+#tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
 </style>
 </head>
 <body>
@@ -1360,6 +1365,34 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
       </div>
     </div>
   </div>
+  <div id="tab-vat-sum" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">부가세 신고 보조 <span class="g-cnt" id="vtTitle"></span></div></div>
+      <div class="b3-head">
+        <label>연도<select id="vtYear" class="select"></select></label>
+        <label>기간<select id="vtTerm" class="select"><option value="1a">1기 예정 (1~3월)</option><option value="1b">1기 확정 (4~6월)</option><option value="1">1기 (1~6월)</option><option value="2a">2기 예정 (7~9월)</option><option value="2b">2기 확정 (10~12월)</option><option value="2">2기 (7~12월)</option><option value="y">연간</option></select></label>
+        <button class="btn btn-primary" onclick="vtLoad()">조회</button>
+      </div>
+      <div class="table-wrap"><table class="vt-sum" data-foot="1"><thead><tr><th>구분</th><th style="text-align:right">매수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtSum"><tr><td colspan="4" class="td-empty">-</td></tr></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">매출처별 세금계산서 합계표 <span class="g-cnt" id="vtSaleCnt"></span></div></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자번호</th><th>상호</th><th style="text-align:right">매수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtSale"><tr><td colspan="5" class="td-empty">-</td></tr></tbody><tfoot id="vtSaleF"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">매입처별 세금계산서 합계표 <span class="g-cnt" id="vtBuyCnt"></span></div></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자번호</th><th>상호</th><th style="text-align:right">매수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtBuy"><tr><td colspan="5" class="td-empty">-</td></tr></tbody><tfoot id="vtBuyF"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">현금영수증 매입 (공제) <span class="g-cnt" id="vtCashCnt"></span></div></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자번호</th><th>가맹점</th><th style="text-align:right">건수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtCash"><tr><td colspan="5" class="td-empty">-</td></tr></tbody><tfoot id="vtCashF"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">신용카드 매입 (연간) <span class="g-cnt" id="vtCardCnt"></span></div></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자유형</th><th style="text-align:right">가맹점수</th><th style="text-align:right">건수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtCardType"><tr><td colspan="5" class="td-empty">-</td></tr></tbody><tfoot id="vtCardTypeF"></tfoot></table></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자번호</th><th>가맹점</th><th>사업자유형</th><th style="text-align:right">건수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtCard"><tr><td colspan="6" class="td-empty">-</td></tr></tbody><tfoot id="vtCardF"></tfoot></table></div>
+    </div>
+  </div>
   <div id="tab-tax-jv" class="tab-pane">
     <div class="panel" id="tmPanel">
       <div class="panel-head"><div class="panel-title">세금계산서 수기 등록</div></div>
@@ -1800,7 +1833,8 @@ var MENU = [
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
     { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
-    { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] } ] },
+    { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] },
+    { n: '부가세', i: [['vat-sum', '부가세 신고 보조']] } ] },
   { m: '시스템설정', g: [
     { n: '기초정보', i: [['governance', '회사정보·인감'], ['partners', '거래처'], ['items', '품목']] } ] }
 ];
@@ -3937,6 +3971,83 @@ document.addEventListener('change', function(e){
   if(id === 'jfOrg') jfLoad();
 });
 var _switchTab142 = switchTab; switchTab = function(tabId){ var r = _switchTab142.apply(this, arguments); if(tabId === 'jv-find'){ jfOpen(); if(!JF.rows.length) jfLoad(); } return r; };
+
+// ── 부가세 신고 보조 (v1.43) ──
+var VT = { biz: null };
+var VT_TERM = { '1a': [1, 3], '1b': [4, 6], '1': [1, 6], '2a': [7, 9], '2b': [10, 12], '2': [7, 12], 'y': [1, 12] };
+function vtN(v){ v = Math.round(Number(v || 0)); return v ? v.toLocaleString('ko-KR') : '0'; }
+function vtBizFmt(s){ var d = String(s || '').replace(/[^0-9]/g, ''); return d.length === 10 ? d.slice(0, 3) + '-' + d.slice(3, 5) + '-' + d.slice(5) : (s || ''); }
+function vtOpen(){
+  var y = document.getElementById('vtYear');
+  if(!y.options.length){
+    var c = new Date(Date.now() + 9 * 3600000), cy = c.getUTCFullYear(), m = c.getUTCMonth() + 1;
+    for(var i = cy; i >= 2021; i--) y.insertAdjacentHTML('beforeend', '<option>' + i + '</option>');
+    document.getElementById('vtTerm').value = m <= 3 ? '1a' : m <= 6 ? '1b' : m <= 9 ? '2a' : '2b';
+    vtLoad();
+  }
+}
+async function vtBizMap(){
+  if(VT.biz) return VT.biz;
+  var m = {};
+  try { var r = await sb.from('ssjg_partners').select('name,biz_no').limit(5000); (r.data || []).forEach(function(x){ if(x.biz_no) m[tjvNorm(x.name)] = x.biz_no; }); } catch(e){}
+  VT.biz = m; return m;
+}
+function vtGroup(rows, key, biz, amt){
+  var g = {};
+  rows.forEach(function(x){
+    var k = key(x) || '(없음)';
+    if(!g[k]) g[k] = { name: k, biz: biz(x) || '', n: 0, s: 0, v: 0 };
+    g[k].n += amt.n(x); g[k].s += Number(x.supply_amt || 0); g[k].v += Number(x.vat_amt || 0);
+    if(!g[k].biz && biz(x)) g[k].biz = biz(x);
+  });
+  return Object.keys(g).map(function(k){ return g[k]; }).sort(function(a, b){ return b.s - a.s; });
+}
+function vtFill(id, list, cols){
+  var body = document.getElementById(id), foot = document.getElementById(id + 'F'), tn = 0, ts = 0, tv = 0;
+  body.innerHTML = list.length ? list.map(function(x){
+    tn += x.n; ts += x.s; tv += x.v;
+    return '<tr>' + cols.map(function(c){ return c(x); }).join('') + '</tr>';
+  }).join('') : '<tr><td colspan="' + cols.length + '" class="td-empty">자료 없음</td></tr>';
+  foot.innerHTML = list.length ? '<tr><td colspan="' + (cols.length - 3) + '">합계 ' + list.length + '</td><td class="n">' + vtN(tn) + '</td><td class="n">' + vtN(ts) + '</td><td class="n">' + vtN(tv) + '</td></tr>' : '';
+  return { n: tn, s: ts, v: tv, c: list.length };
+}
+async function vtLoad(){
+  if(!sb) return;
+  var y = Number(document.getElementById('vtYear').value), tm = VT_TERM[document.getElementById('vtTerm').value] || [1, 12];
+  var d0 = y + '-' + String(tm[0]).padStart(2, '0') + '-01', d1 = (tm[1] === 12 ? (y + 1) + '-01' : y + '-' + String(tm[1] + 1).padStart(2, '0')) + '-01';
+  document.getElementById('vtTitle').textContent = d0 + ' ~ ' + new Date(Date.parse(d1) - 86400000).toISOString().slice(0, 10);
+  var ti = [], cr = [], cd = [], err = [];
+  try { var a = await sb.from('ssjg_tax_invoices').select('*').gte('write_date', d0).lt('write_date', d1).limit(10000); if(a.error) err.push(a.error.message); ti = a.data || []; } catch(e){ err.push(e.message || e); }
+  try { var b = await sb.from('ssjg_cash_receipts').select('*').gte('tx_date', d0).lt('tx_date', d1).limit(10000); if(b.error) err.push(b.error.message); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
+  try { var c = await sb.from('ssjg_card_purchases').select('*').eq('yr', y).limit(10000); if(c.error) err.push(c.error.message); cd = c.data || []; } catch(e){ err.push(e.message || e); }
+  if(err.length) gToast('일부 조회 실패: ' + err.join(', '), true);
+  var bm = await vtBizMap();
+  function cpBiz(x){ return bm[tjvNorm(x)] || ''; }
+  var one = { n: function(){ return 1; } }, cnt = { n: function(x){ return Number(x.cnt || 1); } };
+  var TI_COLS = [function(x){ return '<td>' + gEsc(vtBizFmt(x.biz)) + '</td>'; }, function(x){ return '<td>' + gEsc(x.name) + '</td>'; },
+    function(x){ return '<td class="n">' + vtN(x.n) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.s) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.v) + '</td>'; }];
+  var sale = vtFill('vtSale', vtGroup(ti.filter(function(x){ return x.flow === '매출'; }), function(x){ return x.buyer; }, function(x){ return cpBiz(x.buyer); }, one), TI_COLS);
+  var buy = vtFill('vtBuy', vtGroup(ti.filter(function(x){ return x.flow === '매입'; }), function(x){ return x.supplier; }, function(x){ return cpBiz(x.supplier); }, one), TI_COLS);
+  var cash = vtFill('vtCash', vtGroup(cr, function(x){ return x.merchant; }, function(x){ return x.merchant_biz_no; }, one), TI_COLS);
+  var tg = {}; cd.forEach(function(x){ var k = x.merchant_type || '(없음)'; if(!tg[k]) tg[k] = { name: k, m: {}, n: 0, s: 0, v: 0 }; tg[k].m[x.merchant_biz_no || x.merchant] = 1; tg[k].n += Number(x.cnt || 0); tg[k].s += Number(x.supply_amt || 0); tg[k].v += Number(x.vat_amt || 0); });
+  var tl = Object.keys(tg).map(function(k){ var o = tg[k]; o.mc = Object.keys(o.m).length; return o; }).sort(function(a, b){ return b.s - a.s; });
+  vtFill('vtCardType', tl, [function(x){ return '<td>' + gEsc(x.name) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.mc) + '</td>'; },
+    function(x){ return '<td class="n">' + vtN(x.n) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.s) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.v) + '</td>'; }]);
+  var cl = vtGroup(cd, function(x){ return x.merchant; }, function(x){ return x.merchant_biz_no; }, cnt);
+  var ty = {}; cd.forEach(function(x){ if(x.merchant && x.merchant_type) ty[x.merchant] = x.merchant_type; });
+  var card = vtFill('vtCard', cl, [function(x){ return '<td>' + gEsc(vtBizFmt(x.biz)) + '</td>'; }, function(x){ return '<td>' + gEsc(x.name) + '</td>'; }, function(x){ return '<td>' + gEsc(ty[x.name] || '') + '</td>'; },
+    function(x){ return '<td class="n">' + vtN(x.n) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.s) + '</td>'; }, function(x){ return '<td class="n">' + vtN(x.v) + '</td>'; }]);
+  document.getElementById('vtSaleCnt').textContent = sale.c + '곳 ' + sale.n + '매';
+  document.getElementById('vtBuyCnt').textContent = buy.c + '곳 ' + buy.n + '매';
+  document.getElementById('vtCashCnt').textContent = cash.c + '곳 ' + cash.n + '건';
+  document.getElementById('vtCardCnt').textContent = y + '년 ' + card.c + '곳 ' + card.n + '건';
+  function row(label, o, cls){ return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="n">' + (o.n == null ? '' : vtN(o.n)) + '</td><td class="n">' + (o.s == null ? '' : vtN(o.s)) + '</td><td class="n">' + vtN(o.v) + '</td></tr>'; }
+  document.getElementById('vtSum').innerHTML = row('매출 세금계산서', sale) + row('매입 세금계산서', buy) + row('매입 현금영수증 (공제)', cash)
+    + row('차감 세액 (카드 제외)', { n: null, s: null, v: sale.v - buy.v - cash.v }, 'vt-tot')
+    + row('신용카드 매입 (' + y + '년 연간)', card);
+}
+document.addEventListener('change', function(e){ var id = e.target && e.target.id; if(id === 'vtYear' || id === 'vtTerm') vtLoad(); });
+var _switchTab143 = switchTab; switchTab = function(tabId){ var r = _switchTab143.apply(this, arguments); if(tabId === 'vat-sum') vtOpen(); return r; };
 
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
