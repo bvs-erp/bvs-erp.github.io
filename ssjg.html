@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.36">
+<meta name="app-version" content="1.37">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1091,6 +1091,21 @@ th.gs-th[data-sort]::after{content:attr(data-sort);font-size:9px;margin-left:4px
       <div data-grid="ssjg_bank_txns"></div>
   </div>
 
+  <div id="tab-close" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">월 마감</div></div>
+      <div class="b3-head">
+        <label>연도<select id="clYear" class="select"></select></label>
+        <button class="btn btn-primary" onclick="clLoad()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>월</th><th>상태</th><th>마감일시</th><th>차변</th><th>대변</th><th>차액</th><th></th></tr></thead>
+          <tbody id="clRows"><tr><td colspan="7" class="td-empty">-</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
   <div id="tab-fs-is" class="tab-pane">
     <div class="panel">
       <div class="panel-head"><div class="panel-title">손익계산서 <span id="fsiTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
@@ -1716,7 +1731,7 @@ var MENU = [
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
-    { n: '결산', i: [['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
+    { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] } ] },
   { m: '시스템설정', g: [
@@ -1829,6 +1844,7 @@ function switchTab(tabId, el){
   if(tabId.indexOf('fs-')===0)fsOpen(tabId);
   if(tabId==='journal')jvOpen();
   if(tabId==='tax-jv')tjvOpen();
+  if(tabId==='close')clOpen();
   toggleSide(false);
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
@@ -3606,6 +3622,37 @@ async function tjvDraft(id){
   document.getElementById('jvRows').innerHTML = ''; L.forEach(function(l){ jvAddRow(l); });
 }
 document.addEventListener('change', function(e){ if(e.target && (e.target.id === 'tjvFlow' || e.target.id === 'tjvSt')) tjvRender(); });
+// ── 월 마감 (v1.37) ──
+var CL = { closed: {} };
+function clOpen(){
+  if(!sb) return;
+  var s = document.getElementById('clYear');
+  if(!s.options.length){ var y = Number(perYm(perNow()).slice(0, 4)); for(var i = y; i >= 2021; i--) s.insertAdjacentHTML('beforeend', '<option>' + i + '</option>'); }
+  clLoad();
+}
+async function clLoad(){
+  var y = document.getElementById('clYear').value;
+  var c = await sb.from('ssjg_close_months').select('ym,closed_at').like('ym', y + '-%').limit(12);
+  if(c.error){ document.getElementById('clRows').innerHTML = '<tr><td colspan="7">' + gEsc(c.error.message) + '</td></tr>'; return; }
+  CL.closed = {}; (c.data || []).forEach(function(x){ CL.closed[x.ym] = x.closed_at; });
+  var m = {}; try { var g = await sb.from('ssjg_gl_month').select('mo,dr,cr').eq('yr', Number(y)).limit(5000);
+    (g.data || []).forEach(function(x){ var k = Number(x.mo); m[k] = m[k] || { dr: 0, cr: 0 }; m[k].dr += Number(x.dr || 0); m[k].cr += Number(x.cr || 0); }); } catch(e){}
+  var h = '';
+  for(var i = 1; i <= 12; i++){
+    var ym = y + '-' + String(i).padStart(2, '0'), on = !!CL.closed[ym], v = m[i] || { dr: 0, cr: 0 }, d = Math.round(v.dr - v.cr);
+    h += '<tr><td>' + ym + '</td><td>' + (on ? '마감' : '열림') + '</td><td>' + (on ? gEsc(String(CL.closed[ym]).replace('T', ' ').slice(0, 16)) : '') + '</td>'
+      + '<td class="num">' + Math.round(v.dr).toLocaleString('ko-KR') + '</td><td class="num">' + Math.round(v.cr).toLocaleString('ko-KR') + '</td>'
+      + '<td class="num' + (d ? ' chk-err' : '') + '">' + d.toLocaleString('ko-KR') + '</td>'
+      + '<td><button class="btn" onclick="clSet(\'' + ym + '\',' + (!on) + ')">' + (on ? '마감 해제' : '마감') + '</button></td></tr>';
+  }
+  document.getElementById('clRows').innerHTML = h;
+}
+async function clSet(ym, close){
+  if(!confirm(ym + (close ? ' 을 마감합니다. 이 달 전표는 추가·수정·삭제할 수 없게 됩니다.' : ' 마감을 해제합니다.'))) return;
+  var r = await sb.rpc('ssjg_close_set', { p_ym: ym, p_close: close });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '처리 실패', true); return; }
+  gToast(ym + (close ? ' 마감' : ' 마감 해제')); clLoad();
+}
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
