@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.55">
+<meta name="app-version" content="1.56">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -391,7 +391,7 @@ tr.dr-row{cursor:pointer}
 .dr-hd b{font-weight:600;color:var(--text-dim,#666)}
 .dr-box td.n{text-align:right}
 .dr-ft{display:flex;justify-content:flex-end;gap:6px;margin-top:10px}
-body.perm-ro #drJv{display:none!important}
+body.perm-ro #drJv,body.perm-ro .dr-cp{display:none!important}
 /* v1.41 세금계산서 수기 등록 */
 .tm-row{flex-wrap:wrap}
 .tm-row .tm-cp{width:200px}
@@ -4602,6 +4602,34 @@ document.addEventListener('dblclick', function(e){
   document.getElementById('jfCp').value = o.name; jfLoad();
 });
 var _switchTab152 = switchTab; switchTab = function(tabId){ var r = _switchTab152.apply(this, arguments); if(tabId === 'pt-month') pmOpen(); return r; };
+// ── 전표 복사 · 역분개 (v1.56) ──
+async function drCopy(rev){
+  var L = (DR.lines || []).slice(), doc = DR.doc; if(!L.length) return;
+  if(rev){
+    try { var h = await sb.from('ssjg_jv_head').select('jv_no').eq('src_ref', 'REV:' + doc).limit(1); if(h.data && h.data.length){ gToast('이미 역분개 전표가 있습니다: ' + h.data[0].jv_no, true); return; } } catch(e){}
+  }
+  var title = (L[0] && L[0].title) || '';
+  drClose(); switchTab('journal'); jvNew();
+  JV.srcRef = rev ? 'REV:' + doc : null;
+  document.getElementById('jvNo').textContent = '신규 · ' + (rev ? '역분개 ' : '복사 ') + doc;
+  document.getElementById('jvMemo').value = rev ? ('역분개 ' + doc + (title ? ' ' + title : '')) : title;
+  document.getElementById('jvRows').innerHTML = '';
+  L.forEach(function(x){
+    var d = Number(x.dr || 0), c = Number(x.cr || 0), side = d > 0 ? '차' : '대';
+    if(rev) side = side === '차' ? '대' : '차';
+    jvAddRow({ side: side, acct_code: x.acct_code, partner: x.partner || '', amount: d || c, memo: x.memo || '' });
+  });
+  gToast((rev ? '역분개' : '복사') + ' 초안 — 일자 확인 후 저장');
+}
+var _drOpen156 = drOpen;
+drOpen = async function(){
+  var r = await _drOpen156.apply(this, arguments);
+  var ft = document.querySelector('#drBody .dr-ft');
+  if(ft && !ft.querySelector('.dr-cp') && (DR.lines || []).length){
+    ft.insertAdjacentHTML('afterbegin', '<button class="btn dr-cp" onclick="drCopy(false)">복사</button><button class="btn dr-cp" onclick="drCopy(true)">역분개</button>');
+  }
+  return r;
+};
 // ── 월별 손익계산서 (v1.55) ──
 var IM = { codes: {} };
 function imOpen(){
