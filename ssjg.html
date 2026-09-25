@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.56">
+<meta name="app-version" content="1.57">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -458,6 +458,8 @@ body.perm-ro #alUn button,body.perm-ro #alRows button,body.perm-ro .al-sel{displ
   #vpBox tfoot td{font-weight:700}
   #vpBox .vp-foot{display:flex;justify-content:space-between;margin-top:3mm;font-size:8pt;color:#333}
   #vpBox tr{page-break-inside:avoid}
+  #vpBox .vp-page{page-break-after:always;break-after:page}
+  #vpBox .vp-page:last-child{page-break-after:auto;break-after:auto}
 }
 /* v1.48 */
 .ti-code{font-size:11px;color:var(--text-muted,#6b7280)}
@@ -1519,6 +1521,7 @@ body.perm-ro #tmType{display:none}
         <label>금액<input id="jfMin" class="input jf-n" inputmode="numeric" autocomplete="off"></label>
         <label>~<input id="jfMax" class="input jf-n" inputmode="numeric" autocomplete="off"></label>
         <button class="btn btn-primary" onclick="jfLoad()">조회</button>
+        <button class="btn" onclick="jfPrintAll()">전표 일괄 출력</button>
       </div>
       <div class="table-wrap">
         <table data-foot="1">
@@ -4602,6 +4605,65 @@ document.addEventListener('dblclick', function(e){
   document.getElementById('jfCp').value = o.name; jfLoad();
 });
 var _switchTab152 = switchTab; switchTab = function(tabId){ var r = _switchTab152.apply(this, arguments); if(tabId === 'pt-month') pmOpen(); return r; };
+// ── 전표 일괄 출력 (v1.57) ──
+var VP_MAX = 200;
+function vpPage(L, co, now){
+  var h = L[0], sd = 0, sc = 0, n = function(v){ v = Math.round(Number(v || 0)); return v ? v.toLocaleString('ko-KR') : ''; };
+  var rows = L.map(function(x){
+    var d = Number(x.dr || 0) > 0; sd += Number(x.dr || 0); sc += Number(x.cr || 0);
+    var ac = gEsc(x.acct_code + ' ' + (x.acct_name || ''));
+    return '<tr><td>' + (d ? ac : '') + '</td><td class="n">' + (d ? n(x.dr) : '') + '</td><td>' + (d ? '' : ac) + '</td><td class="n">' + (d ? '' : n(x.cr)) + '</td><td>' + gEsc(x.partner || '') + '</td><td>' + gEsc(x.memo || x.title || '') + '</td></tr>';
+  }).join('');
+  return '<div class="vp-page"><div class="vp-top"><div class="vp-t">전 표</div>'
+    + '<table class="vp-sign"><tr>' + VP_SIGN.map(function(s){ return '<th>' + gEsc(s) + '</th>'; }).join('') + '</tr><tr>' + VP_SIGN.map(function(){ return '<td></td>'; }).join('') + '</tr></table></div>'
+    + '<table class="vp-info"><tr><th>회사</th><td>' + gEsc(co.name || '') + (co.bizno ? ' (' + gEsc(co.bizno) + ')' : '') + '</td><th>전표번호</th><td>' + gEsc(h.doc_no) + '</td></tr>'
+    + '<tr><th>일자</th><td>' + gEsc(h.doc_date || '') + '</td><th>구분</th><td>' + gEsc([h.origin, h.src, h.flow].filter(Boolean).join(' ')) + '</td></tr>'
+    + '<tr><th>적요</th><td colspan="3">' + gEsc(h.title || '') + (h.approval_no ? ' · 승인번호 ' + gEsc(h.approval_no) : '') + '</td></tr></table>'
+    + '<table><thead><tr><th style="width:24%">차변 계정</th><th style="width:13%">차변 금액</th><th style="width:24%">대변 계정</th><th style="width:13%">대변 금액</th><th style="width:12%">거래처</th><th>적요</th></tr></thead><tbody>' + rows + '</tbody>'
+    + '<tfoot><tr><td>합계</td><td class="n">' + n(sd) + '</td><td></td><td class="n">' + n(sc) + '</td><td colspan="2">' + (Math.round(sd) === Math.round(sc) ? '' : '차대 불일치') + '</td></tr></tfoot></table>'
+    + '<div class="vp-foot"><span>' + gEsc(co.name || '') + '</span><span>출력 ' + now + '</span></div></div>';
+}
+function vpShow(html){
+  var box = document.getElementById('vpBox');
+  if(!box){ box = document.createElement('div'); box.id = 'vpBox'; document.body.appendChild(box); }
+  box.innerHTML = html;
+  document.body.classList.add('vp-on');
+  var done = function(){ document.body.classList.remove('vp-on'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 1500);
+}
+function vpNow(){ return new Date(Date.now() + 9 * 3600000).toISOString().replace('T', ' ').slice(0, 16); }
+vpPrint = async function(){
+  var L = DR.lines || []; if(!L.length){ gToast('출력할 전표가 없습니다', true); return; }
+  var co = { name: '', bizno: '' }; try { co = await prtCompany(); } catch(e){}
+  vpShow(vpPage(L, co, vpNow()));
+};
+async function jfPrintAll(){
+  if(!sb) return;
+  var keys = [], seen = {};
+  (JF.rows || []).forEach(function(x){ var k = x.doc_no + '|' + (x.origin || ''); if(!seen[k]){ seen[k] = 1; keys.push({ d: x.doc_no, o: x.origin || '' }); } });
+  if(!keys.length){ gToast('먼저 조회하십시오', true); return; }
+  var over = keys.length > VP_MAX; if(over) keys = keys.slice(0, VP_MAX);
+  var docs = keys.map(function(k){ return k.d; }).filter(function(v, i, a){ return a.indexOf(v) === i; }), all = [];
+  try {
+    for(var i = 0; i < docs.length; i += 100){
+      var r = await sb.from('ssjg_gl_lines').select('doc_no,doc_date,line_no,acct_code,acct_name,dr,cr,partner,flow,src,title,approval_no,memo,origin').in('doc_no', docs.slice(i, i + 100)).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).limit(10000);
+      if(r.error) throw r.error; all = all.concat(r.data || []);
+    }
+  } catch(e){ gToast('조회 실패: ' + (e.message || e), true); return; }
+  var G = {}; all.forEach(function(x){ var k = x.doc_no + '|' + (x.origin || ''); (G[k] = G[k] || []).push(x); });
+  var co = { name: '', bizno: '' }; try { co = await prtCompany(); } catch(e){}
+  var now = vpNow(), html = '', cnt = 0;
+  keys.forEach(function(k){
+    var L = G[k.d + '|' + k.o]; if(!L || !L.length) return;
+    L.sort(function(a, b){ return (Number(b.dr) > 0) - (Number(a.dr) > 0) || Number(a.line_no) - Number(b.line_no); });
+    html += vpPage(L, co, now); cnt++;
+  });
+  if(!cnt){ gToast('출력할 전표가 없습니다', true); return; }
+  if(over) gToast('상위 ' + VP_MAX + '건만 출력합니다', true);
+  vpShow(html);
+}
 // ── 전표 복사 · 역분개 (v1.56) ──
 async function drCopy(rev){
   var L = (DR.lines || []).slice(), doc = DR.doc; if(!L.length) return;
