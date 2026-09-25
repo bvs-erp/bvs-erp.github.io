@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.29">
+<meta name="app-version" content="1.30">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -329,6 +329,17 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 .g-panel td.g-err{background:#fde2e2!important;color:#b91c1c}
 .g-cnt::after{content:attr(data-dirty);color:#b45309}
 .g-panel td .g-in{height:22px;padding:1px 4px;min-width:60px;border-radius:0}
+.ch-box{width:560px}
+.ch-q{width:100%;margin:10px 0 8px}
+.ch-list{max-height:360px!important}
+.ch-list tbody tr{cursor:pointer}
+/* v1.30 전표입력 */
+.jv-tbl td{padding:2px 4px}
+.jv-tbl .input,.jv-tbl .select{width:100%;height:24px;border-radius:0}
+.jv-tbl .num,.jv-tbl input.num{text-align:right}
+.jv-tbl input:disabled{background:#f3f4f6;border-color:transparent}
+.jv-tbl .jv-bad{border-color:#d93a3a;background:#fdecec}
+.jv-tbl tfoot td{font-weight:700}
 </style>
 </head>
 <body>
@@ -1241,6 +1252,28 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
     <div data-grid="ssjg_items"></div>
   </div>
   <div id="tab-journal" class="tab-pane">
+    <div class="panel" id="jvPanel">
+      <div class="panel-head"><div class="panel-title">전표입력 <span class="g-cnt" id="jvNo"></span></div></div>
+      <div class="b3-head">
+        <label>일자<input type="date" id="jvDate" class="input"></label>
+        <label>구분<select id="jvKind" class="select"><option>대체</option><option>입금</option><option>출금</option></select></label>
+        <label style="flex:1;white-space:nowrap">적요<input id="jvMemo" class="input" style="width:100%"></label>
+      </div>
+      <div class="table-wrap">
+        <table class="jv-tbl" data-foot="1">
+          <thead><tr><th style="width:40px">No</th><th style="width:76px">구분</th><th style="width:110px">계정코드</th><th>계정과목</th><th style="width:180px">거래처</th><th style="width:150px">차변</th><th style="width:150px">대변</th><th>적요</th><th style="width:36px"></th></tr></thead>
+          <tbody id="jvRows"></tbody>
+          <tfoot><tr><td colspan="5">합계 <span id="jvDiff"></span></td><td class="num" id="jvDr">0</td><td class="num" id="jvCr">0</td><td colspan="2"></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">입력 전표 <span class="g-cnt" id="jvListCnt"></span></div></div>
+      <div class="table-wrap" style="max-height:320px">
+        <table><thead><tr><th>전표번호</th><th>일자</th><th>구분</th><th>적요</th><th>차변계정</th><th>대변계정</th><th>금액</th></tr></thead>
+        <tbody id="jvList"><tr><td colspan="7" class="td-empty">-</td></tr></tbody></table>
+      </div>
+    </div>
     <div data-grid="ssjg_journal"></div>
     <div data-grid="ssjg_manual_journal"></div>
   </div>
@@ -1687,7 +1720,7 @@ function panelExcel(btn){
 }
 function addPanelExcel(){
   document.querySelectorAll('.tab-pane .panel').forEach(function(p){
-    if(p.classList.contains('g-panel') || p.querySelector('.px-btn') || !p.querySelector('table') || p.querySelector('.b3-tbl')) return;
+    if(p.classList.contains('g-panel') || p.id === 'jvPanel' || p.querySelector('.px-btn') || !p.querySelector('table') || p.querySelector('.b3-tbl')) return;
     var h = p.querySelector('.panel-head'); if(!h) return;
     var b = document.createElement('button'); b.className = 'btn px-btn'; b.textContent = '엑셀'; b.onclick = function(){ panelExcel(b); };
     h.appendChild(b);
@@ -1735,6 +1768,7 @@ function switchTab(tabId, el){
   if(tabId==='logistics')b3Init();
   if(tabId.indexOf('gl-')===0)glOpen(tabId);
   if(tabId.indexOf('fs-')===0)fsOpen(tabId);
+  if(tabId==='journal')jvOpen();
   toggleSide(false);
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
@@ -3100,6 +3134,186 @@ document.addEventListener('keydown', function(e){
   else if((e.key.length === 1 || e.key === 'Process' || e.isComposing) && !e.ctrlKey && !e.metaKey && !e.altKey){ gridEdit(td, i.tb, i.ri, i.f, ''); }
 });
 window.addEventListener('beforeunload', function(e){ var n = 0; Object.keys(GDIRTY).forEach(function(t){ n += gDirtyCnt(t); }); if(n){ e.preventDefault(); e.returnValue = ''; } });
+// ── 코드도움 (F2) ──
+var CH = { cache: {} };
+var CH_SRC = {
+  acct: { t: '계정과목', load: async function(){ var r = await tdFetchAll('ssjg_coa', 'acct_code,acct_name,acct_class', 'acct_code');
+    return r.map(function(a){ return { c: a.acct_code, n: a.acct_name, x: a.acct_class || '' }; }).sort(function(a, b){ return a.c < b.c ? -1 : 1; }); } },
+  partner: { t: '거래처', load: async function(){ var r = await tdFetchAll('ssjg_ledger_partner', 'partner', 'partner'), s = {};
+    r.forEach(function(x){ if(x.partner) s[x.partner] = (s[x.partner] || 0) + 1; });
+    return Object.keys(s).sort().map(function(k){ return { c: k, n: k, x: s[k] + '건' }; }); } },
+  item: { t: '품목', load: async function(){ var r = await sb.from('ssjg_items').select('*').limit(5000); var d = r.data || [];
+    return d.map(function(x){ var c = x.item_code || x.code || x.pl3_code || x.id; return { c: String(c == null ? '' : c), n: x.item_name || x.name || '', x: x.cat1 || '' }; }); } }
+};
+var CH_FIELD = { acct_code: 'acct', pl_code: 'acct', partner: 'partner', vendor: 'partner', item: 'item', item_code: 'item' };
+async function chData(k){ if(!CH.cache[k]) CH.cache[k] = await CH_SRC[k].load(); return CH.cache[k]; }
+async function chOpen(k, q, onPick){
+  var m = document.getElementById('chMod');
+  if(!m){ m = document.createElement('div'); m.id = 'chMod'; m.className = 'g-mod'; document.body.appendChild(m);
+    m.onclick = function(e){ if(e.target === m) chClose(); }; }
+  m.innerHTML = '<div class="g-mod-box ch-box"><div class="panel-title">' + gEsc(CH_SRC[k].t) + ' 코드도움</div>'
+    + '<input class="input ch-q" id="chQ" value="' + gEsc(q || '') + '">'
+    + '<div class="table-wrap ch-list"><table><thead><tr><th>코드</th><th>명칭</th><th>구분</th></tr></thead><tbody id="chRows"><tr><td colspan="3">불러오는 중</td></tr></tbody></table></div></div>';
+  m.style.display = 'flex';
+  var inp = document.getElementById('chQ'), idx = 0, list = [];
+  CH.pick = function(i){ var x = list[i]; if(!x) return; chClose(); onPick && onPick(x); };
+  function draw(){
+    var s = (inp.value || '').trim().toLowerCase();
+    list = (CH.cache[k] || []).filter(function(x){ return !s || (x.c + ' ' + x.n).toLowerCase().indexOf(s) >= 0; }).slice(0, 300);
+    if(idx >= list.length) idx = Math.max(0, list.length - 1);
+    document.getElementById('chRows').innerHTML = list.length ? list.map(function(x, i){
+      return '<tr class="' + (i === idx ? 'sel' : '') + '" onclick="CH.pick(' + i + ')"><td>' + gEsc(x.c) + '</td><td>' + gEsc(x.n) + '</td><td>' + gEsc(x.x) + '</td></tr>'; }).join('')
+      : '<tr><td colspan="3">자료 없음</td></tr>';
+    var sel = document.querySelector('#chRows tr.sel'); if(sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+  inp.oninput = function(){ idx = 0; draw(); };
+  inp.onkeydown = function(e){
+    if(e.key === 'ArrowDown'){ e.preventDefault(); idx = Math.min(list.length - 1, idx + 1); draw(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); idx = Math.max(0, idx - 1); draw(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); CH.pick(idx); }
+    else if(e.key === 'Escape'){ e.preventDefault(); chClose(); }
+    e.stopPropagation();
+  };
+  inp.focus();
+  try { await chData(k); } catch(err){ document.getElementById('chRows').innerHTML = '<tr><td colspan="3">' + gEsc(err.message || err) + '</td></tr>'; return; }
+  draw();
+}
+function chClose(){ var m = document.getElementById('chMod'); if(m) m.style.display = 'none'; }
+// ── 전표입력 (v1.30) ──
+var JV = { id: null, coa: null, list: [] };
+function jvToday(){ return new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10); }
+function jvNum(v){ return Number(String(v == null ? '' : v).replace(/[^0-9.-]/g, '')) || 0; }
+async function jvCoa(){ if(!JV.coa){ JV.coa = await chData('acct'); } return JV.coa; }
+function jvAcctName(c){ var a = (JV.coa || []).find(function(x){ return x.c === c; }); return a ? a.n : ''; }
+function jvRowHtml(l){
+  l = l || {};
+  var dr = l.side === '차' ? l.amount : '', cr = l.side === '대' ? l.amount : '';
+  return '<tr><td class="num jv-no"></td>'
+    + '<td><select class="select jv-side"><option' + (l.side === '대' ? '' : ' selected') + '>차</option><option' + (l.side === '대' ? ' selected' : '') + '>대</option></select></td>'
+    + '<td><input class="input jv-acct" value="' + gEsc(l.acct_code || '') + '"></td>'
+    + '<td class="jv-an">' + gEsc(l.acct_code ? jvAcctName(l.acct_code) : '') + '</td>'
+    + '<td><input class="input jv-pt" value="' + gEsc(l.partner || '') + '"></td>'
+    + '<td><input class="input jv-dr num" value="' + (dr ? Number(dr).toLocaleString('ko-KR') : '') + '"></td>'
+    + '<td><input class="input jv-cr num" value="' + (cr ? Number(cr).toLocaleString('ko-KR') : '') + '"></td>'
+    + '<td><input class="input jv-mm" value="' + gEsc(l.memo || '') + '"></td>'
+    + '<td><button class="btn g-del" tabindex="-1" onclick="this.closest(\'tr\').remove();jvCalc()">×</button></td></tr>';
+}
+function jvAddRow(l){ document.getElementById('jvRows').insertAdjacentHTML('beforeend', jvRowHtml(l)); jvCalc(); }
+function jvLines(){
+  return Array.prototype.map.call(document.querySelectorAll('#jvRows tr'), function(tr){
+    var dr = jvNum(tr.querySelector('.jv-dr').value), cr = jvNum(tr.querySelector('.jv-cr').value);
+    return { side: dr ? '차' : (cr ? '대' : tr.querySelector('.jv-side').value), acct_code: tr.querySelector('.jv-acct').value.trim(),
+      partner: tr.querySelector('.jv-pt').value.trim(), amount: dr || cr, memo: tr.querySelector('.jv-mm').value.trim() };
+  });
+}
+function jvCalc(){
+  var dr = 0, cr = 0;
+  document.querySelectorAll('#jvRows tr').forEach(function(tr, i){
+    tr.querySelector('.jv-no').textContent = i + 1;
+    var s = tr.querySelector('.jv-side').value, d = tr.querySelector('.jv-dr'), c = tr.querySelector('.jv-cr');
+    d.disabled = s === '대'; c.disabled = s === '차';
+    dr += jvNum(d.value); cr += jvNum(c.value);
+  });
+  document.getElementById('jvDr').textContent = dr.toLocaleString('ko-KR');
+  document.getElementById('jvCr').textContent = cr.toLocaleString('ko-KR');
+  var df = document.getElementById('jvDiff'); df.textContent = dr === cr ? '' : '차액 ' + (dr - cr).toLocaleString('ko-KR'); df.className = dr === cr ? '' : 'chk-err';
+}
+function jvNew(){
+  JV.id = null; document.getElementById('jvNo').textContent = '신규';
+  document.getElementById('jvDate').value = jvToday(); document.getElementById('jvKind').value = '대체'; document.getElementById('jvMemo').value = '';
+  document.getElementById('jvRows').innerHTML = ''; jvAddRow({ side: '차' }); jvAddRow({ side: '대' });
+  var f = document.querySelector('#jvRows .jv-acct'); if(f) f.focus();
+}
+async function jvSave(){
+  var lines = jvLines().filter(function(l){ return l.acct_code || l.amount; });
+  var head = { id: JV.id, jv_date: document.getElementById('jvDate').value, kind: document.getElementById('jvKind').value, memo: document.getElementById('jvMemo').value.trim() };
+  var dr = 0, cr = 0; lines.forEach(function(l){ if(l.side === '차') dr += l.amount; else cr += l.amount; });
+  if(!head.jv_date){ gToast('일자를 입력하세요', true); return; }
+  if(lines.length < 2){ gToast('분개 라인은 2줄 이상', true); return; }
+  if(lines.some(function(l){ return !l.acct_code || !l.amount; })){ gToast('계정코드·금액이 빈 라인이 있습니다', true); return; }
+  if(dr !== cr){ gToast('차대 불일치: 차변 ' + dr.toLocaleString('ko-KR') + ' / 대변 ' + cr.toLocaleString('ko-KR'), true); return; }
+  var r = await sb.rpc('ssjg_jv_save', { p_head: head, p_lines: lines });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '저장 실패', true); return; }
+  JV.id = r.data.id; document.getElementById('jvNo').textContent = r.data.jv_no;
+  gToast('저장됨 ' + r.data.jv_no); if(typeof GL !== 'undefined'){ GL.month = null; GL.acct = {}; GL.partner = null; } jvList();
+}
+async function jvDelete(){
+  if(!JV.id){ gToast('불러온 전표가 없습니다', true); return; }
+  if(!confirm(document.getElementById('jvNo').textContent + ' 전표를 삭제합니다.')) return;
+  var r = await sb.rpc('ssjg_jv_delete', { p_id: JV.id });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '삭제 실패', true); return; }
+  gToast('삭제됨 ' + r.data.jv_no); jvNew(); jvList();
+}
+async function jvList(){
+  var h = await sb.from('ssjg_jv_head').select('id,jv_no,jv_date,kind,memo').order('jv_date', { ascending: false }).order('jv_no', { ascending: false }).limit(300);
+  if(h.error){ document.getElementById('jvList').innerHTML = '<tr><td colspan="7">' + gEsc(h.error.message) + '</td></tr>'; return; }
+  var ids = (h.data || []).map(function(x){ return x.id; }), ln = { data: [] };
+  if(ids.length) ln = await sb.from('ssjg_jv_lines').select('head_id,line_no,side,acct_code,partner,amount,memo').in('head_id', ids).order('line_no');
+  var by = {}; (ln.data || []).forEach(function(l){ (by[l.head_id] = by[l.head_id] || []).push(l); });
+  JV.list = (h.data || []).map(function(x){ x.lines = by[x.id] || []; return x; });
+  document.getElementById('jvListCnt').textContent = JV.list.length + '건';
+  document.getElementById('jvList').innerHTML = JV.list.length ? JV.list.map(function(x, i){
+    var d = x.lines.filter(function(l){ return l.side === '차'; }), c = x.lines.filter(function(l){ return l.side === '대'; });
+    var amt = d.reduce(function(s, l){ return s + Number(l.amount); }, 0);
+    function nm(a){ return a.length ? a[0].acct_code + ' ' + jvAcctName(a[0].acct_code) + (a.length > 1 ? ' 외 ' + (a.length - 1) : '') : ''; }
+    return '<tr style="cursor:pointer" ondblclick="jvLoad(' + i + ')"><td>' + gEsc(x.jv_no) + '</td><td>' + gEsc(x.jv_date) + '</td><td>' + gEsc(x.kind) + '</td><td>' + gEsc(x.memo || '') + '</td><td>' + gEsc(nm(d)) + '</td><td>' + gEsc(nm(c)) + '</td><td class="num">' + amt.toLocaleString('ko-KR') + '</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="td-empty">-</td></tr>';
+}
+function jvLoad(i){
+  var x = JV.list[i]; if(!x) return;
+  JV.id = x.id; document.getElementById('jvNo').textContent = x.jv_no;
+  document.getElementById('jvDate').value = x.jv_date; document.getElementById('jvKind').value = x.kind; document.getElementById('jvMemo').value = x.memo || '';
+  document.getElementById('jvRows').innerHTML = ''; x.lines.forEach(function(l){ jvAddRow(l); });
+  window.scrollTo(0, 0);
+}
+async function jvOpen(){
+  if(!sb) return;
+  try { await jvCoa(); } catch(e){}
+  if(!document.querySelector('#jvRows tr')) jvNew();
+  jvList();
+}
+document.addEventListener('keydown', function(e){
+  var t = e.target; if(!t || !t.closest || !t.closest('#jvRows')) return;
+  var tr = t.closest('tr');
+  if(e.key === 'F2' && (t.classList.contains('jv-acct') || t.classList.contains('jv-pt'))){
+    e.preventDefault(); var k = t.classList.contains('jv-acct') ? 'acct' : 'partner';
+    chOpen(k, t.value, function(x){ t.value = x.c; if(k === 'acct') tr.querySelector('.jv-an').textContent = x.n; jvNext(t); });
+    return;
+  }
+  if(e.key === 'Enter'){ e.preventDefault(); jvNext(t); }
+});
+document.addEventListener('change', function(e){
+  var t = e.target; if(!t || !t.closest || !t.closest('#jvRows')) return;
+  var tr = t.closest('tr');
+  if(t.classList.contains('jv-acct')){ var n = jvAcctName(t.value.trim()); tr.querySelector('.jv-an').textContent = n; t.classList.toggle('jv-bad', !!t.value.trim() && !n); }
+  if(t.classList.contains('jv-dr') || t.classList.contains('jv-cr')){ var v = jvNum(t.value); t.value = v ? v.toLocaleString('ko-KR') : ''; }
+  jvCalc();
+});
+document.addEventListener('input', function(e){ if(e.target && e.target.closest && e.target.closest('#jvRows')) jvCalc(); });
+function jvNext(t){
+  var all = Array.prototype.slice.call(document.querySelectorAll('#jvRows input:not(:disabled), #jvRows select'));
+  var i = all.indexOf(t);
+  if(i === all.length - 1){
+    var dr = jvNum(document.getElementById('jvDr').textContent), cr = jvNum(document.getElementById('jvCr').textContent);
+    jvAddRow({ side: dr > cr ? '대' : '차' });
+    var tr = document.querySelector('#jvRows tr:last-child');
+    if(dr !== cr){ var inp = tr.querySelector(dr > cr ? '.jv-cr' : '.jv-dr'); inp.value = Math.abs(dr - cr).toLocaleString('ko-KR'); jvCalc(); }
+    tr.querySelector('.jv-acct').focus(); return;
+  }
+  var n = all[i + 1]; if(n){ n.focus(); if(n.select) n.select(); }
+}
+var _pgAct1 = pgAct;
+pgAct = function(k){
+  var p = pgPane();
+  if(p && p.id === 'tab-journal'){
+    if(k === 'n'){ jvNew(); return; }
+    if(k === 's'){ if(gDirtyAny(p)) pgSave(); else jvSave(); return; }
+    if(k === 'd' && JV.id && !p.querySelector('.g-panel tr.sel')){ jvDelete(); return; }
+    if(k === 'q'){ jvList(); }
+  }
+  return _pgAct1(k);
+};
+function gDirtyAny(p){ var n = 0; p.querySelectorAll('[data-grid]').forEach(function(g){ n += gDirtyCnt(g.getAttribute('data-grid')); }); return n > 0; }
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
