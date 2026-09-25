@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.37">
+<meta name="app-version" content="1.38">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3173,6 +3173,8 @@ gridEdit = function(td, tb, ri, field, first){
   inp.onkeydown = function(e){
     if(e.key === 'Enter'){ e.preventDefault(); fin(true); gMove(td, 1, 0); }
     else if(e.key === 'Tab'){ e.preventDefault(); fin(true); gMove(td, 0, e.shiftKey ? -1 : 1); }
+    else if(e.key === 'F2' && typeof CH_FIELD !== 'undefined' && CH_FIELD[field]){ e.preventDefault(); var kk = CH_FIELD[field];
+      chOpen(kk, inp.value, function(x){ var val = (field === 'item' || field === 'partner' || field === 'vendor') ? (x.v || x.n) : x.c; gridEdit(td, tb, ri, field, val); var ni = td.querySelector('input'); if(ni) ni.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }); }
     else if(e.key === 'Escape'){ fin(false); }
     e.stopPropagation();
   };
@@ -3219,7 +3221,7 @@ var CH_SRC = {
     r.forEach(function(x){ if(x.partner) s[x.partner] = (s[x.partner] || 0) + 1; });
     return Object.keys(s).sort().map(function(k){ return { c: k, n: k, x: s[k] + '건' }; }); } },
   item: { t: '품목', load: async function(){ var r = await sb.from('ssjg_items').select('*').limit(5000); var d = r.data || [];
-    return d.map(function(x){ var c = x.item_code || x.code || x.pl3_code || x.id; return { c: String(c == null ? '' : c), n: x.item_name || x.name || '', x: x.cat1 || '' }; }); } }
+    return d.filter(function(x){ return String(x.status || 'ACTIVE').toUpperCase() !== 'INACTIVE'; }).map(function(x){ var c = x.item_code || x.code || x.pl3_code || x.id; return { c: String(c == null ? '' : c), n: x.item_name || x.name || '', v: x.item_name || x.name || '', x: [x.unit, x.sell_price != null ? Number(x.sell_price).toLocaleString('ko-KR') : ''].filter(Boolean).join(' ') }; }); } }
 };
 var CH_FIELD = { acct_code: 'acct', pl_code: 'acct', partner: 'partner', vendor: 'partner', item: 'item', item_code: 'item' };
 async function chData(k){ if(!CH.cache[k]) CH.cache[k] = await CH_SRC[k].load(); return CH.cache[k]; }
