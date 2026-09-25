@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.24">
+<meta name="app-version" content="1.25">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -959,8 +959,8 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>일자</th><th>전표번호</th><th>거래처</th><th>적요</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">잔액</th></tr></thead>
-          <tbody id="glaRows"><tr><td colspan="7" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+          <thead><tr><th>일자</th><th>원천</th><th>전표번호</th><th>거래처</th><th>적요</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">잔액</th></tr></thead>
+          <tbody id="glaRows"><tr><td colspan="8" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -971,7 +971,7 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <div class="panel-head"><div class="panel-title">거래처원장 <span id="glpTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
       <div class="b3-head">
         <label>거래처<select id="glpCp" class="input" style="width:240px"></select></label>
-        <label>계정<select id="glpAcct" class="input" style="width:140px"><option value="">전체</option><option value="108">외상매출금</option><option value="251">외상매입금</option><option value="253">미지급금</option></select></label>
+        <label>계정<select id="glpAcct" class="input" style="width:140px"><option value="">전체</option><option value="108">외상매출금</option><option value="251">외상매입금</option><option value="253">미지급금</option><option value="134">가지급금</option><option value="257">가수금</option></select></label>
         <label>시작월<input type="month" id="glpFrom" class="input"></label>
         <label>종료월<input type="month" id="glpTo" class="input"></label>
         <button class="btn btn-primary" style="padding:7px 18px" onclick="glpRender()">조회</button>
@@ -1771,7 +1771,7 @@ async function glaRender(){
   if(!code) return;
   try {
     if(!GL.acct[code]){
-      var r = await sb.from('ssjg_ledger_account').select('acct_code,acct_name,doc_date,yr,mo,doc_no,line_no,partner,title,dr,cr,balance').eq('acct_code', code).order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(0, 9999);
+      var r = await sb.from('ssjg_ledger_account').select('acct_code,acct_name,doc_date,yr,mo,doc_no,line_no,partner,title,dr,cr,balance,origin').eq('acct_code', code).order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(0, 9999);
       if(r.error) throw r.error;
       GL.acct[code] = r.data || [];
     }
@@ -1786,10 +1786,10 @@ async function glaRender(){
     rows.push(x);
   });
   document.getElementById('glaTitle').innerText = code + ' ' + (a.acct_name || '');
-  if(!rows.length && !before){ glEmpty('glaRows', 7, '해당 기간 거래 없음'); return; }
-  var html = (f && !cp) ? '<tr><td>' + f + '</td><td></td><td></td><td>전기이월</td><td></td><td></td><td style="text-align:right">' + fmt(Math.round(before)) + '</td></tr>' : '';
+  if(!rows.length && !before){ glEmpty('glaRows', 8, '해당 기간 거래 없음'); return; }
+  var html = (f && !cp) ? '<tr><td>' + f + '</td><td></td><td></td><td></td><td>전기이월</td><td></td><td></td><td style="text-align:right">' + fmt(Math.round(before)) + '</td></tr>' : '';
   html += rows.map(function(x){
-    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.partner) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + (cp ? '' : fmt(Math.round(x.balance))) + '</td></tr>';
+    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.origin || '') + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.partner) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + (cp ? '' : fmt(Math.round(x.balance))) + '</td></tr>';
   }).join('');
   document.getElementById('glaRows').innerHTML = html;
 }
@@ -1810,7 +1810,7 @@ function glpRender(){
     document.getElementById('glpTitle').innerText = list.length + '건';
     if(!list.length){ glEmpty('glpRows', 6, '해당 기간 거래 없음'); return; }
     document.getElementById('glpRows').innerHTML = list.map(function(x){
-      var net = x.c === '108' ? x.dr - x.cr : x.cr - x.dr, drb = x.c === '108' ? Math.max(net, 0) : Math.max(-net, 0), crb = x.c === '108' ? Math.max(-net, 0) : Math.max(net, 0);
+      var dside = x.c === '108' || x.c === '134', net = dside ? x.dr - x.cr : x.cr - x.dr, drb = dside ? Math.max(net, 0) : Math.max(-net, 0), crb = dside ? Math.max(-net, 0) : Math.max(net, 0);
       return '<tr style="cursor:pointer" onclick="glpPick(this.dataset.p)" data-p="' + glEsc(x.p) + '"><td>' + glEsc(x.p) + '</td><td>' + glEsc(x.a) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + glN(drb) + '</td><td style="text-align:right">' + glN(crb) + '</td></tr>';
     }).join('');
     return;
