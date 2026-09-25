@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.35">
+<meta name="app-version" content="1.36">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1292,6 +1292,24 @@ th.gs-th[data-sort]::after{content:attr(data-sort);font-size:9px;margin-left:4px
   <div id="tab-items" class="tab-pane">
     <div data-grid="ssjg_items"></div>
   </div>
+  <div id="tab-tax-jv" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">세금계산서 전표 <span class="g-cnt" id="tjvCnt"></span></div></div>
+      <div class="b3-head">
+        <label>시작월<input type="month" id="tjvFrom" class="input"></label>
+        <label>종료월<input type="month" id="tjvTo" class="input"></label>
+        <label>구분<select id="tjvFlow" class="select"><option value="">전체</option><option>매출</option><option>매입</option></select></label>
+        <label>상태<select id="tjvSt" class="select"><option value="">전체</option><option value="n">미반영</option><option value="y">반영</option></select></label>
+        <button class="btn btn-primary" onclick="tjvLoad()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>작성일자</th><th>구분</th><th>거래처</th><th>품목</th><th>공급가</th><th>세액</th><th>합계</th><th>승인번호</th><th>상태</th><th></th></tr></thead>
+          <tbody id="tjvRows"><tr><td colspan="10" class="td-empty">-</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
   <div id="tab-journal" class="tab-pane">
     <div class="panel" id="jvPanel">
       <div class="panel-head"><div class="panel-title">전표입력 <span class="g-cnt" id="jvNo"></span></div></div>
@@ -1694,7 +1712,7 @@ var MENU = [
     { n: '구매', i: [['logistics', '3PL 정산']] },
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
-    { n: '전표', i: [['journal', '전표']] },
+    { n: '전표', i: [['journal', '전표'], ['tax-jv', '세금계산서 전표']] },
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
@@ -1810,6 +1828,7 @@ function switchTab(tabId, el){
   if(tabId.indexOf('gl-')===0)glOpen(tabId);
   if(tabId.indexOf('fs-')===0)fsOpen(tabId);
   if(tabId==='journal')jvOpen();
+  if(tabId==='tax-jv')tjvOpen();
   toggleSide(false);
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
@@ -3260,14 +3279,14 @@ function jvCalc(){
   var df = document.getElementById('jvDiff'); df.textContent = dr === cr ? '' : '차액 ' + (dr - cr).toLocaleString('ko-KR'); df.className = dr === cr ? '' : 'chk-err';
 }
 function jvNew(){
-  JV.id = null; document.getElementById('jvNo').textContent = '신규';
+  JV.id = null; JV.srcRef = null; document.getElementById('jvNo').textContent = '신규';
   document.getElementById('jvDate').value = jvToday(); document.getElementById('jvKind').value = '대체'; document.getElementById('jvMemo').value = '';
   document.getElementById('jvRows').innerHTML = ''; jvAddRow({ side: '차' }); jvAddRow({ side: '대' });
   var f = document.querySelector('#jvRows .jv-acct'); if(f) f.focus();
 }
 async function jvSave(){
   var lines = jvLines().filter(function(l){ return l.acct_code || l.amount; });
-  var head = { id: JV.id, jv_date: document.getElementById('jvDate').value, kind: document.getElementById('jvKind').value, memo: document.getElementById('jvMemo').value.trim() };
+  var head = { id: JV.id, jv_date: document.getElementById('jvDate').value, kind: document.getElementById('jvKind').value, memo: document.getElementById('jvMemo').value.trim(), src_ref: JV.id ? null : (JV.srcRef || null) };
   var dr = 0, cr = 0; lines.forEach(function(l){ if(l.side === '차') dr += l.amount; else cr += l.amount; });
   if(!head.jv_date){ gToast('일자를 입력하세요', true); return; }
   if(lines.length < 2){ gToast('분개 라인은 2줄 이상', true); return; }
@@ -3512,6 +3531,81 @@ function gsInitPlain(){ document.querySelectorAll('.tab-pane table').forEach(fun
 gsInitPlain();
 var _switchTab1 = switchTab;
 switchTab = function(id, el){ var r = _switchTab1(id, el); setTimeout(gsInitPlain, 300); return r; };
+// ── 세금계산서 전표 (v1.36) ──
+var TJV = { rows: [], partners: null };
+function tjvNorm(s){ return String(s || '').toLowerCase().replace(/\(주\)|㈜|주식회사|\(유\)|유한회사|\(사\)|사단법인/g, '').replace(/[\s()\[\].,\-·]/g, ''); }
+async function tjvPartners(){
+  if(TJV.partners) return TJV.partners;
+  var m = {};
+  try { var r = await sb.from('ssjg_partners').select('name').limit(5000); (r.data || []).forEach(function(x){ m[tjvNorm(x.name)] = x.name; }); } catch(e){}
+  TJV.partners = m; return m;
+}
+function tjvAcct(code, prefix){
+  var coa = JV.coa || [];
+  if(!coa.length || coa.some(function(a){ return a.c === code; })) return code;
+  var f = coa.find(function(a){ return a.c.indexOf(prefix) === 0; }); return f ? f.c : code;
+}
+async function tjvOpen(){
+  if(!sb) return;
+  var f = document.getElementById('tjvFrom'), t = document.getElementById('tjvTo');
+  if(!t.value){ var r = perRange('y'); f.value = r[0]; t.value = r[1]; }
+  try { await jvCoa(); } catch(e){}
+  tjvLoad();
+}
+async function tjvLoad(){
+  var f = document.getElementById('tjvFrom').value, t = document.getElementById('tjvTo').value;
+  var q = sb.from('ssjg_tax_invoices').select('id,flow,write_date,supplier,buyer,item,supply_amt,vat_amt,total_amt,approval_no').order('write_date', { ascending: true }).limit(5000);
+  if(f) q = q.gte('write_date', f + '-01');
+  if(t) q = q.lt('write_date', perAdd(t, 1) + '-01');
+  var r = await q;
+  if(r.error){ document.getElementById('tjvRows').innerHTML = '<tr><td colspan="10">' + gEsc(r.error.message) + '</td></tr>'; return; }
+  var inv = r.data || [];
+  var jn = {}, jr = {};
+  try { var a = await tdFetchAll('ssjg_journal', 'approval_no', 'approval_no'); a.forEach(function(x){ if(x.approval_no) jn[x.approval_no] = 1; }); } catch(e){}
+  try { var h = await sb.from('ssjg_jv_head').select('jv_no,src_ref').like('src_ref', 'TI:%').limit(5000); (h.data || []).forEach(function(x){ jr[x.src_ref] = x.jv_no; }); } catch(e){}
+  await tjvPartners();
+  TJV.rows = inv.map(function(x){
+    var st = x.approval_no && jn[x.approval_no] ? '기존 장부' : (jr['TI:' + x.id] ? '전표 ' + jr['TI:' + x.id] : '');
+    return Object.assign({}, x, { cp: x.flow === '매출' ? x.buyer : x.supplier, st: st });
+  });
+  tjvRender();
+}
+function tjvRender(){
+  var fl = document.getElementById('tjvFlow').value, s = document.getElementById('tjvSt').value;
+  var rows = TJV.rows.filter(function(x){ return (!fl || x.flow === fl) && (!s || (s === 'y') === !!x.st); });
+  document.getElementById('tjvCnt').textContent = rows.length + '건';
+  function n(v){ return Number(v || 0).toLocaleString('ko-KR'); }
+  document.getElementById('tjvRows').innerHTML = rows.length ? rows.map(function(x){
+    return '<tr><td>' + gEsc(x.write_date) + '</td><td>' + gEsc(x.flow) + '</td><td>' + gEsc(x.cp || '') + '</td><td>' + gEsc(x.item || '') + '</td>'
+      + '<td class="num">' + n(x.supply_amt) + '</td><td class="num">' + n(x.vat_amt) + '</td><td class="num">' + n(x.total_amt) + '</td>'
+      + '<td>' + gEsc(x.approval_no || '') + '</td><td>' + gEsc(x.st || '미반영') + '</td>'
+      + '<td>' + (x.st ? '' : '<button class="btn" onclick="tjvDraft(' + x.id + ')">전표 초안</button>') + '</td></tr>';
+  }).join('') : '<tr><td colspan="10" class="td-empty">-</td></tr>';
+}
+async function tjvDraft(id){
+  var x = TJV.rows.find(function(r){ return r.id === id; }); if(!x) return;
+  var pm = await tjvPartners(), cp = pm[tjvNorm(x.cp)] || x.cp || '';
+  var sup = Math.round(Number(x.supply_amt || 0)), vat = Math.round(Number(x.vat_amt || 0)), tot = Math.round(Number(x.total_amt || 0)) || sup + vat;
+  var memo = x.item || '', L = [];
+  if(x.flow === '매출'){
+    L.push({ side: '차', acct_code: tjvAcct('108', '1'), partner: cp, amount: tot, memo: memo });
+    L.push({ side: '대', acct_code: tjvAcct('4100', '4'), partner: cp, amount: sup, memo: memo });
+    if(vat) L.push({ side: '대', acct_code: tjvAcct('255', '25'), partner: cp, amount: vat, memo: memo });
+  } else {
+    var exp = tjvAcct('5110', '5');
+    L.push({ side: '차', acct_code: exp, partner: cp, amount: sup, memo: memo });
+    if(vat) L.push({ side: '차', acct_code: tjvAcct('135', '13'), partner: cp, amount: vat, memo: memo });
+    L.push({ side: '대', acct_code: tjvAcct(exp === '5110' ? '251' : '253', '25'), partner: cp, amount: tot, memo: memo });
+  }
+  switchTab('journal');
+  jvNew();
+  JV.srcRef = 'TI:' + x.id;
+  document.getElementById('jvNo').textContent = '신규 · 세금계산서 ' + (x.approval_no || x.id);
+  document.getElementById('jvDate').value = x.write_date;
+  document.getElementById('jvMemo').value = memo;
+  document.getElementById('jvRows').innerHTML = ''; L.forEach(function(l){ jvAddRow(l); });
+}
+document.addEventListener('change', function(e){ if(e.target && (e.target.id === 'tjvFlow' || e.target.id === 'tjvSt')) tjvRender(); });
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
