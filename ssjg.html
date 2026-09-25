@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.50">
+<meta name="app-version" content="1.51">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,6 +414,8 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 #tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
 #tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
 /* v1.46 채권·채무 명세 · 거래처 별칭 */
+#tab-fa-dep td.n{text-align:right}
+#tab-fa-dep tfoot td{font-weight:600}
 #tab-fund-day td.n{text-align:right}
 #tab-fund-day tfoot td{font-weight:600}
 #tab-fund-day td.fd-bad{color:var(--danger,#c0392b);font-weight:600}
@@ -1393,6 +1395,27 @@ body.perm-ro #tmType{display:none}
       <div class="table-wrap"><table data-foot="1"><thead><tr><th>별칭</th><th>거래처</th><th>구분</th><th></th></tr></thead><tbody id="alRows"><tr><td colspan="4" class="td-empty">-</td></tr></tbody></table></div>
     </div>
   </div>
+  <div id="tab-fa-reg" class="tab-pane">
+    <div data-grid="ssjg_fixed_assets"></div>
+  </div>
+  <div id="tab-fa-dep" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">감가상각비 계산 <span class="g-cnt" id="faCnt"></span></div></div>
+      <div class="b3-head">
+        <label>기준월<input type="month" id="faYm" class="input"></label>
+        <label>계정<select id="faAcct" class="select"><option value="">전체</option><option value="206">206 기계장치</option><option value="208">208 차량운반구</option><option value="212">212 비품</option><option value="240">240 소프트웨어</option></select></label>
+        <button class="btn btn-primary" onclick="faLoad()">조회</button>
+        <button class="btn" onclick="faDraft()">감가상각 전표 초안</button>
+      </div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>자산코드</th><th>자산명</th><th>계정</th><th>취득일</th><th style="text-align:right">취득가액</th><th style="text-align:right">내용연수</th><th>방법</th><th style="text-align:right">전기말 누계</th><th style="text-align:right">당기 상각</th><th style="text-align:right">당월 상각</th><th style="text-align:right">기말 누계</th><th style="text-align:right">미상각 잔액</th><th>상태</th></tr></thead>
+        <tbody id="faRows"><tr><td colspan="13" class="td-empty">-</td></tr></tbody><tfoot id="faFoot"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">계정별 집계</div></div>
+      <div class="table-wrap"><table data-foot="1"><thead><tr><th>자산 계정</th><th>비용 계정</th><th>누계 계정</th><th style="text-align:right">취득가액</th><th style="text-align:right">당기 상각</th><th style="text-align:right">당월 상각</th><th style="text-align:right">기말 누계</th><th style="text-align:right">미상각 잔액</th></tr></thead>
+        <tbody id="faSum"><tr><td colspan="8" class="td-empty">-</td></tr></tbody><tfoot id="faSumFoot"></tfoot></table></div>
+    </div>
+  </div>
   <div id="tab-fund-day" class="tab-pane">
     <div class="panel">
       <div class="panel-head"><div class="panel-title">자금일보 <span class="g-cnt" id="fdCnt"></span></div></div>
@@ -1750,7 +1773,7 @@ function initSupabase(){
 /* ═══ v1.13 공통 원장 편집 (BVS 방식: 추가 · 셀 더블클릭 수정 · 삭제) ═══ */
 var GRID_TABLES = {
   ssjg_shipments:{t:'출고 내역',o:'ship_date'}, ssjg_orders:{t:'주문',o:'ordered_at'}, ssjg_order_lines:{t:'주문 라인'},
-  ssjg_inventory:{t:'재고'}, ssjg_partners:{t:'거래처',o:'code'}, ssjg_accounts:{t:'계정과목',o:'acct_code'}, ssjg_items:{t:'품목 마스터'},
+  ssjg_inventory:{t:'재고'}, ssjg_partners:{t:'거래처',o:'code'}, ssjg_accounts:{t:'계정과목',o:'acct_code'}, ssjg_fixed_assets:{t:'고정자산',o:'asset_code'}, ssjg_items:{t:'품목 마스터'},
   ssjg_pl_month:{t:'월별 관리손익'}, ssjg_sga_month:{t:'월별 판관비'}, ssjg_channel_pl:{t:'채널별 손익'},
   ssjg_month_summary:{t:'월별 손익·자금'}, ssjg_settlements:{t:'채널 매출정산'},
   ssjg_tax_invoices:{t:'세금계산서'}, ssjg_ar_recon:{t:'미수금 대사'}, ssjg_bank_txns:{t:'통장 거래',o:'txn_at'},
@@ -1769,7 +1792,8 @@ var COL_KO = {
   line_order_no:'품목별주문번호', sales_kind:'매출구분', units:'유닛수', price:'판매가', order_paid:'주문결제액', paid_alloc:'결제배분', ship_alloc:'배송비배분', ship_real:'실배송비', ship_est:'예상배송비', boxes:'박스수', ship_method:'발송방식',
   buyer:'주문자', receiver:'받는사람', ship_fee_type:'배송비구분', qty_unit:'수량단위', alloc_pay:'결제배분', alloc_ship:'배송비배분', cat1:'대분류', cat2:'중분류', cat3:'소분류', unit:'단위', buy_price:'매입가', sell_price:'판매가', pl3_code:'3PL코드', pl3_barcode:'3PL바코드', std_cost:'표준원가',
   doc_no:'문서번호', doc_date:'문서일자', yr:'연도', mo:'월', flow:'구분', pl_code:'계정코드', pl_account:'계정과목', src:'출처', title:'적요', partner:'거래처', vendor:'공급처', item:'품목', vat_amt:'세액', approval_no:'승인번호',
-  bill_ym:'정산월', bill_date:'청구일자', acct_code:'계정코드', acct_name:'계정명', acct_class:'분류', normal_side:'차대', id:'번호'
+  bill_ym:'정산월', bill_date:'청구일자', acct_code:'계정코드', acct_name:'계정명', acct_class:'분류', normal_side:'차대', id:'번호',
+  asset_code:'자산코드', asset_name:'자산명', acq_date:'취득일', acq_cost:'취득가액', life_years:'내용연수', residual:'잔존가액', disposed_date:'처분일'
 };
 var GRID = {};
 function noEmo(s){return String(s==null?'':s).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/gu,'').trim()}
@@ -1927,6 +1951,7 @@ var MENU = [
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['fund-day', '자금일보'], ['arap', '채권·채무 명세'], ['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
+    { n: '고정자산', i: [['fa-reg', '고정자산 등록'], ['fa-dep', '감가상각비 계산']] },
     { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] },
@@ -4459,6 +4484,81 @@ drOpen = async function(){
 };
 function trMarkAcct(sel, col){ document.querySelectorAll(sel).forEach(function(tr){ var td = tr.children[col]; if(!td || td.querySelector('.tr-tag')) return; var w = trAcct(td.textContent); if(w) td.insertAdjacentHTML('beforeend', '<span class="tr-tag">' + w + '</span>'); }); }
 var _jfLoad149 = jfLoad; jfLoad = async function(){ var r = await _jfLoad149.apply(this, arguments); trMarkAcct('#jfRows tr.dr-row', 3); return r; };
+// ── 고정자산 · 감가상각 (v1.51) ──
+var FA = { rows: [], calc: [], ym: '' };
+var FA_MAP = { '206': ['207', '818', '기계장치'], '208': ['209', '818', '차량운반구'], '212': ['213', '818', '비품'], '240': ['240', '840', '소프트웨어'] };
+function faIdx(d){ d = String(d || ''); return Number(d.slice(0, 4)) * 12 + Number(d.slice(5, 7)) - 1; }
+function faCum(a, endIdx){
+  var cost = Number(a.acq_cost || 0), res = Number(a.residual || 0), base = cost - res, life = Number(a.life_years || 0) * 12;
+  if(!(cost > 0) || !(life > 0) || base <= 0) return 0;
+  var st = faIdx(a.acq_date), en = endIdx;
+  if(a.disposed_date) en = Math.min(en, faIdx(a.disposed_date));
+  if(en < st) return 0;
+  var n = Math.min(en - st + 1, life);
+  if(a.method !== '정률법') return Math.round(base * n / life);
+  if(n >= life) return base;
+  var r = 1 - Math.pow(Math.max(res, cost * 0.05) / cost, 1 / Number(a.life_years)), bv = cost, cum = 0, last = st + n - 1;
+  for(var y = Math.floor(st / 12); y <= Math.floor(last / 12); y++){
+    var ys = Math.max(st, y * 12), ye = y * 12 + 11, act = ye - ys + 1, cnt = Math.min(ye, last) - ys + 1;
+    var ann = bv * r * act / 12;
+    if(cnt >= act){ cum += ann; bv -= ann; } else { cum += ann * cnt / act; break; }
+  }
+  return Math.min(base, Math.round(cum));
+}
+function faOpen(){ var m = document.getElementById('faYm'); if(!m.value){ m.value = glNowYm(); faLoad(); } }
+async function faLoad(){
+  if(!sb) return;
+  var ym = document.getElementById('faYm').value || glNowYm(), ac = document.getElementById('faAcct').value;
+  document.getElementById('faYm').value = ym;
+  var body = document.getElementById('faRows'); body.innerHTML = '<tr><td colspan="13" class="td-empty">불러오는 중</td></tr>';
+  var r;
+  try { r = await sb.from('ssjg_fixed_assets').select('*').order('asset_code', { ascending: true }).limit(5000); } catch(e){ r = { error: e }; }
+  if(r.error){ body.innerHTML = '<tr><td colspan="13">' + gEsc(r.error.message || r.error) + '</td></tr>'; return; }
+  var e = faIdx(ym + '-01'), yEnd = Math.floor(e / 12) * 12 - 1, T = { cost: 0, open: 0, ytd: 0, mon: 0, acc: 0, bv: 0 }, S = {};
+  FA.ym = ym;
+  FA.calc = (r.data || []).filter(function(a){ return (!ac || a.acct_code === ac) && faIdx(a.acq_date) <= e; }).map(function(a){
+    var open = faCum(a, yEnd), acc = faCum(a, e), prev = faCum(a, e - 1), cost = Number(a.acq_cost || 0);
+    var st = a.disposed_date && faIdx(a.disposed_date) <= e ? '처분' : (acc >= cost - Number(a.residual || 0) && cost > 0 ? '상각완료' : '');
+    var o = { a: a, cost: cost, open: open, ytd: acc - open, mon: acc - prev, acc: acc, bv: cost - acc, st: st };
+    ['cost', 'open', 'ytd', 'mon', 'acc', 'bv'].forEach(function(k){ T[k] += o[k]; });
+    var s = S[a.acct_code] || (S[a.acct_code] = { cost: 0, ytd: 0, mon: 0, acc: 0, bv: 0 });
+    ['cost', 'ytd', 'mon', 'acc', 'bv'].forEach(function(k){ s[k] += o[k]; });
+    return o;
+  });
+  body.innerHTML = FA.calc.length ? FA.calc.map(function(o){ var a = o.a;
+    return '<tr><td>' + gEsc(a.asset_code) + '</td><td>' + gEsc(a.asset_name) + '</td><td>' + gEsc(a.acct_code + ' ' + ((FA_MAP[a.acct_code] || [])[2] || '')) + '</td><td>' + gEsc(String(a.acq_date || '').slice(0, 10)) + '</td><td class="n">' + fmt(o.cost) + '</td><td class="n">' + gEsc(a.life_years) + '</td><td>' + gEsc(a.method) + '</td><td class="n">' + glN(o.open) + '</td><td class="n">' + glN(o.ytd) + '</td><td class="n">' + glN(o.mon) + '</td><td class="n">' + glN(o.acc) + '</td><td class="n">' + fmt(o.bv) + '</td><td>' + gEsc(o.st) + '</td></tr>';
+  }).join('') : '<tr><td colspan="13" class="td-empty">등록된 고정자산 없음</td></tr>';
+  document.getElementById('faFoot').innerHTML = FA.calc.length ? '<tr><td colspan="4">합계 ' + FA.calc.length + '건</td><td class="n">' + fmt(T.cost) + '</td><td></td><td></td><td class="n">' + glN(T.open) + '</td><td class="n">' + glN(T.ytd) + '</td><td class="n">' + glN(T.mon) + '</td><td class="n">' + glN(T.acc) + '</td><td class="n">' + fmt(T.bv) + '</td><td></td></tr>' : '';
+  var ks = Object.keys(S).sort();
+  document.getElementById('faSum').innerHTML = ks.length ? ks.map(function(k){ var s = S[k], m = FA_MAP[k] || [];
+    return '<tr><td>' + gEsc(k + ' ' + (m[2] || '')) + '</td><td>' + gEsc(m[1] || '') + '</td><td>' + gEsc(m[0] || '') + '</td><td class="n">' + fmt(s.cost) + '</td><td class="n">' + glN(s.ytd) + '</td><td class="n">' + glN(s.mon) + '</td><td class="n">' + glN(s.acc) + '</td><td class="n">' + fmt(s.bv) + '</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="td-empty">-</td></tr>';
+  document.getElementById('faSumFoot').innerHTML = ks.length > 1 ? '<tr><td colspan="3">합계</td><td class="n">' + fmt(T.cost) + '</td><td class="n">' + glN(T.ytd) + '</td><td class="n">' + glN(T.mon) + '</td><td class="n">' + glN(T.acc) + '</td><td class="n">' + fmt(T.bv) + '</td></tr>' : '';
+  document.getElementById('faCnt').textContent = ym + ' · ' + FA.calc.length + '건';
+}
+async function faDraft(){
+  if(!sb) return;
+  var ym = FA.ym || document.getElementById('faYm').value;
+  if(!ym || !FA.calc.length){ gToast('먼저 조회하십시오', true); return; }
+  if(document.getElementById('faAcct').value){ gToast('계정을 전체로 두고 조회한 뒤 초안을 만드십시오', true); return; }
+  var ref = 'FA:' + ym;
+  try { var h = await sb.from('ssjg_jv_head').select('jv_no').eq('src_ref', ref).limit(1); if(h.data && h.data.length){ gToast('이미 ' + ym + ' 감가상각 전표가 있습니다: ' + h.data[0].jv_no, true); return; } } catch(e){}
+  var D = {}, C = {};
+  FA.calc.forEach(function(o){ if(!o.mon) return; var m = FA_MAP[o.a.acct_code]; if(!m) return; D[m[1]] = (D[m[1]] || 0) + o.mon; C[m[0]] = (C[m[0]] || 0) + o.mon; });
+  var dk = Object.keys(D).sort(), ck = Object.keys(C).sort();
+  if(!dk.length){ gToast(ym + ' 당월 상각액이 없습니다', true); return; }
+  var y = Number(ym.slice(0, 4)), mo = Number(ym.slice(5, 7)), last = new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10), memo = ym + ' 감가상각';
+  switchTab('journal');
+  jvNew();
+  JV.srcRef = ref;
+  document.getElementById('jvNo').textContent = '신규 · 감가상각 ' + ym;
+  document.getElementById('jvDate').value = last;
+  document.getElementById('jvMemo').value = memo;
+  document.getElementById('jvRows').innerHTML = '';
+  dk.forEach(function(k){ jvAddRow({ side: '차', acct_code: k, amount: D[k], memo: memo }); });
+  ck.forEach(function(k){ jvAddRow({ side: '대', acct_code: k, amount: C[k], memo: memo }); });
+}
+var _switchTab151 = switchTab; switchTab = function(tabId){ var r = _switchTab151.apply(this, arguments); if(tabId === 'fa-dep') faOpen(); return r; };
 // ── 자금일보 (v1.50) ──
 var FD = { rows: null, days: [] };
 function fdAcctName(r){ return r.source_file || r.src || '기본계좌'; }
