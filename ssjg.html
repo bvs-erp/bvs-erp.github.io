@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.38">
+<meta name="app-version" content="1.39">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -378,6 +378,12 @@ th.gs-th[data-sort]::after{content:attr(data-sort);font-size:9px;margin-left:4px
 .table-wrap table thead th:first-child{z-index:12;background:var(--grid-head,#f3f5f8)}
 .table-wrap table tr.sel td:first-child{background:var(--row-sel,#dcebfd)}
 @media print{.gs-fr,.gs-rz{display:none!important}th.gs-th[data-sort]::after{content:''}.table-wrap table td:first-child,.table-wrap table th:first-child{position:static!important}}
+/* v1.39 열람 전용 */
+body.perm-ro #pgN,body.perm-ro #pgS,body.perm-ro #pgD,body.perm-ro .g-add,body.perm-ro .g-del,body.perm-ro .gs-rz~.g-del,
+body.perm-ro #jvPanel,body.perm-ro #tab-logistics .b3-head ~ .b3-foot,body.perm-ro #tab-logistics .panel:first-child,
+body.perm-ro #clRows button,body.perm-ro #tjvRows button{display:none!important}
+body.perm-ro td.g-ed{cursor:default}
+body.perm-ro td.g-ed:hover{outline:none}
 </style>
 </head>
 <body>
@@ -3655,6 +3661,29 @@ async function clSet(ym, close){
   if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '처리 실패', true); return; }
   gToast(ym + (close ? ' 마감' : ' 마감 해제')); clLoad();
 }
+// ── 권한별 화면 (v1.39): 열람 전용 사용자는 입력·수정·삭제 요소 숨김 ──
+var PERM = { ro: false, checked: false };
+async function permCheck(){
+  if(!sb || PERM.checked) return;
+  try {
+    var r = await sb.rpc('ssjg_can_edit', { p_area: 'fi' });
+    if(!r.error){ PERM.checked = true; permApply(r.data !== true); }
+  } catch(e){}
+}
+function permApply(ro){
+  PERM.ro = !!ro;
+  document.body.classList.toggle('perm-ro', PERM.ro);
+  var cur = (document.querySelector('.tab-pane.active') || {}).id;
+  if(cur && typeof pgUpdate === 'function') pgUpdate(cur.replace(/^tab-/, ''));
+}
+function permDeny(){ if(PERM.ro){ gToast('열람 권한만 있습니다', true); return true; } return false; }
+var _hideGate1 = hideGate;
+hideGate = function(){ var r = _hideGate1.apply(this, arguments); setTimeout(permCheck, 0); return r; };
+[['gridEdit', 0], ['gridAdd', 0], ['gridDel', 0], ['pgSave', 0], ['jvSave', 0], ['jvDelete', 0], ['clSet', 0], ['tjvDraft', 0], ['b3Save', 0]].forEach(function(p){
+  var n = p[0], f = window[n]; if(typeof f !== 'function') return;
+  window[n] = function(){ if(permDeny()) return; return f.apply(this, arguments); };
+});
+setTimeout(permCheck, 1500);
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
