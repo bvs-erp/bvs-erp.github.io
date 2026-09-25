@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.39">
+<meta name="app-version" content="1.40">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -384,6 +384,14 @@ body.perm-ro #jvPanel,body.perm-ro #tab-logistics .b3-head ~ .b3-foot,body.perm-
 body.perm-ro #clRows button,body.perm-ro #tjvRows button{display:none!important}
 body.perm-ro td.g-ed{cursor:default}
 body.perm-ro td.g-ed:hover{outline:none}
+/* v1.40 드릴다운 */
+tr.dr-row{cursor:pointer}
+.dr-box{width:760px}
+.dr-hd{display:grid;grid-template-columns:repeat(4,auto 1fr);gap:4px 10px;margin:10px 0;font-size:12px;align-items:center}
+.dr-hd b{font-weight:600;color:var(--text-dim,#666)}
+.dr-box td.n{text-align:right}
+.dr-ft{display:flex;justify-content:flex-end;gap:6px;margin-top:10px}
+body.perm-ro #drJv{display:none!important}
 </style>
 </head>
 <body>
@@ -2035,7 +2043,7 @@ async function glaRender(){
   if(!rows.length && !before){ glEmpty('glaRows', 8, '해당 기간 거래 없음'); return; }
   var html = (f && !cp) ? '<tr><td>' + f + '</td><td></td><td></td><td></td><td>전기이월</td><td></td><td></td><td style="text-align:right">' + fmt(Math.round(before)) + '</td></tr>' : '';
   html += rows.map(function(x){
-    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.origin || '') + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.partner) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + (cp ? '' : fmt(Math.round(x.balance))) + '</td></tr>';
+    return '<tr class="dr-row" data-doc="' + glEsc(x.doc_no) + '" data-o="' + glEsc(x.origin || '') + '"><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.origin || '') + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.partner) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + (cp ? '' : fmt(Math.round(x.balance))) + '</td></tr>';
   }).join('');
   document.getElementById('glaRows').innerHTML = html;
 }
@@ -2066,7 +2074,7 @@ function glpRender(){
   document.getElementById('glpTitle').innerText = cp;
   if(!rows.length){ glEmpty('glpRows', 7, '해당 기간 거래 없음'); return; }
   document.getElementById('glpRows').innerHTML = rows.map(function(x){
-    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.acct_name) + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + fmt(Math.round(x.balance)) + '</td></tr>';
+    return '<tr class="dr-row" data-doc="' + glEsc(x.doc_no) + '"><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.acct_name) + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + fmt(Math.round(x.balance)) + '</td></tr>';
   }).join('');
 }
 function glpPick(p){ var s = document.getElementById('glpCp'); s.value = p; glpRender(); }
@@ -2184,7 +2192,7 @@ function glmRender(){
   document.getElementById('glmTitle').innerText = (f || '처음') + ' ~ ' + (to || '현재');
   if(!list.length){ glEmpty('glmRows', 5, '해당 기간 거래 없음'); return; }
   document.getElementById('glmRows').innerHTML = list.map(function(x){
-    return '<tr><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td></tr>';
+    return '<tr class="dr-row" data-c="' + x.c + '"><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td></tr>';
   }).join('');
 }
 function gltRender(){
@@ -2199,7 +2207,7 @@ function gltRender(){
   if(!list.length){ glEmpty('gltRows', 7, '거래 없음'); return; }
   document.getElementById('gltRows').innerHTML = list.map(function(x){
     var d = x.dr - x.cr;
-    return '<tr><td style="text-align:right">' + glN(Math.max(d, 0)) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + glN(Math.max(-d, 0)) + '</td></tr>';
+    return '<tr class="dr-row" data-c="' + x.c + '"><td style="text-align:right">' + glN(Math.max(d, 0)) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + glN(Math.max(-d, 0)) + '</td></tr>';
   }).join('');
 }
 
@@ -3684,6 +3692,63 @@ hideGate = function(){ var r = _hideGate1.apply(this, arguments); setTimeout(per
   window[n] = function(){ if(permDeny()) return; return f.apply(this, arguments); };
 });
 setTimeout(permCheck, 1500);
+// ── 원장 드릴다운 (v1.40) ──
+var DR = { doc: '', o: '' };
+function drClose(){ var m = document.getElementById('drMod'); if(m) m.style.display = 'none'; }
+async function drOpen(doc, o){
+  if(!sb || !doc) return;
+  var m = document.getElementById('drMod');
+  if(!m){ m = document.createElement('div'); m.id = 'drMod'; m.className = 'g-mod'; document.body.appendChild(m);
+    m.onclick = function(e){ if(e.target === m) drClose(); }; }
+  m.innerHTML = '<div class="g-mod-box dr-box"><div class="panel-title">전표 상세</div><div id="drBody">불러오는 중</div></div>';
+  m.style.display = 'flex';
+  var q = sb.from('ssjg_gl_lines').select('doc_no,doc_date,line_no,acct_code,acct_name,dr,cr,partner,flow,src,title,approval_no,memo,origin,origin_id').eq('doc_no', doc);
+  if(o) q = q.eq('origin', o);
+  var r;
+  try { r = await q.order('line_no', { ascending: true }).limit(500); } catch(e){ r = { error: e }; }
+  var box = document.getElementById('drBody'); if(!box) return;
+  if(r.error){ box.textContent = '조회 실패: ' + (r.error.message || r.error); return; }
+  var L = (r.data || []).slice().sort(function(a, b){ return (Number(b.dr) > 0) - (Number(a.dr) > 0) || Number(a.line_no) - Number(b.line_no); });
+  if(!L.length){ box.textContent = '전표 없음'; return; }
+  var h = L[0], sd = 0, sc = 0;
+  DR.doc = doc; DR.o = h.origin || o || '';
+  var rows = L.map(function(x){ sd += Number(x.dr || 0); sc += Number(x.cr || 0);
+    return '<tr><td>' + (Number(x.dr) > 0 ? '차변' : '대변') + '</td><td>' + gEsc(x.acct_code) + '</td><td>' + gEsc(x.acct_name || '') + '</td><td>' + gEsc(x.partner || '') + '</td><td class="n">' + glN(x.dr) + '</td><td class="n">' + glN(x.cr) + '</td><td>' + gEsc(x.memo || '') + '</td></tr>'; }).join('');
+  box.innerHTML = '<div class="dr-hd"><b>전표번호</b><span>' + gEsc(h.doc_no) + '</span><b>일자</b><span>' + gEsc(h.doc_date || '') + '</span><b>원천</b><span>' + gEsc(h.origin || '') + '</span><b>구분</b><span>' + gEsc([h.src, h.flow].filter(Boolean).join(' ')) + '</span>'
+    + '<b>적요</b><span style="grid-column:span 5">' + gEsc(h.title || '') + '</span><b>승인번호</b><span>' + gEsc(h.approval_no || '') + '</span></div>'
+    + '<div class="table-wrap"><table data-foot="1"><thead><tr><th>구분</th><th>계정</th><th>계정명</th><th>거래처</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th>적요</th></tr></thead><tbody>' + rows + '</tbody>'
+    + '<tfoot><tr><td colspan="4">합계' + (Math.round(sd) === Math.round(sc) ? '' : ' (차대 불일치)') + '</td><td class="n">' + glN(sd) + '</td><td class="n">' + glN(sc) + '</td><td></td></tr></tfoot></table></div>'
+    + '<div class="dr-ft">' + (DR.o === '입력전표' ? '<button class="btn" id="drJv" onclick="drToJv()">전표입력에서 열기</button>' : '') + '<button class="btn" onclick="drClose()">닫기</button></div>';
+}
+function drToJv(){
+  var no = DR.doc; drClose(); switchTab('journal');
+  var n = 0, iv = setInterval(function(){
+    n++;
+    var i = (JV.list || []).findIndex(function(x){ return x.jv_no === no; });
+    if(i >= 0){ clearInterval(iv); jvLoad(i); }
+    else if(n > 30){ clearInterval(iv); gToast('입력 전표 목록에 없습니다: ' + no, true); }
+  }, 100);
+}
+function drAcct(code, f, to){
+  switchTab('gl-account');
+  var n = 0, iv = setInterval(function(){
+    var s = document.getElementById('glaAcct'); n++;
+    if(s && s.options.length){ clearInterval(iv); s.value = code; document.getElementById('glaFrom').value = f || ''; document.getElementById('glaTo').value = to || ''; glaRender(); }
+    else if(n > 50) clearInterval(iv);
+  }, 100);
+}
+document.addEventListener('dblclick', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('tr.dr-row'); if(!tr) return;
+  var tb = tr.parentNode && tr.parentNode.id;
+  if(tb === 'glaRows' || tb === 'glpRows') drOpen(tr.dataset.doc, tr.dataset.o || '');
+  else if(tb === 'glmRows') drAcct(tr.dataset.c, document.getElementById('glmFrom').value, document.getElementById('glmTo').value);
+  else if(tb === 'gltRows') drAcct(tr.dataset.c, '', document.getElementById('gltTo').value);
+});
+document.addEventListener('keydown', function(e){
+  var m = document.getElementById('drMod');
+  if(e.key === 'Escape' && m && m.style.display === 'flex'){ e.preventDefault(); drClose(); }
+});
+
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
