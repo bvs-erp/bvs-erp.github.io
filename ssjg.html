@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.43">
+<meta name="app-version" content="1.44">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1378,6 +1378,10 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
     <div class="panel">
       <div class="panel-head"><div class="panel-title">매출처별 세금계산서 합계표 <span class="g-cnt" id="vtSaleCnt"></span></div></div>
         <div class="table-wrap"><table data-foot="1"><thead><tr><th>사업자번호</th><th>상호</th><th style="text-align:right">매수</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtSale"><tr><td colspan="5" class="td-empty">-</td></tr></tbody><tfoot id="vtSaleF"></tfoot></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">기타 매출 채널별 합계표 <span class="g-cnt" id="vtEtcCnt"></span></div></div>
+        <div class="table-wrap"><table data-foot="1"><thead><tr><th>채널</th><th style="text-align:right">건수</th><th style="text-align:right">정산금액</th><th style="text-align:right">면세</th><th style="text-align:right">공급가액</th><th style="text-align:right">세액</th></tr></thead><tbody id="vtEtc"><tr><td colspan="6" class="td-empty">-</td></tr></tbody><tfoot id="vtEtcF"></tfoot></table></div>
     </div>
     <div class="panel">
       <div class="panel-head"><div class="panel-title">매입처별 세금계산서 합계표 <span class="g-cnt" id="vtBuyCnt"></span></div></div>
@@ -4020,6 +4024,8 @@ async function vtLoad(){
   try { var a = await sb.from('ssjg_tax_invoices').select('*').gte('write_date', d0).lt('write_date', d1).limit(10000); if(a.error) err.push(a.error.message); ti = a.data || []; } catch(e){ err.push(e.message || e); }
   try { var b = await sb.from('ssjg_cash_receipts').select('*').gte('tx_date', d0).lt('tx_date', d1).limit(10000); if(b.error) err.push(b.error.message); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
   try { var c = await sb.from('ssjg_card_purchases').select('*').eq('yr', y).limit(10000); if(c.error) err.push(c.error.message); cd = c.data || []; } catch(e){ err.push(e.message || e); }
+  var st = [];
+  try { var sq = await sb.from('ssjg_settlements').select('*').gte('ym', d0).lt('ym', d1).limit(10000); if(sq.error) err.push(sq.error.message); st = sq.data || []; } catch(e){ err.push(e.message || e); }
   if(err.length) gToast('일부 조회 실패: ' + err.join(', '), true);
   var bm = await vtBizMap();
   function cpBiz(x){ return bm[tjvNorm(x)] || ''; }
@@ -4042,12 +4048,57 @@ async function vtLoad(){
   document.getElementById('vtCashCnt').textContent = cash.c + '곳 ' + cash.n + '건';
   document.getElementById('vtCardCnt').textContent = y + '년 ' + card.c + '곳 ' + card.n + '건';
   function row(label, o, cls){ return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="n">' + (o.n == null ? '' : vtN(o.n)) + '</td><td class="n">' + (o.s == null ? '' : vtN(o.s)) + '</td><td class="n">' + vtN(o.v) + '</td></tr>'; }
-  document.getElementById('vtSum').innerHTML = row('매출 세금계산서', sale) + row('매입 세금계산서', buy) + row('매입 현금영수증 (공제)', cash)
-    + row('차감 세액 (카드 제외)', { n: null, s: null, v: sale.v - buy.v - cash.v }, 'vt-tot')
+  var etc = vtEtcFill(st);
+  document.getElementById('vtSum').innerHTML = row('매출 세금계산서', sale) + row('기타 매출 (판매대행)', etc) + row('매입 세금계산서', buy) + row('매입 현금영수증 (공제)', cash)
+    + row('차감 세액 (카드 제외)', { n: null, s: null, v: sale.v + etc.v - buy.v - cash.v }, 'vt-tot')
     + row('신용카드 매입 (' + y + '년 연간)', card);
 }
 document.addEventListener('change', function(e){ var id = e.target && e.target.id; if(id === 'vtYear' || id === 'vtTerm') vtLoad(); });
 var _switchTab143 = switchTab; switchTab = function(tabId){ var r = _switchTab143.apply(this, arguments); if(tabId === 'vat-sum') vtOpen(); return r; };
+
+// ── 부가세 기타 매출 (v1.44) ──
+function vtEtcFill(st){
+  var g = {};
+  st.forEach(function(x){
+    var k = x.channel || '(없음)', amt = Number(x.amt || 0), ex = Number(x.amt_exempt || 0), tx = amt - ex, sup = Math.round(tx / 1.1);
+    if(!g[k]) g[k] = { name: k, n: 0, a: 0, e: 0, s: 0, v: 0 };
+    g[k].n += Number(x.cnt || 0); g[k].a += amt; g[k].e += ex; g[k].s += sup; g[k].v += tx - sup;
+  });
+  var list = Object.keys(g).map(function(k){ return g[k]; }).sort(function(a, b){ return b.a - a.a; });
+  var T = { n: 0, a: 0, e: 0, s: 0, v: 0 };
+  document.getElementById('vtEtc').innerHTML = list.length ? list.map(function(x){
+    ['n', 'a', 'e', 's', 'v'].forEach(function(f){ T[f] += x[f]; });
+    return '<tr><td>' + gEsc(x.name) + '</td><td class="n">' + vtN(x.n) + '</td><td class="n">' + vtN(x.a) + '</td><td class="n">' + vtN(x.e) + '</td><td class="n">' + vtN(x.s) + '</td><td class="n">' + vtN(x.v) + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="td-empty">자료 없음</td></tr>';
+  document.getElementById('vtEtcF').innerHTML = list.length ? '<tr><td>합계 ' + list.length + '</td><td class="n">' + vtN(T.n) + '</td><td class="n">' + vtN(T.a) + '</td><td class="n">' + vtN(T.e) + '</td><td class="n">' + vtN(T.s) + '</td><td class="n">' + vtN(T.v) + '</td></tr>' : '';
+  document.getElementById('vtEtcCnt').textContent = list.length + '곳';
+  return { n: T.n, s: T.s, v: T.v };
+}
+// ── 상단 버튼 연결: 세금계산서 전표 (v1.44) ──
+var _pgAct144 = pgAct;
+pgAct = function(k){
+  var p = pgPane();
+  if(p && p.id === 'tab-tax-jv'){
+    if(k === 'n'){ tmReset(); document.getElementById('tmCp').focus(); return; }
+    if(k === 's'){ tmSave(); return; }
+    if(k === 'd'){ var s = p.querySelector('#tjvRows tr.sel .tm-del'); if(s) s.click(); else gToast('삭제할 수기 계산서 행을 먼저 선택하세요', true); return; }
+  }
+  return _pgAct144(k);
+};
+var _pgUpdate144 = pgUpdate;
+pgUpdate = function(id){
+  var r = _pgUpdate144.apply(this, arguments);
+  if(id === 'tax-jv'){
+    var on = function(){ var p = document.getElementById('tab-tax-jv'); if(!p || !p.classList.contains('active')) return; ['pgN', 'pgS', 'pgD'].forEach(function(b){ var e = document.getElementById(b); if(e) e.disabled = false; }); };
+    setTimeout(on, 450); setTimeout(on, 1900);
+  }
+  return r;
+};
+document.addEventListener('click', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('#tjvRows tr'); if(!tr || e.target.closest('button')) return;
+  tr.parentNode.querySelectorAll('tr.sel').forEach(function(x){ if(x !== tr) x.classList.remove('sel'); });
+  tr.classList.add('sel');
+});
 
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
