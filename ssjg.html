@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.34">
+<meta name="app-version" content="1.35">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -368,6 +368,16 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 .pg-per{display:inline-flex;gap:2px;align-items:center}
 .pg-per .btn{padding:3px 8px!important;font-size:11.5px;min-width:0}
 @media print{.pg-per{display:none!important}}
+/* v1.35 그리드 표준 기능 */
+th.gs-th{cursor:pointer;user-select:none;position:sticky}
+th.gs-th[data-sort]::after{content:attr(data-sort);font-size:9px;margin-left:4px;color:var(--accent)}
+.gs-rz{position:absolute;top:0;right:-3px;width:6px;height:100%;cursor:col-resize;z-index:2}
+.gs-fr th{padding:2px 3px!important;background:#fafbfc!important;top:28px}
+.gs-f{width:100%;min-width:40px;height:22px!important;padding:1px 4px!important;font-size:11.5px!important;border-radius:0!important;font-weight:400}
+.table-wrap table th:first-child,.table-wrap table td:first-child{position:sticky;left:0;z-index:5;background:var(--panel)}
+.table-wrap table thead th:first-child{z-index:12;background:var(--grid-head,#f3f5f8)}
+.table-wrap table tr.sel td:first-child{background:var(--row-sel,#dcebfd)}
+@media print{.gs-fr,.gs-rz{display:none!important}th.gs-th[data-sort]::after{content:''}.table-wrap table td:first-child,.table-wrap table th:first-child{position:static!important}}
 </style>
 </head>
 <body>
@@ -3431,6 +3441,77 @@ CH_SRC.partner.load = async function(){
   } catch(e){}
   return CH_SRC.partner.load0();
 };
+// ── 그리드 표준 기능 (v1.35): 정렬·열 필터·열 너비·첫 열 고정 ──
+function gsVal(v){ if(v == null || v === '') return null; var n = Number(String(v).replace(/,/g, '')); return isFinite(n) && /^-?[\d,]+(\.\d+)?$/.test(String(v).trim()) ? n : String(v); }
+function gsCmp(a, b){ a = gsVal(a); b = gsVal(b); if(a === null) return b === null ? 0 : 1; if(b === null) return -1;
+  if(typeof a === 'number' && typeof b === 'number') return a - b; return String(a).localeCompare(String(b), 'ko'); }
+var _gridRows1 = gridRows;
+gridRows = function(g){
+  var r = _gridRows1(g), f = g.f || {};
+  var ks = Object.keys(f).filter(function(k){ return f[k]; });
+  if(ks.length) r = r.filter(function(x){ return ks.every(function(k){ return String(x[k] == null ? '' : x[k]).toLowerCase().indexOf(f[k].toLowerCase()) >= 0; }); });
+  if(g.sort){ var c = g.sort.c, d = g.sort.d; r = r.slice().sort(function(a, b){ return gsCmp(a[c], b[c]) * d; }); }
+  return r;
+};
+var _gridRender1 = gridRender;
+gridRender = function(tb){
+  var g = GRID[tb], act = document.activeElement, fcol = act && act.dataset && act.dataset.gf === tb ? act.dataset.col : null, pos = fcol ? act.selectionStart : 0;
+  _gridRender1(tb);
+  var th = document.getElementById('gh_' + tb); if(!th || !g) return;
+  var hr = th.rows[0]; if(!hr) return;
+  Array.prototype.forEach.call(hr.cells, function(c, i){
+    var col = g.cols[i]; if(!col) return;
+    c.classList.add('gs-th'); c.dataset.col = col.name;
+    if(g.sort && g.sort.c === col.name) c.setAttribute('data-sort', g.sort.d > 0 ? '▲' : '▼');
+    c.onclick = function(e){ if(e.target.classList.contains('gs-rz')) return; var s = g.sort; g.sort = !s || s.c !== col.name ? { c: col.name, d: 1 } : (s.d > 0 ? { c: col.name, d: -1 } : null); gridRender(tb); };
+  });
+  var fr = document.createElement('tr'); fr.className = 'gs-fr';
+  fr.innerHTML = Array.prototype.map.call(hr.cells, function(c, i){ var col = g.cols[i];
+    return col ? '<th><input class="input gs-f" data-gf="' + tb + '" data-col="' + gEsc(col.name) + '" value="' + gEsc((g.f || {})[col.name] || '') + '"></th>' : '<th></th>'; }).join('');
+  th.appendChild(fr);
+  fr.querySelectorAll('.gs-f').forEach(function(inp){
+    inp.oninput = function(){ g.f = g.f || {}; g.f[inp.dataset.col] = inp.value.trim(); g.page = 0; gridRender(tb); };
+    inp.onclick = function(e){ e.stopPropagation(); };
+  });
+  if(fcol){ var n = fr.querySelector('.gs-f[data-col="' + fcol + '"]'); if(n){ n.focus(); try { n.setSelectionRange(pos, pos); } catch(e){} } }
+  gsResizers(th.closest('table'));
+};
+function gsResizers(t){
+  if(!t || !t.tHead) return;
+  var hr = t.tHead.rows[0]; if(!hr) return;
+  Array.prototype.forEach.call(hr.cells, function(c){
+    if(c.querySelector('.gs-rz')) return;
+    var h = document.createElement('span'); h.className = 'gs-rz'; c.appendChild(h);
+    h.onmousedown = function(e){ e.preventDefault(); e.stopPropagation(); var x0 = e.clientX, w0 = c.offsetWidth;
+      function mv(ev){ var w = Math.max(40, w0 + ev.clientX - x0); c.style.width = c.style.minWidth = c.style.maxWidth = w + 'px'; }
+      function up(){ document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up); };
+    h.onclick = function(e){ e.stopPropagation(); };
+  });
+}
+function gsPlain(t){
+  if(!t || t.dataset.gs || t.closest('.g-panel') || t.classList.contains('jv-tbl') || t.classList.contains('b3-tbl') || !t.tHead || !t.tBodies[0]) return;
+  var hr = t.tHead.rows[t.tHead.rows.length - 1]; if(!hr || !hr.cells.length || (t.tHead.id || '').indexOf('gh_') === 0) return;
+  t.dataset.gs = '1';
+  Array.prototype.forEach.call(hr.cells, function(c, ci){
+    c.classList.add('gs-th');
+    c.addEventListener('click', function(e){
+      if(e.target.classList.contains('gs-rz')) return;
+      var tb = t.tBodies[0], rows = Array.prototype.filter.call(tb.rows, function(r){ return r.cells.length === hr.cells.length; });
+      if(rows.length < 2) return;
+      var d = c.getAttribute('data-sort') === '▲' ? -1 : 1;
+      hr.querySelectorAll('[data-sort]').forEach(function(x){ x.removeAttribute('data-sort'); });
+      c.setAttribute('data-sort', d > 0 ? '▲' : '▼');
+      rows.sort(function(a, b){ return gsCmp(a.cells[ci].innerText.trim(), b.cells[ci].innerText.trim()) * d; });
+      rows.forEach(function(r){ tb.appendChild(r); });
+    });
+  });
+  gsResizers(t);
+}
+function gsInitPlain(){ document.querySelectorAll('.tab-pane table').forEach(function(t){ try { gsPlain(t); } catch(e){} }); }
+gsInitPlain();
+var _switchTab1 = switchTab;
+switchTab = function(id, el){ var r = _switchTab1(id, el); setTimeout(gsInitPlain, 300); return r; };
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
