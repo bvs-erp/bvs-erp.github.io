@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.48">
+<meta name="app-version" content="1.49">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4394,7 +4394,7 @@ async function vtExport(){
   XLSX.writeFile(wb, today + '_SSJG_정산_세무사_부가세자료_' + d0.slice(0, 7).replace('-', '') + '-' + end + '.xlsx');
 }
 // ── 엔티티 간 거래 경고 (v1.48) ──
-var TR_ENT = [['BVS', ['비브이에스', 'bvs']], ['PYRO', ['파이로', 'pyro']], ['HBS', ['황병승']]];
+var TR_ENT = [['BVS', ['비브이에스', 'bvs']], ['PYRO', ['파이로', 'pyro']], ['HBS', ['황병승']], ['대표', ['이세영']]];
 function trWho(name){
   var s = tjvNorm(name || ''); if(!s) return '';
   for(var i = 0; i < TR_ENT.length; i++){ for(var j = 0; j < TR_ENT[i][1].length; j++){ if(s.indexOf(TR_ENT[i][1][j]) >= 0) return TR_ENT[i][0]; } }
@@ -4419,6 +4419,24 @@ drOpen = async function(){
 function trMark(sel, col){ document.querySelectorAll(sel).forEach(function(tr){ var td = tr.children[col]; if(td && !td.querySelector('.tr-tag')) td.insertAdjacentHTML('beforeend', trTag(td.textContent)); }); }
 var _apLoad148 = apLoad; apLoad = async function(){ var r = await _apLoad148.apply(this, arguments); trMark('#apRows tr.dr-row', 1); return r; };
 var _jfLoad148 = jfLoad; jfLoad = async function(){ var r = await _jfLoad148.apply(this, arguments); trMark('#jfRows tr.dr-row', 5); return r; };
+// ── 가지급금·가수금 경고 (v1.49) ──
+var TR_ACCT = { '134': '가지급금', '257': '가수금' };
+function trAcct(c){ return TR_ACCT[String(c || '').trim()] || ''; }
+document.addEventListener('change', function(e){
+  var t = e.target; if(!t || !t.classList || !t.classList.contains('jv-acct')) return;
+  var w = trAcct(t.value); t.classList.toggle('tr-on', !!w);
+  if(w) gToast(w + ' — 인정이자·상환계획·대여약정 확인', true);
+});
+var _drOpen149 = drOpen;
+drOpen = async function(){
+  var r = await _drOpen149.apply(this, arguments);
+  var who = {}; (DR.lines || []).forEach(function(x){ var w = trAcct(x.acct_code); if(w) who[w] = 1; });
+  var ks = Object.keys(who), box = document.getElementById('drBody');
+  if(ks.length && box && !box.querySelector('.tr-acct')) box.insertAdjacentHTML('afterbegin', '<div class="tr-box tr-acct">' + ks.join('·') + ' 전표 — 인정이자·상환계획·대여약정 확인</div>');
+  return r;
+};
+function trMarkAcct(sel, col){ document.querySelectorAll(sel).forEach(function(tr){ var td = tr.children[col]; if(!td || td.querySelector('.tr-tag')) return; var w = trAcct(td.textContent); if(w) td.insertAdjacentHTML('beforeend', '<span class="tr-tag">' + w + '</span>'); }); }
+var _jfLoad149 = jfLoad; jfLoad = async function(){ var r = await _jfLoad149.apply(this, arguments); trMarkAcct('#jfRows tr.dr-row', 3); return r; };
 // ── Ctrl+K 통합 검색 · 메뉴 접기 (v1.48) ──
 var KP = { idx: 0, list: [] };
 function sideMin(on){
