@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.23">
+<meta name="app-version" content="1.24">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -947,6 +947,77 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <div data-grid="ssjg_bank_txns"></div>
   </div>
 
+  <div id="tab-gl-account" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">계정별원장 <span id="glaTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>계정<select id="glaAcct" class="input" style="width:200px"></select></label>
+        <label>시작월<input type="month" id="glaFrom" class="input"></label>
+        <label>종료월<input type="month" id="glaTo" class="input"></label>
+        <label>거래처<input type="text" id="glaCp" class="input" style="width:160px"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="glaRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>일자</th><th>전표번호</th><th>거래처</th><th>적요</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">잔액</th></tr></thead>
+          <tbody id="glaRows"><tr><td colspan="7" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-gl-partner" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">거래처원장 <span id="glpTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>거래처<select id="glpCp" class="input" style="width:240px"></select></label>
+        <label>계정<select id="glpAcct" class="input" style="width:140px"><option value="">전체</option><option value="108">외상매출금</option><option value="251">외상매입금</option><option value="253">미지급금</option></select></label>
+        <label>시작월<input type="month" id="glpFrom" class="input"></label>
+        <label>종료월<input type="month" id="glpTo" class="input"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="glpRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="glpHead"></thead>
+          <tbody id="glpRows"><tr><td style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-gl-month" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">월계표 <span id="glmTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>시작월<input type="month" id="glmFrom" class="input"></label>
+        <label>종료월<input type="month" id="glmTo" class="input"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="glmRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="text-align:right">차변 합계</th><th>계정코드</th><th>계정과목</th><th>구분</th><th style="text-align:right">대변 합계</th></tr></thead>
+          <tbody id="glmRows"><tr><td colspan="5" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-gl-trial" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">합계잔액시산표 <span id="gltTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>기준월<input type="month" id="gltTo" class="input"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="gltRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="text-align:right">차변 잔액</th><th style="text-align:right">차변 합계</th><th>계정코드</th><th>계정과목</th><th>구분</th><th style="text-align:right">대변 합계</th><th style="text-align:right">대변 잔액</th></tr></thead>
+          <tbody id="gltRows"><tr><td colspan="7" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 3: 월별 손익·자금 추이 -->
   <div id="tab-monthly" class="tab-pane">
     <div class="panel">
@@ -1422,7 +1493,8 @@ var MENU = [
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
     { n: '전표', i: [['journal', '전표']] },
-    { n: '장부', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
+    { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
+    { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
     { n: '결산', i: [['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
@@ -1504,10 +1576,10 @@ function tblFoot(t){
   var sums = [], any = false;
   Array.prototype.forEach.call(hr.cells, function(th, ci){
     var h = th.innerText.trim();
-    var ok = /(금액|합계|공급가|세액|입금|출금|수량|건수|매출|원가|이익|차익|결제|배송|판관비|운임|수입|박스|청구|수금|지급|할인|현금흐름|순수지)/.test(h)
-      && !/(율|단가|일자|월$|번호|코드)/.test(h) && !(/잔액/.test(h) && !/미수/.test(h));
+    var ok = /(차변|대변|금액|합계|공급가|세액|입금|출금|수량|건수|매출|원가|이익|차익|결제|배송|판관비|운임|수입|박스|청구|수금|지급|할인|현금흐름|순수지)/.test(h)
+      && !/(율|단가|일자|월$|번호|코드)/.test(h) && !(/잔액/.test(h) && !/(미수|차변|대변)/.test(h));
     if(!ok){ sums.push(null); return; }
-    var n = 0, s = 0; rows.forEach(function(r){ var v = numOf(r.cells[ci].innerText); if(v !== null){ n++; s += v; } });
+    var dc = /(차변|대변)/.test(h), n = 0, s = 0; rows.forEach(function(r){ var v = numOf(r.cells[ci].innerText); if(v !== null){ n++; s += v; } else if(dc && !r.cells[ci].innerText.trim()) n++; });
     if(n >= rows.length / 2){ sums.push(s); any = true; } else sums.push(null);
   });
   if(!any) return;
@@ -1533,6 +1605,7 @@ function switchTab(tabId, el){
   if(target) target.classList.add('active');
   gridInitIn(target);
   if(tabId==='logistics')b3Init();
+  if(tabId.indexOf('gl-')===0)glOpen(tabId);
   toggleSide(false);
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
@@ -1646,6 +1719,139 @@ function toggleSide(force){
   var on = (force === undefined) ? !sd.classList.contains('open') : force;
   sd.classList.toggle('open', on);
   if(dm) dm.classList.toggle('open', on);
+}
+
+// ── 회계관리 > 장부 ──
+var GL = { coa: null, month: null, acct: {}, partner: null };
+function glEsc(s){ return noEmo(s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function glYm(y, m){ return y + '-' + String(m).padStart(2, '0'); }
+function glIn(ym, f, to){ return (!f || ym >= f) && (!to || ym <= to); }
+function glN(v){ v = Number(v || 0); return v ? fmt(Math.round(v)) : ''; }
+function glEmpty(id, cols, msg){ document.getElementById(id).innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;padding:30px">' + msg + '</td></tr>'; }
+function glNowYm(){ return new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 7); }
+async function glBase(){
+  if(!GL.coa){
+    var c = await tdFetchAll('ssjg_coa', 'acct_code,acct_name,acct_class,normal_side', 'acct_code');
+    GL.coa = c.sort(function(a, b){ return a.acct_code < b.acct_code ? -1 : 1; });
+  }
+  if(!GL.month) GL.month = await tdFetchAll('ssjg_gl_month', 'yr,mo,acct_code,acct_name,acct_class,dr,cr', 'yr');
+}
+async function glOpen(tab){
+  if(!sb) return;
+  try {
+    await glBase();
+    if(tab === 'gl-account'){
+      var s = document.getElementById('glaAcct');
+      if(!s.options.length){
+        s.innerHTML = GL.coa.map(function(a){ return '<option value="' + a.acct_code + '">' + a.acct_code + ' ' + glEsc(a.acct_name) + '</option>'; }).join('');
+        s.value = '108';
+        document.getElementById('glaTo').value = glNowYm();
+      }
+      glaRender();
+    } else if(tab === 'gl-partner'){
+      if(!GL.partner) GL.partner = await tdFetchAll('ssjg_ledger_partner', 'partner,acct_code,acct_name,doc_date,yr,mo,doc_no,title,dr,cr,balance', 'doc_date');
+      var p = document.getElementById('glpCp');
+      if(!p.options.length){
+        var names = {}; GL.partner.forEach(function(r){ names[r.partner] = 1; });
+        p.innerHTML = '<option value="">전체 잔액</option>' + Object.keys(names).sort().map(function(n){ return '<option value="' + glEsc(n) + '">' + glEsc(n) + '</option>'; }).join('');
+      }
+      glpRender();
+    } else if(tab === 'gl-month'){
+      if(!document.getElementById('glmTo').value){ var n = glNowYm(); document.getElementById('glmFrom').value = n.slice(0, 4) + '-01'; document.getElementById('glmTo').value = n; }
+      glmRender();
+    } else if(tab === 'gl-trial'){
+      if(!document.getElementById('gltTo').value) document.getElementById('gltTo').value = glNowYm();
+      gltRender();
+    }
+  } catch(e){ gToast('장부 조회 실패: ' + (e.message || e), true); }
+}
+async function glaRender(){
+  var code = document.getElementById('glaAcct').value, f = document.getElementById('glaFrom').value,
+      to = document.getElementById('glaTo').value, cp = document.getElementById('glaCp').value.trim();
+  if(!code) return;
+  try {
+    if(!GL.acct[code]){
+      var r = await sb.from('ssjg_ledger_account').select('acct_code,acct_name,doc_date,yr,mo,doc_no,line_no,partner,title,dr,cr,balance').eq('acct_code', code).order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(0, 9999);
+      if(r.error) throw r.error;
+      GL.acct[code] = r.data || [];
+    }
+  } catch(e){ gToast('계정별원장 조회 실패: ' + (e.message || e), true); return; }
+  var all = GL.acct[code], a = (GL.coa || []).find(function(x){ return x.acct_code === code; }) || {}, dsign = a.normal_side === '대' ? -1 : 1;
+  var before = 0, rows = [];
+  all.forEach(function(x){
+    var ym = glYm(x.yr, x.mo);
+    if(f && ym < f){ before = Number(x.balance); return; }
+    if(!glIn(ym, f, to)) return;
+    if(cp && String(x.partner || '').indexOf(cp) < 0) return;
+    rows.push(x);
+  });
+  document.getElementById('glaTitle').innerText = code + ' ' + (a.acct_name || '');
+  if(!rows.length && !before){ glEmpty('glaRows', 7, '해당 기간 거래 없음'); return; }
+  var html = (f && !cp) ? '<tr><td>' + f + '</td><td></td><td></td><td>전기이월</td><td></td><td></td><td style="text-align:right">' + fmt(Math.round(before)) + '</td></tr>' : '';
+  html += rows.map(function(x){
+    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.partner) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + (cp ? '' : fmt(Math.round(x.balance))) + '</td></tr>';
+  }).join('');
+  document.getElementById('glaRows').innerHTML = html;
+}
+function glpRender(){
+  var cp = document.getElementById('glpCp').value, ac = document.getElementById('glpAcct').value,
+      f = document.getElementById('glpFrom').value, to = document.getElementById('glpTo').value, head = document.getElementById('glpHead');
+  var src = (GL.partner || []).filter(function(r){ return (!ac || r.acct_code === ac); });
+  if(!cp){
+    head.innerHTML = '<tr><th>거래처</th><th>계정</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">차변 잔액</th><th style="text-align:right">대변 잔액</th></tr>';
+    var g = {};
+    src.forEach(function(r){
+      if(!glIn(glYm(r.yr, r.mo), f, to)) return;
+      var k = r.partner + '||' + r.acct_code;
+      if(!g[k]) g[k] = { p: r.partner, a: r.acct_name, c: r.acct_code, dr: 0, cr: 0 };
+      g[k].dr += Number(r.dr || 0); g[k].cr += Number(r.cr || 0);
+    });
+    var list = Object.keys(g).map(function(k){ return g[k]; }).sort(function(a, b){ return a.c === b.c ? (a.p < b.p ? -1 : 1) : (a.c < b.c ? -1 : 1); });
+    document.getElementById('glpTitle').innerText = list.length + '건';
+    if(!list.length){ glEmpty('glpRows', 6, '해당 기간 거래 없음'); return; }
+    document.getElementById('glpRows').innerHTML = list.map(function(x){
+      var net = x.c === '108' ? x.dr - x.cr : x.cr - x.dr, drb = x.c === '108' ? Math.max(net, 0) : Math.max(-net, 0), crb = x.c === '108' ? Math.max(-net, 0) : Math.max(net, 0);
+      return '<tr style="cursor:pointer" onclick="glpPick(this.dataset.p)" data-p="' + glEsc(x.p) + '"><td>' + glEsc(x.p) + '</td><td>' + glEsc(x.a) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + glN(drb) + '</td><td style="text-align:right">' + glN(crb) + '</td></tr>';
+    }).join('');
+    return;
+  }
+  head.innerHTML = '<tr><th>일자</th><th>계정</th><th>전표번호</th><th>적요</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">잔액</th></tr>';
+  var rows = src.filter(function(r){ return r.partner === cp && glIn(glYm(r.yr, r.mo), f, to); });
+  document.getElementById('glpTitle').innerText = cp;
+  if(!rows.length){ glEmpty('glpRows', 7, '해당 기간 거래 없음'); return; }
+  document.getElementById('glpRows').innerHTML = rows.map(function(x){
+    return '<tr><td>' + (x.doc_date || '') + '</td><td>' + glEsc(x.acct_name) + '</td><td>' + glEsc(x.doc_no) + '</td><td>' + glEsc(x.title) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + fmt(Math.round(x.balance)) + '</td></tr>';
+  }).join('');
+}
+function glpPick(p){ var s = document.getElementById('glpCp'); s.value = p; glpRender(); }
+function glmRender(){
+  var f = document.getElementById('glmFrom').value, to = document.getElementById('glmTo').value, g = {};
+  (GL.month || []).forEach(function(r){
+    if(!glIn(glYm(r.yr, r.mo), f, to)) return;
+    if(!g[r.acct_code]) g[r.acct_code] = { c: r.acct_code, n: r.acct_name, k: r.acct_class, dr: 0, cr: 0 };
+    g[r.acct_code].dr += Number(r.dr || 0); g[r.acct_code].cr += Number(r.cr || 0);
+  });
+  var list = Object.keys(g).sort().map(function(k){ return g[k]; });
+  document.getElementById('glmTitle').innerText = (f || '처음') + ' ~ ' + (to || '현재');
+  if(!list.length){ glEmpty('glmRows', 5, '해당 기간 거래 없음'); return; }
+  document.getElementById('glmRows').innerHTML = list.map(function(x){
+    return '<tr><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td></tr>';
+  }).join('');
+}
+function gltRender(){
+  var to = document.getElementById('gltTo').value, g = {};
+  (GL.month || []).forEach(function(r){
+    if(!glIn(glYm(r.yr, r.mo), '', to)) return;
+    if(!g[r.acct_code]) g[r.acct_code] = { c: r.acct_code, n: r.acct_name, k: r.acct_class, dr: 0, cr: 0 };
+    g[r.acct_code].dr += Number(r.dr || 0); g[r.acct_code].cr += Number(r.cr || 0);
+  });
+  var list = Object.keys(g).sort().map(function(k){ return g[k]; });
+  document.getElementById('gltTitle').innerText = (to || '현재') + ' 누계';
+  if(!list.length){ glEmpty('gltRows', 7, '거래 없음'); return; }
+  document.getElementById('gltRows').innerHTML = list.map(function(x){
+    var d = x.dr - x.cr;
+    return '<tr><td style="text-align:right">' + glN(Math.max(d, 0)) + '</td><td style="text-align:right">' + glN(x.dr) + '</td><td>' + x.c + '</td><td>' + glEsc(x.n) + '</td><td>' + glEsc(x.k) + '</td><td style="text-align:right">' + glN(x.cr) + '</td><td style="text-align:right">' + glN(Math.max(-d, 0)) + '</td></tr>';
+  }).join('');
 }
 
 function fmt(n){
