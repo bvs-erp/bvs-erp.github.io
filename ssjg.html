@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.57">
+<meta name="app-version" content="1.58">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,6 +414,7 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 #tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
 #tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
 /* v1.46 채권·채무 명세 · 거래처 별칭 */
+td.pt-bad{color:var(--danger,#c0392b)!important;font-weight:600;background:rgba(192,57,43,.06)}
 #tab-is-month td.n,#tab-is-month th.n{text-align:right}
 #tab-is-month .im-tbl td:first-child{white-space:nowrap}
 #tab-is-month tr.im-l0 td{font-weight:700;background:var(--bg-soft,rgba(148,163,184,.08))}
@@ -4605,6 +4606,38 @@ document.addEventListener('dblclick', function(e){
   document.getElementById('jfCp').value = o.name; jfLoad();
 });
 var _switchTab152 = switchTab; switchTab = function(tabId){ var r = _switchTab152.apply(this, arguments); if(tabId === 'pt-month') pmOpen(); return r; };
+// ── 거래처 사업자번호 검증 · 중복 표시 (v1.58) ──
+function bizNoCheck(v){
+  var d = String(v || '').replace(/[^0-9]/g, ''); if(!d) return '';
+  if(d.length !== 10) return '자릿수 오류';
+  var w = [1, 3, 7, 1, 3, 7, 1, 3, 5], s = 0, i;
+  for(i = 0; i < 9; i++) s += Number(d[i]) * w[i];
+  s += Math.floor(Number(d[8]) * 5 / 10);
+  return (10 - s % 10) % 10 === Number(d[9]) ? '' : '검증번호 오류';
+}
+var _gridRender158 = gridRender;
+gridRender = function(tb){
+  var r = _gridRender158.apply(this, arguments);
+  if(tb !== 'ssjg_partners') return r;
+  var g = GRID[tb]; if(!g) return r;
+  var ib = -1, inm = -1; g.cols.forEach(function(c, i){ if(c.name === 'biz_no') ib = i; if(c.name === 'name') inm = i; });
+  var all = g.rows || [], cb = {}, cn = {}, bad = 0, dup = 0;
+  all.forEach(function(x){ var b = String(x.biz_no || '').replace(/[^0-9]/g, ''), n = tjvNorm(x.name); if(b) cb[b] = (cb[b] || 0) + 1; if(n) cn[n] = (cn[n] || 0) + 1; });
+  all.forEach(function(x){ var b = String(x.biz_no || '').replace(/[^0-9]/g, ''); if(bizNoCheck(x.biz_no)) bad++; if((b && cb[b] > 1) || cn[tjvNorm(x.name)] > 1) dup++; });
+  var PS = 100, slice = gridRows(g).slice(g.page * PS, g.page * PS + PS), trs = document.querySelectorAll('#gb_' + tb + ' tr');
+  slice.forEach(function(x, k){
+    var tr = trs[k]; if(!tr) return;
+    var b = String(x.biz_no || '').replace(/[^0-9]/g, ''), e = bizNoCheck(x.biz_no);
+    if(ib >= 0 && tr.children[ib]){
+      var m = e || (b && cb[b] > 1 ? '사업자번호 중복' : '');
+      if(m){ tr.children[ib].classList.add('pt-bad'); tr.children[ib].title = m; }
+    }
+    if(inm >= 0 && tr.children[inm] && cn[tjvNorm(x.name)] > 1){ tr.children[inm].classList.add('pt-bad'); tr.children[inm].title = '거래처명 중복(공백·법인표기 무시)'; }
+  });
+  var c = document.getElementById('gc_' + tb);
+  if(c && (bad || dup)) c.textContent += ' · 사업자번호 오류 ' + bad + ' · 중복 ' + dup;
+  return r;
+};
 // ── 전표 일괄 출력 (v1.57) ──
 var VP_MAX = 200;
 function vpPage(L, co, now){
