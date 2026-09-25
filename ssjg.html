@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.41">
+<meta name="app-version" content="1.42">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -401,6 +401,13 @@ body.perm-ro #drJv{display:none!important}
 #tjvRows td.num,#jvList td.num{text-align:right}
 tr.tm-man td:nth-child(2){color:var(--accent,#1f6fd1)}
 body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
+/* v1.42 전표 조회 */
+.jf-row{flex-wrap:wrap}
+.jf-row .jf-acct{width:110px}
+.jf-row .jf-cp{width:150px}
+.jf-row .jf-n{width:110px;text-align:right}
+#tab-jv-find td.n{text-align:right}
+#tab-jv-find tfoot td{font-weight:600}
 </style>
 </head>
 <body>
@@ -1330,6 +1337,29 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
   <div id="tab-items" class="tab-pane">
     <div data-grid="ssjg_items"></div>
   </div>
+  <div id="tab-jv-find" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">전표 조회 <span class="g-cnt" id="jfCnt"></span></div></div>
+      <div class="b3-head jf-row">
+        <label>시작월<input type="month" id="jfFrom" class="input"></label>
+        <label>종료월<input type="month" id="jfTo" class="input"></label>
+        <label>원천<select id="jfOrg" class="select"><option value="">전체</option><option>전표</option><option>통장</option><option>입력전표</option></select></label>
+        <label>계정<input id="jfAcct" class="input jf-acct" autocomplete="off"></label>
+        <label>거래처<input id="jfCp" class="input jf-cp" autocomplete="off"></label>
+        <label>적요<input id="jfTitle" class="input jf-cp" autocomplete="off"></label>
+        <label>금액<input id="jfMin" class="input jf-n" inputmode="numeric" autocomplete="off"></label>
+        <label>~<input id="jfMax" class="input jf-n" inputmode="numeric" autocomplete="off"></label>
+        <button class="btn btn-primary" onclick="jfLoad()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table data-foot="1">
+          <thead><tr><th>일자</th><th>전표번호</th><th>원천</th><th>계정</th><th>계정명</th><th>거래처</th><th>적요</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th></tr></thead>
+          <tbody id="jfRows"><tr><td colspan="9" class="td-empty">-</td></tr></tbody>
+          <tfoot><tr><td colspan="7">합계</td><td class="n" id="jfDr"></td><td class="n" id="jfCr"></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
   <div id="tab-tax-jv" class="tab-pane">
     <div class="panel" id="tmPanel">
       <div class="panel-head"><div class="panel-title">세금계산서 수기 등록</div></div>
@@ -1764,7 +1794,7 @@ var MENU = [
     { n: '구매', i: [['logistics', '3PL 정산']] },
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
-    { n: '전표', i: [['journal', '전표'], ['tax-jv', '세금계산서 전표']] },
+    { n: '전표', i: [['journal', '전표'], ['jv-find', '전표 조회'], ['tax-jv', '세금계산서 전표']] },
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
@@ -3850,6 +3880,63 @@ document.addEventListener('keydown', function(e){
   }
 }, true);
 var _tjvOpen0 = tjvOpen; tjvOpen = function(){ var d = document.getElementById('tmDate'); if(d && !d.value) tmReset(); return _tjvOpen0.apply(this, arguments); };
+
+// ── 전표 조회 (v1.42) ──
+var JF = { rows: [], lim: 5000 };
+function jfNum(v){ var s = String(v == null ? '' : v).replace(/[^0-9.-]/g, ''); return s === '' ? null : Number(s); }
+function jfOpen(){
+  var t = document.getElementById('jfTo');
+  if(!t.value){ var r = perRange('m'); document.getElementById('jfFrom').value = r[0]; t.value = r[1]; }
+}
+async function jfLoad(){
+  if(!sb) return;
+  var f = document.getElementById('jfFrom').value, to = document.getElementById('jfTo').value,
+      o = document.getElementById('jfOrg').value, ac = document.getElementById('jfAcct').value.trim(),
+      cp = document.getElementById('jfCp').value.trim(), ti = document.getElementById('jfTitle').value.trim(),
+      mn = jfNum(document.getElementById('jfMin').value), mx = jfNum(document.getElementById('jfMax').value);
+  if(ac && !/^[0-9A-Za-z]+$/.test(ac)){ var m = ac.match(/^[0-9A-Za-z]+/); ac = m ? m[0] : ac; }
+  var body = document.getElementById('jfRows');
+  body.innerHTML = '<tr><td colspan="9" class="td-empty">불러오는 중</td></tr>';
+  var q = sb.from('ssjg_gl_lines').select('doc_no,doc_date,line_no,acct_code,acct_name,dr,cr,partner,title,memo,origin');
+  if(f) q = q.gte('doc_date', f + '-01');
+  if(to) q = q.lt('doc_date', perAdd(to, 1) + '-01');
+  if(o) q = q.eq('origin', o);
+  if(ac) q = q.eq('acct_code', ac);
+  if(cp) q = q.ilike('partner', '%' + cp + '%');
+  if(ti) q = q.ilike('title', '%' + ti + '%');
+  var r;
+  try { r = await q.order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(0, JF.lim - 1); }
+  catch(e){ r = { error: e }; }
+  if(r.error){ body.innerHTML = '<tr><td colspan="9">' + gEsc(r.error.message || r.error) + '</td></tr>'; return; }
+  var rows = (r.data || []).filter(function(x){ var a = Number(x.dr || 0) || Number(x.cr || 0); return (mn == null || a >= mn) && (mx == null || a <= mx); });
+  JF.rows = rows;
+  var sd = 0, sc = 0;
+  document.getElementById('jfCnt').textContent = rows.length + '건' + ((r.data || []).length >= JF.lim ? ' (상위 ' + JF.lim + ')' : '');
+  body.innerHTML = rows.length ? rows.map(function(x){
+    sd += Number(x.dr || 0); sc += Number(x.cr || 0);
+    return '<tr class="dr-row" data-doc="' + gEsc(x.doc_no) + '" data-o="' + gEsc(x.origin || '') + '"><td>' + gEsc(x.doc_date || '') + '</td><td>' + gEsc(x.doc_no) + '</td><td>' + gEsc(x.origin || '') + '</td><td>' + gEsc(x.acct_code) + '</td><td>' + gEsc(x.acct_name || '') + '</td><td>' + gEsc(x.partner || '') + '</td><td>' + gEsc(x.title || x.memo || '') + '</td><td class="n">' + glN(x.dr) + '</td><td class="n">' + glN(x.cr) + '</td></tr>';
+  }).join('') : '<tr><td colspan="9" class="td-empty">해당 조건 전표 없음</td></tr>';
+  document.getElementById('jfDr').textContent = glN(sd);
+  document.getElementById('jfCr').textContent = glN(sc);
+}
+document.addEventListener('dblclick', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('#jfRows tr.dr-row'); if(!tr) return;
+  drOpen(tr.dataset.doc, tr.dataset.o || '');
+});
+document.addEventListener('keydown', function(e){
+  var t = e.target; if(!t || !t.closest || !t.closest('#tab-jv-find .jf-row')) return;
+  if(e.key === 'F2' && (t.id === 'jfAcct' || t.id === 'jfCp')){
+    e.preventDefault();
+    var k = t.id === 'jfAcct' ? 'acct' : 'partner';
+    chOpen(k, t.value, function(x){ t.value = k === 'acct' ? x.c : (x.v || x.n || x.c); jfLoad(); });
+  }
+});
+document.addEventListener('change', function(e){
+  var id = e.target && e.target.id;
+  if(id === 'jfMin' || id === 'jfMax'){ var v = jfNum(e.target.value); e.target.value = v == null ? '' : v.toLocaleString('ko-KR'); }
+  if(id === 'jfOrg') jfLoad();
+});
+var _switchTab142 = switchTab; switchTab = function(tabId){ var r = _switchTab142.apply(this, arguments); if(tabId === 'jv-find'){ jfOpen(); if(!JF.rows.length) jfLoad(); } return r; };
 
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
