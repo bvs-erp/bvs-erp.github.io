@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.54">
+<meta name="app-version" content="1.55">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,6 +414,12 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 #tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
 #tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
 /* v1.46 채권·채무 명세 · 거래처 별칭 */
+#tab-is-month td.n,#tab-is-month th.n{text-align:right}
+#tab-is-month .im-tbl td:first-child{white-space:nowrap}
+#tab-is-month tr.im-l0 td{font-weight:700;background:var(--bg-soft,rgba(148,163,184,.08))}
+#tab-is-month tr.im-l2 td:first-child{padding-left:24px}
+#tab-is-month tr.im-l2{cursor:pointer}
+#tab-is-month td.im-neg{color:var(--danger,#c0392b)}
 #tab-sales-recon td.n,#tab-sales-recon th.n{text-align:right}
 #tab-sales-recon tfoot td{font-weight:600}
 #tab-sales-recon td.sq-dup{color:var(--text-muted)}
@@ -1403,6 +1409,17 @@ body.perm-ro #tmType{display:none}
       <div class="table-wrap"><table data-foot="1"><thead><tr><th>별칭</th><th>거래처</th><th>구분</th><th></th></tr></thead><tbody id="alRows"><tr><td colspan="4" class="td-empty">-</td></tr></tbody></table></div>
     </div>
   </div>
+  <div id="tab-is-month" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">월별 손익계산서 <span class="g-cnt" id="imCnt"></span></div></div>
+      <div class="b3-head">
+        <label>연도<select id="imYear" class="select"></select></label>
+        <label>표시<select id="imShow" class="select"><option value="">전체 과목</option><option value="sum">구분 합계만</option></select></label>
+        <button class="btn btn-primary" onclick="imLoad()">조회</button>
+      </div>
+      <div class="table-wrap"><table data-foot="1" class="im-tbl"><thead id="imHead"></thead><tbody id="imRows"><tr><td class="td-empty">-</td></tr></tbody></table></div>
+    </div>
+  </div>
   <div id="tab-sales-recon" class="tab-pane">
     <div class="panel">
       <div class="panel-head"><div class="panel-title">매출 대사표 <span class="g-cnt" id="srCnt"></span></div></div>
@@ -1990,7 +2007,7 @@ var MENU = [
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['fund-day', '자금일보'], ['arap', '채권·채무 명세'], ['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
     { n: '고정자산', i: [['fa-reg', '고정자산 등록'], ['fa-dep', '감가상각비 계산']] },
-    { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
+    { n: '결산', i: [['close', '월 마감'], ['fs-is', '손익계산서'], ['is-month', '월별 손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] },
     { n: '부가세', i: [['vat-sum', '부가세 신고 보조'], ['sales-recon', '매출 대사표']] } ] },
@@ -4585,6 +4602,48 @@ document.addEventListener('dblclick', function(e){
   document.getElementById('jfCp').value = o.name; jfLoad();
 });
 var _switchTab152 = switchTab; switchTab = function(tabId){ var r = _switchTab152.apply(this, arguments); if(tabId === 'pt-month') pmOpen(); return r; };
+// ── 월별 손익계산서 (v1.55) ──
+var IM = { codes: {} };
+function imOpen(){
+  var y = document.getElementById('imYear');
+  if(!y.options.length){ var n = Number(glNowYm().slice(0, 4)); for(var i = n; i >= 2021; i--) y.insertAdjacentHTML('beforeend', '<option>' + i + '</option>'); imLoad(); }
+}
+async function imLoad(){
+  if(!sb) return;
+  try { await glBase(); } catch(e){ gToast('손익 조회 실패: ' + (e.message || e), true); return; }
+  var y = document.getElementById('imYear').value || glNowYm().slice(0, 4), only = document.getElementById('imShow').value === 'sum';
+  var M = [], i; for(i = 1; i <= 12; i++) M.push(fsIs(fsSum(glYm(y, i), glYm(y, i))));
+  var T = fsIs(fsSum(y + '-01', y + '-12'));
+  IM.codes = {}; (GL.coa || []).forEach(function(c){ if(!IM.codes[c.acct_name]) IM.codes[c.acct_name] = c.acct_code; });
+  var SEC = [['Ⅰ. 매출액', 'R', 'rev'], ['Ⅱ. 매출원가', 'C', 'cogs'], ['Ⅲ. 매출총이익', 'G'], ['Ⅳ. 판매비와관리비', 'S', 'sga'], ['Ⅴ. 영업이익', 'O'], ['Ⅵ. 영업외수익', 'I', 'nio'], ['Ⅶ. 영업외비용', 'E', 'nie'], ['Ⅷ. 당기순이익', 'N']];
+  function cell(v){ v = Math.round(v || 0); return '<td class="n' + (v < 0 ? ' im-neg' : '') + '">' + (v ? fmt(v) : '') + '</td>'; }
+  function pct(v){ return '<td class="n">' + (T.R && Math.round(v || 0) ? (v / T.R * 100).toFixed(1) + '%' : '') + '</td>'; }
+  var H = '<tr><th>과목</th>'; for(i = 1; i <= 12; i++) H += '<th class="n">' + i + '월</th>'; H += '<th class="n">합계</th><th class="n">매출 대비</th></tr>';
+  document.getElementById('imHead').innerHTML = H;
+  var h = '';
+  SEC.forEach(function(sc){
+    h += '<tr class="im-l0"><td>' + sc[0] + '</td>' + M.map(function(o){ return cell(o[sc[1]]); }).join('') + cell(T[sc[1]]) + pct(T[sc[1]]) + '</tr>';
+    if(!sc[2] || only) return;
+    var names = [], seen = {};
+    T[sc[2]].forEach(function(x){ if(!seen[x.n]){ seen[x.n] = 1; names.push(x.n); } });
+    names.forEach(function(n){
+      var tv = (T[sc[2]].find(function(x){ return x.n === n; }) || {}).v || 0;
+      h += '<tr class="im-l2" data-n="' + gEsc(n) + '"><td>' + gEsc(n) + '</td>' + M.map(function(o){ return cell((o[sc[2]].find(function(x){ return x.n === n; }) || {}).v || 0); }).join('') + cell(tv) + pct(tv) + '</tr>';
+    });
+  });
+  document.getElementById('imRows').innerHTML = h;
+  document.getElementById('imCnt').textContent = y;
+}
+document.addEventListener('change', function(e){ if(e.target && (e.target.id === 'imYear' || e.target.id === 'imShow')) imLoad(); });
+document.addEventListener('dblclick', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('#imRows tr.im-l2'); if(!tr) return;
+  var c = IM.codes[tr.getAttribute('data-n')], td = e.target.closest('td'), idx = Array.prototype.indexOf.call(tr.children, td);
+  if(!c) return;
+  var y = document.getElementById('imYear').value, f = y + '-01', to = y + '-12';
+  if(idx >= 1 && idx <= 12){ f = to = glYm(y, idx); }
+  drAcct(c, f, to);
+});
+var _switchTab155 = switchTab; switchTab = function(tabId){ var r = _switchTab155.apply(this, arguments); if(tabId === 'is-month') imOpen(); return r; };
 // ── 매출 대사표 (v1.53) ──
 function stKind(x){ var f = String(x.src_file || ''), c = String(x.channel || ''); return (f ? f : c).indexOf('신용카드') >= 0 ? '신용카드' : '판매대행'; }
 function srOpen(){
