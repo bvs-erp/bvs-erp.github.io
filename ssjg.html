@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.51">
+<meta name="app-version" content="1.52">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,6 +414,10 @@ body.perm-ro #tmPanel,body.perm-ro .tm-del{display:none!important}
 #tab-vat-sum .vt-sum tr.vt-tot td{font-weight:700;border-top:2px solid var(--border)}
 #tab-vat-sum .table-wrap+.table-wrap{margin-top:10px}
 /* v1.46 채권·채무 명세 · 거래처 별칭 */
+#tab-pt-month td.n,#tab-pt-month th.n{text-align:right}
+#tab-pt-month tfoot td{font-weight:600}
+#tab-pt-month .pm-tbl td:first-child{white-space:nowrap}
+#tab-pt-month tr.pm-gl{cursor:pointer}
 #tab-fa-dep td.n{text-align:right}
 #tab-fa-dep tfoot td{font-weight:600}
 #tab-fund-day td.n{text-align:right}
@@ -1395,6 +1399,20 @@ body.perm-ro #tmType{display:none}
       <div class="table-wrap"><table data-foot="1"><thead><tr><th>별칭</th><th>거래처</th><th>구분</th><th></th></tr></thead><tbody id="alRows"><tr><td colspan="4" class="td-empty">-</td></tr></tbody></table></div>
     </div>
   </div>
+  <div id="tab-pt-month" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">거래처별 월별 현황 <span class="g-cnt" id="pmCnt"></span></div></div>
+      <div class="b3-head">
+        <label>연도<select id="pmYear" class="select"></select></label>
+        <label>구분<select id="pmFlow" class="select"><option value="매출">매출</option><option value="매입">매입</option></select></label>
+        <label>기준<select id="pmSrc" class="select"></select></label>
+        <label>거래처<input id="pmQ" class="input" autocomplete="off"></label>
+        <button class="btn btn-primary" onclick="pmLoad()">조회</button>
+      </div>
+      <div class="table-wrap"><table data-foot="1" class="pm-tbl"><thead id="pmHead"></thead>
+        <tbody id="pmRows"><tr><td class="td-empty">-</td></tr></tbody><tfoot id="pmFoot"></tfoot></table></div>
+    </div>
+  </div>
   <div id="tab-fa-reg" class="tab-pane">
     <div data-grid="ssjg_fixed_assets"></div>
   </div>
@@ -1948,7 +1966,7 @@ var MENU = [
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
     { n: '전표', i: [['journal', '전표'], ['jv-find', '전표 조회'], ['tax-jv', '세금계산서 전표']] },
-    { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
+    { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표'], ['pt-month', '거래처별 월별 현황']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['fund-day', '자금일보'], ['arap', '채권·채무 명세'], ['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
     { n: '고정자산', i: [['fa-reg', '고정자산 등록'], ['fa-dep', '감가상각비 계산']] },
@@ -4484,6 +4502,69 @@ drOpen = async function(){
 };
 function trMarkAcct(sel, col){ document.querySelectorAll(sel).forEach(function(tr){ var td = tr.children[col]; if(!td || td.querySelector('.tr-tag')) return; var w = trAcct(td.textContent); if(w) td.insertAdjacentHTML('beforeend', '<span class="tr-tag">' + w + '</span>'); }); }
 var _jfLoad149 = jfLoad; jfLoad = async function(){ var r = await _jfLoad149.apply(this, arguments); trMarkAcct('#jfRows tr.dr-row', 3); return r; };
+// ── 거래처별 월별 현황 (v1.52) ──
+var PM = { rows: [], src: '' };
+var PM_SRC = { '매출': [['st', '채널 정산'], ['gl', '장부 전표'], ['ti', '세금계산서']], '매입': [['ti', '세금계산서'], ['gl', '장부 전표']] };
+function pmSrcFill(){
+  var f = document.getElementById('pmFlow').value, s = document.getElementById('pmSrc'), cur = s.value;
+  s.innerHTML = PM_SRC[f].map(function(x){ return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('');
+  if(PM_SRC[f].some(function(x){ return x[0] === cur; })) s.value = cur;
+}
+function pmOpen(){
+  var y = document.getElementById('pmYear');
+  if(!y.options.length){ var n = Number(glNowYm().slice(0, 4)); for(var i = n; i >= 2021; i--) y.insertAdjacentHTML('beforeend', '<option>' + i + '</option>'); pmSrcFill(); pmLoad(); }
+}
+async function pmAll(q){
+  var all = [], from = 0, r;
+  while(true){ r = await q().range(from, from + 999); if(r.error) throw r.error; all = all.concat(r.data || []); if(!r.data || r.data.length < 1000) break; from += 1000; }
+  return all;
+}
+async function pmLoad(){
+  if(!sb) return;
+  var y = document.getElementById('pmYear').value || glNowYm().slice(0, 4), f = document.getElementById('pmFlow').value, src = document.getElementById('pmSrc').value || PM_SRC[f][0][0];
+  var kw = tjvNorm(document.getElementById('pmQ').value), d0 = y + '-01-01', d1 = (Number(y) + 1) + '-01-01';
+  var body = document.getElementById('pmRows'); body.innerHTML = '<tr><td class="td-empty">불러오는 중</td></tr>';
+  var L = [];
+  try {
+    if(src === 'st'){
+      (await pmAll(function(){ return sb.from('ssjg_settlements').select('ym,channel,amt').gte('ym', d0).lt('ym', d1).order('ym', { ascending: true }); }))
+        .forEach(function(x){ L.push({ d: String(x.ym || ''), p: x.channel || '(채널 없음)', a: Number(x.amt || 0) }); });
+    } else if(src === 'ti'){
+      (await pmAll(function(){ return sb.from('ssjg_tax_invoices').select('flow,write_date,supplier,buyer,supply_amt').eq('flow', f).gte('write_date', d0).lt('write_date', d1).order('write_date', { ascending: true }); }))
+        .forEach(function(x){ L.push({ d: String(x.write_date || ''), p: (f === '매출' ? x.buyer : x.supplier) || '(거래처 없음)', a: Number(x.supply_amt || 0) }); });
+    } else {
+      (await pmAll(function(){ return sb.from('ssjg_gl_lines').select('doc_date,acct_code,partner,dr,cr').like('acct_code', f === '매출' ? '4%' : '5%').gte('doc_date', d0).lt('doc_date', d1).order('doc_date', { ascending: true }); }))
+        .forEach(function(x){ L.push({ d: String(x.doc_date || ''), p: x.partner || '(없음)', a: f === '매출' ? Number(x.cr || 0) - Number(x.dr || 0) : Number(x.dr || 0) - Number(x.cr || 0) }); });
+    }
+  } catch(e){ body.innerHTML = '<tr><td>' + gEsc(e.message || e) + '</td></tr>'; return; }
+  var M = {}, tot = 0, mt = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+  L.forEach(function(x){
+    var k = tjvNorm(x.p) || x.p, m = Number(x.d.slice(5, 7)) - 1; if(!(m >= 0 && m < 12)) return;
+    if(kw && k.indexOf(kw) < 0) return;
+    var o = M[k] || (M[k] = { name: x.p, m: [0,0,0,0,0,0,0,0,0,0,0,0], t: 0 });
+    o.m[m] += x.a; o.t += x.a; mt[m] += x.a; mt[12] += x.a; tot += x.a;
+  });
+  PM.rows = Object.keys(M).map(function(k){ return M[k]; }).sort(function(a, b){ return b.t - a.t; }); PM.src = src;
+  var H = '<tr><th>거래처</th>'; for(var i = 1; i <= 12; i++) H += '<th class="n">' + i + '월</th>'; H += '<th class="n">합계</th><th class="n">비중</th></tr>';
+  document.getElementById('pmHead').innerHTML = H;
+  body.innerHTML = PM.rows.length ? PM.rows.map(function(o, i){
+    return '<tr class="' + (src === 'gl' ? 'pm-gl' : '') + '" data-i="' + i + '"><td>' + gEsc(o.name) + trTag(o.name) + '</td>' + o.m.map(function(v){ return '<td class="n">' + glN(v) + '</td>'; }).join('') + '<td class="n">' + glN(o.t) + '</td><td class="n">' + (tot ? (o.t / tot * 100).toFixed(1) + '%' : '') + '</td></tr>';
+  }).join('') : '<tr><td colspan="15" class="td-empty">해당 조건 자료 없음</td></tr>';
+  document.getElementById('pmFoot').innerHTML = PM.rows.length ? '<tr><td>합계 ' + PM.rows.length + '곳</td>' + mt.slice(0, 12).map(function(v){ return '<td class="n">' + glN(v) + '</td>'; }).join('') + '<td class="n">' + glN(tot) + '</td><td class="n">' + (tot ? '100.0%' : '') + '</td></tr>' : '';
+  var sn = (PM_SRC[f].filter(function(x){ return x[0] === src; })[0] || [])[1] || '';
+  document.getElementById('pmCnt').textContent = y + ' · ' + f + ' · ' + sn;
+}
+document.addEventListener('change', function(e){ var t = e.target; if(!t) return; if(t.id === 'pmFlow'){ pmSrcFill(); pmLoad(); } else if(t.id === 'pmYear' || t.id === 'pmSrc') pmLoad(); });
+document.addEventListener('dblclick', function(e){
+  var tr = e.target && e.target.closest && e.target.closest('#pmRows tr.pm-gl'); if(!tr) return;
+  var o = PM.rows[Number(tr.getAttribute('data-i'))]; if(!o) return;
+  var y = document.getElementById('pmYear').value;
+  switchTab('jv-find');
+  document.getElementById('jfFrom').value = y + '-01'; document.getElementById('jfTo').value = y + '-12';
+  ['jfAcct', 'jfOrg', 'jfTitle', 'jfMin', 'jfMax'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('jfCp').value = o.name; jfLoad();
+});
+var _switchTab152 = switchTab; switchTab = function(tabId){ var r = _switchTab152.apply(this, arguments); if(tabId === 'pt-month') pmOpen(); return r; };
 // ── 고정자산 · 감가상각 (v1.51) ──
 var FA = { rows: [], calc: [], ym: '' };
 var FA_MAP = { '206': ['207', '818', '기계장치'], '208': ['209', '818', '차량운반구'], '212': ['213', '818', '비품'], '240': ['240', '840', '소프트웨어'] };
