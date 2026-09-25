@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.25">
+<meta name="app-version" content="1.26">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -947,6 +947,39 @@ footer{text-align:center;padding:24px;font-size:11px;color:var(--text-muted);bor
       <div data-grid="ssjg_bank_txns"></div>
   </div>
 
+  <div id="tab-fs-is" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">손익계산서 <span id="fsiTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>시작월<input type="month" id="fsiFrom" class="input"></label>
+        <label>종료월<input type="month" id="fsiTo" class="input"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="fsiRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table class="fs-tbl">
+          <thead><tr><th>과목</th><th style="text-align:right" id="fsiH1">당기</th><th style="text-align:right" id="fsiH2">전기</th></tr></thead>
+          <tbody id="fsiRows"><tr><td colspan="3" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-fs-bs" class="tab-pane">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">재무상태표 <span id="fsbTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
+      <div class="b3-head">
+        <label>기준월<input type="month" id="fsbTo" class="input"></label>
+        <button class="btn btn-primary" style="padding:7px 18px" onclick="fsbRender()">조회</button>
+      </div>
+      <div class="table-wrap">
+        <table class="fs-tbl">
+          <thead><tr><th>과목</th><th style="text-align:right" id="fsbH1">당기말</th><th style="text-align:right" id="fsbH2">전기말</th></tr></thead>
+          <tbody id="fsbRows"><tr><td colspan="3" style="text-align:center;padding:30px">불러오는 중</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div id="tab-gl-account" class="tab-pane">
     <div class="panel">
       <div class="panel-head"><div class="panel-title">계정별원장 <span id="glaTitle" style="font-weight:500;color:var(--text-muted)"></span></div></div>
@@ -1496,7 +1529,7 @@ var MENU = [
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
     { n: '자금', i: [['ar-recon', '미수금 대사'], ['monthly', '월별 자금']] },
-    { n: '결산', i: [['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
+    { n: '결산', i: [['fs-is', '손익계산서'], ['fs-bs', '재무상태표'], ['mgmt-pl', '관리손익'], ['channel-pl', '채널 수익성']] } ] },
   { m: '세무', g: [
     { n: '세무 점검', i: [['dashboard', '자금·세무 현황']] } ] },
   { m: '시스템설정', g: [
@@ -1606,6 +1639,7 @@ function switchTab(tabId, el){
   gridInitIn(target);
   if(tabId==='logistics')b3Init();
   if(tabId.indexOf('gl-')===0)glOpen(tabId);
+  if(tabId.indexOf('fs-')===0)fsOpen(tabId);
   toggleSide(false);
   if(OPEN_TABS.indexOf(tabId) < 0) OPEN_TABS.push(tabId);
   renderTabs(tabId);
@@ -1824,6 +1858,109 @@ function glpRender(){
   }).join('');
 }
 function glpPick(p){ var s = document.getElementById('glpCp'); s.value = p; glpRender(); }
+
+// ── 회계관리 > 결산 > 재무제표 ──
+function fsSum(f, to){
+  var m = {};
+  (GL.month || []).forEach(function(r){
+    if(!glIn(glYm(r.yr, r.mo), f, to)) return;
+    if(!m[r.acct_code]) m[r.acct_code] = { c: r.acct_code, n: r.acct_name, k: r.acct_class, dr: 0, cr: 0 };
+    m[r.acct_code].dr += Number(r.dr || 0); m[r.acct_code].cr += Number(r.cr || 0);
+  });
+  return m;
+}
+function fsV(v){ v = Math.round(v || 0); return v ? fmt(v) : '0'; }
+function fsRow(label, a, b, lv){
+  var st = lv === 0 ? 'font-weight:700;background:var(--bg-soft,rgba(148,163,184,.08))' : (lv === 1 ? 'font-weight:600' : '');
+  var pad = lv === 2 ? 'padding-left:28px' : (lv === 1 ? 'padding-left:14px' : '');
+  return '<tr style="' + st + '"><td style="' + pad + '">' + glEsc(label) + '</td><td style="text-align:right">' + fsV(a) + '</td><td style="text-align:right">' + fsV(b) + '</td></tr>';
+}
+function fsIs(m){
+  var o = { rev: [], cogs: [], sga: [], nio: [], nie: [] };
+  Object.keys(m).sort().forEach(function(k){
+    var x = m[k];
+    if(x.k === '수익') o.rev.push({ n: x.n, v: x.cr - x.dr });
+    else if(x.k === '영업외수익') o.nio.push({ n: x.n, v: x.cr - x.dr });
+    else if(x.k === '영업외비용') o.nie.push({ n: x.n, v: x.dr - x.cr });
+    else if(x.k === '비용' && /^5/.test(k)) o.cogs.push({ n: x.n, v: x.dr - x.cr });
+    else if(x.k === '비용') o.sga.push({ n: x.n, v: x.dr - x.cr });
+  });
+  function s(a){ return a.reduce(function(p, c){ return p + c.v; }, 0); }
+  o.R = s(o.rev); o.C = s(o.cogs); o.G = o.R - o.C; o.S = s(o.sga); o.O = o.G - o.S; o.I = s(o.nio); o.E = s(o.nie); o.N = o.O + o.I - o.E;
+  return o;
+}
+function fsBs(m){
+  var o = { as: [], li: [] };
+  Object.keys(m).sort().forEach(function(k){
+    var x = m[k];
+    if(x.k === '자산') o.as.push({ n: x.n, v: x.dr - x.cr });
+    else if(x.k === '부채') o.li.push({ n: x.n, v: x.cr - x.dr });
+  });
+  o.A = o.as.reduce(function(p, c){ return p + c.v; }, 0);
+  o.L = o.li.reduce(function(p, c){ return p + c.v; }, 0);
+  o.RE = fsIs(m).N;
+  return o;
+}
+function fsMerge(a, b){
+  var names = [], seen = {};
+  a.concat(b).forEach(function(x){ if(!seen[x.n]){ seen[x.n] = 1; names.push(x.n); } });
+  return names.map(function(n){
+    var va = (a.find(function(x){ return x.n === n; }) || {}).v || 0, vb = (b.find(function(x){ return x.n === n; }) || {}).v || 0;
+    return [n, va, vb];
+  });
+}
+async function fsOpen(tab){
+  if(!sb) return;
+  try { await glBase(); } catch(e){ gToast('재무제표 조회 실패: ' + (e.message || e), true); return; }
+  var n = glNowYm();
+  if(tab === 'fs-is'){
+    if(!document.getElementById('fsiTo').value){ document.getElementById('fsiFrom').value = n.slice(0, 4) + '-01'; document.getElementById('fsiTo').value = n; }
+    fsiRender();
+  } else {
+    if(!document.getElementById('fsbTo').value) document.getElementById('fsbTo').value = n;
+    fsbRender();
+  }
+}
+function fsPrev(ym){ return ym ? (Number(ym.slice(0, 4)) - 1) + ym.slice(4) : ''; }
+function fsiRender(){
+  var f = document.getElementById('fsiFrom').value, to = document.getElementById('fsiTo').value;
+  var a = fsIs(fsSum(f, to)), b = fsIs(fsSum(fsPrev(f), fsPrev(to)));
+  document.getElementById('fsiTitle').innerText = (f || '처음') + ' ~ ' + (to || '현재');
+  document.getElementById('fsiH1').innerText = '당기 ' + (to || '').slice(0, 4);
+  document.getElementById('fsiH2').innerText = '전기 ' + (fsPrev(to) || '').slice(0, 4);
+  var h = '';
+  h += fsRow('Ⅰ. 매출액', a.R, b.R, 0);
+  fsMerge(a.rev, b.rev).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('Ⅱ. 매출원가', a.C, b.C, 0);
+  fsMerge(a.cogs, b.cogs).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('Ⅲ. 매출총이익', a.G, b.G, 0);
+  h += fsRow('Ⅳ. 판매비와관리비', a.S, b.S, 0);
+  fsMerge(a.sga, b.sga).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('Ⅴ. 영업이익', a.O, b.O, 0);
+  h += fsRow('Ⅵ. 영업외수익', a.I, b.I, 0);
+  fsMerge(a.nio, b.nio).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('Ⅶ. 영업외비용', a.E, b.E, 0);
+  fsMerge(a.nie, b.nie).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('Ⅷ. 당기순이익', a.N, b.N, 0);
+  document.getElementById('fsiRows').innerHTML = h;
+}
+function fsbRender(){
+  var to = document.getElementById('fsbTo').value, pe = to ? (Number(to.slice(0, 4)) - 1) + '-12' : '';
+  var a = fsBs(fsSum('', to)), b = fsBs(fsSum('', pe));
+  document.getElementById('fsbTitle').innerText = (to || '현재') + ' 기준';
+  document.getElementById('fsbH1').innerText = '당기말 ' + (to || '');
+  document.getElementById('fsbH2').innerText = '전기말 ' + pe;
+  var h = '';
+  h += fsRow('자산', a.A, b.A, 0);
+  fsMerge(a.as, b.as).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('부채', a.L, b.L, 0);
+  fsMerge(a.li, b.li).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
+  h += fsRow('자본', a.A - a.L, b.A - b.L, 0);
+  h += fsRow('이익잉여금', a.RE, b.RE, 2);
+  h += fsRow('기타 자본', a.A - a.L - a.RE, b.A - b.L - b.RE, 2);
+  h += fsRow('부채와 자본 총계', a.A, b.A, 0);
+  document.getElementById('fsbRows').innerHTML = h;
+}
 function glmRender(){
   var f = document.getElementById('glmFrom').value, to = document.getElementById('glmTo').value, g = {};
   (GL.month || []).forEach(function(r){
