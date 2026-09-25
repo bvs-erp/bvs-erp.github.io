@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.32">
+<meta name="app-version" content="1.33">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -364,6 +364,10 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
   .jv-tbl td:last-child,.jv-tbl th:last-child{display:none}
   tr.sel td,td.g-cur,td.g-dirty{outline:none!important;background:#fff!important}
 }
+/* v1.33 조회조건 */
+.pg-per{display:inline-flex;gap:2px;align-items:center}
+.pg-per .btn{padding:3px 8px!important;font-size:11.5px;min-width:0}
+@media print{.pg-per{display:none!important}}
 </style>
 </head>
 <body>
@@ -3374,6 +3378,45 @@ async function prtRun(){
 }
 var _pgAct2 = pgAct;
 pgAct = function(k){ if(k === 'p'){ prtRun(); return; } return _pgAct2(k); };
+// ── 조회조건 표준화 (v1.33) ──
+function perYm(d){ return d.toISOString().slice(0, 7); }
+function perNow(){ return new Date(Date.now() + 9 * 3600000); }
+function perAdd(ym, n){ var y = Number(ym.slice(0, 4)), m = Number(ym.slice(5, 7)) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + String(m + 1).padStart(2, '0'); }
+function perRange(k){
+  var c = perYm(perNow()), y = c.slice(0, 4), q = Math.floor((Number(c.slice(5, 7)) - 1) / 3) * 3 + 1;
+  if(k === 'm') return [c, c];
+  if(k === 'pm'){ var p = perAdd(c, -1); return [p, p]; }
+  if(k === 'q') return [y + '-' + String(q).padStart(2, '0'), c];
+  if(k === 'y') return [y + '-01', c];
+  if(k === 'py'){ var py = String(Number(y) - 1); return [py + '-01', py + '-12']; }
+}
+function perSet(fromId, toId, k){
+  var r = perRange(k), f = fromId && document.getElementById(fromId), t = document.getElementById(toId);
+  if(!fromId && k === 'py') r = [null, String(Number(perYm(perNow()).slice(0, 4)) - 1) + '-12'];
+  if(f) f.value = r[0]; if(t) t.value = r[1];
+  pgAct('q');
+}
+function perInit(){
+  document.querySelectorAll('.tab-pane .b3-head').forEach(function(h){
+    if(h.querySelector('.pg-per')) return;
+    var ms = Array.prototype.slice.call(h.querySelectorAll('input[type=month][id]')), to = null, from = null;
+    ms.forEach(function(i){ if(/To$/.test(i.id)) to = i; if(/From$/.test(i.id)) from = i; });
+    if(!to || h.closest('#tab-logistics')) return;
+    var ks = from ? [['m', '당월'], ['pm', '전월'], ['q', '당분기'], ['y', '당해'], ['py', '전년']] : [['m', '당월'], ['pm', '전월'], ['py', '전년말']];
+    var s = document.createElement('span'); s.className = 'pg-per';
+    s.innerHTML = ks.map(function(k){ return '<button type="button" class="btn" onclick="perSet(' + (from ? '\'' + from.id + '\'' : 'null') + ',\'' + to.id + '\',\'' + k[0] + '\')">' + k[1] + '</button>'; }).join('');
+    var lab = to.closest('label') || to; lab.parentNode.insertBefore(s, lab.nextSibling);
+  });
+}
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' || e.isComposing) return;
+  var t = e.target; if(!t || !t.closest) return;
+  var box = t.closest('.b3-head, .filter-bar'); if(!box || box.closest('#jvPanel, #tab-logistics')) return;
+  if(!/^(INPUT|SELECT)$/.test(t.tagName)) return;
+  var q = document.getElementById('pgQ'); if(!q || q.disabled) return;
+  e.preventDefault(); pgAct('q');
+});
+perInit();
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
