@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.30">
+<meta name="app-version" content="1.32">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -340,6 +340,30 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 .jv-tbl input:disabled{background:#f3f4f6;border-color:transparent}
 .jv-tbl .jv-bad{border-color:#d93a3a;background:#fdecec}
 .jv-tbl tfoot td{font-weight:700}
+/* v1.32 인쇄 양식 */
+.prt-head{display:none}
+@page{size:A4;margin:12mm 10mm 14mm}
+@page{@bottom-center{content:counter(page) " / " counter(pages);font-size:9pt;color:#555}}
+@media print{
+  body{font-size:9.5pt;color:#000}
+  .pgbar{display:none!important}
+  .prt-head{display:block;margin:0 0 6mm}
+  .prt-head .ph-t{font-size:15pt;font-weight:700;text-align:center;letter-spacing:6px;margin-bottom:3mm}
+  .prt-head .ph-row{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1.5px solid #000;padding-bottom:1.5mm}
+  .tab-pane.active .panel-title .g-cnt,.tab-pane.active .b3-head,.tab-pane.active .filter-bar,.kpi-grid,.alert-line,.alert-box,.td-chart,.td-legend{display:none!important}
+  .tab-pane.active .panel-head{margin:3mm 0 1.5mm}
+  table{font-size:8.5pt;width:100%}
+  thead{display:table-header-group}
+  tfoot{display:table-row-group}
+  th,td,tfoot td,.g-sum td{position:static!important}
+  tr{page-break-inside:avoid}
+  th,td{border:0.6px solid #777!important;padding:2px 4px!important;height:auto!important;background:#fff!important;color:#000!important}
+  th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tfoot td,.g-sum td{background:#f4f4f4!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  input,select{border:none!important;background:transparent!important;padding:0!important;height:auto!important}
+  .jv-tbl td:last-child,.jv-tbl th:last-child{display:none}
+  tr.sel td,td.g-cur,td.g-dirty{outline:none!important;background:#fff!important}
+}
 </style>
 </head>
 <body>
@@ -3314,6 +3338,42 @@ pgAct = function(k){
   return _pgAct1(k);
 };
 function gDirtyAny(p){ var n = 0; p.querySelectorAll('[data-grid]').forEach(function(g){ n += gDirtyCnt(g.getAttribute('data-grid')); }); return n > 0; }
+// ── 인쇄 양식 (v1.32) ──
+var PRT = { co: null };
+async function prtCompany(){
+  if(PRT.co) return PRT.co;
+  var f = ((document.querySelector('footer') || {}).innerText || '');
+  var co = { name: (f.split('·')[0] || '').trim(), bizno: ((f.match(/사업자등록번호:\s*([0-9-]+)/) || [])[1] || ''), ceo: ((f.match(/대표이사:\s*([^·]+)/) || [])[1] || '').trim() };
+  try {
+    var r = await sb.from('ssjg_company').select('*').limit(1); var x = (r.data || [])[0];
+    if(x){ var pick = function(ks){ for(var i = 0; i < ks.length; i++){ if(x[ks[i]]) return String(x[ks[i]]); } return ''; };
+      co.name = pick(['company_name', 'corp_name', 'name', 'co_name']) || co.name;
+      co.bizno = pick(['biz_no', 'bizno', 'business_no', 'reg_no', 'brn']) || co.bizno;
+      co.ceo = pick(['ceo', 'ceo_name', 'representative', 'rep_name']) || co.ceo; }
+  } catch(e){}
+  PRT.co = co; return co;
+}
+function prtPeriod(p){
+  var out = [];
+  p.querySelectorAll('.b3-head label, .filter-bar label').forEach(function(l){
+    var i = l.querySelector('input,select'); if(!i || !i.value || l.offsetParent === null && !l.closest('.tab-pane.active')) return;
+    var k = (l.childNodes[0] && l.childNodes[0].nodeType === 3 ? l.childNodes[0].textContent : '').trim();
+    var v = i.tagName === 'SELECT' ? (i.options[i.selectedIndex] || {}).text : i.value;
+    if(k) out.push(k + ' ' + v);
+  });
+  return out.join('  ');
+}
+async function prtRun(){
+  var p = pgPane(); if(!p) return;
+  var co = await prtCompany();
+  var h = p.querySelector('.prt-head');
+  if(!h){ h = document.createElement('div'); h.className = 'prt-head'; p.insertBefore(h, p.firstChild); }
+  var title = (document.getElementById('pgT') || {}).innerText || '';
+  h.innerHTML = '<div class="ph-t">' + gEsc(title) + '</div><div class="ph-row"><span>' + gEsc(co.name) + (co.bizno ? '  (' + gEsc(co.bizno) + ')' : '') + '</span><span>' + gEsc(prtPeriod(p)) + '</span></div>';
+  window.print();
+}
+var _pgAct2 = pgAct;
+pgAct = function(k){ if(k === 'p'){ prtRun(); return; } return _pgAct2(k); };
 // ── 테마 전환 (WO-33) ──
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
