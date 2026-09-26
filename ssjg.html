@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.64">
+<meta name="app-version" content="1.65">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4021,8 +4021,15 @@ function drToJv(){
     n++;
     var i = (JV.list || []).findIndex(function(x){ return x.jv_no === no; });
     if(i >= 0){ clearInterval(iv); jvLoad(i); }
-    else if(n > 30){ clearInterval(iv); gToast('입력 전표 목록에 없습니다: ' + no, true); }
+    else if(n > 30){ clearInterval(iv); jvFetchOne(no); }
   }, 100);
+}
+async function jvFetchOne(no){
+  var h = await sb.from('ssjg_jv_head').select('id,jv_no,jv_date,kind,memo').eq('jv_no', no).limit(1);
+  if(h.error || !h.data || !h.data.length){ gToast('전표를 찾지 못했습니다: ' + no, true); return; }
+  var x = h.data[0], ln = await sb.from('ssjg_jv_lines').select('head_id,line_no,side,acct_code,partner,amount,memo').eq('head_id', x.id).order('line_no');
+  if(ln.error){ gToast('전표 줄 조회 실패: ' + ln.error.message, true); return; }
+  x.lines = ln.data || []; JV.list = (JV.list || []).concat([x]); jvLoad(JV.list.length - 1);
 }
 function drAcct(code, f, to){
   switchTab('gl-account');
@@ -4529,8 +4536,13 @@ async function vtExport(){
 // ── 엔티티 간 거래 경고 (v1.48) ──
 var TR_ENT = [['BVS', ['비브이에스', 'bvs']], ['PYRO', ['파이로', 'pyro']], ['HBS', ['황병승']], ['대표', ['이세영']]];
 function trWho(name){
-  var s = tjvNorm(name || ''); if(!s) return '';
-  for(var i = 0; i < TR_ENT.length; i++){ for(var j = 0; j < TR_ENT[i][1].length; j++){ if(s.indexOf(TR_ENT[i][1][j]) >= 0) return TR_ENT[i][0]; } }
+  var s = String(name || ''); try { s = s.normalize('NFKC'); } catch(e){}
+  s = ' ' + s.toLowerCase().replace(/\(주\)|㈜|주식회사|\(유\)|유한회사/g, ' ') + ' ';
+  if(!s.trim()) return '';
+  for(var i = 0; i < TR_ENT.length; i++){ for(var j = 0; j < TR_ENT[i][1].length; j++){
+    var k = TR_ENT[i][1][j].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if(new RegExp('(^|[^가-힣a-z0-9])' + k + '($|[^가-힣a-z0-9])').test(s)) return TR_ENT[i][0];
+  } }
   return '';
 }
 function trTag(name){ var w = trWho(name); return w ? '<span class="tr-tag">' + w + '</span>' : ''; }
