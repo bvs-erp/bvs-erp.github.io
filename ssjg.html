@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.74">
+<meta name="app-version" content="1.75">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
   --font:var(--font-sans);
 }
 body,button,input,select,textarea,table{font-family:var(--font-sans)}
-.num,td.amt,.md,.kpi-value{font-variant-numeric:tabular-nums}
+.num,td.amt{font-variant-numeric:tabular-nums}
 html[data-theme="light"]{
   --bg:#f8fafc;--panel:#ffffff;--panel-card:#f1f5f9;--panel-border:#cbd5e1;--border:#e2e8f0;
   --text:#0f172a;--text-muted:#64748b;--accent:#dc2626;--accent-hover:#b91c1c;
@@ -38,7 +38,7 @@ html[data-theme="light"] tr:hover td{background:#f8fafc}
 html[data-theme="light"] .input,html[data-theme="light"] .select{background:#ffffff;color:#0f172a;border-color:#cbd5e1}
 html[data-theme="light"] .nav-btn{background:#ffffff;color:#475569;border-color:#cbd5e1}
 html[data-theme="light"] .nav-btn:hover{background:#f1f5f9;color:#0f172a}
-html[data-theme="light"] .tax-banner{background:#fef2f2;border-color:#fca5a5}
+
 html[data-theme="light"] .tax-body h4{color:#991b1b}
 html[data-theme="light"] .tax-body p{color:#334155}
 html[data-theme="light"] .tax-table th{color:#991b1b}
@@ -103,7 +103,7 @@ html[data-theme="light"] .modbar{background:#ffffff}
 .alert-line .al-text{flex:1;min-width:0}
 .al-btn{flex:0 0 auto;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer}
 .alert-box{margin:-4px 0 12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);overflow-x:auto}
-.al-detail{font-size:12.5px;color:var(--text)}
+
 .td-cnt{display:inline-block;margin-left:6px;padding:0 8px;border-radius:10px;background:#dc2626;color:#fff;font-size:12px;line-height:20px}
 .td-cnt:empty{display:none}
 .td-empty{text-align:center;padding:22px;color:var(--text-muted)}
@@ -188,8 +188,8 @@ html[data-theme="light"] .b3-tbl input:focus{background:#fff}
 .kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
 
 /* Tax-Risk Banner */
-.tax-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
-.tax-icon{background:var(--red);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px}
+
+
 .tax-body h4{font-size:14px;font-weight:700;color:#fca5a5;margin-bottom:4px}
 .tax-body p{font-size:12px;color:#cbd5e1;line-height:1.5}
 .tax-table{margin-top:10px;width:100%;border-collapse:collapse;font-size:12px}
@@ -227,7 +227,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 /* Delivery Module */
 .dropzone{border:2px dashed var(--border);border-radius:10px;padding:24px 16px;text-align:center;background:rgba(255,255,255,0.02);cursor:pointer;transition:all .2s;margin-bottom:14px}
 .dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:var(--accent-light)}
-.drop-icon{font-size:28px;margin-bottom:6px}
+
 .btn{cursor:pointer;border:none;border-radius:6px;font-weight:600;font-size:12px;transition:all .15s}
 .btn:disabled{opacity:0.5;cursor:not-allowed}
 .btn-primary{background:var(--accent);color:#fff}
