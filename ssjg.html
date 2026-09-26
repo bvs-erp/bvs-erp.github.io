@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.67">
+<meta name="app-version" content="1.68">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,7 +116,7 @@ html[data-theme="light"] .modbar{background:#ffffff}
 .td-chart svg{display:block;height:240px;width:auto;max-width:100%}
 .td-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
 .td-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:8px}
-.td-sw-now{background:var(--blue)}
+.td-sw-now{background:var(--accent)}
 .td-sw-prev{background:#64748b;opacity:.45}
 .step-no{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700}
 .step-panel{margin-bottom:20px}
@@ -290,7 +290,7 @@ html[data-theme="light"] .amt-plus{color:#1f6fd1}
 html[data-theme="light"] .amt-minus{color:#d93a3a}
 html[data-theme="light"] .kpi-grid{gap:8px;margin-bottom:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 html[data-theme="light"] .kpi-card{border-radius:0;padding:10px 12px;border-color:var(--border)}
-html[data-theme="light"] .kpi-card::before{top:0;bottom:0;right:auto;width:3px;height:auto}
+html[data-theme="light"] .kpi-card::before{display:none}
 html[data-theme="light"] .kpi-label{font-size:12px;color:#4b5563;margin-bottom:2px}
 html[data-theme="light"] .kpi-val{font-size:20px;letter-spacing:0}
 html[data-theme="light"] .alert-line{border-radius:0;padding:6px 10px;margin-bottom:6px}
@@ -2223,10 +2223,14 @@ async function loadToday(){
   var issues = late.map(o => ({ k: '출고 지연', w: false, d: tdDay(o.ordered_at), o: o.order_no, c: o.channel || o.mall || '', t: o.receiver || '', b: '' }))
     .concat(waits.filter(o => late.indexOf(o) < 0).map(o => ({ k: '출고 대기', w: true, d: tdDay(o.ordered_at), o: o.order_no, c: o.channel || o.mall || '', t: o.receiver || '', b: '' })))
     .concat(noTrk.map(r => ({ k: '송장 누락', w: false, d: tdDay(r.ship_date), o: r.order_no, c: r.channel || r.mall || '', t: r.item_name || '', b: tdBox(r) })));
+  try {
+    var trq = await sb.from('ssjg_tax_risk').select('txn_date,counterparty,deposit_amt,withdraw_amt,description').order('txn_date', { ascending: false }).limit(200);
+    (trq.data || []).forEach(function(r){ var a = Number(r.deposit_amt) > 0 ? '입금 ' + fmt(r.deposit_amt) : '출금 ' + fmt(r.withdraw_amt); issues.push({ k: '특수관계', w: true, d: tdDay(r.txn_date), o: '', c: r.counterparty || '', t: a + '원 ' + (r.description || ''), b: '', tab: 'dashboard' }); });
+  } catch(e){}
   issues.sort((a, b) => (a.w - b.w) || (a.d < b.d ? 1 : -1));
   var errN = issues.filter(i => !i.w).length;
   document.getElementById('tdIssueCnt').innerText = errN ? errN : '';
-  document.getElementById('tdIssueRows').innerHTML = issues.length ? issues.map(i => '<tr data-ord="' + gEsc(i.o) + '" onclick="openShip(this.dataset.ord)"><td><span class="td-kind' + (i.w ? ' warn' : '') + '">' + i.k + '</span></td><td>' + gEsc(i.d) + '</td><td style="font-variant-numeric:tabular-nums">' + gEsc(i.o) + '</td><td>' + gEsc(i.c) + '</td><td>' + gEsc(i.t) + '</td><td style="text-align:right">' + (i.b === '' ? '' : i.b) + '</td></tr>').join('') : '<tr><td colspan="6" class="td-empty">없음</td></tr>';
+  document.getElementById('tdIssueRows').innerHTML = issues.length ? issues.map(i => '<tr data-ord="' + gEsc(i.o) + '" onclick="' + (i.tab ? "switchTab('" + i.tab + "')" : 'openShip(this.dataset.ord)') + '"><td><span class="td-kind' + (i.w ? ' warn' : '') + '">' + i.k + '</span></td><td>' + gEsc(i.d) + '</td><td style="font-variant-numeric:tabular-nums">' + gEsc(i.o) + '</td><td>' + gEsc(i.c) + '</td><td>' + gEsc(i.t) + '</td><td style="text-align:right">' + (i.b === '' ? '' : i.b) + '</td></tr>').join('') : '<tr><td colspan="6" class="td-empty">없음</td></tr>';
   // 월별 박스 막대: 최근 12개월 + 전년 같은 달
   var months = [];
   for(var i = 11; i >= 0; i--){ months.push(new Date(Date.UTC(y, Number(ym.slice(5)) - 1 - i, 1)).toISOString().slice(0, 7)); }
@@ -2238,7 +2242,7 @@ async function loadToday(){
   months.forEach((m, i) => {
     var x = pl + i * bw, w = bw * 0.36;
     svg += '<rect x="' + (x + bw * 0.12) + '" y="' + yv(prev[i]) + '" width="' + w + '" height="' + (H - pb - yv(prev[i])) + '" rx="2" fill="#64748b" fill-opacity=".45"><title>' + (Number(m.slice(0, 4)) - 1) + m.slice(4) + ' ' + prev[i] + '박스</title></rect>';
-    svg += '<rect x="' + (x + bw * 0.12 + w + 2) + '" y="' + yv(vals[i]) + '" width="' + w + '" height="' + (H - pb - yv(vals[i])) + '" rx="2" fill="var(--blue)"><title>' + m + ' ' + vals[i] + '박스</title></rect>';
+    svg += '<rect x="' + (x + bw * 0.12 + w + 2) + '" y="' + yv(vals[i]) + '" width="' + w + '" height="' + (H - pb - yv(vals[i])) + '" rx="2" fill="var(--accent)"><title>' + m + ' ' + vals[i] + '박스</title></rect>';
     if(vals[i]) svg += '<text x="' + (x + bw * 0.12 + w * 1.5 + 2) + '" y="' + (yv(vals[i]) - 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">' + vals[i] + '</text>';
     svg += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".6">' + Number(m.slice(5)) + '월</text>';
   });
@@ -2568,7 +2572,7 @@ async function loadAllData(){
       document.getElementById('trCnt').innerText = taxData.length;
       document.getElementById('trCnt2').innerText = taxData.length;
       document.getElementById('trSum').innerText = Math.round(trSum / 10000).toLocaleString('ko-KR');
-      document.getElementById('taxBanner').style.display = taxData.length ? '' : 'none';
+      document.getElementById('taxBanner').style.display = 'none'; document.getElementById('taxRiskBox').style.display = taxData.length ? '' : 'none';
     }
     if(taxData && taxData.length > 0){
       document.getElementById('taxRiskRows').innerHTML = taxData.map(r => `
