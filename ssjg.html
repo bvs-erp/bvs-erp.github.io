@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.65">
+<meta name="app-version" content="1.66">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3486,9 +3486,19 @@ gridEdit = function(td, tb, ri, field, first){
   };
   inp.onblur = function(){ fin(true); };
 };
+var GBULK = null;
 async function gridSaveAll(tb){
   var d = GDIRTY[tb] || {}, ks = Object.keys(d); if(!ks.length) return { ok: 0, bad: 0 };
   var ok = 0, bad = 0;
+  if(GBULK !== false){
+    var br = await sb.rpc('ssjg_update_rows', { p_table: tb, p_rows: ks.map(function(k){ var x = d[k]; return { key: x.key, field: x.f, value: x.v }; }) });
+    if(br.error && (br.error.code === 'PGRST202' || /could not find the function/i.test(br.error.message || ''))) GBULK = false;
+    else {
+      GBULK = true;
+      if(br.error || !br.data || !br.data.ok){ var em = (br.error && br.error.message) || (br.data && br.data.error) || '저장 실패'; ks.forEach(function(k){ d[k].err = em; }); gMark(tb); return { ok: 0, bad: ks.length }; }
+      ks.forEach(function(k){ delete d[k]; }); gMark(tb); return { ok: ks.length, bad: 0 };
+    }
+  }
   for(var i = 0; i < ks.length; i++){
     var x = d[ks[i]];
     var r = await sb.rpc('ssjg_update_row', { p_table: tb, p_key: x.key, p_field: x.f, p_value: x.v });
@@ -4944,7 +4954,8 @@ async function faDraft(){
 var _switchTab151 = switchTab; switchTab = function(tabId){ var r = _switchTab151.apply(this, arguments); if(tabId === 'fa-dep') faOpen(); return r; };
 // ── 자금일보 (v1.50) ──
 var FD = { rows: null, days: [] };
-function fdAcctName(r){ return r.source_file || r.src || '기본계좌'; }
+var SSJG_ACCT = 'IBK기업은행 보통예금';
+function fdAcctName(r){ return r.acct_name || SSJG_ACCT; }
 function fdDay(r){ return String(r.txn_date || r.txn_at || '').slice(0, 10); }
 async function fdFetch(){
   if(FD.rows) return FD.rows;
