@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.71">
+<meta name="app-version" content="1.74">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
 <style>
 :root{
   --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
@@ -1371,13 +1371,13 @@ body.perm-ro #tmType{display:none}
         <div class="gov-info-row"><span class="gov-info-label">주력 브랜드</span><span>47 레드캣 (REDCAT) 고양이 벤토나이트 모래</span></div>
       </div>
       <div class="gov-card">
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인인감</h3>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">사용인감</h3>
         <div class="seal-box">
           <div id="sealLoadingBox" style="font-size:11px;color:var(--text-muted);padding:24px 10px">
             -
           </div>
-          <img id="govSealImg" src="" alt="SSJG 법인인감" class="seal-img" style="display:none;max-height:100px;margin:0 auto;filter:drop-shadow(0 2px 8px rgba(239,68,68,0.25))">
-          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 법인인감</div>
+          <img id="govSealImg" src="" alt="SSJG 사용인감" class="seal-img" style="display:none;max-height:100px;margin:0 auto;filter:drop-shadow(0 2px 8px rgba(239,68,68,0.25))">
+          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 사용인감</div>
         </div>
       </div>
     </div>
@@ -2695,11 +2695,11 @@ function renderMgmtPl(plRows, sgaRows){
 
   tbody.innerHTML = plRows.map(r => {
     var sgaItem = sgaRows.find(s => s.ym === r.ym) || {};
-    var isSep = r.ym === '2026-09';
+    var isSep = r.ym === glNowYm();
     var isOpPositive = Number(r.op_income) >= 0;
     return `
       <tr>
-        <td><strong>${r.ym}</strong> ${isSep ? '<span class="badge" style="background:rgba(245,158,11,0.15);color:var(--amber);margin-left:4px">9/18 기준</span>' : ''}</td>
+        <td><strong>${r.ym}</strong> ${isSep ? '<span class="badge" style="margin-left:4px">월중</span>' : ''}</td>
         <td class="amt-neutral" style="font-weight:700">${fmt(r.revenue_total)}</td>
         <td class="amt-neutral">${fmt(r.rev_invoice)}</td>
         <td class="amt-neutral">${fmt(r.rev_channel)}</td>
@@ -3053,6 +3053,7 @@ function handleEzadminFile(file){
         var productName = row['출고 상품명'] || row['상품명'] || row['물품명'] || '';
         var qty = Number(row['상품수량'] || row['수량'] || row['택배수량'] || 1);
         var msg = row['배송메시지'] || row['배송메세지'] || '';
+        var opt = row['옵션'] || row['상품옵션'] || row['옵션명'] || '';
         var invoiceNo = row['송장번호'] || '';
 
         return {
@@ -3066,6 +3067,7 @@ function handleEzadminFile(file){
           product_name: String(productName).trim(),
           qty: qty,
           delivery_msg: String(msg).trim(),
+          option_name: String(opt).trim(),
           invoice_no: String(invoiceNo).trim()
         };
       });
@@ -3129,7 +3131,7 @@ function renderDeliveryTable(){
   if(mEl){ mEl.innerText = ck.err ? '오류 ' + ck.err + '건' : (ck.warn ? '확인 ' + ck.warn + '건' : '통과'); mEl.style.color = ck.err ? '#ef4444' : (ck.warn ? '#d97706' : 'var(--green)'); }
   if(mSub) mSub.innerText = ck.err ? '로젠 파일 차단' : '';
 
-  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+  var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
 
   tbody.innerHTML = rawDeliveryRows.map(r => `
     <tr class="${r._err.length ? 'row-err' : (r._warn.length ? 'row-warn' : '')}">
@@ -3151,7 +3153,7 @@ function renderDeliveryTable(){
 function recalcDeliveryKpi(){
   var count = rawDeliveryRows.length;
   var totalBoxes = rawDeliveryRows.reduce((sum, r) => sum + (r.qty || 1), 0);
-  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+  var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
   var totalFreight = totalBoxes * freight;
 
   document.getElementById('kpiDelivOrders').innerText = count.toLocaleString() + ' 건';
@@ -3178,7 +3180,7 @@ function downloadLogenExcel(){
     if(!confirm('확인 ' + ck.warn + '건\n\n' + wl.join('\n') + (ck.warn > 8 ? '\n…' : '') + '\n\n이대로 로젠 파일을 만들까요?')) return;
   }
 
-  var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+  var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
   var freightType = document.getElementById('cfgFreightType').value || '10';
   var senderName = document.getElementById('cfgSenderName').value || (compInfo && compInfo.corp_name) || '승승장구컴퍼니';
   var senderAddr = document.getElementById('cfgSenderAddr').value || (compInfo && compInfo.address) || '';
@@ -3304,14 +3306,14 @@ async function saveDeliveryToSupabase(){
   btn.innerText = '저장 중';
 
   try {
-    var freight = Number(document.getElementById('cfgFreight').value) || 4150;
+    var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
     var payload = rawDeliveryRows.map((r, idx) => ({
       order_no: r.order_no,
       order_seq: idx + 1,
       order_date: new Date().toISOString(),
       shop_name: '이지어드민출고',
       product_name: r.product_name,
-      option_name: r.delivery_msg || '',
+      option_name: r.option_name || '',
       qty: r.qty,
       freight_amt: freight,
       invoice_no: r.invoice_no || null,
@@ -3327,7 +3329,7 @@ async function saveDeliveryToSupabase(){
       alert('출고 내역 저장 실패: ' + error.message);
     } else {
       var count = (data && data.count) || rawDeliveryRows.length;
-      alert('성공: 출고 내역 ' + count + '건이 Supabase raw.ssjg_ezadmin_logs 원장에 안전하게 저장되었습니다!');
+      gToast('저장 완료 ' + count + '건');
     }
   } catch(e) {
     alert('저장 오류: ' + e.message);
@@ -4968,6 +4970,7 @@ var _switchTab151 = switchTab; switchTab = function(tabId){ var r = _switchTab15
 // ── 자금일보 (v1.50) ──
 var FD = { rows: null, days: [] };
 var SSJG_ACCT = 'IBK기업은행 보통예금';
+var SSJG_FREIGHT_DEFAULT = 4150;
 function fdAcctName(r){ return r.acct_name || SSJG_ACCT; }
 function fdDay(r){ return String(r.txn_date || r.txn_at || '').slice(0, 10); }
 async function fdFetch(){
