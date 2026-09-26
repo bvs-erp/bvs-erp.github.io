@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.70">
+<meta name="app-version" content="1.71">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1979,7 +1979,7 @@ async function b3Save(replace){
   if(r.data&&r.data.exists&&!replace){if(confirm(r.data.error+'. 새로 입력한 내용으로 바꿉니까? (기존 줄은 삭제 보관함에 남습니다)'))return b3Save(true);return}
   if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);return}
   gToast(ym+' '+r.data.inserted+'줄 저장 · 합계 '+Number(r.data.total).toLocaleString('ko-KR')+'원');b3Reset();b3Load();if(GRID.ssjg_3pl_bills)gridLoad('ssjg_3pl_bills')}
-async function b3Load(){if(!sb)return;var r=await sb.from('ssjg_3pl_bills').select('bill_ym,vendor,supply_amt,vat_amt,total_amt').order('bill_ym',{ascending:false}).limit(5000);
+async function b3Load(){if(!sb)return;var r=await sbAllR('ssjg_3pl_bills','bill_ym,vendor,supply_amt,vat_amt,total_amt',[['bill_ym',{ascending:false}],['id', { ascending: true }]]);
   var body=document.getElementById('b3Sum');if(r.error){body.innerHTML='<tr><td colspan="6">'+gEsc(r.error.message)+'</td></tr>';return}
   var m={},vs={};(r.data||[]).forEach(function(x){var k=x.bill_ym+'|'+x.vendor;vs[x.vendor]=1;m[k]=m[k]||{ym:x.bill_ym,v:x.vendor,n:0,s:0,t:0,a:0};m[k].n++;m[k].s+=+x.supply_amt||0;m[k].t+=+x.vat_amt||0;m[k].a+=+x.total_amt||0});
   var ks=Object.keys(m).sort().reverse();
@@ -2159,6 +2159,7 @@ async function sbFetchPar(table, cols, orders, max, flt){
   if(c <= max && out.length !== n) throw new Error(table + ' 건수 불일치 ' + out.length + '/' + n);
   return out;
 }
+async function sbAllR(table, cols, orders, flt){ try { return { data: await sbFetchPar(table, cols, orders, 200000, flt), error: null }; } catch(e){ return { data: null, error: e }; } }
 async function tdFetchAll(table, cols, orderCol){
   if(orderCol) return sbFetchPar(table, cols, [[orderCol, { ascending: true }]]);
   var out = [];
@@ -3547,7 +3548,7 @@ var CH_SRC = {
   partner: { t: '거래처', load: async function(){ var r = await tdFetchAll('ssjg_ledger_partner', 'partner', 'partner'), s = {};
     r.forEach(function(x){ if(x.partner) s[x.partner] = (s[x.partner] || 0) + 1; });
     return Object.keys(s).sort().map(function(k){ return { c: k, n: k, x: s[k] + '건' }; }); } },
-  item: { t: '품목', load: async function(){ var r = await sb.from('ssjg_items').select('*').limit(5000); var d = r.data || [];
+  item: { t: '품목', load: async function(){ var r = await sbAllR('ssjg_items', '*', [['id', { ascending: true }]]); var d = r.data || [];
     return d.filter(function(x){ return String(x.status || 'ACTIVE').toUpperCase() !== 'INACTIVE'; }).map(function(x){ var c = x.item_code || x.code || x.pl3_code || x.id; return { c: String(c == null ? '' : c), n: x.item_name || x.name || '', v: x.item_name || x.name || '', x: [x.unit, x.sell_price != null ? Number(x.sell_price).toLocaleString('ko-KR') : ''].filter(Boolean).join(' ') }; }); } }
 };
 var CH_FIELD = { acct_code: 'acct', pl_code: 'acct', partner: 'partner', vendor: 'partner', item: 'item', item_code: 'item' };
@@ -3799,7 +3800,7 @@ Object.assign(COL_KO, { code: '코드', kind: '구분', biz_no: '사업자번호
 CH_SRC.partner.load0 = CH_SRC.partner.load;
 CH_SRC.partner.load = async function(){
   try {
-    var r = await sb.from('ssjg_partners').select('code,name,biz_no,kind,is_active').order('code').limit(5000);
+    var r = await sbAllR('ssjg_partners', 'code,name,biz_no,kind,is_active', [['code', { ascending: true }], ['id', { ascending: true }]]);
     if(!r.error && r.data && r.data.length) return r.data.filter(function(x){ return x.is_active !== false; })
       .map(function(x){ return { c: x.code, n: x.name, x: [x.kind, x.biz_no].filter(Boolean).join(' '), v: x.name }; });
   } catch(e){}
@@ -3882,7 +3883,7 @@ function tjvNorm(s){ s = String(s || ''); try { s = s.normalize('NFKC'); } catch
 async function tjvPartners(){
   if(TJV.partners) return TJV.partners;
   var m = {};
-  try { var r = await sb.from('ssjg_partners').select('name').limit(5000); (r.data || []).forEach(function(x){ m[tjvNorm(x.name)] = x.name; }); } catch(e){}
+  try { var r = await sbAllR('ssjg_partners', 'name', [['id', { ascending: true }]]); (r.data || []).forEach(function(x){ m[tjvNorm(x.name)] = x.name; }); } catch(e){}
   TJV.partners = m; return m;
 }
 function tjvAcct(code, prefix){
@@ -3899,15 +3900,16 @@ async function tjvOpen(){
 }
 async function tjvLoad(){
   var f = document.getElementById('tjvFrom').value, t = document.getElementById('tjvTo').value;
-  var q = sb.from('ssjg_tax_invoices').select('*').order('write_date', { ascending: true }).limit(5000);
-  if(f) q = q.gte('write_date', f + '-01');
-  if(t) q = q.lt('write_date', perAdd(t, 1) + '-01');
-  var r = await q;
+  var r = await sbAllR('ssjg_tax_invoices', '*', [['write_date', { ascending: true }], ['id', { ascending: true }]], function(q){
+    if(f) q = q.gte('write_date', f + '-01');
+    if(t) q = q.lt('write_date', perAdd(t, 1) + '-01');
+    return q;
+  });
   if(r.error){ document.getElementById('tjvRows').innerHTML = '<tr><td colspan="10">' + gEsc(r.error.message) + '</td></tr>'; return; }
   var inv = r.data || [];
   var jn = {}, jr = {};
   try { var a = await tdFetchAll('ssjg_journal', 'approval_no', 'approval_no'); a.forEach(function(x){ if(x.approval_no) jn[x.approval_no] = 1; }); } catch(e){}
-  try { var h = await sb.from('ssjg_jv_head').select('jv_no,src_ref').like('src_ref', 'TI:%').limit(5000); (h.data || []).forEach(function(x){ jr[x.src_ref] = x.jv_no; }); } catch(e){}
+  try { var h = await sbAllR('ssjg_jv_head', 'jv_no,src_ref', [['id', { ascending: true }]], function(q){ return q.like('src_ref', 'TI:%'); }); (h.data || []).forEach(function(x){ jr[x.src_ref] = x.jv_no; }); } catch(e){}
   await tjvPartners();
   TJV.rows = inv.map(function(x){
     var st = x.approval_no && jn[x.approval_no] ? '기존 장부' : (jr['TI:' + x.id] ? '전표 ' + jr['TI:' + x.id] : '');
@@ -4224,7 +4226,7 @@ function vtOpen(){
 async function vtBizMap(){
   if(VT.biz) return VT.biz;
   var m = {};
-  try { var r = await sb.from('ssjg_partners').select('name,biz_no').limit(5000); (r.data || []).forEach(function(x){ if(x.biz_no) m[tjvNorm(x.name)] = x.biz_no; }); } catch(e){}
+  try { var r = await sbAllR('ssjg_partners', 'name,biz_no', [['id', { ascending: true }]]); (r.data || []).forEach(function(x){ if(x.biz_no) m[tjvNorm(x.name)] = x.biz_no; }); } catch(e){}
   VT.biz = m; return m;
 }
 function vtGroup(rows, key, biz, amt){
@@ -4253,11 +4255,11 @@ async function vtLoad(){
   VT.d0 = d0; VT.d1 = d1;
   document.getElementById('vtTitle').textContent = d0 + ' ~ ' + new Date(Date.parse(d1) - 86400000).toISOString().slice(0, 10);
   var ti = [], cr = [], cd = [], err = [];
-  try { var a = await sb.from('ssjg_tax_invoices').select('*').gte('write_date', d0).lt('write_date', d1).limit(10000); if(a.error) err.push(a.error.message); else if((a.data || []).length >= 1000) err.push('ssjg_tax_invoices 1,000건 이상: 조회 기간을 나눠 주십시오'); ti = a.data || []; } catch(e){ err.push(e.message || e); }
-  try { var b = await sb.from('ssjg_cash_receipts').select('*').gte('tx_date', d0).lt('tx_date', d1).limit(10000); if(b.error) err.push(b.error.message); else if((b.data || []).length >= 1000) err.push('ssjg_cash_receipts 1,000건 이상: 조회 기간을 나눠 주십시오'); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
-  try { var c = await sb.from('ssjg_card_purchases').select('*').eq('yr', y).limit(10000); if(c.error) err.push(c.error.message); else if((c.data || []).length >= 1000) err.push('ssjg_card_purchases 1,000건 이상: 조회 기간을 나눠 주십시오'); cd = c.data || []; } catch(e){ err.push(e.message || e); }
+  try { var a = await sbAllR('ssjg_tax_invoices', '*', [['write_date', { ascending: true }], ['id', { ascending: true }]], function(q){ return q.gte('write_date', d0).lt('write_date', d1); }); if(a.error) err.push(a.error.message || a.error); ti = a.data || []; } catch(e){ err.push(e.message || e); }
+  try { var b = await sbAllR('ssjg_cash_receipts', '*', [['tx_date', { ascending: true }], ['id', { ascending: true }]], function(q){ return q.gte('tx_date', d0).lt('tx_date', d1); }); if(b.error) err.push(b.error.message || b.error); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
+  try { var c = await sbAllR('ssjg_card_purchases', '*', [['yr', { ascending: true }], ['id', { ascending: true }]], function(q){ return q.eq('yr', y); }); if(c.error) err.push(c.error.message || c.error); cd = c.data || []; } catch(e){ err.push(e.message || e); }
   var st = [];
-  try { var sq = await sb.from('ssjg_settlements').select('*').gte('ym', d0).lt('ym', d1).limit(10000); if(sq.error) err.push(sq.error.message); else if((sq.data || []).length >= 1000) err.push('ssjg_settlements 1,000건 이상: 조회 기간을 나눠 주십시오'); st = sq.data || []; } catch(e){ err.push(e.message || e); }
+  try { var sq = await sbAllR('ssjg_settlements', '*', [['ym', { ascending: true }], ['id', { ascending: true }]], function(q){ return q.gte('ym', d0).lt('ym', d1); }); if(sq.error) err.push(sq.error.message || sq.error); st = sq.data || []; } catch(e){ err.push(e.message || e); }
   if(err.length) gToast('일부 조회 실패: ' + err.join(', '), true);
   var bm = await vtBizMap();
   function cpBiz(x){ return bm[tjvNorm(x)] || ''; }
@@ -4411,12 +4413,12 @@ document.addEventListener('keydown', function(e){
 document.addEventListener('change', function(e){ var id = e.target && e.target.id; if(id === 'apAcct' || id === 'apShow' || id === 'apAsof') apLoad(); });
 // ── 거래처 별칭 (v1.46) ──
 var AL = { parts: null, un: [] };
-async function alParts(){ if(AL.parts) return AL.parts; var r = await sb.from('ssjg_partners').select('id,name').limit(5000); AL.parts = r.data || []; return AL.parts; }
+async function alParts(){ if(AL.parts) return AL.parts; var r = await sbAllR('ssjg_partners', 'id,name', [['id', { ascending: true }]]); AL.parts = r.data || []; return AL.parts; }
 async function alLoad(){
   if(!sb || !document.getElementById('alUn')) return;
   AL.parts = null; var ps = await alParts(), byId = {}; ps.forEach(function(p){ byId[p.id] = p.name; });
   var u = await sb.from('ssjg_alias_candidates').select('alias,lines,dr,cr,candidates').limit(5000);
-  var a = await sb.from('ssjg_partner_alias').select('alias,partner_id,source').order('alias').limit(5000);
+  var a = await sbAllR('ssjg_partner_alias', 'alias,partner_id,source', [['alias', { ascending: true }], ['id', { ascending: true }]]);
   if(u.error){ document.getElementById('alUn').innerHTML = '<tr><td colspan="6">' + gEsc(u.error.message) + '</td></tr>'; return; }
   AL.un = (u.data || []).sort(function(x, y){ return Number(y.lines) - Number(x.lines); });
   document.getElementById('alUnCnt').textContent = AL.un.length + '건';
@@ -4741,7 +4743,7 @@ async function jfPrintAll(){
   var docs = keys.map(function(k){ return k.d; }).filter(function(v, i, a){ return a.indexOf(v) === i; }), all = [];
   try {
     for(var i = 0; i < docs.length; i += 100){
-      var r = await sb.from('ssjg_gl_lines').select('doc_no,doc_date,line_no,acct_code,acct_name,dr,cr,partner,flow,src,title,approval_no,memo,origin').in('doc_no', docs.slice(i, i + 100)).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).limit(10000);
+      var dz = docs.slice(i, i + 100), r = await sbAllR('ssjg_gl_lines', 'doc_no,doc_date,line_no,acct_code,acct_name,dr,cr,partner,flow,src,title,approval_no,memo,origin', [['doc_no', { ascending: true }], ['line_no', { ascending: true }]], function(q){ return q.in('doc_no', dz); });
       if(r.error) throw r.error; all = all.concat(r.data || []);
     }
   } catch(e){ gToast('조회 실패: ' + (e.message || e), true); return; }
@@ -4916,7 +4918,7 @@ async function faLoad(){
   document.getElementById('faYm').value = ym;
   var body = document.getElementById('faRows'); body.innerHTML = '<tr><td colspan="13" class="td-empty">불러오는 중</td></tr>';
   var r;
-  try { r = await sb.from('ssjg_fixed_assets').select('*').order('asset_code', { ascending: true }).limit(5000); } catch(e){ r = { error: e }; }
+  try { r = await sbAllR('ssjg_fixed_assets', '*', [['asset_code', { ascending: true }], ['id', { ascending: true }]]); } catch(e){ r = { error: e }; }
   if(r.error){ body.innerHTML = '<tr><td colspan="13">' + gEsc(r.error.message || r.error) + '</td></tr>'; return; }
   var e = faIdx(ym + '-01'), yEnd = Math.floor(e / 12) * 12 - 1, T = { cost: 0, open: 0, ytd: 0, mon: 0, acc: 0, bv: 0 }, S = {};
   FA.ym = ym;
