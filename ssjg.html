@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.60">
+<meta name="app-version" content="1.64">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -501,7 +501,7 @@ body.perm-ro #tmType{display:none}
     <div id="steplogin">
       <div class="f-group">
         <label>계정 이메일</label>
-        <input id="email" class="auth-input" value="enicy1211@gmail.com" autocomplete="username">
+        <input id="email" class="auth-input" autocomplete="username">
       </div>
       <div class="f-group">
         <label>비밀번호 <span id="pwlen" style="color:var(--text-muted);font-size:10px"></span></label>
@@ -566,9 +566,8 @@ body.perm-ro #tmType{display:none}
       공수 ERP
     </a>
     <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
-    <div id="connBadge" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);padding-left:8px">
-      <span style="font-size:16px">●</span> DB 정상 연동
-    </div>
+    <span id="userEmail" style="font-size:11px;color:var(--text-muted);padding-left:8px"></span>
+    <button class="nav-btn" onclick="doLogout()">로그아웃</button>
   </div>
 </header>
 
@@ -637,14 +636,6 @@ body.perm-ro #tmType{display:none}
         <thead><tr><th>거래일자</th><th>거래처</th><th>구분</th><th>금액</th><th>잔액</th><th>적요</th></tr></thead>
         <tbody id="taxRiskRows"><tr><td colspan="6">-</td></tr></tbody>
       </table>
-    </div>
-    <div class="alert-line">
-      <span class="al-dot"></span>
-      <span class="al-text">원천세 <b id="wo26Dday"></b> · 2026-08-21 김나연 외주용역비 원천세 <b>42,900원</b> · 납기 2026-09-10</span>
-      <button class="al-btn" onclick="toggleAlert('wo26Box',this)">상세</button>
-    </div>
-    <div class="alert-box" id="wo26Box" style="display:none">
-      <div class="al-detail">총지급 1,300,000원 · 통장 실지급 1,257,100원 · 원천징수 42,900원 (사업소득 3.3%) · 세무대리인 기한후신고·자진납부</div>
     </div>
 
     <!-- KPI Grid -->
@@ -1371,18 +1362,12 @@ body.perm-ro #tmType{display:none}
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인 정보</h3>
         <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span id="govCorpNo">134811-0530752</span></div>
         <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span id="govBizNo">772-87-02119</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영 (지분율 100%, 40,000주)</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영</span></div>
         <div class="gov-info-row"><span class="gov-info-label">자본금</span><span>20,000,000 원</span></div>
         <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span id="govAddress">경기도 용인시 처인구 이동읍 백옥대로753번길 15(어반즈19) 405호</span></div>
         <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span id="govBizItem">도매 및 소매업 / 애완용 동물 및 관련용품, 통신판매업</span></div>
         <div class="gov-info-row"><span class="gov-info-label">특수 인증</span><span>여성기업 확인서 보유 (유효기간 2024~2027)</span></div>
         <div class="gov-info-row"><span class="gov-info-label">주력 브랜드</span><span>47 레드캣 (REDCAT) 고양이 벤토나이트 모래</span></div>
-        <div class="gov-info-row" style="background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;padding-left:8px">
-          <span class="gov-info-label" style="color:#fca5a5;font-weight:700">임원 보수 한도 결의</span>
-          <div>
-            <span class="badge" style="background:#dc2626;color:#ffffff;font-weight:700;font-size:11px">미결의 · 의사록 없음</span>
-          </div>
-        </div>
       </div>
       <div class="gov-card">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인인감</h3>
@@ -1704,7 +1689,7 @@ function authLog(msg, isErr){
   var el = document.getElementById('authLog');
   if(!el) return;
   el.style.display = 'block';
-  el.innerHTML = isErr ? '<span style="color:#ef4444">' + msg + '</span>' : '<span style="color:#10b981">' + msg + '</span>';
+  el.innerHTML = isErr ? '<span style="color:#ef4444">' + gEsc(msg) + '</span>' : '<span style="color:#10b981">' + gEsc(msg) + '</span>';
 }
 
 async function doLogin(){
@@ -1793,7 +1778,7 @@ function resetKey(){
 async function startApp(){
   hideGate();
   var userDisplay = document.getElementById('userEmail');
-  if(userDisplay) userDisplay.innerText = USER || '로그인 완료';
+  if(userDisplay) userDisplay.textContent = USER || '';
 
   try {
     var st = await sb.rpc('my_status');
@@ -1830,8 +1815,9 @@ function initSupabase(){
 
 
 /* ═══ v1.13 공통 원장 편집 (BVS 방식: 추가 · 셀 더블클릭 수정 · 삭제) ═══ */
+var GRID_RO = { ssjg_journal: 1, ssjg_manual_journal: 1, ssjg_bank_txns: 1, ssjg_tax_invoices: 1 };
 var GRID_TABLES = {
-  ssjg_shipments:{t:'출고 내역',o:'ship_date'}, ssjg_orders:{t:'주문',o:'ordered_at'}, ssjg_order_lines:{t:'주문 라인'},
+  ssjg_shipments:{t:'출고 내역',o:'ship_date'}, ssjg_orders:{t:'주문',o:'ordered_at',pk:'id'}, ssjg_order_lines:{t:'주문 라인'},
   ssjg_inventory:{t:'재고'}, ssjg_partners:{t:'거래처',o:'code'}, ssjg_accounts:{t:'계정과목',o:'acct_code'}, ssjg_fixed_assets:{t:'고정자산',o:'asset_code'}, ssjg_items:{t:'품목 마스터'},
   ssjg_pl_month:{t:'월별 관리손익'}, ssjg_sga_month:{t:'월별 판관비'}, ssjg_channel_pl:{t:'채널별 손익'},
   ssjg_month_summary:{t:'월별 손익·자금'}, ssjg_settlements:{t:'채널 매출정산'},
@@ -1880,9 +1866,9 @@ function gridMount(host){
 async function gridLoad(tb){
   var g=GRID[tb];if(!g||!sb)return;
   var ord0=(GRID_TABLES[tb]||{}).o||null,pre=null;
-  if(ord0)pre=sbFetchPar(tb,'*',[[ord0,{ascending:false,nullsFirst:false}]],20000).then(function(d){return {d:d}},function(e){return {e:e}});
+  if(ord0)pre=sbFetchPar(tb,'*',[[ord0,{ascending:false,nullsFirst:false}]].concat((GRID_TABLES[tb]||{}).pk?[[(GRID_TABLES[tb]||{}).pk,{ascending:false}]]:[]),20000).then(function(d){return {d:d}},function(e){return {e:e}});
   var m=await sb.rpc('ssjg_table_meta',{p_table:tb});
-  if(m.data&&m.data.ok){g.pk=m.data.pk;g.cols=m.data.cols||[];g.edit=true}else{g.pk=null;g.edit=false;g.cols=[]}
+  if(m.data&&m.data.ok){g.pk=m.data.pk;g.cols=m.data.cols||[];g.edit=!GRID_RO[tb]}else{g.pk=null;g.edit=false;g.cols=[]}
   document.getElementById('ga_'+tb).classList.toggle('hide',!g.edit);
   var ord=ord0;if(!ord)g.cols.forEach(function(c){if(!ord&&gIsDate(c.type))ord=c.name});
   var all,res;
@@ -1986,6 +1972,8 @@ function b3Calc(){var sup=0,vat=0;b3Rows().forEach(function(r){var s=b3Num(r.sup
 async function b3Save(replace){
   var ym=document.getElementById('b3Ym').value,dt=document.getElementById('b3Date').value||null,vd=document.getElementById('b3Vendor').value.trim(),rows=b3Rows();
   if(!ym){gToast('정산월을 고르세요',true);return}if(!vd){gToast('공급자를 넣으세요',true);return}if(!rows.length){gToast('입력한 항목이 없습니다',true);return}
+  rows=rows.map(function(r){var o=Object.assign({},r),q=b3Num(r.qty),u=b3Num(r.unit_price),sp=b3Num(r.supply_amt);if(sp==null&&q!=null&&u!=null)sp=Math.round(q*u);var v=b3Num(r.vat_amt);if(v==null&&sp!=null)v=Math.round(sp*0.1);
+    if('qty' in o)o.qty=q;if('unit_price' in o)o.unit_price=u;o.supply_amt=sp;o.vat_amt=v;if('total_amt' in o)o.total_amt=(sp||0)+(v||0);return o});
   var r=await sb.rpc('ssjg_3pl_bulk',{p_ym:ym,p_date:dt,p_vendor:vd,p_rows:rows,p_replace:!!replace});
   if(r.data&&r.data.exists&&!replace){if(confirm(r.data.error+'. 새로 입력한 내용으로 바꿉니까? (기존 줄은 삭제 보관함에 남습니다)'))return b3Save(true);return}
   if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);return}
@@ -1997,7 +1985,7 @@ async function b3Load(){if(!sb)return;var r=await sb.from('ssjg_3pl_bills').sele
   body.innerHTML=ks.length?ks.map(function(k){var o=m[k];return '<tr><td>'+gEsc(o.ym)+'</td><td>'+gEsc(o.v)+'</td><td style="text-align:right">'+o.n+'</td><td style="text-align:right">'+o.s.toLocaleString('ko-KR')+'</td><td style="text-align:right">'+o.t.toLocaleString('ko-KR')+'</td><td style="text-align:right;font-weight:600">'+o.a.toLocaleString('ko-KR')+'</td></tr>'}).join(''):'<tr><td colspan="6">자료 없음</td></tr>';
   var dl=document.getElementById('b3VendorList');dl.innerHTML=Object.keys(vs).map(function(v){return '<option value="'+gEsc(v)+'">'}).join('');
   var vi=document.getElementById('b3Vendor');if(!vi.value&&ks.length)vi.value=m[ks[0]].v}
-function b3Init(){if(document.getElementById('b3Body').children.length===0){b3Reset();var d=new Date();d.setMonth(d.getMonth()-1);
+function b3Init(){if(document.getElementById('b3Body').children.length===0){b3Reset();var d=new Date(Date.now()+9*3600000);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-1);
   document.getElementById('b3Ym').value=d.toISOString().slice(0,7)}b3Load()}
 
 // ── 메뉴 체계: 모듈 > 그룹 > 메뉴 ──
@@ -2144,11 +2132,16 @@ function toggleAlert(id, btn){
 }
 
 // ── 병렬 페이지 수집 (v1.60): 첫 페이지와 건수를 동시에 받고 나머지 페이지를 4개씩 동시에 받음. 정렬이 없으면 순차 ──
-async function sbFetchPar(table, cols, orders, max){
+// v1.62: flt(쿼리 필터 함수) 추가. 선택 열이 '*'가 아니면 나머지 선택 열 전부를 보조 정렬로 붙여 페이지 경계 중복·누락을 막고, 건수가 서버 count와 다르면 오류로 올린다.
+async function sbFetchPar(table, cols, orders, max, flt){
   var PS = 1000; max = max || 100000;
-  function q(f){ var x = sb.from(table).select(cols).range(f, f + PS - 1); (orders || []).forEach(function(o){ x = x.order(o[0], o[1] || { ascending: true }); }); return x; }
+  var ords = (orders || []).slice(), used = {};
+  ords.forEach(function(o){ used[o[0]] = 1; });
+  if(cols && cols !== '*') String(cols).split(',').forEach(function(k){ k = k.trim(); if(k && !used[k]){ used[k] = 1; ords.push([k, { ascending: true, nullsFirst: true }]); } });
+  function q(f){ var x = sb.from(table).select(cols); if(flt) x = flt(x); x = x.range(f, f + PS - 1); ords.forEach(function(o){ x = x.order(o[0], o[1] || { ascending: true }); }); return x; }
+  function hq(){ var x = sb.from(table).select(cols, { count: 'exact', head: true }); if(flt) x = flt(x); return x; }
   var c = null, r0;
-  try { var pr = await Promise.all([q(0), sb.from(table).select(cols, { count: 'exact', head: true })]); r0 = pr[0]; c = pr[1] && !pr[1].error ? pr[1].count : null; }
+  try { var pr = await Promise.all([q(0), hq()]); r0 = pr[0]; c = pr[1] && !pr[1].error ? pr[1].count : null; }
   catch(e){ r0 = await q(0); }
   if(r0.error) throw r0.error;
   var out = (r0.data || []).slice();
@@ -2162,6 +2155,7 @@ async function sbFetchPar(table, cols, orders, max){
     var rs = await Promise.all(starts.slice(i, i + 4).map(function(st){ return q(st); }));
     for(var j = 0; j < rs.length; j++){ if(rs[j].error) throw rs[j].error; out = out.concat(rs[j].data || []); }
   }
+  if(c <= max && out.length !== n) throw new Error(table + ' 건수 불일치 ' + out.length + '/' + n);
   return out;
 }
 async function tdFetchAll(table, cols, orderCol){
@@ -2192,7 +2186,7 @@ async function loadToday(){
   var ships, orders;
   try {
     var tdp = await Promise.all([tdFetchAll('ssjg_shipments', 'order_no,ship_date,order_date,channel,mall,item_name,boxes,qty,tracking_no,ship_status,ship_method', 'ship_date'),
-      tdFetchAll('ssjg_orders', 'order_no,ordered_at,channel,mall,receiver', null)]);
+      sbFetchPar('ssjg_orders', 'id,order_no,ordered_at,channel,mall,receiver', [['ordered_at', { ascending: false }], ['id', { ascending: false }]])]);
     ships = tdp[0]; orders = tdp[1];
   } catch(e){
     console.warn('loadToday error:', e);
@@ -2269,7 +2263,7 @@ function toggleSide(force){
 
 // ── 회계관리 > 장부 ──
 var GL = { coa: null, month: null, acct: {}, partner: null };
-function glEsc(s){ return noEmo(s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function glEsc(s){ return noEmo(s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function glYm(y, m){ return y + '-' + String(m).padStart(2, '0'); }
 function glIn(ym, f, to){ return (!f || ym >= f) && (!to || ym <= to); }
 function glN(v){ v = Number(v || 0); return v ? fmt(Math.round(v)) : ''; }
@@ -2280,7 +2274,7 @@ async function glBase(){
     var c = await tdFetchAll('ssjg_coa', 'acct_code,acct_name,acct_class,normal_side', 'acct_code');
     GL.coa = c.sort(function(a, b){ return a.acct_code < b.acct_code ? -1 : 1; });
   }
-  if(!GL.month) GL.month = await tdFetchAll('ssjg_gl_month', 'yr,mo,acct_code,acct_name,acct_class,dr,cr', 'yr');
+  if(!GL.month) GL.month = await sbFetchPar('ssjg_gl_month', 'yr,mo,acct_code,acct_name,acct_class,dr,cr', [['yr'], ['mo'], ['acct_code']]);
 }
 async function glOpen(tab){
   if(!sb) return;
@@ -2295,7 +2289,7 @@ async function glOpen(tab){
       }
       glaRender();
     } else if(tab === 'gl-partner'){
-      if(!GL.partner) GL.partner = await tdFetchAll('ssjg_ledger_partner', 'partner,acct_code,acct_name,doc_date,yr,mo,doc_no,title,dr,cr,balance', 'doc_date');
+      if(!GL.partner) GL.partner = await sbFetchPar('ssjg_ledger_partner', 'partner,acct_code,acct_name,doc_date,yr,mo,doc_no,title,dr,cr,balance', [['doc_date'], ['doc_no'], ['partner']]);
       var p = document.getElementById('glpCp');
       if(!p.options.length){
         var names = {}; GL.partner.forEach(function(r){ names[r.partner] = 1; });
@@ -2317,9 +2311,7 @@ async function glaRender(){
   if(!code) return;
   try {
     if(!GL.acct[code]){
-      var r = await sb.from('ssjg_ledger_account').select('acct_code,acct_name,doc_date,yr,mo,doc_no,line_no,partner,title,dr,cr,balance,origin').eq('acct_code', code).order('doc_date', { ascending: true }).order('doc_no', { ascending: true }).order('line_no', { ascending: true }).range(0, 9999);
-      if(r.error) throw r.error;
-      GL.acct[code] = r.data || [];
+      GL.acct[code] = await sbFetchPar('ssjg_ledger_account', 'acct_code,acct_name,doc_date,yr,mo,doc_no,line_no,partner,title,dr,cr,balance,origin', [['doc_date'], ['doc_no'], ['line_no']], 200000, function(x){ return x.eq('acct_code', code); });
     }
   } catch(e){ gToast('계정별원장 조회 실패: ' + (e.message || e), true); return; }
   var all = GL.acct[code], a = (GL.coa || []).find(function(x){ return x.acct_code === code; }) || {}, dsign = a.normal_side === '대' ? -1 : 1;
@@ -2402,14 +2394,16 @@ function fsIs(m){
   return o;
 }
 function fsBs(m){
-  var o = { as: [], li: [] };
+  var o = { as: [], li: [], eq: [] };
   Object.keys(m).sort().forEach(function(k){
     var x = m[k];
     if(x.k === '자산') o.as.push({ n: x.n, v: x.dr - x.cr });
     else if(x.k === '부채') o.li.push({ n: x.n, v: x.cr - x.dr });
+    else if(x.k === '자본') o.eq.push({ n: x.n, v: x.cr - x.dr });
   });
   o.A = o.as.reduce(function(p, c){ return p + c.v; }, 0);
   o.L = o.li.reduce(function(p, c){ return p + c.v; }, 0);
+  o.E = o.eq.reduce(function(p, c){ return p + c.v; }, 0);
   o.RE = fsIs(m).N;
   return o;
 }
@@ -2467,10 +2461,12 @@ function fsbRender(){
   fsMerge(a.as, b.as).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
   h += fsRow('부채', a.L, b.L, 0);
   fsMerge(a.li, b.li).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
-  h += fsRow('자본', a.A - a.L, b.A - b.L, 0);
+  h += fsRow('자본', a.E + a.RE, b.E + b.RE, 0);
+  fsMerge(a.eq, b.eq).forEach(function(x){ h += fsRow(x[0], x[1], x[2], 2); });
   h += fsRow('이익잉여금', a.RE, b.RE, 2);
-  h += fsRow('기타 자본', a.A - a.L - a.RE, b.A - b.L - b.RE, 2);
-  h += fsRow('부채와 자본 총계', a.A, b.A, 0);
+  h += fsRow('부채와 자본 총계', a.L + a.E + a.RE, b.L + b.E + b.RE, 0);
+  var da = Math.round(a.A - a.L - a.E - a.RE), db = Math.round(b.A - b.L - b.E - b.RE);
+  if(da || db) h += '<tr style="font-weight:700;color:#DC2626"><td>차액 (자산 − 부채·자본)</td><td style="text-align:right">' + fsV(da) + '</td><td style="text-align:right">' + fsV(db) + '</td></tr>';
   document.getElementById('fsbRows').innerHTML = h;
 }
 function glmRender(){
@@ -2577,12 +2573,12 @@ async function loadAllData(){
     if(taxData && taxData.length > 0){
       document.getElementById('taxRiskRows').innerHTML = taxData.map(r => `
         <tr>
-          <td><strong>${r.txn_date}</strong></td>
-          <td><span class="badge" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">${r.counterparty}</span></td>
+          <td><strong>${gEsc(r.txn_date)}</strong></td>
+          <td><span class="badge" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">${gEsc(r.counterparty)}</span></td>
           <td>${r.deposit_amt > 0 ? '<span class="tag tag-deposit">입금</span>' : '<span class="tag tag-withdraw">출금</span>'}</td>
           <td class="${r.deposit_amt > 0 ? 'amt-plus' : 'amt-minus'}">${fmt(r.deposit_amt > 0 ? r.deposit_amt : r.withdraw_amt)} 원</td>
           <td class="amt-neutral">${fmt(r.balance_amt)} 원</td>
-          <td>${r.description}</td>
+          <td>${gEsc(r.description)}</td>
         </tr>
       `).join('');
     }
@@ -2728,7 +2724,7 @@ function renderChannelKpi(rows){
   var cls = ['green', 'blue', 'amber', 'purple'];
   g.innerHTML = Object.values(m).sort((a, b) => b.pay - a.pay).slice(0, 4).map((o, i) => `
       <div class="kpi-card ${cls[i]}">
-        <div class="kpi-label">${o.ch} (비중 ${tot > 0 ? Math.round(o.pay / tot * 100) : 0}%)</div>
+        <div class="kpi-label">${gEsc(o.ch)} (비중 ${tot > 0 ? Math.round(o.pay / tot * 100) : 0}%)</div>
         <div class="kpi-val">${o.pay > 0 ? (o.gross / o.pay * 100).toFixed(1) : '0.0'}%</div>
         <div class="kpi-sub">출고 ${o.n.toLocaleString('ko-KR')}건 · 차익 ${man(o.gross)}만 원</div>
       </div>`).join('');
@@ -2745,8 +2741,8 @@ function renderChannelPl(rows){
     var isPositive = Number(r.gross_after_ship) >= 0;
     return `
       <tr>
-        <td style="font-variant-numeric:tabular-nums"><strong>${r.ym}</strong></td>
-        <td><strong>${r.channel}</strong></td>
+        <td style="font-variant-numeric:tabular-nums"><strong>${gEsc(r.ym)}</strong></td>
+        <td><strong>${gEsc(r.channel)}</strong></td>
         <td style="text-align:right">${fmt(r.ship_cnt)} 건</td>
         <td class="amt-neutral">${fmt(r.pay_incl_vat)}</td>
         <td class="amt-neutral">${fmt(r.ship_income)}</td>
@@ -2775,12 +2771,12 @@ function renderSettlements(rows){
   }
   tbody.innerHTML = rows.map(r => `
     <tr>
-      <td><span class="badge" style="${r.src === 'AGENT' ? 'background:rgba(59,130,246,0.15);color:var(--blue)' : 'background:rgba(245,158,11,0.15);color:var(--amber)'}">${r.src}</span></td>
-      <td><strong>${r.ym_raw || r.ym || '-'}</strong></td>
-      <td>${r.channel || '-'}</td>
+      <td><span class="badge" style="${r.src === 'AGENT' ? 'background:rgba(59,130,246,0.15);color:var(--blue)' : 'background:rgba(245,158,11,0.15);color:var(--amber)'}">${gEsc(r.src)}</span></td>
+      <td><strong>${gEsc(r.ym_raw || r.ym || '-')}</strong></td>
+      <td>${gEsc(r.channel || '-')}</td>
       <td style="text-align:right">${fmt(r.cnt)} 건</td>
       <td class="amt-plus">${fmt(r.amt)} 원</td>
-      <td style="font-size:11px;color:var(--text-muted)">${r.src_file || '-'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${gEsc(r.src_file || '-')}</td>
     </tr>
   `).join('');
 }
@@ -2821,16 +2817,16 @@ function renderTaxInvoices(rows){
 
   tbody.innerHTML = rows.map(r => `
     <tr>
-      <td style="font-variant-numeric:tabular-nums">${r.write_date || '-'}</td>
-      <td><span class="tag ${r.flow === '매출' ? 'tag-deposit' : 'tag-withdraw'}">${r.flow}</span></td>
-      <td>${r.supplier || '-'}</td>
-      <td>${r.buyer || '-'}</td>
-      <td title="${r.item}">${r.item || '-'}</td>
+      <td style="font-variant-numeric:tabular-nums">${gEsc(r.write_date || '-')}</td>
+      <td><span class="tag ${r.flow === '매출' ? 'tag-deposit' : 'tag-withdraw'}">${gEsc(r.flow)}</span></td>
+      <td>${gEsc(r.supplier || '-')}</td>
+      <td>${gEsc(r.buyer || '-')}</td>
+      <td title="${gEsc(r.item)}">${gEsc(r.item || '-')}</td>
       <td class="amt-neutral">${fmt(r.supply_amt)}</td>
       <td class="amt-neutral">${fmt(r.vat_amt)}</td>
       <td style="font-weight:700;text-align:right">${fmt(r.total_amt)}</td>
-      <td><span class="tag" style="${r.settle_status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.settle_status))}</span></td>
-      <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
+      <td><span class="tag" style="${String(r.settle_status || '').includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.settle_status))}</span></td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}</td>
     </tr>
   `).join('');
 }
@@ -2857,14 +2853,14 @@ function renderArRecon(rows){
   }
   tbody.innerHTML = rows.map(r => `
     <tr>
-      <td><strong>${r.partner}</strong></td>
-      <td>${r.kind}</td>
-      <td>${r.issue_ym}</td>
+      <td><strong>${gEsc(r.partner)}</strong></td>
+      <td>${gEsc(r.kind)}</td>
+      <td>${gEsc(r.issue_ym)}</td>
       <td class="amt-neutral">${fmt(r.total_amt)}</td>
       <td class="amt-plus">${fmt(r.collect_amt)}</td>
       <td class="${Number(r.ar_balance) > 0 ? 'amt-minus' : 'amt-neutral'}">${fmt(r.ar_balance)}</td>
-      <td><span class="tag" style="${r.status.includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.status))}</span></td>
-      <td style="font-size:10.5px;color:var(--text-muted)">${r.approval_no || '-'}</td>
+      <td><span class="tag" style="${String(r.status || '').includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.status))}</span></td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}</td>
     </tr>
   `).join('');
 }
@@ -2897,15 +2893,15 @@ function renderBankTable(rows){
   }
   document.getElementById('bankTableRows').innerHTML = rows.map(r => `
     <tr>
-      <td style="color:var(--text-muted)">${r.txn_at}</td>
-      <td><strong>${r.description || '-'}</strong></td>
-      <td>${r.counterparty || '-'}</td>
+      <td style="color:var(--text-muted)">${gEsc(r.txn_at)}</td>
+      <td><strong>${gEsc(r.description || '-')}</strong></td>
+      <td>${gEsc(r.counterparty || '-')}</td>
       <td>${r.deposit_amt > 0 ? '<span class="tag tag-deposit">입금</span>' : '<span class="tag tag-withdraw">출금</span>'}</td>
       <td class="amt-plus">${r.deposit_amt > 0 ? fmt(r.deposit_amt) : '-'}</td>
       <td class="amt-minus">${r.withdraw_amt > 0 ? fmt(r.withdraw_amt) : '-'}</td>
       <td class="amt-neutral">${fmt(r.balance_amt)}</td>
-      <td style="color:var(--text-muted)">${r.memo || '-'}</td>
-      <td style="color:var(--text-muted);font-size:11px">${r.source_file}</td>
+      <td style="color:var(--text-muted)">${gEsc(r.memo || '-')}</td>
+      <td style="color:var(--text-muted);font-size:11px">${gEsc(r.source_file)}</td>
     </tr>
   `).join('');
 }
@@ -2916,7 +2912,7 @@ function filterBankRows(){
   var tp = document.getElementById('bankType').value;
 
   var filtered = allBankRows.filter(r => {
-    if(yr && !r.txn_at.startsWith(yr)) return false;
+    if(yr && !String(r.txn_at || '').startsWith(yr)) return false;
     if(tp === 'in' && Number(r.deposit_amt) <= 0) return false;
     if(tp === 'out' && Number(r.withdraw_amt) <= 0) return false;
     if(q){
@@ -2940,7 +2936,7 @@ var rawCafe24Rows = [];
 
 function handleCafe24File(file){
   if(!file) return;
-  document.getElementById('cafe24DropText').innerHTML = '읽는 중 (' + file.name + ')';
+  document.getElementById('cafe24DropText').textContent = '읽는 중 (' + file.name + ')';
 
   var reader = new FileReader();
   reader.onload = function(e){
@@ -2991,7 +2987,7 @@ function handleCafe24File(file){
       });
 
       document.getElementById('cafe24ParsedCount').innerText = rawCafe24Rows.length + ' 건';
-      document.getElementById('cafe24DropText').innerHTML = file.name + ' · ' + rawCafe24Rows.length + '건';
+      document.getElementById('cafe24DropText').textContent = file.name + ' · ' + rawCafe24Rows.length + '건';
       document.getElementById('btnDownloadEzadminOrder').disabled = false;
 
     } catch(err) {
@@ -3014,7 +3010,7 @@ function downloadEzadminOrderExcel(){
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '이지어드민주문');
 
-  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var today = new Date(Date.now() + 9 * 3600000).toISOString().slice(2, 10).replace(/-/g, '');
   var fileName = today + '_SSJG_이지어드민_주문등록_v1.0.xlsx';
   XLSX.writeFile(wb, fileName);
 }
@@ -3025,7 +3021,7 @@ var matchedInvoices = [];
 
 function handleEzadminFile(file){
   if(!file) return;
-  document.getElementById('ezadminDropText').innerHTML = '읽는 중 (' + file.name + ')';
+  document.getElementById('ezadminDropText').textContent = '읽는 중 (' + file.name + ')';
   
   var reader = new FileReader();
   reader.onload = function(e){
@@ -3071,7 +3067,7 @@ function handleEzadminFile(file){
       renderDeliveryTable();
       recalcDeliveryKpi();
 
-      document.getElementById('ezadminDropText').innerHTML = file.name + ' · ' + rawDeliveryRows.length + '건';
+      document.getElementById('ezadminDropText').textContent = file.name + ' · ' + rawDeliveryRows.length + '건';
       document.getElementById('btnDownloadLogen').disabled = false;
       document.getElementById('btnSaveToDb').disabled = false;
       document.getElementById('kpiDelivMatched').innerHTML = '접수 준비완료';
@@ -3102,7 +3098,7 @@ function delivCheck(){
     if(!r.address) e.push('주소 없음');
     else if(r.address.replace(/\s+/g, '').length < 8) e.push('주소 짧음');
     if(!p && !p2) e.push('전화 없음');
-    else if(!/^0\d{8,10}$/.test(p || p2)) e.push('전화 형식');
+    else if(!/^0\d{8,11}$/.test(p || p2)) e.push('전화 형식');
     if(!(r.qty >= 1) || Math.floor(r.qty) !== r.qty) e.push('수량 오류');
     else if(r.qty > 10) w.push('수량 ' + r.qty);
     if(seen[r._k] > 1) w.push('같은 받는 사람 ' + seen[r._k] + '건');
@@ -3131,17 +3127,17 @@ function renderDeliveryTable(){
 
   tbody.innerHTML = rawDeliveryRows.map(r => `
     <tr class="${r._err.length ? 'row-err' : (r._warn.length ? 'row-warn' : '')}">
-      <td>${r.idx}</td>
+      <td>${gEsc(r.idx)}</td>
       <td>${r._err.length ? '<span class="chk-err">' + gEsc(r._err.join(' · ')) + '</span>' : (r._warn.length ? '<span class="chk-warn">' + gEsc(r._warn.join(' · ')) + '</span>' : '<span class="chk-ok">통과</span>')}</td>
-      <td style="font-weight:600;font-variant-numeric:tabular-nums">${r.order_no}</td>
-      <td style="font-weight:700">${r.receiver}</td>
-      <td style="font-size:12px;color:var(--text-muted)">${r.phone1}</td>
-      <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${r.address}">${r.address}</td>
-      <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${r.product_name}">${r.product_name}</td>
-      <td style="text-align:right;font-weight:700">${r.qty}</td>
+      <td style="font-weight:600;font-variant-numeric:tabular-nums">${gEsc(r.order_no)}</td>
+      <td style="font-weight:700">${gEsc(r.receiver)}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${gEsc(r.phone1)}</td>
+      <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${gEsc(r.address)}">${gEsc(r.address)}</td>
+      <td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${gEsc(r.product_name)}">${gEsc(r.product_name)}</td>
+      <td style="text-align:right;font-weight:700">${gEsc(r.qty)}</td>
       <td style="text-align:right;color:var(--accent)">${fmt(freight * r.qty)}</td>
-      <td style="font-family:monospace;font-weight:700;color:${r.invoice_no ? 'var(--green)' : 'var(--text-muted)'}">${r.invoice_no || '미발급'}</td>
-      <td style="font-size:11px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.delivery_msg || '-'}</td>
+      <td style="font-family:monospace;font-weight:700;color:${r.invoice_no ? 'var(--green)' : 'var(--text-muted)'}">${gEsc(r.invoice_no || '미발급')}</td>
+      <td style="font-size:11px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${gEsc(r.delivery_msg || '-')}</td>
     </tr>
   `).join('');
 }
@@ -3207,14 +3203,14 @@ function downloadLogenExcel(){
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '로젠택배');
 
-  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var today = new Date(Date.now() + 9 * 3600000).toISOString().slice(2, 10).replace(/-/g, '');
   var fileName = today + '_SSJG_로젠택배_대량접수_v1.0.xlsx';
   XLSX.writeFile(wb, fileName);
 }
 
 function handleInvoiceFile(file){
   if(!file) return;
-  document.getElementById('invoiceDropText').innerHTML = '읽는 중 (' + file.name + ')';
+  document.getElementById('invoiceDropText').textContent = '읽는 중 (' + file.name + ')';
 
   var reader = new FileReader();
   reader.onload = function(e){
@@ -3233,23 +3229,27 @@ function handleInvoiceFile(file){
       json.forEach(row => {
         var ord = String(row['주문번호'] || row['관리번호'] || row['고객주문번호'] || '').trim();
         var inv = String(row['송장번호'] || row['운송장번호'] || row['운송장'] || '').trim();
-        if(ord && inv) matchMap[ord] = inv;
+        if(ord && inv){ (matchMap[ord] = matchMap[ord] || []); if(matchMap[ord].indexOf(inv) < 0) matchMap[ord].push(inv); }
       });
 
-      var matchedCount = 0;
-      rawDeliveryRows.forEach(r => {
-        if(matchMap[r.order_no]){
-          r.invoice_no = matchMap[r.order_no];
+      var matchedCount = 0, rowsByOrd = {}, invMismatch = 0;
+      rawDeliveryRows.forEach(r => { (rowsByOrd[r.order_no] = rowsByOrd[r.order_no] || []).push(r); });
+      Object.keys(rowsByOrd).forEach(o => {
+        var invs = matchMap[o] || [], rs = rowsByOrd[o];
+        if(!invs.length) return;
+        if(invs.length !== rs.length) invMismatch++;
+        rs.forEach((r, i) => {
+          r.invoice_no = i < invs.length ? ((i === rs.length - 1 && invs.length > rs.length) ? invs.slice(i).join(',') : invs[i]) : invs[invs.length - 1];
           matchedCount++;
-        }
+        });
       });
 
       renderDeliveryTable();
-      document.getElementById('invoiceMatchCount').innerText = matchedCount + ' 건 매칭 완료 (전체 ' + rawDeliveryRows.length + '건 중)';
-      document.getElementById('invoiceDropText').innerHTML = file.name + ' · 매칭 ' + matchedCount + '건';
+      document.getElementById('invoiceMatchCount').innerText = matchedCount + ' / ' + rawDeliveryRows.length + '건 매칭' + (invMismatch ? ' · 송장 수와 행 수가 다른 주문 ' + invMismatch + '건' : '');
+      document.getElementById('invoiceDropText').textContent = file.name + ' · 매칭 ' + matchedCount + '건';
       document.getElementById('btnDownloadEzadmin').disabled = (matchedCount === 0);
       document.getElementById('kpiDelivMatched').innerHTML = matchedCount + '건 완료';
-      document.getElementById('kpiDelivStatusSub').innerHTML = '이지어드민 송장등록 엑셀 출력 가능';
+      document.getElementById('kpiDelivStatusSub').textContent = invMismatch ? '송장 수 불일치 ' + invMismatch + '건' : '';
 
     } catch(err) {
       alert('송장 파일 처리 오류: ' + err.message);
@@ -3278,7 +3278,7 @@ function downloadEzadminUploadExcel(){
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '이지어드민송장');
 
-  var today = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  var today = new Date(Date.now() + 9 * 3600000).toISOString().slice(2, 10).replace(/-/g, '');
   var fileName = today + '_SSJG_이지어드민_송장등록_v1.0.xlsx';
   XLSX.writeFile(wb, fileName);
 }
@@ -3369,22 +3369,22 @@ function renderInventory(rows){
   setT('invKpiDateSub', dN ? '차이 ' + dN + '품목' : '차이 없음');
 
   tbody.innerHTML = rows.map(r => {
-    var isSubUnit = r.item_code.endsWith('1P') || r.item_code.endsWith('4P');
+    var isSubUnit = /(1P|4P)$/.test(String(r.item_code || ''));
     var bookDisplay = isSubUnit ? '<span class="tag tag-wait">0 (박스통합)</span>' : fmt(r.book_qty);
     var pl3Display = r.pl3_qty !== null && r.pl3_qty !== undefined ? fmt(r.pl3_qty) : '-';
     var diffDisplay = r.diff_qty !== null && r.diff_qty !== undefined ? fmt(r.diff_qty) : '-';
-    var verdictHtml = r.verdict ? (r.verdict.includes('일치') ? `<span class="tag tag-deposit">${r.verdict}</span>` : `<span class="tag tag-wait">${r.verdict}</span>`) : '-';
+    var verdictHtml = r.verdict ? (r.verdict.includes('일치') ? `<span class="tag tag-deposit">${gEsc(r.verdict)}</span>` : `<span class="tag tag-wait">${gEsc(r.verdict)}</span>`) : '-';
     return `
       <tr>
-        <td><span class="badge">${r.item_kind || '-'}</span></td>
-        <td><code>${r.item_code}</code></td>
-        <td><strong>${r.item_name}</strong></td>
+        <td><span class="badge">${gEsc(r.item_kind || '-')}</span></td>
+        <td><code>${gEsc(r.item_code)}</code></td>
+        <td><strong>${gEsc(r.item_name)}</strong></td>
         <td style="text-align:right">${bookDisplay}</td>
         <td style="text-align:right;font-weight:700">${pl3Display}</td>
         <td style="text-align:right;color:var(--text-muted)">${diffDisplay}</td>
         <td style="text-align:center">${verdictHtml}</td>
-        <td style="font-size:11px;color:var(--text-muted)">${r.count_date || '-'}</td>
-        <td style="font-size:11.5px;color:var(--text-muted);max-width:320px;white-space:normal">${r.memo || '-'}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${gEsc(r.count_date || '-')}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);max-width:320px;white-space:normal">${gEsc(r.memo || '-')}</td>
       </tr>
     `;
   }).join('');
@@ -3944,7 +3944,7 @@ async function clLoad(){
   var c = await sb.from('ssjg_close_months').select('ym,closed_at').like('ym', y + '-%').limit(12);
   if(c.error){ document.getElementById('clRows').innerHTML = '<tr><td colspan="7">' + gEsc(c.error.message) + '</td></tr>'; return; }
   CL.closed = {}; (c.data || []).forEach(function(x){ CL.closed[x.ym] = x.closed_at; });
-  var m = {}; try { var g = await sb.from('ssjg_gl_month').select('mo,dr,cr').eq('yr', Number(y)).limit(5000);
+  var m = {}; try { var g = await sbFetchPar('ssjg_gl_month', 'mo,acct_code,dr,cr', [['mo'], ['acct_code']], 100000, function(x){ return x.eq('yr', Number(y)); }).then(function(d){ return { data: d }; }, function(e){ return { error: e, data: [] }; });
     (g.data || []).forEach(function(x){ var k = Number(x.mo); m[k] = m[k] || { dr: 0, cr: 0 }; m[k].dr += Number(x.dr || 0); m[k].cr += Number(x.cr || 0); }); } catch(e){}
   var h = '';
   for(var i = 1; i <= 12; i++){
@@ -3963,13 +3963,15 @@ async function clSet(ym, close){
   gToast(ym + (close ? ' 마감' : ' 마감 해제')); clLoad();
 }
 // ── 권한별 화면 (v1.39): 열람 전용 사용자는 입력·수정·삭제 요소 숨김 ──
-var PERM = { ro: false, checked: false };
+var PERM = { ro: true, checked: false, tries: 0 };
 async function permCheck(){
   if(!sb || PERM.checked) return;
+  var ok = false;
   try {
     var r = await sb.rpc('ssjg_can_edit', { p_area: 'fi' });
-    if(!r.error){ PERM.checked = true; permApply(r.data !== true); }
+    if(!r.error){ PERM.checked = true; ok = true; permApply(r.data !== true); }
   } catch(e){}
+  if(!ok){ permApply(true); if(++PERM.tries < 4) setTimeout(permCheck, 3000); }
 }
 function permApply(ro){
   PERM.ro = !!ro;
@@ -3980,7 +3982,7 @@ function permApply(ro){
 function permDeny(){ if(PERM.ro){ gToast('열람 권한만 있습니다', true); return true; } return false; }
 var _hideGate1 = hideGate;
 hideGate = function(){ var r = _hideGate1.apply(this, arguments); setTimeout(permCheck, 0); return r; };
-[['gridEdit', 0], ['gridAdd', 0], ['gridDel', 0], ['pgSave', 0], ['jvSave', 0], ['jvDelete', 0], ['clSet', 0], ['tjvDraft', 0], ['b3Save', 0]].forEach(function(p){
+[['gridEdit', 0], ['gridAdd', 0], ['gridDel', 0], ['pgSave', 0], ['jvSave', 0], ['jvDelete', 0], ['clSet', 0], ['tjvDraft', 0], ['b3Save', 0], ['saveDeliveryToSupabase', 0], ['faDraft', 0], ['drCopy', 0]].forEach(function(p){
   var n = p[0], f = window[n]; if(typeof f !== 'function') return;
   window[n] = function(){ if(permDeny()) return; return f.apply(this, arguments); };
 });
@@ -4223,11 +4225,11 @@ async function vtLoad(){
   VT.d0 = d0; VT.d1 = d1;
   document.getElementById('vtTitle').textContent = d0 + ' ~ ' + new Date(Date.parse(d1) - 86400000).toISOString().slice(0, 10);
   var ti = [], cr = [], cd = [], err = [];
-  try { var a = await sb.from('ssjg_tax_invoices').select('*').gte('write_date', d0).lt('write_date', d1).limit(10000); if(a.error) err.push(a.error.message); ti = a.data || []; } catch(e){ err.push(e.message || e); }
-  try { var b = await sb.from('ssjg_cash_receipts').select('*').gte('tx_date', d0).lt('tx_date', d1).limit(10000); if(b.error) err.push(b.error.message); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
-  try { var c = await sb.from('ssjg_card_purchases').select('*').eq('yr', y).limit(10000); if(c.error) err.push(c.error.message); cd = c.data || []; } catch(e){ err.push(e.message || e); }
+  try { var a = await sb.from('ssjg_tax_invoices').select('*').gte('write_date', d0).lt('write_date', d1).limit(10000); if(a.error) err.push(a.error.message); else if((a.data || []).length >= 1000) err.push('ssjg_tax_invoices 1,000건 이상: 조회 기간을 나눠 주십시오'); ti = a.data || []; } catch(e){ err.push(e.message || e); }
+  try { var b = await sb.from('ssjg_cash_receipts').select('*').gte('tx_date', d0).lt('tx_date', d1).limit(10000); if(b.error) err.push(b.error.message); else if((b.data || []).length >= 1000) err.push('ssjg_cash_receipts 1,000건 이상: 조회 기간을 나눠 주십시오'); cr = (b.data || []).filter(function(x){ return String(x.deductible || '공제') === '공제'; }); } catch(e){ err.push(e.message || e); }
+  try { var c = await sb.from('ssjg_card_purchases').select('*').eq('yr', y).limit(10000); if(c.error) err.push(c.error.message); else if((c.data || []).length >= 1000) err.push('ssjg_card_purchases 1,000건 이상: 조회 기간을 나눠 주십시오'); cd = c.data || []; } catch(e){ err.push(e.message || e); }
   var st = [];
-  try { var sq = await sb.from('ssjg_settlements').select('*').gte('ym', d0).lt('ym', d1).limit(10000); if(sq.error) err.push(sq.error.message); st = sq.data || []; } catch(e){ err.push(e.message || e); }
+  try { var sq = await sb.from('ssjg_settlements').select('*').gte('ym', d0).lt('ym', d1).limit(10000); if(sq.error) err.push(sq.error.message); else if((sq.data || []).length >= 1000) err.push('ssjg_settlements 1,000건 이상: 조회 기간을 나눠 주십시오'); st = sq.data || []; } catch(e){ err.push(e.message || e); }
   if(err.length) gToast('일부 조회 실패: ' + err.join(', '), true);
   var bm = await vtBizMap();
   function cpBiz(x){ return bm[tjvNorm(x)] || ''; }
@@ -4512,7 +4514,7 @@ async function vtExport(){
       if(r.error) throw r.error; all = all.concat(r.data || []); if(!r.data || r.data.length < 1000) break; from += 1000;
     }
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(all.map(function(x){ return { '일자': x.doc_date, '전표번호': x.doc_no, '원천': x.origin, '줄': x.line_no, '계정': x.acct_code, '계정명': x.acct_name, '거래처': x.partner, '적요': x.title, '차변': Number(x.dr || 0), '대변': Number(x.cr || 0) }; })), name('전표'));
-    var m = await sb.from('ssjg_gl_month').select('yr,mo,acct_code,acct_name,acct_class,dr,cr').limit(20000);
+    var m = await sbFetchPar('ssjg_gl_month', 'yr,mo,acct_code,acct_name,acct_class,dr,cr', [['yr'], ['mo'], ['acct_code']]).then(function(d){ return { data: d }; }, function(e){ return { error: e, data: [] }; });
     if(!m.error){
       var endYm = new Date(Date.parse(d1) - 86400000).toISOString().slice(0, 7), g = {};
       (m.data || []).forEach(function(x){ var ym = x.yr + '-' + String(x.mo).padStart(2, '0'); if(ym > endYm) return; var k = x.acct_code; if(!g[k]) g[k] = { '계정': k, '계정명': x.acct_name, '분류': x.acct_class, '차변 합계': 0, '대변 합계': 0 }; g[k]['차변 합계'] += Number(x.dr || 0); g[k]['대변 합계'] += Number(x.cr || 0); });
