@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.07</title>
+<title>BVS 현장앱 v1.08</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -530,10 +530,6 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <div class="sp" style="flex:1"></div>
       <div class="ksearch" onclick="openMobNavModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>현장 공수·일지·안전</span></div>
       <div class="elinks">
-        <a class="nav-btn" href="./erp.html"><i style="color:#1D4ED8">●</i> BVS</a>
-        <a class="nav-btn" href="./ssjg.html"><i style="color:#dc2626">●</i> SSJG</a>
-        <a class="nav-btn" href="./pyro.html"><i style="color:#15803d">●</i> PYRO</a>
-        <a class="nav-btn active" href="./worker.html" title="현장 인원 공수 입력 (현재)"><i style="color:#1D4ED8">●</i> 현장앱</a>
         <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
         <button class="nav-btn" onclick="doLogout()" title="로그아웃">로그아웃</button>
       </div>
@@ -566,12 +562,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <button class="ibtn mob-menu-btn" onclick="closeMobNavModal()" style="border:none;background:none"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
         <div class="mob-nav-list">
-          <div class="mob-nav-grp">4대 엔티티 ERP 바로가기</div>
-          <a class="mob-nav-item" href="./erp.html"><i style="color:#1D4ED8">●</i> BVS 경영관리 ERP</a>
-          <a class="mob-nav-item" href="./ssjg.html"><i style="color:#dc2626">●</i> SSJG 커머스 ERP</a>
-          <a class="mob-nav-item" href="./pyro.html"><i style="color:#15803d">●</i> PYRO 제조 ERP</a>
-          <a class="mob-nav-item on" href="./worker.html"><i style="color:#1D4ED8">●</i> BVS 현장앱 (현재)</a>
-          <div class="mob-nav-grp" style="margin-top:10px">현장앱 주요 업무</div>
+          <div class="mob-nav-grp">현장앱 주요 업무</div>
           <div class="mob-nav-item" onclick="go('in');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 출퇴근 및 공수 등록</div>
           <div class="mob-nav-item" onclick="go('log');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 작업일지 작성</div>
           <div class="mob-nav-item" onclick="go('safety');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 일일 안전점검</div>
@@ -658,7 +649,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <button type="button" class="btn-fix" onclick="fixSubmit(4,'반일')"><b>반일</b><small>4시간</small></button>
         </div>
       </div>
-      <div class="note tiny">같은 날 같은 현장에 다시 등록하면 덮어씁니다. 7일 이전 기록이나 확정된 기록의 수정은 대표에게 요청하십시오.</div>
+      <div class="note tiny">같은 날 같은 현장에 다시 등록하면 덮어씁니다.</div>
     </section>
 
     <!-- 일지 -->
@@ -750,7 +741,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <!-- [세그먼트 2] 투입현황 (WO-53 통합) -->
       <div id="leadSegDeploy" class="hide">
 <div class="card">
-        <h2>투입현황 <small class="dim tiny">리드·대표</small></h2>
+        <h2>투입현황</h2>
         <div class="chips" id="dpDates" style="margin-bottom:10px"></div>
         <div id="dpBlocks"><pre id="dpText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre></div>
         <p class="tiny dim" style="margin:8px 0 0">매출처별로 따로 복사·공유됩니다.</p>
@@ -758,7 +749,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
       <div class="card"><h2>인원별 <small class="dim tiny" id="dpN"></small></h2><div id="dpRows"></div></div>
       <div class="card">
-        <h2>내일 배치 <small class="dim tiny">리드·대표 · 저장하면 각자 앱 첫 화면에 뜹니다</small></h2>
+        <h2>내일 배치</h2>
         <div class="f" style="display:flex;align-items:center;gap:10px"><label style="margin:0;flex:none">일자</label><input id="pl_date" class="in" type="date" style="padding:8px 10px" onchange="plOpen(this.value)"></div>
         <div id="plRows"></div>
         <div class="row2" style="margin-top:10px"><button class="btn" onclick="plCopyToday()">오늘 배치 그대로</button><button class="btn p" onclick="plSave()">저장</button></div>
@@ -805,7 +796,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
     <!-- 리드: 펌프실 -->
     <section class="page" id="p-pump">
       <div class="card">
-        <h2>펌프실 작업보고 <small class="dim tiny">리드·대표</small></h2>
+        <h2>펌프실 작업보고</h2>
         <div class="chips" id="pmDates" style="margin-bottom:10px"></div>
         <pre id="pmText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre>
         <div class="row2" style="margin-top:10px"><button class="btn" onclick="copyText('pmText')">복사</button><button class="btn p" onclick="shareText('pmText','펌프실 작업')">카톡으로 공유</button></div>
@@ -848,7 +839,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
     <section class="page" id="p-leave">
       <div class="card">
         <h2>휴가 · 휴무 신청</h2>
-        <p class="tiny dim" style="margin:0 0 10px">신청하면 대표가 확인 후 승인합니다. 승인된 일정은 현장 배치와 고객사 안내에 반영됩니다.</p>
+        
         <div class="f"><label>구분</label><div class="chips big" id="lv_kind"></div></div>
         <div class="row2">
           <div class="f"><label>시작일</label><input id="lv_start" class="in" type="date"></div>
@@ -867,7 +858,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
     </section>
 
     <section class="page" id="p-me">
-      <div class="card"><h2>내 스펙 <small class="dim tiny">사이즈·출입ID·교육 이수</small></h2><div id="meRows"></div><p class="tiny dim" style="margin:10px 0 0">사이즈·거주지·카풀은 직접 고칠 수 있습니다(연필 표시). 출입ID·교육 이수일은 대표가 관리합니다.</p></div>
+      <div class="card"><h2>내 스펙 <small class="dim tiny">사이즈·출입ID·교육 이수</small></h2><div id="meRows"></div><p class="tiny dim" style="margin:10px 0 0">사이즈·거주지·카풀은 직접 고칠 수 있습니다(연필 표시).</p></div>
     </section>
     <section class="page" id="p-doc">
       <div class="card">
@@ -879,7 +870,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
     <section class="page" id="p-pay">
       <div class="card" id="gradeCard"></div>
       <div id="comp"></div>
-      <div class="card"><h2>월별 정산</h2><div id="pay"></div><p class="tiny dim" style="margin:12px 0 0">지급액은 대표 확정 후 다음 달 10일에 지급됩니다. 확정 전 금액은 바뀔 수 있습니다.</p></div>
+      <div class="card"><h2>월별 정산</h2><div id="pay"></div><p class="tiny dim" style="margin:12px 0 0">매월 10일 지급 · 확정 전 금액은 바뀔 수 있습니다.</p></div>
     </section>
   </div>
 </div>
@@ -1215,7 +1206,7 @@ function renderSafety(){
   if(!el('sfItems'))return;
   var d=sfToday(),rec=sfRecord(d),items=(D.sfItems&&D.sfItems.length)?D.sfItems:DEFAULT_SF_ITEMS;
   el('sfDateLbl').textContent=kdate(d)+(d===today()?' · 오늘':'');
-  if(!items.length){el('sfItems').innerHTML='<div class="empty">점검 항목이 아직 등록되지 않았습니다. 대표에게 알려 주십시오.</div>';return}
+  if(!items.length){el('sfItems').innerHTML='<div class="empty">점검 항목이 아직 등록되지 않았습니다.</div>';return}
   if(rec&&!Object.keys(SF.sel).length){SF.sel={};items.forEach(function(it){SF.sel[it.code]=(rec.items&&rec.items[it.code]!==false)})}
   el('sfItems').innerHTML=items.map(function(it){
     var on=SF.sel[it.code]!==false;
@@ -2020,7 +2011,7 @@ function renderList(){
 async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용을 적어 주세요 (예: 연장 2시간 했는데 1시간으로 등록됨)');if(!msg)return;
   var r=await sb.rpc('my_dispute',{p_entry_id:id,p_message:msg});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
-  toast('이의 접수 — 대표가 확인 후 답합니다','g');loadAll()}
+  toast('이의 접수됨','g');loadAll()}
 var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id',''],['ss_id',''],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
 function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0];return r?r.label:(d||'')}
 function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">수정</button>':'')+'</div>'}).join('')}
@@ -2035,9 +2026,9 @@ function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.inner
   if(CP.ten==null)CP.ten=0;if(CP.grade==null)CP.grade=+c.tech_grade||1;
   var ord=+c.ordinary_amt,veh=+c.vehicle_amt||0,insCo=+c.employer_ins_amt||0,ret=+c.retire_accrual_amt||0,tu=cf(R,'pay_tenure_unit',40000),su=cf(R,'pay_skill_unit',40000);
   var insMe=Math.round((ord-(+c.meal_amt||0))*cf(R,'ins_employee_rate',0.094));
-  var bT=+c.bonus_target_count||2,bPaid=+c.bonus_paid_ytd||0,bPlan=bT*ord,bShow=bPaid>0?bPaid:bPlan,bIsPlan=!(bPaid>0);
+  var bT=+c.bonus_target_count||2,bPaid=+c.bonus_paid_ytd||0,bShow=bPaid,bIsPlan=!(bPaid>0);
   var aPay=ord*12,aVeh=veh*12,aIns=insCo*12,aRet=ret*12,cash=aPay+aVeh+bShow,total=cash+aIns+aRet,ratio=(total/aPay).toFixed(2);
-  var segs=[['급여',aPay,'var(--ac)'],['성과금',bShow,'#8b5cf6'],['차량',aVeh,'#0ea5e9'],['4대보험 회사부담',aIns,'#f59e0b'],['퇴직 적립',aRet,'#10b981']];
+  var segs=[['급여',aPay,'var(--ac)']].concat(bShow>0?[['성과금',bShow,'#8b5cf6']]:[]).concat([['차량',aVeh,'#0ea5e9'],['4대보험 회사부담',aIns,'#f59e0b'],['퇴직 적립',aRet,'#10b981']]);
   var fixed=!!c.base_override;
   var h='<div class="card"><h2>이번 달 <small class="dim tiny">'+esc(c.person_name)+' · '+(fixed?'고정 패키지':(c.tech_grade+'등급'+(c.position_title?' · '+esc(c.position_title):'')))+'</small></h2>'
    +'<table class="ctbl">'+[['기본급',c.base_amt],['식대 (비과세)',c.meal_amt]].concat(fixed?[]:[['기술등급수당 ('+c.tech_grade+'등급)',c.skill_amt],['직책수당'+(c.position_title?' ('+esc(c.position_title)+')':''),c.position_amt],['경력근속수당 (경력 '+(+c.career_years)+'년 · 근속 '+c.tenure_years+'년)',c.career_total_amt]]).map(function(x){return '<tr><td>'+x[0]+'</td><td>'+won(x[1])+'</td></tr>'}).join('')
@@ -2046,8 +2037,8 @@ function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.inner
    +'<p class="tiny dim" style="margin:8px 0 0">회사도 4대보험으로 같은 금액대('+won(insCo)+')를 따로 냅니다.</p></div>'
   +'<div class="card"><h2>올해 총보상 <small class="dim tiny">회사가 나에게 쓰는 돈</small></h2><div class="big">'+won(total)+'<small class="dim tiny"> /년</small></div>'
    +'<div class="cbar">'+segs.map(function(g){return '<span style="width:'+(100*g[1]/total).toFixed(1)+'%;background:'+g[2]+'" title="'+g[0]+'"></span>'}).join('')+'</div>'
-   +'<table class="ctbl"><tr><td>급여 12개월</td><td>'+won(aPay)+'</td></tr><tr><td>성과금 (연 '+bT+'회) '+(bIsPlan?'<span class="pill y">예정</span>':'<span class="pill g">지급 '+c.bonus_cnt_ytd+'회</span>')+'</td><td>'+won(bShow)+'</td></tr><tr><td>명절 떡값 (연 2회) <span class="pill y">예정</span></td><td class="dim">별도</td></tr>'+(veh?'<tr><td>차량유지비 12개월</td><td>'+won(aVeh)+'</td></tr>':'')+'<tr><td>4대보험 회사부담</td><td>'+won(aIns)+'</td></tr><tr><td>퇴직급여 적립 (추정)</td><td>'+won(aRet)+'</td></tr><tr class="sum"><td>합계</td><td>'+won(total)+'</td></tr></table>'
-   +'<p class="tiny" style="margin:10px 0 0"><b>회사가 쓰는 돈은 내 급여의 '+ratio+'배</b> — 통장에 들어오는 돈 '+won(cash)+' + 회사가 대신 내는 돈 '+won(aIns+aRet)+'</p><p class="tiny dim" style="margin:4px 0 0">성과금·떡값은 경영 성과에 따라 정해지며 「예정」은 확정 금액이 아닙니다.</p></div>';
+   +'<table class="ctbl"><tr><td>급여 12개월</td><td>'+won(aPay)+'</td></tr>'+(bIsPlan?'<tr><td>성과금</td><td class="dim">미정</td></tr>':'<tr><td>성과금 (올해 지급분)</td><td>'+won(bShow)+'</td></tr>')+'<tr><td>명절 떡값</td><td class="dim">별도</td></tr>'+(veh?'<tr><td>차량유지비 12개월</td><td>'+won(aVeh)+'</td></tr>':'')+'<tr><td>4대보험 회사부담</td><td>'+won(aIns)+'</td></tr><tr><td>퇴직급여 적립 (추정)</td><td>'+won(aRet)+'</td></tr><tr class="sum"><td>합계</td><td>'+won(total)+'</td></tr></table>'
+   +'<p class="tiny" style="margin:10px 0 0"><b>회사가 쓰는 돈은 내 급여의 '+ratio+'배</b> — 통장에 들어오는 돈 '+won(cash)+' + 회사가 대신 내는 돈 '+won(aIns+aRet)+'</p><p class="tiny dim" style="margin:4px 0 0">성과금·떡값은 지급된 금액만 합계에 넣습니다.</p></div>';
   if(!fixed){var now=compOrd(c,R,0,+c.tech_grade),lad=[1,3,5,10].map(function(k){return [k,compOrd(c,R,k,+c.tech_grade)]});
    h+='<div class="card"><h2>내 사다리 <small class="dim tiny">남아 있으면 이만큼</small></h2><div class="tiny">근속 <b id="cpTen">'+CP.ten+'</b>년 뒤 월 고정급 <span class="big" id="cpTenV">'+won(compOrd(c,R,CP.ten,+c.tech_grade))+'</span></div><input type="range" min="0" max="10" step="1" value="'+CP.ten+'" oninput="cpTen(this.value)">'
     +'<div class="lad">'+lad.map(function(x){return '<div><small>'+x[0]+'년 뒤</small><b>'+won(x[1])+'</b><small>+'+won(x[1]-now)+'</small></div>'}).join('')+'</div><p class="tiny dim" style="margin:8px 0 0">근속 1년 = 월 +'+won(tu)+'원 (경력·근속 합산 한도 '+won(cf(R,'pay_career_tenure_cap',400000))+')</p></div>'
@@ -2080,7 +2071,7 @@ function renderGrade(){
       +'<div class="gtrack'+(stayOk?' ok':'')+'"><span style="width:'+gpct(gotM,totM)+'%"></span></div>'
       +'<div class="tiny dim" style="margin-top:4px">'+esc(String(g.granted_on))+' 부여 → '+esc(String(g.stay_ok_on))+' 충족</div></div>';
     if(g.judge==='심사 대상')
-      h+='<div class="gjudge g">신청 자격이 열렸습니다. 신청하면 <b>회사는 반드시 심사를 실시합니다</b>(취업규칙 제43조의2 제3항). 리드 또는 대표에게 승급 신청서(F-32-13)를 내십시오.</div>';
+      h+='<div class="gjudge g">신청 자격이 열렸습니다. 신청하면 <b>회사는 반드시 심사를 실시합니다</b>(취업규칙 제43조의2 제3항). 승급 신청서(F-32-13)를 제출하십시오.</div>';
     else
       h+='<div class="gjudge w">최소 체류기간까지 '+leftM+'일 남았습니다. 그 이후 신청할 수 있습니다.</div>';
     h+='<details class="gd"><summary>'+g.next_grade+'등급에서 요구하는 기술</summary><div class="greq">'
@@ -2275,7 +2266,7 @@ async function leaveSubmit(){var m=el('lvMsg');var a=el('lv_start').value,b=el('
   m.textContent='신청 중…';
   var r=await sb.rpc('my_absence_request',{p_kind:LV.kind,p_start:a,p_end:b,p_memo:memo});
   if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
-  m.innerHTML='<span class="pos">신청했습니다. 대표 승인 후 확정됩니다.</span>';toast('휴가 신청 완료','g');el('lv_memo').value='';leaveLoad()}
+  m.innerHTML='<span class="pos">신청했습니다.</span>';toast('휴가 신청 완료','g');el('lv_memo').value='';leaveLoad()}
 async function leaveCancel(id){if(!confirm('이 신청을 취소할까요?'))return;
   var r=await sb.rpc('my_absence_cancel',{p_id:id});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
