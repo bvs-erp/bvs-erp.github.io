@@ -1318,7 +1318,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr pjc pjcs pjcm'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.80';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.81';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2937,12 +2937,48 @@ function renderChk(){if(!el('gChk'))return;
     {k:'site_name',t:'현장',l:1,f:function(v,r){return esc(v||r.site_id||'–')}},
     {k:'work_md',t:'공수',f:'num'},
     {k:'issue_why',t:'원인 및 조치',l:1,cls:'tiny dim'},
-    {k:'_a',t:'',l:1,f:function(v,r){return r.issue_kind==='내부 근무가 청구 대상'&&r.entry_id?'<button class="stbtn" onclick="event.stopPropagation();lkSet('+r.entry_id+',\'nonbillable\')">내부로</button>':''}}],
+    {k:'_a',t:'',l:1,f:function(v,r){if(r.issue_kind==='같은 날 중복 투입')return '<button class="stbtn" onclick="event.stopPropagation();dupOpen(\''+esc(r.work_date)+'\',\''+esc(r.employment_no||'')+'\',\''+esc(r.person_name||'')+'\')">정리</button>';return r.issue_kind==='내부 근무가 청구 대상'&&r.entry_id?'<button class="stbtn" onclick="event.stopPropagation();lkSet('+r.entry_id+',\'nonbillable\')">내부로</button>':''}}],
     {rows:rows,q:['person_name','site_name','issue_kind'],csv:true,page:30,
      chips:[{k:'issue_kind',vals:ch}],
      sort:{k:'severity'},
-     onRow:function(r){var sel=el('daysel');if(sel){sel.value=r.work_date;renderSite()}go('site');window.scrollTo(0,0)},
+     onRow:function(r){if(r.issue_kind==='같은 날 중복 투입'){dupOpen(r.work_date,r.employment_no||'',r.person_name||'');return}var sel=el('daysel');if(sel){sel.value=r.work_date;renderSite()}go('site');window.scrollTo(0,0)},
      empty:hard?'':'점검에 걸린 것이 없습니다 — 이번 달 마감을 막는 것은 없습니다'});}
+/* ═══════════ 같은 날 중복 투입 정리 (v1.81) ═══════════ */
+var DUP={rows:[]};
+async function dupFetch(d,emp,nm){var q=sb.from('ceo_labor_month').select('*').eq('work_date',d);q=emp?q.eq('employment_no',emp):q.eq('person_name',nm);var r=await q.order('entry_id');if(r.error){toast(r.error.message,'e');DUP.rows=[];return []}DUP.rows=r.data||[];return DUP.rows}
+function dupRows(){return DUP.rows}
+async function dupOpen(d,emp,nm){var rs=await dupFetch(d,emp,nm);
+  if(rs.length<2){toast(rs.length?'이미 한 건입니다':'기록을 찾지 못했습니다','e');return}
+  var keep=(rs.filter(function(x){return x.settled_ym})[0]||rs[0]).entry_id;
+  var rows=rs.map(function(x){var lock=!!x.settled_ym;return '<tr><td><input type="radio" name="dupKeep" value="'+x.entry_id+'"'+(x.entry_id===keep?' checked':'')+'></td>'
+    +'<td class="l">'+esc(x.site_name||x.site_id||'–')+'<div class="tiny dim">'+esc(pjNm(x.project_code)||'')+(x.work_desc?' · '+esc(x.work_desc):'')+'</div></td>'
+    +'<td>'+(+x.work_md||0)+'</td><td>'+(+x.ot_hours||0)+'</td><td>'+(+x.night_hours||0)+'</td>'
+    +'<td class="l">'+hhmm(x.work_start)+'~'+hhmm(x.work_end)+'</td>'
+    +'<td class="l tiny">'+(lock?'<span class="pill g">'+esc(x.settled_ym)+' 마감</span>':'<span class="dim">미마감</span>')+'</td>'
+    +'<td class="l"><button class="stbtn" onclick="dupEdit('+x.entry_id+')">수정</button>'+(lock?'':' <button class="stbtn x" onclick="dupDel('+x.entry_id+',\''+esc(d)+'\',\''+esc(emp)+'\',\''+esc(nm)+'\')">삭제</button>')+'</td></tr>'}).join('');
+  var sm=rs.reduce(function(a,x){a.md+=+x.work_md||0;a.ot+=+x.ot_hours||0;a.nt+=+x.night_hours||0;return a},{md:0,ot:0,nt:0});
+  drOpen('중복 투입 정리 · '+esc(nm||emp)+' '+d,
+    '<table class="ctbl" style="width:100%"><tr><th>남길 것</th><th>현장</th><th>공수</th><th>잔업</th><th>야간</th><th>시간</th><th>마감</th><th></th></tr>'+rows+'</table>'
+   +'<div class="f" style="margin-top:12px"><label><input type="checkbox" id="dupSum"> 공수·잔업·야간을 합쳐서 남기기 (합계 공수 '+sm.md+' · 잔업 '+sm.ot+'h · 야간 '+sm.nt+'h)</label></div>',
+    '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="dupMerge(\''+esc(d)+'\',\''+esc(emp)+'\',\''+esc(nm)+'\')">하나로 합치기</button>')}
+function dupEdit(id){var f=DUP.rows.filter(function(x){return x.entry_id===id})[0];if(!f){toast('기록을 찾지 못했습니다','e');return}drClose();calForm(f)}
+async function dupDel(id,d,emp,nm){if(!await ask('투입 삭제','이 기록 한 건을 지웁니다.',{ok:'삭제',danger:true}))return;
+  var r=await sb.rpc('ceo_delete_row',{p_table:'labor',p_key:String(id),p_reason:'중복 투입 정리'});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('삭제됨','g');CAL.cache={};CAL.loadedFor=null;
+  if((await dupFetch(d,emp,nm)).length>1)dupOpen(d,emp,nm);else drClose();loadAll()}
+async function dupMerge(d,emp,nm){var rs=await dupFetch(d,emp,nm),k=document.querySelector('input[name=dupKeep]:checked');if(!k){toast('남길 기록을 고르세요','e');return}
+  var kid=+k.value,kr=rs.filter(function(x){return +x.entry_id===kid})[0],others=rs.filter(function(x){return +x.entry_id!==kid});
+  if(others.some(function(x){return x.settled_ym})){toast('마감된 기록은 지울 수 없습니다 — 마감된 기록을 남길 것으로 고르세요','e');return}
+  var sum=el('dupSum')&&el('dupSum').checked;
+  if(!await ask('하나로 합치기',esc(kr.site_name||'')+' 기록 한 건만 남기고 나머지 '+others.length+'건을 지웁니다.'+(sum?' 남는 기록의 공수·잔업·야간은 합계로 바꿉니다.':''),{ok:'합치기',danger:true}))return;
+  if(sum){if(kr.settled_ym){toast('마감된 기록은 합산할 수 없습니다','e');return}
+    var t=rs.reduce(function(a,x){a.md+=+x.work_md||0;a.ot+=+x.ot_hours||0;a.nt+=+x.night_hours||0;return a},{md:0,ot:0,nt:0});
+    var st=rs.map(function(x){return hhmm(x.work_start)}).filter(function(v){return v!=='–'}).sort()[0]||'',et=rs.map(function(x){return hhmm(x.work_end)}).filter(function(v){return v!=='–'}).sort().pop()||'';
+    var p={entry_id:kid,employment_no:kr.employment_no,work_date:kr.work_date,site_id:kr.site_id,project_code:kr.project_code,work_md:String(t.md),ot_hours:String(t.ot),night_hours:String(t.nt),work_start:st,work_end:et,work_desc:kr.work_desc||'',rate_override_daily_amt:kr.rate_override_daily_amt==null?'':String(kr.rate_override_daily_amt),rate_override_reason:kr.rate_override_reason||''};
+    var u=await sb.rpc('ceo_labor_upsert',{p:p});if(u.error||!(u.data&&u.data.ok)){toast((u.error&&u.error.message)||(u.data&&u.data.error)||'합산 저장 실패','e');return}}
+  var fail=0;for(var i=0;i<others.length;i++){var r=await sb.rpc('ceo_delete_row',{p_table:'labor',p_key:String(others[i].entry_id),p_reason:'중복 투입 합치기'});if(r.error||!r.data||!r.data.ok)fail++}
+  toast(fail?('일부 실패 '+fail+'건'):'합쳤습니다 · '+d,fail?'e':'g');drClose();CAL.cache={};CAL.loadedFor=null;loadAll()}
 async function fillPartner(){
   var n=(D.chk||[]).filter(function(r){return r.issue_kind==='청구처 미지정'}).length;
   if(!n){toast('자동으로 채울 것이 없습니다','g');return}
