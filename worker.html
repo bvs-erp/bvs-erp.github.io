@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="BVS 공수">
+<meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 공수 v1.02</title>
+<title>BVS 현장앱 v1.05</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <style>
@@ -508,6 +508,31 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 .guide-step-box span{color:var(--tx2);font-size:12.5px;line-height:1.55;display:block}
 .guide-tab-btn{border:none;border-radius:10px;padding:9px 0;font-size:13px;font-weight:700;cursor:pointer;background:var(--sf2);color:var(--tx3);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:5px}
 .guide-tab-btn.on{background:var(--ac);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,0.25)}
+/* v1.03 표준 화면: ERP와 같은 글꼴·색·각진 모서리, 하단 탭 5칸 + 더보기 */
+:root,html[data-theme="light"]{--font-sans:'IBM Plex Sans KR','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;--r:6px}
+html[data-theme="light"]{--bg:#f2f4f7;--sf:#ffffff;--sf2:#f7f8fa;--ln:#d4d9e0;--tx:#16181d;--tx2:#374151;--tx3:#5b6270;--ac:#1D4ED8;--ac2:#e8eefc;--acx:#1e40af;--sh:none;--shx:0 4px 14px rgba(15,23,42,.08);--header-bg:#ffffff;--tab-bg:#ffffff}
+html[data-theme="dark"]{--r:6px;--sh:none}
+.card{border-radius:var(--r);box-shadow:none;padding:14px}
+h2{font-size:15.5px;padding-left:9px;border-left:3px solid var(--ac);line-height:1.25}
+.in,.btn,.sw,.pmrow input,.pmrow select,.fix .btn,.gskill,.gjudge,.note{border-radius:4px}
+.btn.p{box-shadow:none}
+.pill,.tierbadge{border-radius:3px}
+.kpi{border-radius:4px;box-shadow:none}
+.toast{border-radius:4px}
+.tabs{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:580px;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;padding:0 0 env(safe-area-inset-bottom);gap:0}
+.tabs div{border-radius:0;padding:7px 1px 6px;font-size:11px;border-top:2px solid transparent}
+.tabs div.on{background:transparent;border-top-color:var(--ac)}
+.tabs div.sec2{display:none!important}
+#moreDim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40}
+#moreSheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:580px;background:var(--sf);border-top:1px solid var(--ln);z-index:41;padding:12px 12px calc(14px + env(safe-area-inset-bottom))}
+#moreSheet .mh{font-size:13px;font-weight:700;color:var(--tx2);margin:0 2px 10px}
+#moreSheet .mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#moreSheet .mi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:1px solid var(--ln);border-radius:4px;background:var(--sf2);font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;position:relative}
+#moreSheet .mi.on{border-color:var(--ac);color:var(--ac);background:var(--ac2)}
+#moreSheet .mi svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#moreSheet .mi.alert::after,.tabs div.more.alert::after{content:'';position:absolute;top:6px;right:calc(50% - 16px);width:8px;height:8px;border-radius:50%;background:var(--crit)}
+.chip,.gate-theme-btn{border-radius:4px}
+.chip-hq{border-radius:4px!important}
 </style>
 </head>
 <body>
@@ -516,7 +541,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
   <div id="gate">
     <div class="gate-theme-wrap">
       <button class="gate-theme-btn" onclick="toggleTheme()" id="gateThemeBtn" title="낮/밤 모드 전환">
-        <span id="gateThemeIcon">☀️</span> <span id="gateThemeLbl">낮모드</span>
+        <span id="gateThemeIcon"></span><span id="gateThemeLbl">낮모드</span>
       </button>
     </div>
     <div style="text-align:center;margin:24px 0 20px">
@@ -550,16 +575,16 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
 
       <!-- 아코디언 가이드 토글 버튼 -->
       <button type="button" class="btn sm" onclick="toggleInstallGuide()" id="btnToggleGuide" style="border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;background:var(--sf);border:1px solid var(--ln);box-shadow:var(--sh);color:var(--tx2);display:inline-flex;align-items:center;gap:6px">
-        <span>📱</span> <span>홈 화면에 앱 추가하는 방법 안내</span> <span id="guideArrow" style="font-size:11px;color:var(--tx3)">▼</span>
+        <span>홈 화면에 앱 추가하는 방법</span> <span id="guideArrow" style="font-size:11px;color:var(--tx3)">▼</span>
       </button>
 
       <!-- 아코디언 상세 안내 카드 -->
       <div id="installGuideCard" class="card hide" style="margin-top:12px;text-align:left;padding:16px;background:var(--sf);border:1.5px solid var(--ln);box-shadow:var(--shx);border-radius:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <b style="font-size:14.5px;display:flex;align-items:center;gap:6px">
-            <span style="font-size:17px">💡</span> 홈 화면 바로가기 추가 안내
+            홈 화면 바로가기 추가 안내
           </b>
-          <button type="button" class="lnk tiny" onclick="toggleInstallGuide(false)" style="color:var(--tx3)">닫기 ✕</button>
+          <button type="button" class="lnk tiny" onclick="toggleInstallGuide(false)" style="color:var(--tx3)">닫기</button>
         </div>
         <p class="tiny dim" style="margin:0 0 12px;line-height:1.5">
           홈 화면에 추가하시면 매번 링크를 찾을 필요 없이 <b>스마트폰 바탕화면 아이콘</b>을 눌러 바로 출퇴근·작업일보를 열 수 있습니다.
@@ -568,10 +593,10 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
           <button type="button" id="tabGuideAndroid" class="guide-tab-btn on" onclick="switchGuideTab('android')">
-            🤖 삼성 / 갤럭시
+            삼성 / 갤럭시
           </button>
           <button type="button" id="tabGuideIos" class="guide-tab-btn" onclick="switchGuideTab('ios')">
-            🍎 아이폰 (iPhone)
+            아이폰
           </button>
         </div>
 
@@ -584,7 +609,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
           </div>
           <div class="guide-step-box">
             <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
-            <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] ➡️ [홈 화면])를 누릅니다.</span>
+            <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] → [홈 화면])를 누릅니다.</span>
           </div>
           <div class="guide-step-box" style="margin-bottom:0">
             <b><span class="pill b" style="font-size:10.5px">3단계</span> [추가] 또는 [설치] 터치</b>
@@ -597,11 +622,11 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
           <div class="guide-step-box">
             <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
             <span>Safari 브라우저 화면 <b>하단 중앙의 네모+위로 화살표(↑) 공유 아이콘</b>을 누릅니다.<br>
-            <small class="dim">* 카톡 등 인앱 브라우저는 우측 하단 점 3개 ➡️ [Safari로 열기] 먼저 실행</small></span>
+            <small class="dim">* 카톡 등 인앱 브라우저는 우측 하단 점 3개 → [Safari로 열기] 먼저 실행</small></span>
           </div>
           <div class="guide-step-box">
             <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
-            <span>공유 시트를 아래로 살짝 내려 <b>[홈 화면에 추가] (➕)</b> 항목을 터치합니다.</span>
+            <span>공유 시트를 아래로 살짝 내려 <b>[홈 화면에 추가] </b> 항목을 터치합니다.</span>
           </div>
           <div class="guide-step-box" style="margin-bottom:0">
             <b><span class="pill b" style="font-size:10.5px">3단계</span> 우측 상단 [추가] 터치</b>
@@ -633,7 +658,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
         </button>
         <button class="top-icon-btn" onclick="toggleTheme()" id="appThemeBtn" title="테마 전환 (라이트/다크)" style="display:inline-flex;align-items:center;gap:4px;width:auto;padding:0 9px;font-size:12px;font-weight:700">
-          <span>🌓</span> <span>테마</span>
+          <span>테마</span>
         </button>
         <button class="top-logout-btn" onclick="doLogout()" title="로그아웃">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg>
@@ -664,7 +689,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="f hide" id="pumpBox"><label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업</span></label></div>
         <details class="f"><summary class="tiny dim">메모 추가 (선택)</summary><textarea id="w_desc" class="in" placeholder="예: M15X 5EAL7005 반입, EFEM 레벨링" style="margin-top:8px"></textarea></details>
         <div class="site-summary-badge" id="siteSummaryBadge">
-          <span>📍</span> <span id="siteSummaryText">현장 장소와 라인을 선택해 주세요</span>
+          <span id="siteSummaryText">현장 장소와 라인을 선택해 주세요</span>
         </div>
         <div class="row2" style="margin-top:4px">
           <button class="btn big in-btn" id="btnIn" onclick="clockIn()"><b>출근</b><small id="nowIn">--:--</small></button>
@@ -702,7 +727,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="chips" id="logDates" style="margin-bottom:10px"></div>
         <div class="tiny dim" id="logSite" style="margin-bottom:6px"></div>
         <textarea id="logText" class="in" style="min-height:140px" placeholder="오늘 한 일을 편하게 적으세요. 예) M15X 5EAL7005 반입, EFEM 레벨링, 오후 배관 마감"></textarea>
-        <div class="row2" style="margin-top:10px"><button class="btn" id="micBtn" onclick="micToggle()">🎤 음성 입력</button><button class="btn" id="aiBtn" onclick="aiRefine()">✨ AI 정리</button></div>
+        <div class="row2" style="margin-top:10px"><button class="btn" id="micBtn" onclick="micToggle()">음성 입력</button><button class="btn" id="aiBtn" onclick="aiRefine()">AI 정리</button></div>
         <div id="aiBox" class="hide" style="margin-top:10px;background:var(--ac2);border-radius:12px;padding:12px">
           <div class="tiny dim" style="margin-bottom:6px">AI가 정리한 문장 — 마음에 들면 적용</div>
           <div id="aiText" style="white-space:pre-wrap;font-size:15px"></div>
@@ -729,11 +754,11 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <h2 style="margin:0">현장 팀 리드 관제 <small class="dim tiny">팀장 전용</small></h2>
-            <span class="pill b" style="font-size:11px;font-weight:700">🔒 보안 규정 준수</span>
+            
           </div>
           <p class="tiny dim" style="margin:0 0 12px">
             ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인하고 승인합니다.<br>
-            <span style="color:var(--good);font-weight:600">🛡️ 개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
+            <span style="color:var(--good);font-weight:600">개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
           </p>
           <div class="chips" id="leadDates" style="margin-bottom:10px"></div>
           <div id="leadSummaryKpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
@@ -787,7 +812,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <h2>투입현황 <small class="dim tiny">리드·대표</small></h2>
         <div class="chips" id="dpDates" style="margin-bottom:10px"></div>
         <div id="dpBlocks"><pre id="dpText" style="white-space:pre-wrap;font:inherit;background:var(--sf2);border-radius:12px;padding:12px;margin:0;min-height:80px"></pre></div>
-        <p class="tiny dim" style="margin:8px 0 0">매출처별로 따로 복사·공유됩니다 (우주이엔지 보고와 메인이엔씨 보고를 섞지 않음).</p>
+        <p class="tiny dim" style="margin:8px 0 0">매출처별로 따로 복사·공유됩니다.</p>
         <div class="msg" id="dpMsg"></div>
       </div>
       <div class="card"><h2>인원별 <small class="dim tiny" id="dpN"></small></h2><div id="dpRows"></div></div>
@@ -814,7 +839,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
           </div>
           <p class="tiny dim" style="margin:0 0 10px">
             ※ 팀원별 일자별 투입 공수(M/D) 및 연장(OT)을 확인합니다.<br>
-            <span style="color:var(--good);font-weight:600">🛡️ 무금액 원칙</span>: 급여·단가·정산액은 완전 비공개 처리됩니다.
+            <span style="color:var(--good);font-weight:600">금액 비공개</span>: 급여·단가·정산액은 완전 비공개 처리됩니다.
           </p>
           <div class="cal-table-wrap">
             <table class="cal-table" id="leadCalTable">
@@ -862,7 +887,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
         <p class="tiny dim" style="margin:0 0 8px">오늘 일을 시작하기 전에 확인하고 제출하십시오. 제출 기록은 회사가 안전조치를 했다는 증빙이 됩니다.</p>
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
           <button type="button" class="btn sm" onclick="sfCheckAllOk()" style="background:var(--goodbg);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);font-weight:700">
-            🟢 전 항목 정상 (원클릭 체크)
+            전 항목 정상
           </button>
         </div>
         <div id="sfItems"></div>
@@ -936,9 +961,9 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
   <div class="guide-modal-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <b style="font-size:16px;display:flex;align-items:center;gap:6px">
-        <span style="font-size:19px">📱</span> 홈 화면에 앱 추가하는 방법
+        홈 화면에 앱 추가하는 방법
       </b>
-      <button type="button" class="btn sm" onclick="closeHomeGuideModal()" style="border-radius:8px;padding:4px 10px;font-size:12px">닫기 ✕</button>
+      <button type="button" class="btn sm" onclick="closeHomeGuideModal()" style="border-radius:8px;padding:4px 10px;font-size:12px">닫기</button>
     </div>
 
     <!-- PWA 원클릭 설치 버튼 (지원 브라우저) -->
@@ -954,10 +979,10 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
     <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
       <button type="button" id="modalTabGuideAndroid" class="guide-tab-btn on" onclick="switchModalGuideTab('android')">
-        🤖 삼성 / 갤럭시
+        삼성 / 갤럭시
       </button>
       <button type="button" id="modalTabGuideIos" class="guide-tab-btn" onclick="switchModalGuideTab('ios')">
-        🍎 아이폰 (iPhone)
+        아이폰
       </button>
     </div>
 
@@ -970,7 +995,7 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
       </div>
       <div class="guide-step-box">
         <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
-        <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] ➡️ [홈 화면])를 누릅니다.</span>
+        <span>메뉴에서 <b>[홈 화면에 추가]</b> (또는 [현재 페이지 추가] → [홈 화면])를 누릅니다.</span>
       </div>
       <div class="guide-step-box" style="margin-bottom:0">
         <b><span class="pill b" style="font-size:10.5px">3단계</span> [추가] 또는 [설치] 터치</b>
@@ -983,11 +1008,11 @@ details.gd{margin-top:10px}details.gd summary{cursor:pointer;font-size:14px;colo
       <div class="guide-step-box">
         <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
         <span>Safari 화면 <b>하단 중앙의 네모+위로 화살표(↑) 공유 아이콘</b>을 누릅니다.<br>
-        <small class="dim">* 카톡 인앱 브라우저는 우측 하단 점 3개 ➡️ [Safari로 열기] 먼저 실행</small></span>
+        <small class="dim">* 카톡 인앱 브라우저는 우측 하단 점 3개 → [Safari로 열기] 먼저 실행</small></span>
       </div>
       <div class="guide-step-box">
         <b><span class="pill b" style="font-size:10.5px">2단계</span> [홈 화면에 추가] 선택</b>
-        <span>공유 메뉴를 아래로 스크롤하여 <b>[홈 화면에 추가] (➕)</b> 항목을 터치합니다.</span>
+        <span>공유 메뉴를 아래로 스크롤하여 <b>[홈 화면에 추가] </b> 항목을 터치합니다.</span>
       </div>
       <div class="guide-step-box" style="margin-bottom:0">
         <b><span class="pill b" style="font-size:10.5px">3단계</span> 우측 상단 [추가] 터치</b>
@@ -1021,7 +1046,7 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   try{localStorage.setItem('bvs_worker_theme', t)}catch(e){}
   var isDark=(t==='dark');
-  var icon=isDark?'🌙':'☀️';
+  var icon='';
   var lbl=isDark?'밤모드':'낮모드';
   if(el('gateThemeIcon')) el('gateThemeIcon').textContent=icon;
   if(el('gateThemeLbl')) el('gateThemeLbl').textContent=lbl;
@@ -1032,7 +1057,7 @@ function toggleTheme(){
   var cur=document.documentElement.getAttribute('data-theme')||getPreferredTheme();
   var nxt=(cur==='dark')?'light':'dark';
   applyTheme(nxt);
-  toast(nxt==='light'?'☀️ 선명한 낮모드로 전환되었습니다':'🌙 눈이 편안한 밤모드로 전환되었습니다','g');
+  toast(nxt==='light'?'낮모드':'밤모드','g');
 }
 try{applyTheme(getPreferredTheme())}catch(e){}
 
@@ -1069,7 +1094,7 @@ async function syncRefresh(btn){
   if(btn) btn.classList.add('spin');
   try{
     await loadAll();
-    toast('최신 데이터가 동기화되었습니다 🟢','g');
+    toast('새로 불러왔습니다','g');
   }catch(e){
     toast('동기화 오류: '+(e&&e.message||e),'e');
   }finally{
@@ -1234,11 +1259,12 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false}),sb.from('my_safety').select('*').order('check_date',{ascending:false}).limit(60),sb.from('my_training_sessions').select('*').order('held_on',{ascending:false}),sb.rpc('my_safety_items'),sb.from('my_esign').select('*').order('issued_at',{ascending:false})]);
-  var errs=res.filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
+  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false}),sb.from('my_safety').select('*').order('check_date',{ascending:false}).limit(60),sb.from('my_training_sessions').select('*').order('held_on',{ascending:false}),sb.rpc('my_safety_items'),sb.from('my_esign').select('*').order('issued_at',{ascending:false}),sb.from('op_place_list').select('*'),sb.from('core_label_list').select('*')]);
+  var errs=res.slice(0,10).filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
+  D.places=(res[10]&&!res[10].error&&res[10].data)||[];D.lbl=(res[11]&&!res[11].error&&res[11].data)||[];
   D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];D.me=((res[4]&&res[4].data)||[])[0]||null;D.disp=(res[5]&&res[5].data)||[];
   D.safety=(res[6]&&res[6].data)||[];D.edu=(res[7]&&res[7].data)||[];D.sfItems=(res[8]&&res[8].data)||[];D.docs=(res[9]&&res[9].data)||[];
-  updateWorkerTerms();renderPlaces();renderState();renderList();renderPay();renderSafety();renderEdu();renderDocs();
+  updateWorkerTerms();placesBuild();renderPlaces();renderState();renderList();renderPay();renderSafety();renderEdu();renderDocs();
 }
 
 /* ── 안전점검 · 교육 서명 ── */
@@ -1296,18 +1322,15 @@ async function edSign(id){
   toast('서명 완료','g');await loadAll();
 }
 
-/* ── 장소 → 라인 (WO-48: 5대 그룹 및 BVS이천 1번 고정, 우주이천 하이닉스 배치) ── */
-var PLACE_GROUPS = [
-  { label: '본사', items: [['BV','BVS이천']], isHQ: true },
-  { label: '하이닉스', items: [['IC','SK이천'], ['UO','우주이천'], ['CJ','SK청주']] },
-  { label: '삼성', items: [['PT','삼성평택'], ['HS','삼성화성']] },
-  { label: 'TES', items: [['TE','TES용인']] },
-  { label: '비근무', items: [['ED','교육'], ['OFF','휴무·병가']], isOff: true }
-];
-var PLACES = [
-  ['BV','BVS이천'],['IC','SK이천'],['UO','우주이천'],['CJ','SK청주'],
-  ['PT','삼성평택'],['HS','삼성화성'],['TE','TES용인'],['ED','교육'],['OFF','휴무·병가']
-];
+/* ── 장소 → 라인: 장소 목록은 로그인 후 DB(op_place_list)에서 받는다 ── */
+var PLACE_GROUPS=[],PLACES=[];
+function placeRow(pf){return (D.places||[]).filter(function(r){return r.place_code===pf})[0]||{}}
+function placesBuild(){var rows=(D.places||[]).slice();
+  if(!rows.length){var seen={},n=0;(D.sites||[]).forEach(function(x){var pf=String(x.site_id).split('-')[0];if(!seen[pf])seen[pf]={place_code:pf,place_name:String(x.site_name||pf).split(' ')[0],group_name:'',sort_no:n++}});rows=Object.keys(seen).map(function(k){return seen[k]})}
+  rows.sort(function(a,b){return (+a.sort_no||0)-(+b.sort_no||0)});
+  PLACES=rows.map(function(r){return [r.place_code,r.place_name]});
+  var g=[],gi={};rows.forEach(function(r){var k=r.group_name||'';if(!(k in gi)){gi[k]=g.length;g.push({label:k,items:[],isHQ:!!r.is_hq,isOff:!!r.is_off})}g[gi[k]].items.push([r.place_code,r.place_name])});
+  PLACE_GROUPS=g}
 function sitesOf(pf){return D.sites.filter(function(s){return String(s.site_id).split('-')[0]===pf})}
 function lineLabel(s){var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
   if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
@@ -1340,7 +1363,7 @@ function pickPlace(pf){SEL.place=pf;var ss=sitesOf(pf);SEL.site=ss.length===1?ss
 function renderLines(){var ss=SEL.place?sitesOf(SEL.place):[];
   el('lineBox').classList.toggle('hide',ss.length<=1);
   el('w_line').innerHTML=ss.map(function(s){return '<span class="chip'+(s.site_id===SEL.site?' on':'')+'" onclick="pickLine(\''+esc(s.site_id)+'\')">'+esc(lineLabel(s))+'</span>'}).join('');
-  el('pumpBox').classList.toggle('hide',!(SEL.place==='IC'||SEL.place==='CJ'));
+  el('pumpBox').classList.toggle('hide',!placeRow(SEL.place).pump_ok);
   renderState();
 }
 function pickLine(id){SEL.site=id;document.querySelectorAll('#w_line .chip').forEach(function(c){c.classList.toggle('on',c.textContent===lineLabel(D.sites.filter(function(s){return s.site_id===id})[0]||{site_name:''}))});renderState()}
@@ -1350,20 +1373,16 @@ function updateSiteSummaryBadge(){
   if(!b||!t) return;
   if(SEL.site){
     var sName=siteName(SEL.site);
-    if(SEL.place==='UO' || String(SEL.site).indexOf('UO-')===0){
-      sName = '우주이엔지 이천사무실 (SK이천 앞)';
-    }
+    var smn=placeRow(SEL.place||String(SEL.site).split('-')[0]).summary_name;if(smn)sName=smn;
     b.className='site-summary-badge ok';
-    t.innerHTML='📍 선택 현장: <b>'+esc(sName)+'</b>'+(el('w_pump')&&el('w_pump').checked?' <span class="pill y">펌프실</span>':'');
+    t.innerHTML='선택 현장: <b>'+esc(sName)+'</b>'+(el('w_pump')&&el('w_pump').checked?' <span class="pill y">펌프실</span>':'');
   } else {
     b.className='site-summary-badge';
     t.textContent='작업 장소와 라인을 위에서 선택해 주세요';
   }
 }
 
-function projectCode(){var pf=SEL.place;
-  if(pf==='IC'||pf==='CJ')return el('w_pump').checked?'PJ-PUMP':'PJ-SETUP';
-  if(pf==='PT'||pf==='HS')return 'PJ-SETUP';if(pf==='TE')return 'PJ-TESMFG';if(pf==='BV'||pf==='UO')return 'PJ-HQ';if(pf==='ED')return 'PJ-EDU';if(pf==='OFF')return 'PJ-OFF';return 'PJ-SETUP'}
+function projectCode(){var r=placeRow(SEL.place);if(r.pump_ok&&el('w_pump')&&el('w_pump').checked)return 'PJ-PUMP';return r.project_code||'PJ-SETUP'}
 function siteName(id){var s=D.sites.filter(function(x){return x.site_id===id})[0];return s?s.site_name:id}
 
 /* ── 오늘 상태 · 시계 ── */
@@ -1473,7 +1492,7 @@ function termMap(){
     outBtn: reg ? '퇴근' : '작업 종료',
     inLabel: reg ? '출근' : '작업 시작',
     outLabel: reg ? '퇴근' : '작업 종료',
-    tabLabel: reg ? '입력 (출퇴근)' : '투입 기록',
+    tabLabel: reg ? '출퇴근' : '투입 기록',
     fixTitle: reg ? '출퇴근을 못 눌렀을 때' : '투입 시간을 직접 입력할 때',
     fixDesc: reg ? '위에서 일자·장소·라인을 고른 뒤 하나만 누르면 바로 등록됩니다.' : '위에서 일자·장소·라인을 고른 뒤 당일 투입 시간을 바로 등록합니다.',
     noInMsg: reg ? '출근 기록이 없습니다. 아래 시간보정 버튼으로 등록해 주세요.' : '작업 시작 기록이 없습니다. 아래 시간 직접입력 버튼으로 등록해 주세요.',
@@ -1522,7 +1541,7 @@ function updateWorkerTerms(){
       el('uGradePill').className='pill b';
     }else{
       var isReg=tm.isReg;
-      el('uGradePill').textContent=isReg?(ME.role||'정규직 엔지니어'):'용역 엔지니어';
+      el('uGradePill').textContent=isReg?(ROLE_KO[ME.role]||ME.role||'정규직 엔지니어'):'용역 엔지니어';
       el('uGradePill').className='pill '+(isReg?'b':'y');
     }
   }
@@ -1560,7 +1579,7 @@ function micToggle(){var SR=window.SpeechRecognition||window.webkitSpeechRecogni
   if(LOG.mic){LOG.mic.stop();return}
   var rec=new SR();rec.lang='ko-KR';rec.interimResults=true;rec.continuous=true;var base=el('logText').value;var fin='';
   rec.onresult=function(ev){var s='';for(var i=ev.resultIndex;i<ev.results.length;i++){if(ev.results[i].isFinal)fin+=ev.results[i][0].transcript+' ';else s+=ev.results[i][0].transcript}el('logText').value=(base?base+'\n':'')+fin+s};
-  rec.onend=function(){LOG.mic=null;el('micBtn').textContent='🎤 음성 입력';el('micBtn').classList.remove('p')};
+  rec.onend=function(){LOG.mic=null;el('micBtn').textContent='음성 입력';el('micBtn').classList.remove('p')};
   rec.onerror=function(e){toast('음성 인식 오류: '+e.error,'e')};
   rec.start();LOG.mic=rec;el('micBtn').textContent='⏹ 듣는 중… (누르면 정지)';el('micBtn').classList.add('p')}
 async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 일지 내용을 적어 주세요','e');return}
@@ -1581,8 +1600,8 @@ async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 
   }
   el('aiText').textContent=out;
   el('aiBox').classList.remove('hide');
-  toast('✨ 업무일지가 깔끔하게 정리되었습니다','g');
-  b.disabled=false;b.textContent='✨ AI 정리'}
+  toast('업무일지를 정리했습니다','g');
+  b.disabled=false;b.textContent='AI 정리'}
 function aiApply(){el('logText').value=el('aiText').textContent;aiDismiss()}
 
 
@@ -1604,7 +1623,7 @@ async function loadPendingWorkLogs(){
     }
 
     if(!rows.length){
-      box.innerHTML = '<div class="empty" style="color:var(--good);padding:10px">✅ 미작성된 업무일지가 없습니다 (전원 작성 완료).</div>';
+      box.innerHTML = '<div class="empty" style="color:var(--good);padding:10px">미작성 업무일지 없음</div>';
       return;
     }
 
@@ -1844,7 +1863,7 @@ async function leadOpen(d){
     el('leadWorkersN').textContent = rows.length + '명';
 
     if(pendingRows.length === 0){
-      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">✅ 대기 중인 미승인 공수가 없습니다.</div>';
+      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">미승인 공수 없음</div>';
       el('btnApproveAll').disabled = true;
     } else {
       el('btnApproveAll').disabled = false;
@@ -2045,8 +2064,9 @@ async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용�
   var r=await sb.rpc('my_dispute',{p_entry_id:id,p_message:msg});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('이의 접수 — 대표가 확인 후 답합니다','g');loadAll()}
-var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id','SK 출입ID'],['ss_id','삼성 출입ID'],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
-function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">✎</button>':'')+'</div>'}).join('')}
+var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id',''],['ss_id',''],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
+function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0];return r?r.label:(d||'')}
+function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">수정</button>':'')+'</div>'}).join('')}
 async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=prompt(label+(k==='own_vehicle_known'?' (유/무)':''),cur==null?'':String(cur));if(v===null)return;
   var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
 /* ══════ 내 보상 (월급제 본인 행만) ══════ */
@@ -2115,7 +2135,7 @@ function renderGrade(){
   }
   h+='<details class="gd"><summary>등급 사다리 전체 보기 (1 ~ 11등급)</summary>'
     +'<table class="ladder"><tr><th>등급</th><th>현장 호칭</th><th>월 수당</th><th>최소 체류</th></tr>'+lad+'</table>'
-    +'<p class="tiny dim" style="margin-top:10px">월 수당 = (등급 − 1) × 40,000원 · 11등급 400,000원 상한.<br><b>승급의 판정 기준은 기술 자립도입니다.</b> 최소 체류기간은 신청 자격을 여는 문턱일 뿐이고, 체류기간이 찼다고 자동으로 오르지 않습니다. 누적 출근일수나 현장 투입일수는 요건이 아닙니다. 등급은 내려가지 않습니다.<br>최근 6개월 내 중대 안전수칙 위반은 결격 사유입니다.</p></details>';
+    +'<p class="tiny dim" style="margin-top:10px"><b>승급의 판정 기준은 기술 자립도입니다.</b> 최소 체류기간은 신청 자격을 여는 문턱일 뿐이고, 체류기간이 찼다고 자동으로 오르지 않습니다. 누적 출근일수나 현장 투입일수는 요건이 아닙니다. 등급은 내려가지 않습니다.<br>최근 6개월 내 중대 안전수칙 위반은 결격 사유입니다.</p></details>';
   h+='<p class="tiny dim" style="margin:12px 0 0">부여 후 현장 투입 '+(+g.days_after||0).toLocaleString('ko-KR')+'일 (참고 · 승급 요건 아님). 상세 요건은 취업규칙 별표 2에 따릅니다. 정기심사는 매년 12월, 요건이 새로 충족되면 수시로 신청할 수 있습니다. 승급하지 않기로 하는 경우 회사는 그 사유와 보완 과제를 서면으로 알려드립니다.</p>';
   box.innerHTML=h;
 }
@@ -2133,8 +2153,8 @@ function renderPay(){
 
     return '<div class="pay-card">'
       + '<div class="pay-card-head">'
-      +   '<div class="pay-card-ym">📅 ' + y + '년 ' + m + '월 귀속 정산</div>'
-      +   '<span class="pill ' + (isClosed ? 'g' : 'y') + '">' + (isClosed ? '🟢 확정' : '⏳ 집계 중') + '</span>'
+      +   '<div class="pay-card-ym">' + y + '년 ' + m + '월 귀속 정산</div>'
+      +   '<span class="pill ' + (isClosed ? 'g' : 'y') + '">' + (isClosed ? '확정' : '집계 중') + '</span>'
       + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 0">'
       +   '<span style="font-size:13px;color:var(--tx2)">총 지급 예정액</span>'
@@ -2175,16 +2195,16 @@ function renderDocs(){
 
     var btnHtml = '';
     if(isIssued){
-      btnHtml = '<button class="doc-action-btn sign" onclick="docOpen('+r.issue_id+');event.stopPropagation();">✍️ 계약서 확인 및 서명하기</button>';
+      btnHtml = '<button class="doc-action-btn sign" onclick="docOpen('+r.issue_id+');event.stopPropagation();">계약서 확인 및 서명</button>';
     } else {
-      btnHtml = '<button class="doc-action-btn view" onclick="docOpen('+r.issue_id+');event.stopPropagation();">📄 계약서 전문 열람</button>';
+      btnHtml = '<button class="doc-action-btn view" onclick="docOpen('+r.issue_id+');event.stopPropagation();">계약서 열람</button>';
     }
 
     var badgeHtml = docBadge(r.status);
     if(isIssued){
-      badgeHtml = '<span class="pill y" style="font-weight:700">⚠️ 서명 필요</span>';
+      badgeHtml = '<span class="pill y" style="font-weight:700">서명 필요</span>';
     } else if(isCountersigned){
-      badgeHtml = '<span class="pill g" style="font-weight:700">🟢 교부 완료</span>';
+      badgeHtml = '<span class="pill g" style="font-weight:700">교부 완료</span>';
     }
 
     return '<div class="' + cls + '" onclick="docOpen('+r.issue_id+')">'
@@ -2307,6 +2327,28 @@ function go(p){document.querySelectorAll('.page').forEach(function(x){x.classLis
   if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();switchLeadSeg(LEAD_CURRENT_SEG||'day');return}if(p==='deploy'){go('lead');switchLeadSeg('deploy');return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
+/* v1.03 하단 탭: 자주 쓰는 4칸 + 더보기 */
+var TAB_MAIN={in:1,log:1,safety:1,list:1};
+function moreSetup(){var tb=el('tabs');if(!tb||el('tabMore'))return;
+  tb.querySelectorAll('div[data-p]').forEach(function(t){if(!TAB_MAIN[t.dataset.p])t.classList.add('sec2')});
+  var m=document.createElement('div');m.id='tabMore';m.className='more';m.innerHTML='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더보기';
+  m.onclick=moreOpen;tb.appendChild(m);
+  new MutationObserver(moreSync).observe(tb,{subtree:true,attributes:true,attributeFilter:['class']});moreSync()}
+function moreItems(){return [].slice.call(document.querySelectorAll('#tabs div.sec2')).filter(function(t){return !t.classList.contains('hide')})}
+function moreSync(){var m=el('tabMore');if(!m)return;var it=moreItems();
+  var on=it.some(function(t){return t.classList.contains('on')}),al=it.some(function(t){return t.classList.contains('alert')});
+  if(m.classList.contains('on')!==on)m.classList.toggle('on',on);if(m.classList.contains('alert')!==al)m.classList.toggle('alert',al)}
+function moreOpen(){moreClose();var it=moreItems();
+  var d=document.createElement('div');d.id='moreDim';d.onclick=moreClose;
+  var s=document.createElement('div');s.id='moreSheet';
+  s.innerHTML='<div class="mh">메뉴</div><div class="mg">'+it.map(function(t){return '<div class="mi'+(t.classList.contains('on')?' on':'')+(t.classList.contains('alert')?' alert':'')+'" data-p="'+t.dataset.p+'">'+t.innerHTML+'</div>'}).join('')+'</div>';
+  s.querySelectorAll('.mi').forEach(function(x){x.onclick=function(){moreClose();go(x.dataset.p)}});
+  document.body.appendChild(d);document.body.appendChild(s)}
+function moreClose(){['moreDim','moreSheet'].forEach(function(i){var x=el(i);if(x)x.remove()})}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')moreClose()});
+var ROLE_KO={owner:'대표',admin:'관리자',lead:'리드',leader:'리드',worker:'엔지니어',staff:'엔지니어'};
+moreSetup();
+
 </script>
 </body>
 </html>
