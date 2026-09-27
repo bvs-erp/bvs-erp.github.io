@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.88">
+<meta name="app-version" content="1.89">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,7 +136,8 @@ tr.row-warn td{background:rgba(245,158,11,.07)}
   .side-dim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60}
   header{height:auto!important;min-height:48px;padding:6px 10px!important;flex-wrap:wrap;box-sizing:border-box}
   .brand{display:flex;align-items:center;gap:8px;min-width:0}
-  .brand-title{font-size:15px}
+  .brand-title{font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .brand-title:after{content:'▾';font-size:11px;opacity:0.6}
   .nav-links{order:20;width:100%;overflow-x:auto;gap:4px;padding:4px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;display:flex;justify-content:flex-start}
   .nav-btn{height:30px;padding:0 10px;flex:0 0 auto;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
   #modbar,#mtabs,#sbar{display:none!important}
@@ -148,6 +149,25 @@ tr.row-warn td{background:rgba(245,158,11,.07)}
   body{padding-bottom:calc(56px + env(safe-area-inset-bottom))!important}
   .container{padding-bottom:calc(60px + env(safe-area-inset-bottom))!important}
 }
+
+
+/* ── BVS 스타일 모바일 메뉴 드로어 (v1.89) ── */
+#mobMenuModal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:9999;display:flex;justify-content:flex-start}
+#mobMenuModal.hide{display:none!important}
+.mob-menu-panel{background:var(--panel,#1e293b);width:310px;max-width:85vw;height:100%;box-shadow:4px 0 24px rgba(0,0,0,.35);display:flex;flex-direction:column;animation:mobSlideLeft .2s ease-out}
+@keyframes mobSlideLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+.mob-menu-hdr{padding:14px 16px;border-bottom:1px solid var(--border,#334155);display:flex;justify-content:space-between;align-items:center;background:var(--bg,#0f172a)}
+.mob-menu-hdr b{font-size:15px;color:var(--accent,#ef4444);font-weight:800;letter-spacing:-.02em}
+.mob-menu-q{padding:10px 12px;border-bottom:1px solid var(--border,#334155);background:var(--panel,#1e293b)}
+.mob-menu-q input{width:100%;box-sizing:border-box;font-size:13.5px;padding:8px 12px;border-radius:6px;border:1px solid var(--border,#334155);background:var(--bg,#0f172a);color:var(--text,#f8fafc);outline:none}
+.mob-menu-q input:focus{border-color:var(--accent,#ef4444);box-shadow:0 0 0 2px rgba(239,68,68,0.25)}
+.mob-menu-list{flex:1;overflow-y:auto;padding:10px 8px;-webkit-overflow-scrolling:touch}
+.mob-menu-grp{font-size:11px;font-weight:700;color:var(--text-muted,#94a3b8);letter-spacing:.05em;padding:12px 10px 4px;margin-top:6px;border-top:1px solid var(--border,#334155)}
+.mob-menu-grp:first-child{border-top:none;margin-top:0}
+.mob-menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text,#f8fafc);transition:background .12s,color .12s}
+.mob-menu-item:hover,.mob-menu-item.on{background:rgba(239,68,68,0.15);color:var(--accent,#ef4444);font-weight:700}
+.mob-menu-item .m-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;display:block}
+.mob-menu-item .m-t{flex:1}
 
 /* Ledger grid (v1.13) */
 .g-bar{display:flex;gap:6px;align-items:center}
@@ -627,10 +647,10 @@ body.perm-ro #tmType{display:none}
 
 <header>
   <div class="brand">
-    <button class="menu-btn" onclick="toggleSide()" aria-label="메뉴">☰</button>
+    <button class="menu-btn" onclick="openMobMenu()" aria-label="전체 메뉴">☰</button>
     <img class="logo-img" src="ssjg-logo.png" alt="SSJG" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="logo" style="display:none">SS</div>
     <div>
-      <div class="brand-title">SSJG ERP</div>
+      <div class="brand-title" onclick="openMobMenu()" title="전체 메뉴">SSJG ERP</div>
       <div style="font-size:11px;color:var(--text-muted)" id="hdCo"></div>
     </div>
   </div>
@@ -655,6 +675,19 @@ body.perm-ro #tmType{display:none}
 </header>
 
 <div class="side-dim" id="sideDim" onclick="toggleSide(false)"></div>
+
+<!-- ── 모바일 전체 메뉴 드로어 모달 (v1.89 BVS형) ── -->
+<div id="mobMenuModal" class="hide" onclick="if(event.target===this)closeMobMenu()">
+  <div class="mob-menu-panel">
+    <div class="mob-menu-hdr">
+      <b>SSJG ERP 전체 메뉴</b>
+      <button class="icon-btn" onclick="closeMobMenu()" style="width:30px;height:30px;font-size:16px;border:none;background:none;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+    <div class="mob-menu-q"><input id="mobQ" placeholder="메뉴 검색" autocomplete="off" oninput="mobMenuFilter(this.value)" onkeydown="mobQKey(event)"></div>
+    <div class="mob-menu-list" id="mobMenuList"></div>
+  </div>
+</div>
+
 <div class="shell">
 <aside class="side" id="side">
 </aside>
@@ -5919,8 +5952,74 @@ function renderMNav(){
     '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);switchTab(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>영업</div>',
     '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);switchTab(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>구매/자재</div>',
     '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);switchTab(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8M8 13h8M8 17h5"/></svg>세무</div>',
-    '<div class="mi" onclick="toggleSide(true)"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>전체</div>'
+    '<div class="mi" onclick="openMobMenu()"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>전체</div>'
   ].join('');
+}
+
+
+// ── BVS 스타일 모바일 전체 메뉴 드로어 (v1.89) ──
+function mobMenuHtml(q){
+  q = String(q||'').trim().toLowerCase();
+  var cur = (document.querySelector('.tab-pane.active')||{}).id || '';
+  cur = cur.replace(/^tab-/, '');
+  if(!MENU || !MENU.length) return '';
+  return MENU.map(function(mo, mi){
+    var grps = [];
+    mo.g.forEach(function(gr){
+      var its = gr.i.filter(function(it){
+        return !q || it[1].toLowerCase().indexOf(q) >= 0 || gr.n.toLowerCase().indexOf(q) >= 0 || mo.m.toLowerCase().indexOf(q) >= 0;
+      });
+      if(its.length) grps.push({ n: gr.n, i: its });
+    });
+    if(!grps.length) return '';
+    return '<div class="mob-menu-grp">' + mo.m + '</div>'
+      + grps.map(function(gr){
+          return '<div style="font-size:11px;color:var(--text-muted);padding:4px 10px 2px;font-weight:600">' + gr.n + '</div>'
+            + gr.i.map(function(it){
+                var isOn = it[0] === cur;
+                return '<div class="mob-menu-item ' + (isOn ? 'on' : '') + '" onclick="goAndClose(\'' + it[0] + '\',' + mi + ')">'
+                  + '<span class="m-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg></span>'
+                  + '<span class="m-t">' + it[1] + '</span>'
+                  + '</div>';
+              }).join('');
+        }).join('');
+  }).join('');
+}
+
+function openMobMenu(){
+  var m = document.getElementById('mobMenuModal');
+  if(!m) return;
+  var q = document.getElementById('mobQ');
+  if(q) q.value = '';
+  var list = document.getElementById('mobMenuList');
+  if(list) list.innerHTML = mobMenuHtml('');
+  m.classList.remove('hide');
+  if(q) setTimeout(function(){ q.focus(); }, 120);
+}
+
+function mobMenuFilter(v){
+  var list = document.getElementById('mobMenuList');
+  if(list) list.innerHTML = mobMenuHtml(v);
+}
+
+function mobQKey(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    var first = document.querySelector('#mobMenuList .mob-menu-item');
+    if(first) first.click();
+  }
+}
+
+function closeMobMenu(){
+  var m = document.getElementById('mobMenuModal');
+  if(m) m.classList.add('hide');
+}
+
+function goAndClose(tabId, modIdx){
+  closeMobMenu();
+  if(typeof modIdx === 'number') selectModule(modIdx);
+  switchTab(tabId);
+  renderMNav();
 }
 
 window.addEventListener('DOMContentLoaded', function(){ initSupabase(); renderMNav(); });
