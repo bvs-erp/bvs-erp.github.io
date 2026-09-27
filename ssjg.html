@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.81">
+<meta name="app-version" content="1.82">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -555,7 +555,7 @@ body.perm-ro #tmType{display:none}
       <img class="logo-img" src="ssjg-logo.png" alt="SSJG" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;background:var(--accent);color:#fff;font-weight:700;width:32px;height:32px;border-radius:8px;align-items:center;justify-content:center">SS</div>
       <div>
         <h1 style="font-size:17px;font-weight:700;letter-spacing:-0.3px;margin:0">SSJG ERP</h1>
-        <p style="color:var(--text-muted);font-size:11px;margin:0">주식회사 승승장구컴퍼니</p>
+        
       </div>
     </div>
     <div style="height:1px;background:var(--border);margin:14px 0"></div>
@@ -619,7 +619,7 @@ body.perm-ro #tmType{display:none}
     <img class="logo-img" src="ssjg-logo.png" alt="SSJG" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="logo" style="display:none">SS</div>
     <div>
       <div class="brand-title">SSJG ERP</div>
-      <div style="font-size:11px;color:var(--text-muted)">주식회사 승승장구컴퍼니 (SSJG)</div>
+      <div style="font-size:11px;color:var(--text-muted)" id="hdCo"></div>
     </div>
   </div>
   <div class="nav-links">
@@ -930,7 +930,7 @@ body.perm-ro #tmType{display:none}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
               <div>
                 <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인명</label>
-                <input type="text" id="cfgSenderName" class="input" value="주식회사 승승장구컴퍼니" style="padding:4px 8px;width:100%">
+                <input type="text" id="cfgSenderName" class="input" value="" style="padding:4px 8px;width:100%">
               </div>
               <div>
                 <label style="color:var(--text-muted);display:block;margin-bottom:2px">송하인 연락처</label>
@@ -1477,14 +1477,12 @@ body.perm-ro #tmType{display:none}
     <div class="gov-grid">
       <div class="gov-card">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">법인 정보</h3>
-        <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span id="govCorpNo">134811-0530752</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span id="govBizNo">772-87-02119</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span>이세영</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">자본금</span><span>20,000,000 원</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span id="govAddress">경기도 용인시 처인구 이동읍 백옥대로753번길 15(어반즈19) 405호</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span id="govBizItem">도매 및 소매업 / 애완용 동물 및 관련용품, 통신판매업</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">특수 인증</span><span>여성기업 확인서 보유 (유효기간 2024~2027)</span></div>
-        <div class="gov-info-row"><span class="gov-info-label">주력 브랜드</span><span>47 레드캣 (REDCAT) 고양이 벤토나이트 모래</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">법인명</span><span id="govCorpName">-</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">법인등록번호</span><span id="govCorpNo">-</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">사업자등록번호</span><span id="govBizNo">-</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">대표이사</span><span id="govCeo">-</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">본점 소재지</span><span id="govAddress">-</span></div>
+        <div class="gov-info-row"><span class="gov-info-label">업태 / 종목</span><span id="govBizItem">-</span></div>
       </div>
       <div class="gov-card">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">사용인감</h3>
@@ -1493,7 +1491,7 @@ body.perm-ro #tmType{display:none}
             -
           </div>
           <img id="govSealImg" src="" alt="SSJG 사용인감" class="seal-img" style="display:none;max-height:100px;margin:0 auto;filter:drop-shadow(0 2px 8px rgba(239,68,68,0.25))">
-          <div style="font-size:11px;color:#64748b;margin-top:10px">주식회사 승승장구컴퍼니 사용인감</div>
+          <div style="font-size:11px;color:#64748b;margin-top:10px">사용인감</div>
         </div>
       </div>
     </div>
@@ -1739,10 +1737,7 @@ body.perm-ro #tmType{display:none}
 </div>
 
 <aside id="f3p" aria-label="원천·이력"><div class="f3-h"><span>원천 · 이력</span><button class="btn" onclick="f3Close()">닫기</button></div><div class="f3-b" id="f3Body"></div></aside>
-<div id="sbar" role="status" aria-live="polite"><span id="sbKeys"></span><span class="sb-sp"></span><span id="sbCnt"></span><span id="sbLock" class="sb-lock" style="display:none"></span><span id="sbCo">주식회사 승승장구컴퍼니</span></div>
-<footer hidden>
-  주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
-</footer>
+<div id="sbar" role="status" aria-live="polite"><span id="sbKeys"></span><span class="sb-sp"></span><span id="sbCnt"></span><span id="sbLock" class="sb-lock" style="display:none"></span><span id="sbCo"></span></div>
 </div>
 </div>
 </div>
@@ -2637,6 +2632,7 @@ async function loadAllData(){
       var { data: compList, error: compErr } = await sb.from('ssjg_company').select('*').limit(1);
       if(compList && compList.length > 0){
         compInfo = compList[0];
+        coFill(compInfo);
         if(compInfo.address){
           var addrEl = document.getElementById('govAddress');
           if(addrEl) addrEl.innerText = compInfo.address;
@@ -3302,7 +3298,7 @@ function downloadLogenExcel(){
 
   var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
   var freightType = document.getElementById('cfgFreightType').value || '10';
-  var senderName = document.getElementById('cfgSenderName').value || (compInfo && compInfo.corp_name) || '승승장구컴퍼니';
+  var senderName = document.getElementById('cfgSenderName').value || (compInfo && compInfo.corp_name) || '';
   var senderAddr = document.getElementById('cfgSenderAddr').value || (compInfo && compInfo.address) || '';
   var senderPhone = document.getElementById('cfgSenderPhone').value.trim() || (compInfo && compInfo.phone) || '';
 
@@ -3846,8 +3842,7 @@ function gDirtyAny(p){ var n = 0; p.querySelectorAll('[data-grid]').forEach(func
 var PRT = { co: null };
 async function prtCompany(){
   if(PRT.co) return PRT.co;
-  var f = ((document.querySelector('footer') || {}).textContent || '');
-  var co = { name: (f.split('·')[0] || '').trim(), bizno: ((f.match(/사업자등록번호:\s*([0-9-]+)/) || [])[1] || ''), ceo: ((f.match(/대표이사:\s*([^·]+)/) || [])[1] || '').trim() };
+  var co = { name: '', bizno: '', ceo: '' };
   try {
     var r = await sb.from('ssjg_company').select('*').limit(1); var x = (r.data || [])[0];
     if(x){ var pick = function(ks){ for(var i = 0; i < ks.length; i++){ if(x[ks[i]]) return String(x[ks[i]]); } return ''; };
@@ -3855,7 +3850,7 @@ async function prtCompany(){
       co.bizno = pick(['biz_no', 'bizno', 'business_no', 'reg_no', 'brn']) || co.bizno;
       co.ceo = pick(['ceo', 'ceo_name', 'representative', 'rep_name']) || co.ceo; }
   } catch(e){}
-  PRT.co = co; return co;
+  if(co.name) PRT.co = co; return co;
 }
 function prtPeriod(p){
   var out = [];
@@ -4679,7 +4674,7 @@ async function vtExport(){
   XLSX.writeFile(wb, today + '_SSJG_정산_세무사_부가세자료_' + d0.slice(0, 7).replace('-', '') + '-' + end + '.xlsx');
 }
 // ── 엔티티 간 거래 경고 (v1.48) ──
-var TR_ENT = [['BVS', ['비브이에스', 'bvs']], ['PYRO', ['파이로', 'pyro']], ['HBS', ['황병승']], ['대표', ['이세영']]];
+var TR_ENT = [['BVS', ['비브이에스', 'bvs']], ['PYRO', ['파이로', 'pyro']]];
 function trWho(name){
   var s = String(name || ''); try { s = s.normalize('NFKC'); } catch(e){}
   s = ' ' + s.toLowerCase().replace(/\(주\)|㈜|주식회사|\(유\)|유한회사/g, ' ') + ' ';
@@ -5600,7 +5595,7 @@ function inbTop(M){ if(!M) return null; var ks = Object.keys(M), n = 0, b = null
 function inbRp(name){
   var n = tjvNorm(name || ''); if(!n || n === '(없음)') return false;
   var ceo = tjvNorm((PRT.co && PRT.co.ceo) || '');
-  return (ceo && n.indexOf(ceo) >= 0) || /비브이에스|파이로|황병승/.test(n);
+  return (ceo && n.indexOf(ceo) >= 0) || !!trWho(name);
 }
 function tiLines(x, cp){
   var sup = Math.round(Number(x.supply_amt || 0)), vat = Math.round(Number(x.vat_amt || 0)), tot = Math.round(Number(x.total_amt || 0)) || sup + vat, memo = x.item || '', L = [];
@@ -5737,6 +5732,38 @@ var _sbKeys181 = sbKeys;
 sbKeys = function(p){
   if(p && p.id === 'tab-inbox') return [['J', '다음'], ['K', '이전'], ['Ctrl Enter', '확정'], ['E', '편집'], ['F2', '계정 도움'], ['Ctrl K', '검색']].map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join('');
   return _sbKeys181.apply(this, arguments);
+};
+
+// ── 공개 소스 정보 제거 (v1.82) — 회사·대표 정보는 로그인 후 DB에서만 ──
+function coFill(c){
+  if(!c) return;
+  var set = function(id, v){ var el = document.getElementById(id); if(el) el.textContent = v || '-'; };
+  set('govCorpName', c.corp_name); set('govCorpNo', c.corp_no); set('govBizNo', c.biz_no); set('govCeo', c.ceo_name); set('govAddress', c.address);
+  set('govBizItem', [c.biz_type, c.biz_item].filter(Boolean).join(' / '));
+  var hd = document.getElementById('hdCo'); if(hd) hd.textContent = c.corp_name || '';
+  var so = document.getElementById('sbCo'); if(so) so.textContent = c.corp_name || '';
+  PRT.co = { name: c.corp_name || '', bizno: c.biz_no || '', ceo: c.ceo_name || '' };
+  var add = [];
+  if(c.ceo_name) add.push(['대표', [c.ceo_name]]);
+  TR_ENT = TR_ENT.filter(function(x){ return x[0] === 'BVS' || x[0] === 'PYRO'; }).concat(add);
+  trRel();
+}
+async function trRel(){
+  try {
+    var r = await sb.from('ssjg_partners').select('name').eq('kind', '특수관계').limit(200);
+    var nm = (r.data || []).map(function(x){ return String(x.name || '').trim(); }).filter(Boolean);
+    if(nm.length && !TR_ENT.some(function(x){ return x[0] === '특수관계'; })) TR_ENT.push(['특수관계', nm]);
+  } catch(e){}
+}
+var _doLogout182 = typeof doLogout === 'function' ? doLogout : null;
+if(_doLogout182) doLogout = async function(){
+  var r = await _doLogout182.apply(this, arguments);
+  if(document.getElementById('app').classList.contains('hide')){
+    ['govCorpName', 'govCorpNo', 'govBizNo', 'govCeo', 'govAddress', 'govBizItem'].forEach(function(id){ var el = document.getElementById(id); if(el) el.textContent = '-'; });
+    ['hdCo', 'sbCo'].forEach(function(id){ var el = document.getElementById(id); if(el) el.textContent = ''; });
+    PRT.co = null; compInfo = null;
+  }
+  return r;
 };
 
 window.addEventListener('DOMContentLoaded', initSupabase);
