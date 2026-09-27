@@ -1310,7 +1310,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr pjc pjcs pjcm'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.78';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.79';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2489,7 +2489,8 @@ async function renderGroupPlSummary(){
       if(GPL_CACHE['_busy_'+ymK]) return;
       GPL_CACHE['_busy_'+ymK]=1;
       try{
-        var gR = await sb.from('group_pl_month').select('*').eq('ym', ymK);
+        var gR = await sb.from('fi_pl_month').select('*').eq('period_ym', ymK);
+        if(gR&&gR.data)gR.data=gR.data.map(function(r){return {entity:r.entity,ym:r.period_ym,revenue:r.revenue_amt,cogs:r.cogs_amt,sga:r.sga_amt,op_income:r.operating_profit,non_op:r.non_op_amt}});
         var bR = await sb.from('bvs_pl_month_accrual').select('*').eq('ym', ymK);
         cached = GPL_CACHE[ymK] = {g:gR, b:bR};
       }finally{ delete GPL_CACHE['_busy_'+ymK]; }
