@@ -700,11 +700,13 @@ td.ed:hover{border-radius:0}
 #sbar .sb-k b{display:inline-block;font-weight:700;color:var(--tx);border:1px solid var(--ln);border-radius:3px;padding:0 4px;margin-right:4px;background:var(--sf);line-height:16px;font-size:11px}
 #sbar .sb-sp{flex:1}
 #sbCo{font-weight:600;color:var(--tx)}
-@media(max-width:1280px){.elinks .nav-btn:not(.active):not(button){display:none}}
+@media(max-width:1280px){.nav-btn{padding:0 8px}.ksearch{min-width:140px}}
 @media(max-width:860px){
   #app{padding-bottom:0}
   #top{height:auto;min-height:48px;padding:6px 10px}
-  #top .brand .nm small,.elinks,#modbar,#mtabs,#sbar{display:none!important}
+  #top .brand .nm small,#modbar,#mtabs,#sbar{display:none!important}
+  .elinks{order:20;width:100%;overflow-x:auto;gap:4px;padding:2px 0 4px;scrollbar-width:none}
+  .elinks .nav-btn{height:30px;flex:0 0 auto;font-size:12.5px}
   .pgbar{flex:none;flex-wrap:wrap;padding:6px 10px}
   .pg-path{display:none}
   .pg-btns{margin-left:0;width:100%}
@@ -1308,7 +1310,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr pjc pjcs pjcm'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.74';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.77';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2133,6 +2135,8 @@ function lzFns(){
     ['disp',function(){return sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)}],
     ['payp',function(){return sb.from('ceo_pay_profiles').select('*').order('person_name')}],
     ['co',function(){return sb.from('core_company').select('*')}],
+    ['plc',function(){return sb.from('op_place_list').select('*').order('sort_no')}],
+    ['lbl',function(){return sb.from('core_label_list').select('*')}],
     ['ht',function(){return sb.from('ceo_hometax_invoices').select('*').order('issue_date',{ascending:false}).limit(3000)}],
     ['htm',function(){return sb.from('ceo_hometax_month').select('*').order('period_ym',{ascending:false})}],
     ['htv',function(){return sb.from('ceo_hometax_vs_sd').select('*').order('period_ym',{ascending:false}).limit(2000)}],
@@ -2156,7 +2160,7 @@ function lzFns(){
 
   // 엔지니어링 리드 접속 시 재무·세무·급여·계약 등 민감 쿼리 원천 차단
   if(isEngLead()){
-    var LEAD_ALLOW = {hol:1, pjl:1, att:1, attk:1, sfk:1, eds:1, edg:1, lm:1, sites:1, staff:1, roster:1, crew:1, carpool:1, plans:1, items:1, pick:1, sup:1, chk:1, disp:1, tgr:1, co:1};
+    var LEAD_ALLOW = {hol:1, pjl:1, att:1, attk:1, sfk:1, eds:1, edg:1, lm:1, sites:1, staff:1, roster:1, crew:1, carpool:1, plans:1, items:1, pick:1, sup:1, chk:1, disp:1, tgr:1, co:1, plc:1, lbl:1};
     Q = Q.filter(function(q){ return LEAD_ALLOW[q[0]]; });
   }
   if(!isOwner()){ Q = Q.filter(function(q){ return q[0]!=='pjc'&&q[0]!=='pjcs'&&q[0]!=='pjcm'; }); }
@@ -2178,18 +2182,23 @@ async function loadAll(extra){
   LASTERR=errs;
   if(errs.length)toast('조회 '+errs.length+'건 실패','e');
   var eb=el('errbox');if(eb)eb.innerHTML=errs.length?'<div class="al" style="padding:8px 12px;border:1px solid var(--crit);border-radius:6px"><b>조회 실패 '+errs.length+'건</b> — 아래 화면의 숫자가 빠져 있을 수 있습니다<br>'+errs.map(function(x){return esc(x)}).join('<br>')+'</div>':'';
-  if(LZ.fns.dash&&!D.dash.length&&!errs.length&&!isEngLead())toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
+  var pk0=lzNeed(ST.page||'home').filter(function(k){return !LZ_OPT[k]});if(!errs.length&&!isEngLead()&&pk0.length&&pk0.every(function(k){return !(D[k]||[]).length}))toast('연결은 됐는데 0건입니다. 로그인 계정 권한 확인이 필요합니다.','e');
   lzIdle();
 }
 /* v1.73 화면별 조회: 로그인 때 전부 부르지 않고, 지금 여는 화면에 필요한 자료만 부른다. 조회 버튼은 지금 화면만 다시 부른다. */
 var PK={"home":["abs","acct","al","att","attk","co","dash","edg","eds","esgt","gap","hol","intg","lm","pay","pipe","plans","sd","sdm","set","setg","sfk","stl","tr"],"site":["abs","att","attk","chk","disp","lm","lrv","pj","pjl","plans","ptn","set","sites","srate","staff"],"sales":["acct","pipe","ptn","sd","sdm"],"money":["alw","apay","att","bank","co","cons","ctr","dash","dlog","esg","esgt","grd","hol","ldr","padj","pay","payp","perh","pmb","ptn","rateh","retro","roster","set","setg","seth","staff","tclaim","teamh","tgr","trn","uacc","uorp"],"pl":["acct","dash","di","lnc","lno","mj"],"pm":["items","mat","pgap","po","sites","stk","stmv","sup"],"hr":["alw","apay","att","bank","co","cons","ctr","dlog","esg","esgt","grd","hol","padj","pay","payp","perh","pmb","ptn","rateh","retro","roster","set","setg","seth","staff","teamh","tgr","trn","uacc","uorp"],"safety":["edg","eds","sfk"],"crew":["abs","att","carpool","co","crew","setg","staff"],"close":["acct","alw","apay","att","bank","close","cm","co","cons","ctr","dlog","esg","esgt","grd","hol","htv","mrev","mrevl","padj","pay","payp","perh","pj","pjd","pji","pjk","pjm","pjq","pjs","pmb","ptn","rateh","retro","roster","sd","set","setg","seth","sites","staff","teamh","tgr","trn","uacc","uorp"],"tax":["acct","card","pipe","sd","tf"],"ht":["acct","bank","bunm","card","cash","co","ht","htm","htr","htv","inbox","ptn","sd"],"settle":["bunm","pcash","po","sadj","stl","stm","stp"],"alerts":["ack","al","att","attk","edg","eds","gap","intg","pay","pj","pjl","po","set","setg","sfk","sites","stl","tr","trg","tro"],"project":["pjc","pjcm","pjcs","ptn","sites","srate","staff"],"gl":["acct","ht","pipe","sd"],"badge":["al","att","attk","edg","eds","gap","intg","pay","set","sfk","stl","tr"],"shell":["co","dash","hol","sdm"]};
-var SHELL_KEYS=['co','setg','hol','sdm'];
+var SHELL_KEYS=['co','setg','hol','sdm','plc','lbl'];
+var LZ_OPT={plc:1,lbl:1};
+/* 고객사 관련 표시 이름은 DB(core_label_list)에서 받는다 */
+function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0];return r?r.label:(d||'')}
+function crewIdEd(k){var f=['sk_id','ss_id'].filter(function(f){return L('crewcol.'+f)===k})[0];return f||null}
 var LZ={st:{},fns:null,gen:0,run:{},fg:0,heavy:0,idle:null,bq:[],brun:false};
 function lzNeed(p){var s={},o=[];SHELL_KEYS.concat(PK[p]||[]).forEach(function(k){if(!s[k]&&LZ.fns&&LZ.fns[k]){s[k]=1;o.push(k)}});return o}
 async function lzOne(k){
   var fn=LZ.fns[k];if(!fn)return null;
   for(var a=0;a<2;a++){
     try{var r=await lqPaged(fn);
+      if(r&&r.error&&LZ_OPT[k]){D[k]=[];LZ.st[k]='ok';return null}
       if(r&&r.error){if(a===0&&(r.error.code==='57014'||/timeout|cancel/i.test(r.error.message||''))){await new Promise(function(z){setTimeout(z,600)});continue}return k+': '+r.error.message}
       D[k]=(r&&r.data)||[];LZ.st[k]='ok';LQ.done[k]=1;return null}
     catch(e){if(a===0){await new Promise(function(z){setTimeout(z,800)});continue}return k+': '+(e&&e.message||e)}
@@ -2919,7 +2928,7 @@ function costPill(k){return k==='team_full'?' <span class="pill y tiny">팀장�
 var CAL={mode:'all',cache:{}};
 function calMode(m,elm){CAL.mode=m;Array.prototype.forEach.call(elm.parentNode.children,function(c){c.classList.toggle('on',c===elm)});renderCal()}
 function ymNext(m){var y=+m.slice(0,4),mo=+m.slice(5,7)+1;if(mo>12){mo=1;y++}return y+'-'+String(mo).padStart(2,'0')+'-01'}
-function siteShort(n){return String(n||'').replace(/SK\s*/,' ').replace(/\s*제조동/,'').replace(/^\s+/,'')}
+function siteShort(n){var sp=L('site.prefix','');n=String(n||'');if(sp)n=n.split(sp).join(' ');return n.replace(/\s*제조동/,'').replace(/^\s+/,'')}
 function calRows(m){if(m===CAL.loadedFor)return D.lm||[];return CAL.cache[m]}
 async function calFetch(m){var r=await sb.from('ceo_labor_month').select('*').gte('work_date',m+'-01').lt('work_date',ymNext(m)).order('work_date').limit(4000);if(r.error){toast(r.error.message,'e');return []}CAL.cache[m]=r.data||[];return CAL.cache[m]}
 async function renderCal(){var box=el('calBox');if(!box)return;var m=M();
@@ -3863,7 +3872,7 @@ function renderSettle(){
       : '';
   }
 
-  // 거래처별 누계 cleanPtn: 거래처명 정규화 후 베셀 C0076/C0077 분할 및 통장 메모 자동이체 건 0원 완제 반영
+  // 거래처별 누계 cleanPtn: 거래처명 정규화 후 분할 코드 및 통장 메모 자동이체 건 0원 완제 반영
   var ptnMap = {};
   ptn.forEach(function(p){
     var nm = normPName(p.partner_name);
@@ -3956,7 +3965,7 @@ async function stRun(){toast('자동 대사 실행 중…');var r=await sb.rpc('
 function helpHt(){help('자금 · 통장 · 카드 — 어떻게 들어오나',
   '<p>대표 PC의 수집기가 매일 07:30에 홈택스(세금계산서 · 사업용카드 · 현금영수증)를 가져오고, <code>bank_in</code> 폴더에 넣어 둔 기업은행 엑셀을 함께 적재합니다.</p>'
  +'<p>원본은 바꾸지 않습니다. 거래처 · 문서 · 계정만 연결합니다.</p>'
- +'<p>상대방이 파이로 · 승승장구컴퍼니 · 대표 개인이면 <b>Tax-Risk</b>로 표시합니다. 판정 범위는 홈택스 수집분이 아니라 <b>회계 전표 전 기간</b>입니다.</p>'
+ +'<p>상대방이 관계사 또는 대표 개인이면 <b>Tax-Risk</b>로 표시합니다. 판정 범위는 홈택스 수집분이 아니라 <b>회계 전표 전 기간</b>입니다.</p>'
  +'<p>엔티티 사이의 거래는 금액 · 방향 · 명목 · 상환계획과 <b>시가 근거</b>를 갖춰 두지 않으면 가지급금 인정이자나 부당행위계산부인으로 이어집니다.</p>')}
 function htRisk(){var risk=trRows();
   if(!risk.length){toast('그룹사 간 거래 내역이 없습니다','g');return}
@@ -4958,7 +4967,8 @@ var ROSSET={
   safety:{t:'안전·교육 제출',d:'출입증 + 혈액형·교육 이수',cols:['name','birth_ymd','phone','affiliation','rank_title','blood_type','last_trained_on','last_course','training_cnt']},
   full:{t:'전체 (내부 확인용)',d:'내보내기 전 우리가 보는 용도',cols:['name','employment_no','birth_ymd','phone','affiliation','rank_title','employment_type','blood_type','vehicle_no','emergency_contact','sk_company','sk_id','ss_company','ss_id','home_area','primary_area','suit_size','shoe_size','edu_basic','edu_haz8h_off','last_trained_on','training_cnt','hired_on','last_work_date']}
 };
-var ROSLBL={name:'이름',employment_no:'사번',birth_ymd:'생년월일',phone:'연락처',affiliation:'소속',rank_title:'직책',employment_type:'고용형태',blood_type:'혈액형',vehicle_no:'차량번호',emergency_contact:'비상연락처',sk_company:'SK 소속사',sk_id:'SK ID',ss_company:'SS 소속사',ss_id:'SS ID',home_area:'거주권역',primary_area:'배치권역',suit_size:'방진복',shoe_size:'안전화',edu_basic:'기본교육',edu_haz8h_off:'유해8h',last_trained_on:'최근 교육일',last_course:'최근 과정',training_cnt:'교육 건수',hired_on:'입사일',last_work_date:'최근 투입일'};
+var ROSLBL={name:'이름',employment_no:'사번',birth_ymd:'생년월일',phone:'연락처',affiliation:'소속',rank_title:'직책',employment_type:'고용형태',blood_type:'혈액형',vehicle_no:'차량번호',emergency_contact:'비상연락처',sk_company:'소속사 1',sk_id:'출입ID 1',ss_company:'소속사 2',ss_id:'출입ID 2',home_area:'거주권역',primary_area:'배치권역',suit_size:'방진복',shoe_size:'안전화',edu_basic:'기본교육',edu_haz8h_off:'유해8h',last_trained_on:'최근 교육일',last_course:'최근 과정',training_cnt:'교육 건수',hired_on:'입사일',last_work_date:'최근 투입일'};
+['sk_company','sk_id','ss_company','ss_id'].forEach(function(f){var d=ROSLBL[f];Object.defineProperty(ROSLBL,f,{enumerable:true,configurable:true,get:function(){return L('ros.'+f,d)}})});
 function rosRows(){var r=(D.roster||[]).filter(function(x){return !x.resigned_on});
   if(ROS.only)r=r.filter(function(x){return x.consent_third_party});
   return r}
@@ -5119,7 +5129,7 @@ function renderStaff(){
     {k:'md_this_month', t:'이달공수', f:'num'},
     {k:'last_work_date', t:'최근투입', l:1, cls:'tiny'},
     {k:'training_cnt', t:'교육', f:function(v,r){ return +v ? v+'회 <span class="tiny dim">'+esc(r.last_training_on||'')+'</span>' : '<span class="dim">0</span>'; }},
-    {k:'sk_id', t:'SK ID', l:1, cls:'tiny dim'}
+    {k:'sk_id', t:L('ros.sk_id','출입ID 1'), l:1, cls:'tiny dim'}
   ], {
     rows: st,
     q: ['name','employment_no','phone','job_title','leader_name'],
@@ -5157,7 +5167,7 @@ function dayAdd(ds,n){return new Date(Date.parse(ds+'T00:00:00Z')+n*864e5).toISO
 function today(){return todayKst()}
 function staffOpen(r){var emp=r.employment_no;var rh=(D.rateh||[]).filter(function(x){return x.employment_no===emp}),ph=(D.perh||[]).filter(function(x){return x.employment_no===emp}),th=(D.teamh||[]).filter(function(x){return x.employment_no===emp}),tr=(D.trn||[]).filter(function(x){return x.employment_no===emp});
   var inf=function(v){return v==='infinity'||!v?'현재':esc(v)};
-  var body=kv([['사번',esc(emp)+' · '+esc(ETYPE[r.employment_type]||r.employment_type)+' · '+(r.resigned_on?'<span class="neg">퇴사 '+esc(r.resigned_on)+'</span>':'재직 (입사 '+esc(r.hired_on)+')')],['연락처',esc(r.phone||'–')+(r.email?' · '+esc(r.email):'')],['주소',esc(r.address||'–')],['비상연락처',esc(r.emergency_contact||'–')],['생년월일',esc(r.birth_ymd||'–')],['혈액형 / 차량',esc(r.blood_type||'–')+' / '+esc(r.vehicle_no||'없음')],['매출처',esc(r.bill_partner_name||'현장 기준')],['출입 자료','SK ID '+esc(r.sk_id||'–')+' · SS ID '+esc(r.ss_id||'–')+' · 배치 '+esc(r.primary_area||'–')+' · 기본교육 '+esc(r.edu_basic||'–')+' <a href="#" onclick="event.preventDefault();drClose();go(\'crew\')">배치표에서 수정</a>']])
+  var body=kv([['사번',esc(emp)+' · '+esc(ETYPE[r.employment_type]||r.employment_type)+' · '+(r.resigned_on?'<span class="neg">퇴사 '+esc(r.resigned_on)+'</span>':'재직 (입사 '+esc(r.hired_on)+')')],['연락처',esc(r.phone||'–')+(r.email?' · '+esc(r.email):'')],['주소',esc(r.address||'–')],['비상연락처',esc(r.emergency_contact||'–')],['생년월일',esc(r.birth_ymd||'–')],['혈액형 / 차량',esc(r.blood_type||'–')+' / '+esc(r.vehicle_no||'없음')],['매출처',esc(r.bill_partner_name||'현장 기준')],['출입 자료',L('ros.sk_id','출입ID 1')+' '+esc(r.sk_id||'–')+' · '+L('ros.ss_id','출입ID 2')+' '+esc(r.ss_id||'–')+' · 배치 '+esc(r.primary_area||'–')+' · 기본교육 '+esc(r.edu_basic||'–')+' <a href="#" onclick="event.preventDefault();drClose();go(\'crew\')">배치표에서 수정</a>']])
    +'<div class="fr" style="margin-top:10px"><div class="f"><label>주소</label><input id="sf_addr" class="in" value="'+esc(r.address||'')+'"></div><div class="f"><label>비상연락처</label><input id="sf_emg" class="in" value="'+esc(r.emergency_contact||'')+'"></div></div><div class="fr"><div class="f"><label>이메일</label><input id="sf_email" class="in" value="'+esc(r.email||'')+'"></div><div class="f"><label>매출처</label>'+ptnSel('sf_ptn',r.bill_partner_id)+'</div></div><div class="fr"><div class="f"><label>생년월일</label><input id="sf_birth" class="in" type="date" value="'+esc(r.birth_ymd||'')+'"></div><div class="f"><label>고용형태</label><select id="sf_etype" class="sel" style="width:100%">'+Object.keys(ETYPE).map(function(k){return '<option value="'+k+'"'+(r.employment_type===k?' selected':'')+'>'+ETYPE[k]+'</option>'}).join('')+'</select></div></div><div class="fr"><div class="f"><label>혈액형</label><input id="sf_blood" class="in" placeholder="A / B / O / AB (+/-)" value="'+esc(r.blood_type||'')+'"></div><div class="f"><label>차량번호</label><input id="sf_veh" class="in" placeholder="비우면 차량 없음" value="'+esc(r.vehicle_no||'')+'"></div></div><div class="tiny dim" style="margin:-2px 0 8px">혈액형은 민감정보입니다. 고객사 안전·출입 제출 목적으로만 쓰고, 개인정보 동의서 별도 동의 항목에 포함해야 합니다.</div><button class="btn sm" onclick="staffSaveBasic(\''+esc(emp)+'\')">인적사항 저장</button>';
   if(isOwner())body+=settleHtml(emp,r)+pmbHtml(emp);
   // 단가
@@ -6162,7 +6172,7 @@ function renderCrew(){
   renderAbsenceTimeline();
   renderCarCards();
   var EDCOL=/교육|A-D|중량물|신규PJT|작업지휘자|급소|유해물질|안전|출입신청|이수/;
-  var cols=c.length?Object.keys(c[0]).map(function(k){var e=CREW_ED[k];return {k:k,t:k,l:true,e:e||null,f:EDCOL.test(k)?function(v,r){return eduBadge(v,r,k)}:null}}):[{k:'이름',t:'이름',l:1}];
+  var cols=c.length?Object.keys(c[0]).map(function(k){var e=CREW_ED[k]||crewIdEd(k);return {k:k,t:k,l:true,e:e||null,f:EDCOL.test(k)?function(v,r){return eduBadge(v,r,k)}:null}}):[{k:'이름',t:'이름',l:1}];
   grid('gCrew',cols,{rows:c,q:true,qph:'이름·소속·지역·업무',chips:[{k:'배치(우선지역)',vals:[['','전체']].concat(Object.keys(areas).sort().map(function(a){return [a,a]}))}],page:60,csv:true,
     save:function(r,field,v){return crewSave(r,field,v)},afterSave:function(r,col){if(col.k==='배치(우선지역)'||col.k==='차량'||col.k==='카풀'||col.k==='소속')renderCrewTop()}});
   var h=el('gCrew').querySelector('.tbar');if(h&&!h.querySelector('.edhint'))h.insertAdjacentHTML('beforeend','<span class="edhint" style="margin:0 0 0 6px">셀 더블클릭 → 수정 · Enter 저장 · Esc 취소 · Tab 다음 칸</span>');
@@ -6600,7 +6610,8 @@ function renderHomeAbs(){var box=el('homeAbsReq');if(!box)return;var req=(D.abs|
 /* 이번 주 투입 가능 현황 — 고객사 카톡용 (단가·연락처 등 내부 정보 제외) */
 function availWeek(){var t=new Date(getSysToday()+'T00:00:00');var dow=t.getDay();var mon=new Date(t);mon.setDate(t.getDate()+(dow===0?1:1-dow));
   var days=[];for(var i=0;i<6;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return days}
-function availGroup(site){var s=String(site||'');if(/청주/.test(s))return '청주 SK';if(/이천우주|우주/.test(s))return '이천 우주';if(/이천/.test(s))return '이천 SK';if(/TES|용인/.test(s))return '용인 TES';if(/화성|평택|삼성/.test(s))return '삼성';return '본사·기타'}
+function availGroup(site){var pc=plcOfName(site);var p=plcList().filter(function(x){return x.c===pc})[0];return (p&&p.grp)||'본사·기타'}
+function plcOfName(sn){sn=String(sn||'');var st=(D.sites||[]).filter(function(x){return x.site_name===sn})[0];if(st)return String(st.site_id).split('-')[0];var hit=plcList().filter(function(p){return p.n&&sn.replace(/\s/g,'').indexOf(String(p.n).replace(/\s/g,''))>=0})[0];return hit?hit.c:''}
 function availRoster(){var f=dayAdd(getSysToday(),-21);
   var act={};(D.staff||[]).forEach(function(x){if(!x.resigned_on&&!(ceoName()&&x.name===ceoName()))act[x.employment_no]=x.name});
   var seen={};(D.att||[]).forEach(function(r){if(r.work_date>=f&&act[r.employment_no]&&+r.work_md>0){var o=seen[r.employment_no]=seen[r.employment_no]||{no:r.employment_no,name:act[r.employment_no],sites:{}};o.sites[r.site_name]=(o.sites[r.site_name]||0)+1}});
@@ -7148,7 +7159,7 @@ var CREW_ED={
   '거주지/숙소':{field:'__home',ph:'거주지/숙소'},
   '배치(우선지역)':{field:'__area',ph:'이천->청주'},
   '차량':{field:'own_vehicle_known',ph:'유 / 무',apply:function(r,v){r['차량']=/^(유|y|o|1|true|가능)$/i.test(v)?'유':(v?'무':'')}},
-  '카풀':'carpool_driver','업무':'work_type','방진복':'suit_size','방진화':'shoe_size','SK출입ID':'sk_id','삼성출입ID':'ss_id',
+  '카풀':'carpool_driver','업무':'work_type','방진복':'suit_size','방진화':'shoe_size',
   '기본A-D':{field:'edu_basic',ph:'YYYY-MM-DD'},'중량물':{field:'edu_heavy',ph:'YYYY-MM-DD'},'신규PJT':{field:'edu_newpjt',ph:'YYYY-MM-DD'},
   '작업지휘자':{field:'edu_leader',ph:'YYYY-MM-DD'},'급소':{field:'edu_critical',ph:'YYYY-MM-DD'},'유해물질8H':{field:'edu_haz8h_off',ph:'YYYY-MM-DD'}
 };
@@ -7156,24 +7167,15 @@ var CREW_ED={
 /* ═══════════ 마감·경보 ═══════════ */
 
 /* ═══════════ 금일 투입 지도 ═══════════ */
-var PLACES=[
-  {c:'BV',n:'BVS이천',sub:'본사',x:338,y:206,hq:true},
-  {c:'IC',n:'SK이천',sub:'이천',x:412,y:96},
-  {c:'CJ',n:'SK청주',sub:'청주',x:392,y:338},
-  {c:'TE',n:'TES용인',sub:'용인',x:262,y:118},
-  {c:'UO',n:'우주이천',sub:'이천',x:452,y:190},
-  {c:'HS',n:'삼성화성',sub:'화성',x:140,y:150},
-  {c:'PT',n:'삼성평택',sub:'평택',x:168,y:268},
-  {c:'ED',n:'교육',sub:'',x:590,y:300,side:true},
-  {c:'OFF',n:'휴무·병가',sub:'',x:590,y:370,side:true}
-];
+/* 현장 장소 목록은 DB(op_place_list)에서 받는다 */
+function plcList(){return (D.plc||[]).map(function(r){return {c:r.place_code,n:r.place_name,sub:r.map_sub||'',x:+r.map_x||0,y:+r.map_y||0,hq:!!r.is_hq,side:!!r.map_side,grp:r.avail_group||''}})}
 function attKey(r){return r.work_date+'|'+r.employment_no}
 function placeOf(siteId){return siteId?String(siteId).split('-')[0]:''}
 function lineOf(siteId){var p=String(siteId||'').split('-');return p.length>1?p.slice(1).join('-'):''}
 function mapRows(rows){
   var keys={};(D.attk||[]).forEach(function(k){keys[attKey(k)]=k});
   return rows.map(function(r){var k=keys[attKey(r)]||{};var sid=k.site_id||'';var pc=placeOf(sid);
-    if(!pc){var sn=String(r.site_name||'');pc=/청주/.test(sn)?'CJ':/이천SK|이천 SK/.test(sn)?'IC':/평택/.test(sn)?'PT':/화성/.test(sn)?'HS':/용인|TES/.test(sn)?'TE':/우주/.test(sn)?'UO':/BVS/.test(sn)?'BV':/교육/.test(sn)?'ED':/휴무|병가/.test(sn)?'OFF':''}
+    if(!pc){pc=plcOfName(r.site_name)}
     return {name:r.person_name,place:pc,site:sid,line:lineOf(sid)||String(r.site_name||'').split(' ').slice(1).join(' '),project:k.project_code||'',start:r.work_start,md:r.work_md,ot:r.ot_hours,status:r.status,src:k.source||''}});
 }
 var MAPD={rows:[],day:null};
@@ -7200,7 +7202,7 @@ function renderMap(day, rows){
   var nextSource = attNext.length ? '사전 등록' : (planNext.length ? '배치 계획' : '');
 
   // 거점 카드 목록 렌더링 (주요 현장)
-  var activePlaces = PLACES.filter(function(p){ return !p.side; });
+  var activePlaces = plcList().filter(function(p){ return !p.side; });
   var cardsHtml = activePlaces.map(function(p){
     var g = byP[p.c] || [];
     var n = g.length;
@@ -7231,7 +7233,7 @@ function renderMap(day, rows){
   }).join('');
 
   // 기타/교육/휴무/미분류
-  var sidePlaces = PLACES.filter(function(p){ return p.side; });
+  var sidePlaces = plcList().filter(function(p){ return p.side; });
   var sideCards = sidePlaces.map(function(p){
     var g = byP[p.c] || [];
     if(!g.length) return '';
@@ -7259,14 +7261,14 @@ function renderMap(day, rows){
     + '</div>';
 }
 function mapList(){var box=el('mapList');if(!box)return;var byP=by(MAPD.rows,'place');
-  box.innerHTML=PLACES.filter(function(p){return (byP[p.c]||[]).length}).map(function(p){var g=byP[p.c];var ls=by(g,'line');
+  box.innerHTML=plcList().filter(function(p){return (byP[p.c]||[]).length}).map(function(p){var g=byP[p.c];var ls=by(g,'line');
     return '<div class="al click" style="display:block;margin:0" onclick="mapOpen(\''+p.c+'\')"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>'+esc(p.n)+'</b><span class="tiny dim">'+g.length+'명 · '+num(sum(g,'md'))+' M/D</span></div>'
       +Object.keys(ls).sort().map(function(k){return '<div style="margin-top:5px;display:flex;gap:7px;align-items:baseline;flex-wrap:wrap"><span class="pill b">'+esc(k||'라인 미지정')+'</span><span class="tiny" style="color:var(--tx2)">'+ls[k].map(function(r){return esc(r.name)}).join(', ')+'</span></div>'}).join('')+'</div>'}).join('')
     +((byP['']||[]).length?'<div class="al hot"><div class="t">현장 미분류 '+byP[''].map(function(r){return esc(r.name)}).join(', ')+'</div></div>':'')
     +(function(){var pl=(D.plans||[]);if(!pl.length)return '';var d=pl[0].plan_date;var rows=pl.filter(function(x){return x.plan_date===d});var g=by(rows,'site_name');
       return '<div class="al" style="display:block;border-style:dashed"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>'+esc(d)+' 배치 계획</b><span class="tiny dim">'+rows.length+'명 · 리드 등록</span></div>'+Object.keys(g).sort().map(function(k){return '<div class="tiny" style="margin-top:3px"><span class="dim">'+esc(k||'미지정')+'</span> '+g[k].map(function(r){return esc(r.person_name)}).join(', ')+'</div>'}).join('')+'</div>'})();
 }
-function mapOpen(pc){var p=PLACES.filter(function(x){return x.c===pc})[0]||{n:pc};var g=MAPD.rows.filter(function(r){return r.place===pc});
+function mapOpen(pc){var p=plcList().filter(function(x){return x.c===pc})[0]||{n:pc};var g=MAPD.rows.filter(function(r){return r.place===pc});
   var PJ=pjMap(null,1);
   var body=kv([['일자',MAPD.day||'–'],['인원',g.length+'명 · '+num(sum(g,'md'))+' M/D · 연장 '+num(sum(g,'ot'))+'h']])
     +'<table class="mini" style="width:100%;margin-top:10px"><thead><tr><th class="l">이름</th><th class="l">라인</th><th class="l">업무</th><th>시작</th><th>공수</th><th>연장</th><th class="l">상태</th></tr></thead><tbody>'

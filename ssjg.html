@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.84">
+<meta name="app-version" content="1.87">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -888,7 +888,7 @@ body.perm-ro #tmType{display:none}
       <div style="padding:16px">
         <div class="dropzone" id="dropCafe24" onclick="document.getElementById('fileCafe24').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleCafe24File(event.dataTransfer.files[0])">
           <div style="font-weight:600;font-size:13px" id="cafe24DropText">카페24 주문 엑셀</div>
-          <input type="file" id="fileCafe24" style="display:none" accept=".xlsx,.xls" onchange="handleCafe24File(this.files[0])">
+          <input type="file" id="fileCafe24" style="display:none" accept=".csv,.xlsx,.xls" onchange="handleCafe24File(this.files[0])">
         </div>
 
         <div class="step-meta">주문 <span id="cafe24ParsedCount">0 건</span></div>
@@ -896,7 +896,12 @@ body.perm-ro #tmType{display:none}
         <button class="btn btn-primary" id="btnDownloadEzadminOrder" onclick="downloadEzadminOrderExcel()" style="width:100%;padding:12px;font-size:14px;font-weight:700;background:var(--accent)" disabled>
           이지어드민 주문등록 파일 받기
         </button>
+        <button class="btn" id="btnC24Reg" onclick="c24Register()" style="width:100%;padding:10px;margin-top:8px;font-weight:700" disabled>ERP 주문 등록</button>
       </div>
+    </div>
+    <div class="panel" id="c24ChkPanel" style="display:none">
+      <div class="panel-head"><div class="panel-title">카페24 주문 검사 <span class="g-cnt" id="c24ChkCnt"></span></div></div>
+      <div class="table-wrap"><table><thead><tr><th>주문번호</th><th>원주문 품목</th><th style="text-align:right">주문수량</th><th>3PL 출고 품목</th><th>3PL코드</th><th style="text-align:right">출고수량</th><th>검사</th><th>ERP</th></tr></thead><tbody id="c24ChkRows"></tbody></table></div>
     </div>
 
     <!-- 2열 워크플로우 카드 -->
@@ -3089,6 +3094,8 @@ function handleCafe24File(file){
         var option = String(row['옵션'] || '').trim();
         var qty = Number(row['수량']) || 1;
         var itemCode = String(row['자체품목코드'] || '').trim();
+        var salePrice = Math.round(Number(String(row['판매가'] || '').replace(/[^0-9.-]/g, '')) || 0);
+        var shipFee = String(row['배송비 정보'] || row['배송비구분'] || '').trim();
 
         return {
           '판매처': channel,
@@ -3105,13 +3112,18 @@ function handleCafe24File(file){
           '상품명': productName,
           '옵션': option,
           '수량': qty,
-          '상품코드': itemCode
+          '상품코드': itemCode,
+          '판매가': salePrice || '',
+          '배송비구분': shipFee,
+          _pno: String(row['상품번호'] || '').trim(),
+          _raw: row
         };
       });
 
       document.getElementById('cafe24ParsedCount').innerText = rawCafe24Rows.length + ' 건';
       document.getElementById('cafe24DropText').textContent = file.name + ' · ' + rawCafe24Rows.length + '건';
       document.getElementById('btnDownloadEzadminOrder').disabled = false;
+      c24Enrich();
 
     } catch(err) {
       alert('카페24 엑셀 파싱 오류: ' + err.message);
@@ -3128,7 +3140,7 @@ function downloadEzadminOrderExcel(){
   }
 
   var ws = XLSX.utils.json_to_sheet(rawCafe24Rows, {
-    header: ['판매처', '주문번호', '주문자명', '주문자전화', '주문자핸드폰', '수령인명', '수령인전화', '수령인핸드폰', '우편번호', '배송지주소', '배송메시지', '상품명', '옵션', '수량', '상품코드']
+    header: ['판매처', '주문번호', '주문자명', '주문자전화', '주문자핸드폰', '수령인명', '수령인전화', '수령인핸드폰', '우편번호', '배송지주소', '배송메시지', '상품명', '옵션', '수량', '상품코드', '판매가', '배송비구분']
   });
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '이지어드민주문');
@@ -5762,6 +5774,113 @@ if(_doLogout182) doLogout = async function(){
   }
   return r;
 };
+
+// ── 카페24 → 이지어드민 출고 품목 규칙 (v1.86) ──
+var C24 = { map: null, pl3: null };
+async function c24Maps(){
+  if(C24.map) return;
+  var ol = await sbAllR('ssjg_order_lines', 'mall_product_no,option_code,item_code', [['id', { ascending: true }]], function(q){ return q.not('mall_product_no', 'is', null); });
+  var cnt = {};
+  (ol.data || []).forEach(function(x){ var p = String(x.mall_product_no || '').trim(), c = String(x.option_code || x.item_code || '').trim(); if(!p || !c) return; cnt[p] = cnt[p] || {}; cnt[p][c] = (cnt[p][c] || 0) + 1; });
+  var m = {}; Object.keys(cnt).forEach(function(p){ var b = null; Object.keys(cnt[p]).forEach(function(c){ if(!b || cnt[p][c] > cnt[p][b]) b = c; }); m[p] = b; });
+  var it = await sb.from('ssjg_items').select('item_code,pl3_code').limit(500);
+  var pl = {}; (it.data || []).forEach(function(x){ if(x.pl3_code) pl[x.item_code] = x.pl3_code; });
+  C24.map = m; C24.pl3 = pl;
+}
+async function c24Enrich(){
+  if(!sb || !rawCafe24Rows.length) return;
+  try { await c24Maps(); } catch(e){ gToast('품목 매핑을 불러오지 못했습니다: ' + (e.message || e), true); return; }
+  var ok = 0, miss = 0, split = 0;
+  rawCafe24Rows.forEach(function(r){
+    var prod = C24.map[r._pno]; if(!prod){ miss++; return; }
+    var ship = prod, qty = Number(r['수량']) || 1;
+    if(/-4P$/.test(prod)){ ship = prod.replace(/-4P$/, '-2P'); qty = qty * 2; r['옵션'] = (r['옵션'] ? r['옵션'] + ' / ' : '') + '2개입×2박스'; split++; }
+    r['수량'] = qty;
+    var code = C24.pl3[ship];
+    if(code && !r['상품코드']) r['상품코드'] = code;
+    if(code) ok++; else miss++;
+  });
+  var el = document.getElementById('cafe24ParsedCount');
+  if(el) el.innerText = rawCafe24Rows.length + ' 건 · 상품코드 ' + ok + '건' + (split ? ' · 4개입 분할 ' + split + '건' : '') + (miss ? ' · 미매칭 ' + miss + '건' : '');
+  if(miss) gToast('상품코드를 찾지 못한 주문 ' + miss + '건 — 파일에서 확인하십시오', true);
+}
+var _dlEz186 = downloadEzadminOrderExcel;
+downloadEzadminOrderExcel = function(){
+  var keep = rawCafe24Rows;
+  rawCafe24Rows = keep.map(function(r){ var o = Object.assign({}, r); delete o._pno; return o; });
+  try { return _dlEz186.apply(this, arguments); } finally { rawCafe24Rows = keep; }
+};
+
+// ── 카페24 주문 검사·ERP 등록 (v1.87) ──
+function c24Rule(prod, oqty){
+  if(!prod) return { ok: false, why: '상품번호 매칭 없음' };
+  var four = /-4P$/.test(prod), ship = four ? prod.replace(/-4P$/, '-2P') : prod, sqty = four ? oqty * 2 : oqty;
+  var code = (C24.pl3 || {})[ship];
+  if(!code) return { ok: false, ship: ship, sqty: sqty, why: '3PL코드 없음' };
+  if(four && !(/-2P$/.test(ship) && sqty === oqty * 2)) return { ok: false, ship: ship, sqty: sqty, code: code, why: '4개입 분할 불일치' };
+  return { ok: true, ship: ship, sqty: sqty, code: code, four: four, why: four ? '4개입 → 2개입×' + sqty : '정상' };
+}
+c24Enrich = async function(){
+  if(!sb || !rawCafe24Rows.length) return;
+  try { await c24Maps(); } catch(e){ gToast('품목 매핑을 불러오지 못했습니다: ' + (e.message || e), true); return; }
+  var nos = rawCafe24Rows.map(function(r){ return r['주문번호']; }), have = {};
+  try { var h = await sb.from('ssjg_orders').select('order_no').in('order_no', nos); (h.data || []).forEach(function(x){ have[x.order_no] = 1; }); } catch(e){}
+  rawCafe24Rows.forEach(function(r){
+    var raw = r._raw || {}, oqty = Number(raw['수량']) || 1, prod = C24.map[r._pno] || '';
+    var k = c24Rule(prod, oqty);
+    r._prod = prod; r._oqty = oqty; r._chk = k; r._have = !!have[r['주문번호']];
+    r['수량'] = k.sqty || oqty;
+    r['옵션'] = String(raw['옵션'] || '').trim() + (k.four ? (raw['옵션'] ? ' / ' : '') + '2개입×2박스' : '');
+    r['상품코드'] = String(raw['자체품목코드'] || '').trim() || k.code || '';
+  });
+  c24Paint();
+};
+function c24Paint(){
+  var L = rawCafe24Rows, bad = L.filter(function(r){ return !(r._chk && r._chk.ok); }).length, four = L.filter(function(r){ return r._chk && r._chk.four; }).length, done = L.filter(function(r){ return r._have; }).length;
+  document.getElementById('c24ChkPanel').style.display = L.length ? '' : 'none';
+  document.getElementById('c24ChkCnt').textContent = L.length + '건 · 합격 ' + (L.length - bad) + (bad ? ' · 불합격 ' + bad : '') + (four ? ' · 4개입 분할 ' + four : '') + (done ? ' · ERP 등록됨 ' + done : '');
+  document.getElementById('c24ChkRows').innerHTML = L.map(function(r){
+    var k = r._chk || {};
+    return '<tr><td>' + gEsc(r['주문번호']) + '</td><td>' + gEsc(r._pno ? '#' + r._pno + ' ' : '') + gEsc(r._prod || '-') + '</td><td class="num">' + (r._oqty || '') + '</td><td>' + gEsc(k.ship || '-') + '</td><td>' + gEsc(k.code || '-') + '</td><td class="num">' + (k.sqty || '') + '</td>'
+      + '<td>' + (k.ok ? '<span class="bdg bdg-ok">' + gEsc(k.why) + '</span>' : '<span class="bdg bdg-block">' + gEsc(k.why || '확인 필요') + '</span>') + '</td><td>' + (r._have ? '<span class="bdg bdg-close">등록됨</span>' : '<span class="bdg bdg-draft">미등록</span>') + '</td></tr>';
+  }).join('');
+  var dl = document.getElementById('btnDownloadEzadminOrder'); if(dl) dl.disabled = !L.length || bad > 0;
+  var rg = document.getElementById('btnC24Reg'); if(rg){ var n = L.filter(function(r){ return !r._have && r._chk && r._chk.ok; }).length; rg.disabled = !n || PERM.ro; rg.textContent = 'ERP 주문 등록' + (n ? ' (' + n + '건)' : ''); }
+  var el = document.getElementById('cafe24ParsedCount'); if(el) el.innerText = L.length + ' 건' + (bad ? ' · 불합격 ' + bad + '건 — 파일 받기 막힘' : ' · 검사 합격');
+}
+var _dlEz187 = downloadEzadminOrderExcel;
+downloadEzadminOrderExcel = function(){
+  var bad = rawCafe24Rows.filter(function(r){ return !(r._chk && r._chk.ok); });
+  if(bad.length){ gToast('검사 불합격 ' + bad.length + '건: ' + bad.map(function(r){ return r['주문번호'] + ' ' + ((r._chk || {}).why || ''); }).join(', '), true); return; }
+  var keep = rawCafe24Rows;
+  rawCafe24Rows = keep.map(function(r){ var o = {}; Object.keys(r).forEach(function(k){ if(k.charAt(0) !== '_') o[k] = r[k]; }); return o; });
+  try { return _dlEz187.apply(this, arguments); } finally { rawCafe24Rows = keep; }
+};
+async function c24Register(){
+  if(PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
+  var L = rawCafe24Rows.filter(function(r){ return !r._have && r._chk && r._chk.ok; });
+  if(!L.length){ gToast('등록할 주문이 없습니다', true); return; }
+  if(!confirm('카페24 주문 ' + L.length + '건을 ERP에 등록합니다.')) return;
+  var btn = document.getElementById('btnC24Reg'); btn.disabled = true;
+  var ok = 0, skip = 0, fail = [];
+  for(var i = 0; i < L.length; i++){
+    var r = L[i], raw = r._raw || {}, no = r['주문번호'], mall = String(raw['쇼핑몰'] || '카페24').trim(), oid = mall.replace(/\s+/g, '-') + '_' + no;
+    try {
+      var ex = await sb.from('ssjg_orders').select('id').eq('order_no', no).limit(1);
+      if(ex.data && ex.data.length){ r._have = true; skip++; continue; }
+      var price = Math.round(Number(String(raw['판매가'] || '').replace(/[^0-9.-]/g, '')) || 0);
+      var a = await sb.rpc('ssjg_insert_row', { p_table: 'ssjg_orders', p_row: { order_id: oid, ordered_at: String(raw['발주일'] || '').slice(0, 10) || null, channel: mall, mall: mall, order_no: no,
+        buyer: String(raw['주문자'] || '').trim(), receiver: String(raw['수령인'] || '').trim(), pay_method: String(raw['결제수단'] || '').trim(), ship_fee_type: String(raw['배송비 정보'] || '').trim() } });
+      if(a.error || !a.data || !a.data.ok) throw new Error((a.error && a.error.message) || (a.data && a.data.error) || '주문 저장 실패');
+      var b = await sb.rpc('ssjg_insert_row', { p_table: 'ssjg_order_lines', p_row: { line_id: oid + '_C1', order_id: oid, item_code: r._prod, option_code: r._prod, ordered_name: String(raw['주문상품명'] || '').trim(),
+        option_name: String(raw['옵션'] || '').trim() || null, qty: r._oqty, qty_unit: 'set', unit_price: price || null, sales_type: '매출', mall_product_no: r._pno } });
+      if(b.error || !b.data || !b.data.ok) throw new Error((b.error && b.error.message) || (b.data && b.data.error) || '주문라인 저장 실패 — 주문 ' + no + ' 확인 필요');
+      r._have = true; ok++;
+    } catch(e){ fail.push(no + ' ' + (e.message || e)); }
+  }
+  c24Paint();
+  gToast('ERP 등록 ' + ok + '건' + (skip ? ' · 이미 있음 ' + skip : '') + (fail.length ? ' · 실패 ' + fail.length + ': ' + fail.join(' / ') : ''), !!fail.length);
+}
 
 window.addEventListener('DOMContentLoaded', initSupabase);
 </script>
