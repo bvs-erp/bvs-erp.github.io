@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.87">
+<meta name="app-version" content="1.88">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -128,13 +128,25 @@ html[data-theme="light"] .modbar{background:#ffffff}
 tr.row-err td{background:rgba(239,68,68,.08)}
 tr.row-warn td{background:rgba(245,158,11,.07)}
 #tab-today .table-wrap table{min-width:640px}
+#mnav{display:none}
 @media (max-width:900px){
   .menu-btn{display:flex;align-items:center;justify-content:center}
   .side{position:fixed;left:0;top:0;height:100vh;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.4)}
   .side.open{transform:none}
   .side-dim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60}
-  header{flex-wrap:wrap;gap:8px}
-  .nav-links{flex-wrap:wrap}
+  header{height:auto!important;min-height:48px;padding:6px 10px!important;flex-wrap:wrap;box-sizing:border-box}
+  .brand{display:flex;align-items:center;gap:8px;min-width:0}
+  .brand-title{font-size:15px}
+  .nav-links{order:20;width:100%;overflow-x:auto;gap:4px;padding:4px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;display:flex;justify-content:flex-start}
+  .nav-btn{height:30px;padding:0 10px;flex:0 0 auto;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+  #modbar,#mtabs,#sbar{display:none!important}
+  #mnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--panel,#fff);border-top:1px solid var(--border,#d4d9e0);overflow-x:auto;z-index:950;padding-bottom:env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #mnav .mi{flex:1 0 54px;text-align:center;padding:7px 2px 5px;font-size:11px;color:var(--text-muted);white-space:nowrap;position:relative;cursor:pointer;user-select:none;text-decoration:none}
+  #mnav .mi svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 2px}
+  #mnav .mi.on{color:var(--accent);font-weight:700}
+  #mnav .mi .bd{position:absolute;top:2px;right:8px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:0 5px;border-radius:10px;line-height:14px}
+  body{padding-bottom:calc(56px + env(safe-area-inset-bottom))!important}
+  .container{padding-bottom:calc(60px + env(safe-area-inset-bottom))!important}
 }
 
 /* Ledger grid (v1.13) */
@@ -622,6 +634,7 @@ body.perm-ro #tmType{display:none}
       <div style="font-size:11px;color:var(--text-muted)" id="hdCo"></div>
     </div>
   </div>
+  <button class="nav-btn icon-btn" onclick="kpOpen()" title="검색 (Ctrl+K)" aria-label="검색" style="margin-left:auto"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
   <div class="nav-links">
     <a href="https://bvs-erp.github.io/erp.html" class="nav-btn">
       <span style="color:var(--blue)">●</span> BVS 현장 ERP
@@ -2234,6 +2247,7 @@ function switchTab(tabId, el){
   if(tabId==='logistics')b3Init();
   if(tabId.indexOf('gl-')===0)glOpen(tabId);
   if(tabId.indexOf('fs-')===0)fsOpen(tabId);
+  try{renderMNav();}catch(e){}
   if(tabId==='journal')jvOpen();
   if(tabId==='tax-jv')tjvOpen();
   if(tabId==='close')clOpen();
@@ -5882,7 +5896,35 @@ async function c24Register(){
   gToast('ERP 등록 ' + ok + '건' + (skip ? ' · 이미 있음 ' + skip : '') + (fail.length ? ' · 실패 ' + fail.length + ': ' + fail.join(' / ') : ''), !!fail.length);
 }
 
-window.addEventListener('DOMContentLoaded', initSupabase);
+
+// ── 모바일 하단 네비게이션 (v1.88 BVS ERP형 모바일 UI 이식) ──
+function renderMNav(){
+  var mn = document.getElementById('mnav');
+  if(!mn) return;
+  var cur = (document.querySelector('.tab-pane.active')||{}).id || '';
+  var isHome = cur === 'tab-today' || cur === 'tab-todo';
+  var isSales = (CUR_MOD === 0 && !isHome) || cur === 'tab-delivery' || cur === 'tab-shiplog' || cur === 'tab-settlements';
+  var isPur = (CUR_MOD === 1 && !isHome) || cur === 'tab-logistics' || cur === 'tab-inventory';
+  var isAcc = (CUR_MOD === 2 && !isHome) || cur === 'tab-journal' || cur === 'tab-jv-find' || cur === 'tab-tax-jv' || cur.indexOf('tab-gl') === 0 || cur === 'tab-bank' || cur === 'tab-tax-invoices' || cur === 'tab-cards';
+  var isTax = (CUR_MOD === 3 && !isHome) || cur === 'tab-dashboard' || cur === 'tab-vat-sum';
+  var badgeHtml = '';
+  try {
+    var tdoCnt = (document.getElementById('tdoCnt')||{}).textContent || '';
+    var n = parseInt(tdoCnt) || 0;
+    if(n > 0) badgeHtml = '<span class="bd">' + n + '</span>';
+  } catch(e){}
+  mn.innerHTML = [
+    '<div class="mi' + (isHome ? ' on' : '') + '" onclick="switchTab(\'today\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>메인' + badgeHtml + '</div>',
+    '<div class="mi' + (isAcc ? ' on' : '') + '" onclick="selectModule(2);switchTab(\'journal\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 14l4-4 4 3 5-6"/></svg>회계</div>',
+    '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);switchTab(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>영업</div>',
+    '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);switchTab(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>구매/자재</div>',
+    '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);switchTab(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8M8 13h8M8 17h5"/></svg>세무</div>',
+    '<div class="mi" onclick="toggleSide(true)"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>전체</div>'
+  ].join('');
+}
+
+window.addEventListener('DOMContentLoaded', function(){ initSupabase(); renderMNav(); });
 </script>
+<nav id="mnav"></nav>
 </body>
 </html>
