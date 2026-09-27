@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.79">
+<meta name="app-version" content="1.80">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -302,6 +302,7 @@ html[data-theme="light"] .g-toast{border-radius:2px}
 html[data-theme="light"] .side-badge,html[data-theme="light"] .td-cnt{border-radius:2px}
 html[data-theme="light"] .tag,html[data-theme="light"] .td-kind{border-radius:2px}
 html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;background:#fff}
+footer[hidden]{display:none!important}
 @media (max-width:900px){
   html[data-theme="light"] .side{top:0;height:100vh}
   html[data-theme="light"] header{height:auto;padding:6px 10px}
@@ -1711,7 +1712,7 @@ body.perm-ro #tmType{display:none}
 
 <aside id="f3p" aria-label="원천·이력"><div class="f3-h"><span>원천 · 이력</span><button class="btn" onclick="f3Close()">닫기</button></div><div class="f3-b" id="f3Body"></div></aside>
 <div id="sbar" role="status" aria-live="polite"><span id="sbKeys"></span><span class="sb-sp"></span><span id="sbCnt"></span><span id="sbLock" class="sb-lock" style="display:none"></span><span id="sbCo">주식회사 승승장구컴퍼니</span></div>
-<footer>
+<footer hidden>
   주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
 </footer>
 </div>
@@ -3817,7 +3818,7 @@ function gDirtyAny(p){ var n = 0; p.querySelectorAll('[data-grid]').forEach(func
 var PRT = { co: null };
 async function prtCompany(){
   if(PRT.co) return PRT.co;
-  var f = ((document.querySelector('footer') || {}).innerText || '');
+  var f = ((document.querySelector('footer') || {}).textContent || '');
   var co = { name: (f.split('·')[0] || '').trim(), bizno: ((f.match(/사업자등록번호:\s*([0-9-]+)/) || [])[1] || ''), ceo: ((f.match(/대표이사:\s*([^·]+)/) || [])[1] || '').trim() };
   try {
     var r = await sb.from('ssjg_company').select('*').limit(1); var x = (r.data || [])[0];
