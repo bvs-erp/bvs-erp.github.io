@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.80">
+<meta name="app-version" content="1.81">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -400,6 +400,18 @@ body.has-sbar{padding-bottom:30px}
 .tdo-chip{height:28px;padding:0 12px;border:1px solid #d5d9e0;border-radius:14px;background:#fff;font-size:12px;font-weight:600;color:#3f4550;cursor:pointer}
 .tdo-chip.on{border-color:var(--accent);color:var(--accent);background:#fdecec}
 .tdo-note{font-size:12px;color:#5b6270;margin-left:auto}
+.inb-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:10px;align-items:start}
+#inbRows tr{cursor:pointer}
+#inbRows tr.on td{background:#fdecec}
+#inbRows tr.done td{color:#8a909b;text-decoration:line-through}
+.inb-d{padding:10px 12px;font-size:12px}
+.inb-d dl{display:grid;grid-template-columns:78px 1fr;gap:3px 8px;margin:0 0 8px}
+.inb-d dt{color:#5b6270}.inb-d dd{margin:0;word-break:break-all}
+.inb-sg{margin:8px 0;padding:6px 8px;border:1px solid #e3e6eb;border-radius:4px;background:#f8f9fb;color:#3f4550}
+.inb-rk{margin:8px 0;padding:6px 8px;border:1px solid #f2d9a0;border-radius:4px;background:#fff4db;color:#7a4f00}
+.inb-ac{display:flex;gap:6px;align-items:center;margin:8px 0}
+.inb-ac input{width:90px}
+.inb-bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .bdg{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:0 6px;line-height:18px;border:1px solid transparent;white-space:nowrap}
 .bdg-block{color:#fff;background:#b42318;border-color:#b42318;font-weight:700}
 .bdg-draft{color:var(--accent);background:#fff;border-color:var(--accent)}
@@ -710,6 +722,22 @@ body.perm-ro #tmType{display:none}
           <div class="table-wrap"><table><thead><tr><th>월</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">차액</th><th>마감</th></tr></thead><tbody id="tdoMon"><tr><td colspan="5" class="td-empty">-</td></tr></tbody></table></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="tab-inbox" class="tab-pane">
+    <div class="inb-wrap">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">증빙 수신함 <span class="g-cnt" id="inbCnt"></span></div></div>
+        <div class="filter-bar tdo-chips" id="inbChips"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:84px">구분</th><th style="width:88px">일자</th><th>상대</th><th>내용</th><th style="text-align:right;width:120px">금액</th><th style="width:90px">상태</th></tr></thead>
+            <tbody id="inbRows"><tr><td colspan="6" class="td-empty">-</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-head"><div class="panel-title" id="inbDT">선택한 증빙</div></div><div class="inb-d" id="inbD"><div class="f3-e">왼쪽 목록에서 한 건을 고르십시오</div></div></div>
     </div>
   </div>
 
@@ -2088,7 +2116,7 @@ var MENU = [
     { n: '구매', i: [['logistics', '3PL 정산']] },
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
-    { n: '점검', i: [['todo', '처리할 일']] },
+    { n: '점검', i: [['todo', '처리할 일'], ['inbox', '증빙 수신함']] },
     { n: '전표', i: [['journal', '전표'], ['jv-find', '전표 조회'], ['tax-jv', '세금계산서 전표']] },
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표'], ['pt-month', '거래처별 월별 현황']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
@@ -5263,9 +5291,10 @@ async function tdoLoad(){
     ['매출', '매입'].forEach(function(fl){
       var L = un.filter(function(x){ return x.flow === fl; }); if(!L.length) return;
       var amt = L.reduce(function(s, x){ return s + Number(x.total_amt || 0); }, 0), d0 = L[0].write_date;
-      items.push({ k: 'draft', t: fl + ' 세금계산서 전표 미반영', o: L.length + '건', a: amt, d: String(d0).slice(5, 10) + '~', b: '전표 초안', tab: 'tax-jv' });
+      items.push({ k: 'draft', t: fl + ' 세금계산서 전표 미반영', o: L.length + '건', a: amt, d: String(d0).slice(5, 10) + '~', b: '수신함', tab: 'inbox' });
     });
-    if(Math.round(u199y)) items.push({ k: 'draft', t: '통장미분류(199) 거래', o: y + '년 계정 분류 필요', a: u199y, d: y + '', b: '분류', tab: 'bank' });
+    try { var p199 = await inb199(); u199 = {}; u199y = 0; p199.forEach(function(x){ var k = String(x.doc_date).slice(0, 7), v = Number(x.dr || 0) + Number(x.cr || 0); u199[k] = (u199[k] || 0) + v; u199y += v; });
+      if(p199.length) items.push({ k: 'draft', t: '통장미분류(199) 거래', o: p199.length + '건 계정 분류 필요', a: u199y, d: String(p199[0].doc_date).slice(5), b: '수신함', tab: 'inbox' }); } catch(e){}
     // 경고
     try { var tr = await sb.from('ssjg_tax_risk').select('txn_date,counterparty,deposit_amt,withdraw_amt').order('txn_date', { ascending: false }).limit(50);
       (tr.data || []).forEach(function(r){ var dep = Number(r.deposit_amt) > 0; items.push({ k: 'warn', rp: true, t: '엔티티 간 거래', o: (r.counterparty || '') + ' · ' + (dep ? '입금' : '출금'), a: dep ? r.deposit_amt : r.withdraw_amt, d: tdDay(r.txn_date).slice(5), b: '근거 확인', tab: 'dashboard' }); }); } catch(e){}
@@ -5544,6 +5573,171 @@ sbKeys = function(p){
   return h;
 };
 var _drOpen179 = drOpen; drOpen = async function(){ var r = await _drOpen179.apply(this, arguments); if(f3Open() && (DR.lines || []).length){ var L = DR.lines[0]; f3Load(DR.doc, L.origin || DR.o, L.origin_id, L.doc_date, DR.lines); } return r; };
+
+// ── 증빙 수신함 (v1.81, G10 1단계) ──
+var INB = { items: [], i: -1, f: '', hist: null, busy: false };
+async function inb199(){
+  var r = await sbAllR('ssjg_gl_lines', 'doc_no,doc_date,acct_code,dr,cr,partner,title,origin', [['doc_date', { ascending: true }], ['doc_no', { ascending: true }]], function(q){ return q.eq('acct_code', '199').eq('origin', '통장'); });
+  if(r.error) throw r.error;
+  var done = {};
+  var h = await sbAllR('ssjg_jv_head', 'jv_no,src_ref', [['id', { ascending: true }]], function(q){ return q.like('src_ref', 'BK:%'); });
+  (h.data || []).forEach(function(x){ done[x.src_ref.slice(3)] = x.jv_no; });
+  return (r.data || []).filter(function(x){ return !done[x.doc_no]; });
+}
+async function inbHist(){
+  if(INB.hist) return INB.hist;
+  var r = await sbAllR('ssjg_gl_lines', 'doc_no,acct_code,acct_name,partner,title', [['doc_no', { ascending: true }]], function(q){ return q.eq('origin', '통장'); });
+  var byDoc = {}; (r.data || []).forEach(function(x){ (byDoc[x.doc_no] = byDoc[x.doc_no] || []).push(x); });
+  var P = {}, T = {};
+  Object.keys(byDoc).forEach(function(d){
+    var L = byDoc[d], c = L.filter(function(x){ return x.acct_code !== '103' && x.acct_code !== '199'; })[0]; if(!c) return;
+    function add(M, k){ if(!k || k === '(없음)') return; M[k] = M[k] || {}; M[k][c.acct_code] = (M[k][c.acct_code] || 0) + 1; }
+    add(P, tjvNorm(c.partner)); add(T, tjvNorm(c.title));
+  });
+  INB.hist = { P: P, T: T }; return INB.hist;
+}
+function inbTop(M){ if(!M) return null; var ks = Object.keys(M), n = 0, b = null; ks.forEach(function(k){ n += M[k]; if(!b || M[k] > M[b]) b = k; }); return b ? { c: b, m: M[b], n: n } : null; }
+function inbRp(name){
+  var n = tjvNorm(name || ''); if(!n || n === '(없음)') return false;
+  var ceo = tjvNorm((PRT.co && PRT.co.ceo) || '');
+  return (ceo && n.indexOf(ceo) >= 0) || /비브이에스|파이로|황병승/.test(n);
+}
+function tiLines(x, cp){
+  var sup = Math.round(Number(x.supply_amt || 0)), vat = Math.round(Number(x.vat_amt || 0)), tot = Math.round(Number(x.total_amt || 0)) || sup + vat, memo = x.item || '', L = [];
+  if(x.flow === '매출'){
+    L.push({ side: '차', acct_code: tjvAcct('108', '1'), partner: cp, amount: tot, memo: memo });
+    L.push({ side: '대', acct_code: tjvAcct('4100', '4'), partner: cp, amount: sup, memo: memo });
+    if(vat) L.push({ side: '대', acct_code: tjvAcct('255', '25'), partner: cp, amount: vat, memo: memo });
+  } else {
+    var exp = tjvAcct('5110', '5'), nd = x.ti_type === '불공제';
+    L.push({ side: '차', acct_code: exp, partner: cp, amount: nd ? sup + vat : sup, memo: memo });
+    if(vat && !nd) L.push({ side: '차', acct_code: tjvAcct('135', '13'), partner: cp, amount: vat, memo: memo });
+    L.push({ side: '대', acct_code: tjvAcct(exp === '5110' ? '251' : '253', '25'), partner: cp, amount: tot, memo: memo });
+  }
+  return L;
+}
+async function inbLoad(){
+  if(!sb || INB.busy) return; INB.busy = true;
+  document.getElementById('inbRows').innerHTML = '<tr><td colspan="6" class="td-empty">불러오는 중</td></tr>';
+  try {
+    try { await jvCoa(); } catch(e){}
+    try { await prtCompany(); } catch(e){}
+    var pm = await tjvPartners(), items = [];
+    var ti = await sbAllR('ssjg_tax_invoices', '*', [['write_date', { ascending: true }], ['id', { ascending: true }]]);
+    var jn = {}, jr = {};
+    try { var a = await tdFetchAll('ssjg_journal', 'approval_no', 'approval_no'); a.forEach(function(x){ if(x.approval_no) jn[x.approval_no] = 1; }); } catch(e){}
+    try { var h = await sbAllR('ssjg_jv_head', 'src_ref', [['id', { ascending: true }]], function(q){ return q.like('src_ref', 'TI:%'); }); (h.data || []).forEach(function(x){ jr[x.src_ref] = 1; }); } catch(e){}
+    (ti.data || []).forEach(function(x){
+      if((x.approval_no && jn[x.approval_no]) || jr['TI:' + x.id]) return;
+      var cp0 = x.flow === '매출' ? x.buyer : x.supplier, cp = pm[tjvNorm(cp0)] || cp0 || '';
+      items.push({ t: 'ti', id: x.id, d: x.write_date, cp: cp, txt: (x.flow || '') + ' ' + (x.item || ''), a: Math.round(Number(x.total_amt || 0)), x: x, rp: inbRp(cp) });
+    });
+    var hist = await inbHist(), p = await inb199();
+    p.forEach(function(x){
+      var cp = x.partner && x.partner !== '(없음)' ? x.partner : '';
+      items.push({ t: 'bk', id: x.doc_no, d: x.doc_date, cp: cp, txt: x.title || '', a: Math.round(Number(x.dr || 0) + Number(x.cr || 0)), x: x, rp: inbRp(cp) || inbRp(x.title),
+        sg: inbTop(hist.P[tjvNorm(cp)]) || inbTop(hist.T[tjvNorm(x.title)]) });
+    });
+    INB.items = items; if(INB.i >= items.length) INB.i = items.length - 1; if(INB.i < 0 && items.length) INB.i = 0;
+    inbPaint();
+  } catch(e){ document.getElementById('inbRows').innerHTML = '<tr><td colspan="6" class="td-empty">불러오지 못했습니다: ' + gEsc(e.message || String(e)) + '</td></tr>'; }
+  INB.busy = false;
+}
+function inbList(){ return INB.items.filter(function(x){ return !INB.f || x.t === INB.f; }); }
+function inbPaint(){
+  var it = INB.items, c = { ti: 0, bk: 0 }; it.forEach(function(x){ if(!x.done) c[x.t]++; });
+  var left = c.ti + c.bk;
+  document.getElementById('inbCnt').textContent = left + '건';
+  document.getElementById('inbChips').innerHTML = [['', '전체 ' + left], ['ti', '세금계산서 ' + c.ti], ['bk', '통장 199 ' + c.bk]].map(function(x){ return '<button type="button" class="tdo-chip' + (INB.f === x[0] ? ' on' : '') + '" onclick="INB.f=\'' + x[0] + '\';INB.i=0;inbPaint()">' + x[1] + '</button>'; }).join('')
+    + '<span class="tdo-note">J 다음 · K 이전 · Ctrl Enter 확정 · E 전표입력에서 편집</span>';
+  var L = inbList();
+  document.getElementById('inbRows').innerHTML = L.length ? L.map(function(x, i){
+    return '<tr class="' + (i === INB.i ? 'on' : '') + (x.done ? ' done' : '') + '" onclick="INB.i=' + i + ';inbPaint()"><td><span class="bdg ' + (x.t === 'ti' ? 'bdg-draft">계산서' : 'bdg-warn">통장 199') + '</span></td><td>' + gEsc(x.d) + '</td><td>' + gEsc(x.cp || '') + (x.rp ? ' <span class="bdg bdg-rp">특수관계</span>' : '') + '</td><td>' + gEsc(x.txt) + '</td><td class="num">' + tdoN(x.a) + '</td><td>' + (x.done ? '<span class="bdg bdg-ok">' + gEsc(x.done) + '</span>' : '<span class="bdg bdg-draft">미처리</span>') + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="td-empty">처리할 증빙이 없습니다</td></tr>';
+  inbDetail();
+}
+function inbCur(){ return inbList()[INB.i] || null; }
+function inbBkLines(x, code){
+  var dr199 = Number(x.x.dr || 0) > 0, amt = x.a, memo = '199 정리 ' + (x.txt || ''), cp = x.cp || '';
+  return dr199 ? [{ side: '차', acct_code: code, partner: cp, amount: amt, memo: memo }, { side: '대', acct_code: '199', partner: cp, amount: amt, memo: memo }]
+               : [{ side: '차', acct_code: '199', partner: cp, amount: amt, memo: memo }, { side: '대', acct_code: code, partner: cp, amount: amt, memo: memo }];
+}
+function inbDetail(){
+  var x = inbCur(), box = document.getElementById('inbD');
+  if(!x){ document.getElementById('inbDT').textContent = '선택한 증빙'; box.innerHTML = '<div class="f3-e">처리할 증빙이 없습니다</div>'; return; }
+  var h = '';
+  if(x.t === 'ti'){
+    var t = x.x; document.getElementById('inbDT').textContent = '세금계산서 ' + (t.approval_no || t.id);
+    h += f3Dl([['작성일', t.write_date], ['구분', [t.flow, t.ti_type].filter(Boolean).join(' ')], ['상대', x.cp], ['품목', t.item], ['공급가', f3N(t.supply_amt), 1], ['세액', f3N(t.vat_amt), 1], ['합계', f3N(t.total_amt), 1]]);
+    h += '<div class="inb-sg">분개안(고정 규칙): ' + tiLines(t, x.cp).map(function(l){ return l.side + ' ' + l.acct_code + ' ' + jvAcctName(l.acct_code) + ' ' + tdoN(l.amount); }).join(' / ') + '</div>';
+  } else {
+    var dr199 = Number(x.x.dr || 0) > 0;
+    document.getElementById('inbDT').textContent = '통장 ' + x.id + (dr199 ? ' 출금' : ' 입금');
+    h += f3Dl([['일자', x.d], ['상대', x.cp || '(없음)'], ['내용', x.txt], [dr199 ? '출금' : '입금', tdoN(x.a), 1]]);
+    var code = x.code || (!x.rp && x.sg ? x.sg.c : '');
+    if(x.rp) h += '<div class="inb-rk">대표·관계회사 관련 입출금입니다. 가지급금·가수금이면 인정이자·상여처분 문제가 생길 수 있어 자동 추천하지 않습니다. 명목과 상환계획을 확인하고, 근거가 없으면 세무사 확인을 권합니다.</div>';
+    else if(x.sg) h += '<div class="inb-sg">추천: ' + gEsc(x.sg.c + ' ' + jvAcctName(x.sg.c)) + ' — 같은 상대 과거 통장 분개 ' + x.sg.n + '건 중 ' + x.sg.m + '건</div>';
+    else if(/세무서|국세|지방세|부가세|관세/.test(x.txt || '')) h += '<div class="inb-sg">세금 납부·환급입니다. 부가세 정산(255·135)인지 세금과공과인지 신고서와 맞춰 고르십시오.</div>';
+    else h += '<div class="inb-sg">과거 같은 상대 기록이 없습니다. 계정을 직접 고르십시오(F2).</div>';
+    h += '<div class="inb-ac"><span>' + (dr199 ? '차변 계정' : '대변 계정') + '</span><input class="input" id="inbAc" value="' + gEsc(code) + '"><span id="inbAn">' + gEsc(code ? jvAcctName(code) : '') + '</span></div>';
+    h += '<div class="f3-e">원 통장 일자(' + gEsc(x.d) + ')로 대체전표를 만들어 199를 비웁니다. 그 달이 마감됐으면 저장이 막힙니다.</div>';
+  }
+  h += '<div class="inb-bt"><button class="btn btn-primary" onclick="inbSave()"' + (x.done || PERM.ro ? ' disabled' : '') + '>확정 (Ctrl Enter)</button><button class="btn" onclick="inbEdit()"' + (x.done ? ' disabled' : '') + '>전표입력에서 편집 (E)</button><button class="btn" onclick="inbMove(1)">다음 (J)</button></div>';
+  box.innerHTML = h;
+}
+document.addEventListener('input', function(e){ if(e.target && e.target.id === 'inbAc'){ var x = inbCur(); if(x) x.code = e.target.value.trim(); var n = document.getElementById('inbAn'); if(n) n.textContent = jvAcctName(e.target.value.trim()); } });
+function inbMove(d){ var L = inbList(); if(!L.length) return; INB.i = Math.max(0, Math.min(L.length - 1, INB.i + d)); inbPaint(); var tr = document.querySelector('#inbRows tr.on'); if(tr) tr.scrollIntoView({ block: 'nearest' }); }
+function inbDraft(x){
+  if(x.t === 'ti') return { head: { id: null, jv_date: x.x.write_date, kind: '대체', memo: x.x.item || '', src_ref: 'TI:' + x.id }, lines: tiLines(x.x, x.cp), label: '세금계산서 ' + (x.x.approval_no || x.id) };
+  var code = (document.getElementById('inbAc') || {}).value; code = String(code || x.code || '').trim();
+  return { head: { id: null, jv_date: x.d, kind: '대체', memo: '199 정리 ' + x.id + ' ' + (x.txt || ''), src_ref: 'BK:' + x.id }, lines: code ? inbBkLines(x, code) : null, code: code, label: '통장 ' + x.id };
+}
+async function inbSave(){
+  var x = inbCur(); if(!x || x.done) return;
+  if(PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
+  var d = inbDraft(x);
+  if(!d.lines){ gToast('계정을 먼저 고르십시오 (F2)', true); var a = document.getElementById('inbAc'); if(a) a.focus(); return; }
+  if(x.t === 'bk'){
+    if(d.code === '199' || d.code === '103'){ gToast('199·103이 아닌 상대 계정을 고르십시오', true); return; }
+    if((JV.coa || []).length && !JV.coa.some(function(c){ return c.c === d.code; })){ gToast('계정코드가 없습니다: ' + d.code, true); return; }
+  }
+  try { var h = await sb.from('ssjg_jv_head').select('jv_no').eq('src_ref', d.head.src_ref).limit(1); if(h.data && h.data.length){ x.done = h.data[0].jv_no; gToast('이미 전표가 있습니다: ' + x.done, true); inbPaint(); return; } } catch(e){}
+  var r = await sb.rpc('ssjg_jv_save', { p_head: d.head, p_lines: d.lines });
+  if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '저장 실패', true); return; }
+  x.done = r.data.jv_no; gToast('확정 ' + r.data.jv_no + ' · ' + d.label);
+  if(typeof GL !== 'undefined'){ GL.month = null; GL.acct = {}; GL.partner = null; }
+  var L = inbList(), n = L.findIndex(function(y, i){ return i > INB.i && !y.done; }); if(n >= 0) INB.i = n;
+  inbPaint();
+}
+function inbEdit(){
+  var x = inbCur(); if(!x || x.done) return;
+  var d = inbDraft(x);
+  switchTab('journal'); jvNew();
+  JV.srcRef = d.head.src_ref;
+  document.getElementById('jvNo').textContent = '신규 · ' + d.label;
+  document.getElementById('jvDate').value = d.head.jv_date;
+  document.getElementById('jvMemo').value = d.head.memo;
+  document.getElementById('jvRows').innerHTML = '';
+  (d.lines || inbBkLines(x, '')).forEach(function(l){ jvAddRow(l); });
+}
+document.addEventListener('keydown', function(e){
+  var p = pgPane(); if(!p || p.id !== 'tab-inbox') return;
+  if(document.getElementById('app').classList.contains('hide')) return;
+  var t = e.target;
+  if(t && t.id === 'inbAc' && e.key === 'F2'){ e.preventDefault(); chOpen('acct', t.value, function(c){ var x = inbCur(); if(x) x.code = c.c; t.value = c.c; document.getElementById('inbAn').textContent = c.n; }); return; }
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); inbSave(); return; }
+  if(kbTyping(t) || e.ctrlKey || e.altKey || e.metaKey) return;
+  if(e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown'){ e.preventDefault(); inbMove(1); }
+  else if(e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp'){ e.preventDefault(); inbMove(-1); }
+  else if(e.key === 'e' || e.key === 'E'){ e.preventDefault(); inbEdit(); }
+});
+var _switchTab181 = switchTab; switchTab = function(tabId){ var r = _switchTab181.apply(this, arguments); if(tabId === 'inbox'){ INB.hist = null; inbLoad(); } return r; };
+var _pgAct181 = pgAct; pgAct = function(k){ var p = pgPane(); if(p && p.id === 'tab-inbox' && k === 'q'){ INB.hist = null; inbLoad(); return; } return _pgAct181(k); };
+var _sbKeys181 = sbKeys;
+sbKeys = function(p){
+  if(p && p.id === 'tab-inbox') return [['J', '다음'], ['K', '이전'], ['Ctrl Enter', '확정'], ['E', '편집'], ['F2', '계정 도움'], ['Ctrl K', '검색']].map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join('');
+  return _sbKeys181.apply(this, arguments);
+};
 
 window.addEventListener('DOMContentLoaded', initSupabase);
 </script>
