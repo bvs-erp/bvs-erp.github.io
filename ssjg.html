@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.75">
+<meta name="app-version" content="1.78">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -369,6 +369,49 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 .pg-per{display:inline-flex;gap:2px;align-items:center}
 .pg-per .btn{padding:3px 8px!important;font-size:11.5px;min-width:0}
 @media print{.pg-per{display:none!important}}
+#sbar{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:900;display:flex;align-items:center;gap:14px;padding:0 14px;background:#f8f9fb;border-top:1px solid #c9ced6;font-size:12px;color:#3f4550;font-feature-settings:'tnum' 1;white-space:nowrap;overflow:hidden}
+#sbar .sb-k b{display:inline-block;font-weight:700;color:#16181d;border:1px solid #d5d9e0;border-radius:3px;padding:0 4px;margin-right:3px;background:#fff;line-height:16px}
+#sbar .sb-k{margin-right:8px}
+#sbar .sb-sp{flex:1}
+#sbar .sb-lock{font-weight:600;color:#3f4550;border:1px solid #c9ced6;border-radius:4px;padding:0 6px;background:#fff}
+#app.hide #sbar{display:none}
+body.has-sbar{padding-bottom:30px}
+.tdo-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.tdo-kpi>div{background:#fff;border:1px solid #e1e4e9;border-radius:8px;padding:10px 14px}
+.tdo-kpi .l{font-size:12px;color:#5b6270;font-weight:600}
+.tdo-kpi .v{font-size:22px;font-weight:700;color:#16181d;font-variant-numeric:tabular-nums;margin-top:2px}
+.tdo-kpi .s{font-size:11px;color:#5b6270;margin-top:2px}
+.tdo-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px;align-items:start}
+.tdo-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tdo-chip{height:28px;padding:0 12px;border:1px solid #d5d9e0;border-radius:14px;background:#fff;font-size:12px;font-weight:600;color:#3f4550;cursor:pointer}
+.tdo-chip.on{border-color:var(--accent);color:var(--accent);background:#fdecec}
+.tdo-note{font-size:12px;color:#5b6270;margin-left:auto}
+.bdg{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:0 6px;line-height:18px;border:1px solid transparent;white-space:nowrap}
+.bdg-block{color:#fff;background:#b42318;border-color:#b42318;font-weight:700}
+.bdg-draft{color:var(--accent);background:#fff;border-color:var(--accent)}
+.bdg-warn{color:#7a4f00;background:#fff4db;border-color:#f2d9a0}
+.bdg-ok{color:#1f7a4d;background:#e7f4ec;border-color:#e7f4ec}
+.bdg-close{color:#3f4550;background:#fff;border-color:#c9ced6}
+.bdg-rp{color:#3f4550;background:#fff;border-color:#c9ced6;padding:0 5px}
+html[data-theme="light"] body.den-33 td{padding:7px 8px;height:33px}
+html[data-theme="light"] body.den-33 th{padding:8px 8px}
+#pgDen{min-width:64px}
+#vpBox .vp-amt{margin:2mm 0 0;font-size:10pt;font-weight:700;letter-spacing:1px}
+#vpBox .vp-amt span{font-weight:400;letter-spacing:0;margin-left:3mm}
+#vpBox .vp-hash{font-family:ui-monospace,Consolas,monospace}
+#tdoRows tr{cursor:pointer}
+#tdoRows td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tdo-steps{display:flex;flex-direction:column;gap:0;padding:4px 12px 10px}
+.tdo-step{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f1f4;font-size:13px}
+.tdo-step:last-child{border-bottom:0}
+.tdo-dot{width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1.5px solid #c9ced6;color:#5b6270;background:#fff}
+.tdo-dot.done{background:#1f7a4d;border-color:#1f7a4d;color:#fff}
+.tdo-dot.block{border-color:#b42318;color:#b42318}
+.tdo-step .d{font-size:11px;color:#5b6270}
+.tdo-step .r{font-size:12px;font-weight:600}
+#tdoMon td{font-variant-numeric:tabular-nums}
+#tdoCloseBtn{white-space:nowrap;flex-shrink:0}
+@media print{#sbar{display:none!important}body.has-sbar{padding-bottom:0}}
 /* v1.35 그리드 표준 기능 */
 th.gs-th{cursor:pointer;user-select:none;position:sticky}
 th.gs-th[data-sort]::after{content:attr(data-sort);font-size:9px;margin-left:4px;color:var(--accent)}
@@ -579,7 +622,7 @@ body.perm-ro #tmType{display:none}
 <div class="main">
 <div class="modbar" id="modbar"></div>
 <div class="mtabs" id="mtabs"></div>
-<div class="pgbar" id="pgbar"><span class="pg-t" id="pgT"></span><span class="pg-path" id="pgPath"></span><div class="pg-btns"><button class="btn pg-q" id="pgQ" onclick="pgAct('q')">조회</button><button class="btn" id="pgN" onclick="pgAct('n')">신규</button><button class="btn" id="pgS" onclick="pgAct('s')">저장</button><button class="btn" id="pgD" onclick="pgAct('d')">삭제</button><button class="btn" id="pgX" onclick="pgAct('x')">엑셀</button><button class="btn" id="pgP" onclick="pgAct('p')">인쇄</button></div></div>
+<div class="pgbar" id="pgbar"><span class="pg-t" id="pgT"></span><span class="pg-path" id="pgPath"></span><div class="pg-btns"><button class="btn pg-q" id="pgQ" onclick="pgAct('q')">조회</button><button class="btn" id="pgN" onclick="pgAct('n')">신규</button><button class="btn" id="pgS" onclick="pgAct('s')">저장</button><button class="btn" id="pgD" onclick="pgAct('d')">삭제</button><button class="btn" id="pgX" onclick="pgAct('x')">엑셀</button><button class="btn" id="pgP" onclick="pgAct('p')">인쇄</button><button class="btn" id="pgDen" onclick="denToggle()" title="행 높이 전환">행 넓게</button></div></div>
 
 <div class="container">
 
@@ -622,6 +665,37 @@ body.perm-ro #tmType{display:none}
         <div class="td-legend"><span class="td-sw td-sw-now"></span><span id="tdLgNow"></span><span class="td-sw td-sw-prev"></span><span id="tdLgPrev"></span></div>
       </div>
       <div id="tdChart" class="td-chart"></div>
+    </div>
+  </div>
+
+  <div id="tab-todo" class="tab-pane">
+    <div class="tdo-kpi">
+      <div><div class="l" id="tdoK1l">이번 달 매출</div><div class="v" id="tdoK1">-</div><div class="s" id="tdoK1s">장부 기준 · 수익 계정 순액</div></div>
+      <div><div class="l">미수금 (108)</div><div class="v" id="tdoK2">-</div><div class="s">외상매출금 잔액</div></div>
+      <div><div class="l">통장 잔액 (103)</div><div class="v" id="tdoK3">-</div><div class="s" id="tdoK3s">보통예금 장부 잔액</div></div>
+    </div>
+    <div class="tdo-wrap">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">처리할 일 <span class="g-cnt" id="tdoCnt"></span></div></div>
+        <div class="filter-bar tdo-chips" id="tdoChips"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:64px">구분</th><th>항목</th><th>대상</th><th style="text-align:right;width:130px">금액</th><th style="width:88px">발생</th><th style="width:96px">처리</th></tr></thead>
+            <tbody id="tdoRows"><tr><td colspan="6" class="td-empty">-</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title" id="tdoCloseT">월 마감</div></div>
+          <div class="tdo-steps" id="tdoSteps"></div>
+          <div style="padding:0 12px 12px;display:flex;gap:8px;align-items:center"><button class="btn btn-primary" id="tdoCloseBtn" disabled>마감하기</button><span class="tdo-note" id="tdoCloseNote" style="margin-left:0"></span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">월별 차대 점검 <span class="g-cnt" id="tdoYr"></span></div></div>
+          <div class="table-wrap"><table><thead><tr><th>월</th><th style="text-align:right">차변</th><th style="text-align:right">대변</th><th style="text-align:right">차액</th><th>마감</th></tr></thead><tbody id="tdoMon"><tr><td colspan="5" class="td-empty">-</td></tr></tbody></table></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1622,6 +1696,7 @@ body.perm-ro #tmType{display:none}
 
 </div>
 
+<div id="sbar" role="status" aria-live="polite"><span id="sbKeys"></span><span class="sb-sp"></span><span id="sbCnt"></span><span id="sbLock" class="sb-lock" style="display:none"></span><span id="sbCo">주식회사 승승장구컴퍼니</span></div>
 <footer>
   주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
 </footer>
@@ -1997,6 +2072,7 @@ var MENU = [
     { n: '구매', i: [['logistics', '3PL 정산']] },
     { n: '재고', i: [['inventory', '재고현황']] } ] },
   { m: '회계관리', g: [
+    { n: '점검', i: [['todo', '처리할 일']] },
     { n: '전표', i: [['journal', '전표'], ['jv-find', '전표 조회'], ['tax-jv', '세금계산서 전표']] },
     { n: '장부', i: [['gl-account', '계정별원장'], ['gl-partner', '거래처원장'], ['gl-month', '월계표'], ['gl-trial', '합계잔액시산표'], ['pt-month', '거래처별 월별 현황']] },
     { n: '증빙', i: [['bank', '통장원장'], ['tax-invoices', '세금계산서'], ['cards', '카드·현금영수증']] },
@@ -3928,7 +4004,7 @@ function tjvRender(){
     var man = x.source === 'manual';
     return '<tr' + (man ? ' class="tm-man"' : '') + '><td>' + gEsc(x.write_date) + '</td><td>' + gEsc(x.flow) + (man ? ' 수기' : '') + ' <span class="ti-code">' + gEsc(tiCodeLabel(x)) + '</span></td><td>' + gEsc(x.cp || '') + '</td><td>' + gEsc(x.item || '') + '</td>'
       + '<td class="num">' + n(x.supply_amt) + '</td><td class="num">' + n(x.vat_amt) + '</td><td class="num">' + n(x.total_amt) + '</td>'
-      + '<td>' + gEsc(x.approval_no || '') + '</td><td>' + gEsc(x.st || '미반영') + '</td>'
+      + '<td>' + gEsc(x.approval_no || '') + '</td><td>' + (x.st ? '<span class="bdg bdg-ok">' + gEsc(x.st) + '</span>' : '<span class="bdg bdg-draft">미반영</span>') + '</td>'
       + '<td>' + (x.st ? '' : '<button class="btn" onclick="tjvDraft(' + x.id + ')">전표 초안</button>') + (man && !x.st ? ' <button class="btn tm-del" onclick="tmDel(' + x.id + ')">삭제</button>' : '') + '</td></tr>';
   }).join('') : '<tr><td colspan="10" class="td-empty">-</td></tr>';
 }
@@ -3974,7 +4050,7 @@ async function clLoad(){
   var h = '';
   for(var i = 1; i <= 12; i++){
     var ym = y + '-' + String(i).padStart(2, '0'), on = !!CL.closed[ym], v = m[i] || { dr: 0, cr: 0 }, d = Math.round(v.dr - v.cr);
-    h += '<tr><td>' + ym + '</td><td>' + (on ? '마감' : '열림') + '</td><td>' + (on ? gEsc(String(CL.closed[ym]).replace('T', ' ').slice(0, 16)) : '') + '</td>'
+    h += '<tr><td>' + ym + '</td><td>' + (on ? '<span class="bdg bdg-close">마감</span>' : '열림') + '</td><td>' + (on ? gEsc(String(CL.closed[ym]).replace('T', ' ').slice(0, 16)) : '') + '</td>'
       + '<td class="num">' + Math.round(v.dr).toLocaleString('ko-KR') + '</td><td class="num">' + Math.round(v.cr).toLocaleString('ko-KR') + '</td>'
       + '<td class="num' + (d ? ' chk-err' : '') + '">' + d.toLocaleString('ko-KR') + '</td>'
       + '<td><button class="btn" onclick="clSet(\'' + ym + '\',' + (!on) + ')">' + (on ? '마감 해제' : '마감') + '</button></td></tr>';
@@ -5127,6 +5203,236 @@ pgUpdate('today');
 document.querySelector('.tab-item[data-tab="today"]') && document.querySelector('.tab-item[data-tab="today"]').classList.add('active');
 addPanelExcel();
 watchTables();
+
+// ── 처리할 일 (v1.77, 시안 2 예외 우선 화면) ──
+var TDO = { items: [], f: '', busy: false };
+function tdoN(v){ return Math.round(Number(v) || 0).toLocaleString('ko-KR'); }
+function tdoVatDue(today){
+  var y = Number(today.slice(0, 4)), c = [[y, '01-25', (y - 1) + '년 2기 확정'], [y, '04-25', y + '년 1기 예정'], [y, '07-25', y + '년 1기 확정'], [y, '10-25', y + '년 2기 예정'], [y + 1, '01-25', y + '년 2기 확정']];
+  for(var i = 0; i < c.length; i++){ var d = c[i][0] + '-' + c[i][1]; if(d >= today) return { d: d, t: c[i][2], n: Math.round((Date.parse(d) - Date.parse(today)) / 86400000) }; }
+  return null;
+}
+async function tdoLoad(){
+  if(!sb || TDO.busy) return; TDO.busy = true;
+  var rowsEl = document.getElementById('tdoRows'); rowsEl.innerHTML = '<tr><td colspan="6" class="td-empty">불러오는 중</td></tr>';
+  try {
+    var today = tdKst(), ym = today.slice(0, 7), y = Number(today.slice(0, 4)), items = [];
+    var gm = GL.month || await sbFetchPar('ssjg_gl_month', 'yr,mo,acct_code,acct_name,acct_class,dr,cr', [['yr'], ['mo'], ['acct_code']]); GL.month = gm;
+    var cl = await sb.from('ssjg_close_months').select('ym,closed_at').order('ym', { ascending: true }).limit(500);
+    var closed = {}; (cl.data || []).forEach(function(x){ closed[x.ym] = x.closed_at; });
+    // 월별 차대 · KPI
+    var mon = {}, rev = 0, ar = 0, bank = 0, z9 = 0, u199 = {}, u199y = 0;
+    gm.forEach(function(x){
+      var k = x.yr + '-' + String(x.mo).padStart(2, '0'), dr = Number(x.dr || 0), cr = Number(x.cr || 0);
+      if(Number(x.yr) === y){ mon[k] = mon[k] || { dr: 0, cr: 0 }; mon[k].dr += dr; mon[k].cr += cr; }
+      if(k === ym && x.acct_class === '수익') rev += cr - dr;
+      if(x.acct_code === '108') ar += dr - cr;
+      if(x.acct_code === '103') bank += dr - cr;
+      if(x.acct_code === 'Z900' && Number(x.yr) === y) z9 += dr - cr;
+      if(x.acct_code === '199'){ u199[k] = (u199[k] || 0) + dr + cr; if(Number(x.yr) === y) u199y += dr + cr; }
+    });
+    document.getElementById('tdoK1l').textContent = Number(ym.slice(5)) + '월 매출';
+    document.getElementById('tdoK1').textContent = tdoN(rev);
+    document.getElementById('tdoK2').textContent = tdoN(ar);
+    document.getElementById('tdoK3').textContent = tdoN(bank);
+    // 차단: 차대 불일치 달
+    Object.keys(mon).sort().forEach(function(k){ var d = Math.round(mon[k].dr - mon[k].cr); if(d) items.push({ k: 'block', t: '차대 불일치', o: k + ' 월계', a: d, d: k, b: '월계표', tab: 'gl-month' }); });
+    // 초안: 전표 미반영 세금계산서 (올해)
+    var ti = await sbAllR('ssjg_tax_invoices', 'id,approval_no,write_date,flow,total_amt', [['write_date', { ascending: true }], ['id', { ascending: true }]], function(q){ return q.gte('write_date', y + '-01-01'); });
+    var jn = {}, jr = {};
+    try { var a = await tdFetchAll('ssjg_journal', 'approval_no', 'approval_no'); a.forEach(function(x){ if(x.approval_no) jn[x.approval_no] = 1; }); } catch(e){}
+    try { var h = await sbAllR('ssjg_jv_head', 'src_ref', [['id', { ascending: true }]], function(q){ return q.like('src_ref', 'TI:%'); }); (h.data || []).forEach(function(x){ jr[x.src_ref] = 1; }); } catch(e){}
+    var un = (ti.data || []).filter(function(x){ return !(x.approval_no && jn[x.approval_no]) && !jr['TI:' + x.id]; });
+    TDO.unByYm = {}; un.forEach(function(x){ var k = String(x.write_date).slice(0, 7); TDO.unByYm[k] = (TDO.unByYm[k] || 0) + 1; });
+    ['매출', '매입'].forEach(function(fl){
+      var L = un.filter(function(x){ return x.flow === fl; }); if(!L.length) return;
+      var amt = L.reduce(function(s, x){ return s + Number(x.total_amt || 0); }, 0), d0 = L[0].write_date;
+      items.push({ k: 'draft', t: fl + ' 세금계산서 전표 미반영', o: L.length + '건', a: amt, d: String(d0).slice(5, 10) + '~', b: '전표 초안', tab: 'tax-jv' });
+    });
+    if(Math.round(u199y)) items.push({ k: 'draft', t: '통장미분류(199) 거래', o: y + '년 계정 분류 필요', a: u199y, d: y + '', b: '분류', tab: 'bank' });
+    // 경고
+    try { var tr = await sb.from('ssjg_tax_risk').select('txn_date,counterparty,deposit_amt,withdraw_amt').order('txn_date', { ascending: false }).limit(50);
+      (tr.data || []).forEach(function(r){ var dep = Number(r.deposit_amt) > 0; items.push({ k: 'warn', rp: true, t: '엔티티 간 거래', o: (r.counterparty || '') + ' · ' + (dep ? '입금' : '출금'), a: dep ? r.deposit_amt : r.withdraw_amt, d: tdDay(r.txn_date).slice(5), b: '근거 확인', tab: 'dashboard' }); }); } catch(e){}
+    if(Math.round(z9)) items.push({ k: 'warn', rp: true, t: '대표 개인경비 의심(Z900)', o: y + '년 누계', a: z9, d: y + '', b: '원장', tab: 'gl-account' });
+    try { var al = await sb.from('ssjg_alias_candidates').select('alias', { count: 'exact', head: true }); if(al.count) items.push({ k: 'warn', t: '거래처 미연결 장부명', o: al.count + '건', a: '', d: '', b: '연결', tab: 'partners' }); } catch(e){}
+    try { var iv = await sb.from('ssjg_inventory').select('item_name,diff_qty,verdict').limit(1000);
+      var bad = (iv.data || []).filter(function(x){ return Number(x.diff_qty || 0) !== 0; });
+      if(bad.length) items.push({ k: 'warn', t: '재고 실사 차이', o: bad.slice(0, 2).map(function(x){ return x.item_name + ' ' + (Number(x.diff_qty) > 0 ? '+' : '') + x.diff_qty; }).join(' · ') + (bad.length > 2 ? ' 외 ' + (bad.length - 2) : ''), a: '', d: '', b: '재고 보기', tab: 'inventory' }); } catch(e){}
+    try { var sh = await sbAllR('ssjg_shipments', 'tracking_no,ship_status,ship_date', [['ship_date', { ascending: true }]], function(q){ return q.gte('ship_date', y + '-01-01'); });
+      var nt = (sh.data || []).filter(function(r){ return !String(r.tracking_no || '').trim() && String(r.ship_status || '').trim() !== '송장없이배송완료'; });
+      if(nt.length) items.push({ k: 'warn', t: '송장 없는 출고', o: nt.length + '건 · ' + y + '년', a: '', d: '', b: '출고 현황', tab: 'today' }); } catch(e){}
+    var vd = tdoVatDue(today); if(vd && vd.n <= 45) items.push({ k: 'warn', t: '부가세 ' + vd.t + ' 신고', o: '신고기한 ' + vd.d.slice(5) + ' · ' + vd.n + '일 남음', a: '', d: '—', b: '보조표', tab: 'vat-sum' });
+    TDO.items = items;
+    // 월 마감 단계: 마지막 마감 다음 달 (이번 달 이전까지만)
+    var last = Object.keys(closed).sort().pop() || '', target = last ? perAdd(last, 1) : perAdd(ym, -1);
+    TDO.target = target < ym ? target : '';
+    tdoPaint(); tdoCloseInfo(mon, closed, u199);
+  } catch(e){ rowsEl.innerHTML = '<tr><td colspan="6" class="td-empty">불러오지 못했습니다: ' + gEsc(e.message || e) + '</td></tr>'; }
+  TDO.busy = false;
+}
+var TDO_K = { block: ['차단', 'bdg-block'], draft: ['초안', 'bdg-draft'], warn: ['경고', 'bdg-warn'] };
+function tdoPaint(){
+  var it = TDO.items, c = { block: 0, draft: 0, warn: 0 }; it.forEach(function(x){ c[x.k]++; });
+  var ch = [['', '전체 ' + it.length], ['block', '차단 ' + c.block], ['draft', '초안 검토 ' + c.draft], ['warn', '경고 ' + c.warn]];
+  document.getElementById('tdoChips').innerHTML = ch.map(function(x){ return '<button type="button" class="tdo-chip' + (TDO.f === x[0] ? ' on' : '') + '" onclick="TDO.f=\'' + x[0] + '\';tdoPaint()">' + x[1] + '</button>'; }).join('')
+    + '<span class="tdo-note">' + (c.block ? '차단이 0건이어야 마감할 수 있습니다' : '차단 없음') + '</span>';
+  var L = it.filter(function(x){ return !TDO.f || x.k === TDO.f; }).sort(function(a, b){ var o = { block: 0, draft: 1, warn: 2 }; return o[a.k] - o[b.k]; });
+  document.getElementById('tdoCnt').textContent = it.length + '건';
+  document.getElementById('tdoRows').innerHTML = L.length ? L.map(function(x){
+    var k = TDO_K[x.k];
+    return '<tr onclick="switchTab(\'' + x.tab + '\')"><td><span class="bdg ' + k[1] + '">' + k[0] + '</span></td><td>' + gEsc(x.t) + (x.rp ? ' <span class="bdg bdg-rp">특수관계</span>' : '') + '</td><td>' + gEsc(x.o) + '</td><td class="num">' + (x.a === '' ? '' : tdoN(x.a)) + '</td><td>' + gEsc(x.d) + '</td><td><button type="button" class="btn">' + gEsc(x.b) + '</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" class="td-empty">처리할 일이 없습니다</td></tr>';
+}
+function tdoCloseInfo(mon, closed, u199){
+  var t = TDO.target, st = document.getElementById('tdoSteps'), btn = document.getElementById('tdoCloseBtn'), note = document.getElementById('tdoCloseNote');
+  var y = Number(tdKst().slice(0, 4));
+  document.getElementById('tdoYr').textContent = y + '년';
+  var h = '', ks = Object.keys(mon).sort();
+  ks.forEach(function(k){ var v = mon[k], d = Math.round(v.dr - v.cr); h += '<tr><td>' + k + '</td><td class="num">' + tdoN(v.dr) + '</td><td class="num">' + tdoN(v.cr) + '</td><td class="num' + (d ? ' chk-err' : '') + '">' + tdoN(d) + '</td><td>' + (closed[k] ? '<span class="bdg bdg-close">마감</span>' : '') + '</td></tr>'; });
+  document.getElementById('tdoMon').innerHTML = h || '<tr><td colspan="5" class="td-empty">-</td></tr>';
+  if(!t){ document.getElementById('tdoCloseT').textContent = '월 마감'; st.innerHTML = '<div class="tdo-step"><span class="tdo-dot done">✓</span><span>마감할 지난달이 없습니다</span><span></span></div>'; btn.disabled = true; note.textContent = ''; return; }
+  document.getElementById('tdoCloseT').textContent = t + ' 마감';
+  var v = mon[t] || { dr: 0, cr: 0 }, diff = Math.round(v.dr - v.cr), un = (TDO.unByYm || {})[t] || 0, u = Math.round(u199[t] || 0);
+  var S = [['1', '세금계산서 전표 반영', un ? '미반영 ' + un + '건' : '완료', un ? 'wait' : 'done'],
+    ['2', '통장미분류 정리', u ? '199 계정 ' + tdoN(u) + '원' : '완료', u ? 'wait' : 'done'],
+    ['3', '차변 = 대변', diff ? '차액 ' + tdoN(diff) : '차액 0', diff ? 'block' : 'done'],
+    ['4', '마감', '마감하면 이 달 전표·통장·계산서 수정이 잠깁니다', 'wait']];
+  st.innerHTML = S.map(function(x){ return '<div class="tdo-step"><span class="tdo-dot ' + (x[3] === 'done' ? 'done' : (x[3] === 'block' ? 'block' : '')) + '">' + (x[3] === 'done' ? '✓' : x[0]) + '</span><span>' + x[1] + '<div class="d">' + gEsc(x[2]) + '</div></span><span class="r" style="color:' + (x[3] === 'done' ? '#1f7a4d' : (x[3] === 'block' ? '#b42318' : '#5b6270')) + '">' + (x[3] === 'done' ? '완료' : (x[3] === 'block' ? '차단' : '')) + '</span></div>'; }).join('');
+  btn.disabled = !!diff || PERM.ro;
+  btn.onclick = async function(){ await clSet(t, true); TDO.busy = false; tdoLoad(); };
+  note.textContent = diff ? '차대 차액을 먼저 맞춰야 합니다' : ((un || u) ? '미처리 항목이 있어도 마감할 수 있지만 권장하지 않습니다' : '');
+}
+var _switchTab177 = switchTab; switchTab = function(tabId){ var r = _switchTab177.apply(this, arguments); if(tabId === 'todo') tdoLoad(); return r; };
+var _pgAct177 = pgAct; pgAct = function(k){ var p = pgPane(); if(p && p.id === 'tab-todo' && k === 'q'){ GL.month = null; tdoLoad(); return; } return _pgAct177(k); };
+
+// ── 하단 상태바 (v1.76, 시안 5 공통 규격) ──
+var SB = { lockYm: null, t: 0 };
+function sbKeys(p){
+  var k = [];
+  if(p && p.querySelector('#jvRows')) k = [['Enter', '다음 칸'], ['F2', '코드도움'], ['Ctrl S', '저장']];
+  else if(p && p.querySelector('[data-grid]')) k = [['Enter', '편집'], ['F2', '코드도움'], ['Ctrl S', '변경 저장']];
+  else if(p && p.querySelector('.dr-row, #gltRows, #glmRows')) k = [['더블클릭', '원장 열기'], ['Esc', '닫기']];
+  k.push(['Ctrl K', '검색']);
+  return k.map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join('');
+}
+function sbCnt(p){
+  if(!p) return '';
+  var c = p.querySelector('.g-cnt'); var t = c ? (c.textContent || '').trim() : '';
+  if(t) return t;
+  var n = Array.prototype.filter.call(p.querySelectorAll('.table-wrap tbody tr'), function(tr){ return tr.offsetParent !== null && !tr.querySelector('td[colspan]'); }).length;
+  return n ? n.toLocaleString('ko-KR') + '행' : '';
+}
+function sbPaint(){
+  var p = pgPane(), k = document.getElementById('sbKeys'), c = document.getElementById('sbCnt'); if(!k || !c) return;
+  var kh = sbKeys(p); if(k.innerHTML !== kh) k.innerHTML = kh;
+  var ct = sbCnt(p); if(c.textContent !== ct) c.textContent = ct;
+}
+async function sbLock(){
+  if(!sb) return;
+  try {
+    var r = await sb.from('ssjg_close_months').select('ym').order('ym', { ascending: false }).limit(1);
+    var ym = r.data && r.data[0] && r.data[0].ym; var el = document.getElementById('sbLock'); if(!el) return;
+    SB.lockYm = ym || null;
+    if(ym){ el.textContent = '최근 마감 ' + ym + ' · 마감월 수정 잠김'; el.style.display = ''; } else el.style.display = 'none';
+  } catch(e){}
+}
+document.body.classList.add('has-sbar');
+var _switchTab176 = switchTab; switchTab = function(){ var r = _switchTab176.apply(this, arguments); setTimeout(sbPaint, 0); return r; };
+setInterval(function(){ if(document.hidden) return; sbPaint(); if(++SB.t % 60 === 1) sbLock(); }, 1000);
+
+// ── 시안 5 공통 규격 2차 (v1.78) ──
+// (a) 한글 금액 · 원장 대조값
+function numKo(n){
+  n = Math.round(Math.abs(Number(n) || 0)); if(!n) return '영';
+  var D = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'], S = ['', '십', '백', '천'], U = ['', '만', '억', '조', '경'];
+  var out = '', u = 0;
+  while(n > 0 && u < U.length){
+    var g = n % 10000, t = '';
+    if(g){
+      for(var i = 3; i >= 0; i--){ var d = Math.floor(g / Math.pow(10, i)) % 10; if(d) t += (d === 1 && i > 0 ? '' : D[d]) + S[i]; }
+      if(g === 1 && u > 0) t = '일';
+      out = t + U[u] + out;
+    }
+    n = Math.floor(n / 10000); u++;
+  }
+  return out;
+}
+function vpHash(L){
+  var s = L.map(function(x){ return [x.doc_no, x.acct_code, Math.round(Number(x.dr || 0)), Math.round(Number(x.cr || 0)), x.partner || ''].join('|'); }).join('\n');
+  var h = 0x811c9dc5;
+  for(var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return ('0000000' + h.toString(16).toUpperCase()).slice(-8);
+}
+var _vpPage178 = vpPage;
+vpPage = function(L, co, now){
+  var html = _vpPage178.apply(this, arguments);
+  var sd = 0; (L || []).forEach(function(x){ sd += Number(x.dr || 0); }); sd = Math.round(sd);
+  var amt = '<div class="vp-amt">금 ' + numKo(sd) + ' 원정<span>(₩' + sd.toLocaleString('ko-KR') + ')</span></div>';
+  return html.replace('<div class="vp-foot"><span>', amt + '<div class="vp-foot"><span>')
+             .replace('<span>출력 ', '<span class="vp-hash">원장 대조값 ' + vpHash(L || []) + '</span><span>출력 ');
+};
+// (b) 전표입력 F4 복사 초안 · F8 역분개 초안
+async function jvCopyDraft(rev){
+  var no = (document.getElementById('jvNo').textContent || '').trim();
+  var L = jvLines().filter(function(l){ return l.acct_code || l.amount; });
+  if(!L.length){ gToast('복사할 분개 라인이 없습니다', true); return; }
+  if(rev){
+    if(!JV.id){ gToast('역분개는 저장된 전표를 불러온 뒤 가능합니다', true); return; }
+    try { var h = await sb.from('ssjg_jv_head').select('jv_no').eq('src_ref', 'REV:' + no).limit(1); if(h.data && h.data.length){ gToast('이미 역분개 전표가 있습니다: ' + h.data[0].jv_no, true); return; } } catch(e){}
+  }
+  var memo = document.getElementById('jvMemo').value, kind = document.getElementById('jvKind').value, src = JV.id ? no : '';
+  JV.id = null; JV.srcRef = rev ? 'REV:' + no : null;
+  document.getElementById('jvNo').textContent = '신규' + (src ? ' · ' + (rev ? '역분개 ' : '복사 ') + src : '');
+  document.getElementById('jvDate').value = jvToday(); document.getElementById('jvKind').value = kind;
+  document.getElementById('jvMemo').value = rev ? ('역분개 ' + no + (memo ? ' ' + memo : '')) : memo;
+  document.getElementById('jvRows').innerHTML = '';
+  L.forEach(function(l){ jvAddRow({ side: rev ? (l.side === '차' ? '대' : '차') : l.side, acct_code: l.acct_code, partner: l.partner, amount: l.amount, memo: l.memo }); });
+  gToast((rev ? '역분개' : '복사') + ' 초안 — 일자 확인 후 저장');
+}
+function drIsOpen(){ var m = document.getElementById('drMod'); return !!(m && m.style.display === 'flex'); }
+function kbTyping(t){ return !!(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))); }
+// (c) 드릴다운 한 단계 위
+var DRS = [];
+var _drAcct178 = drAcct;
+drAcct = function(){
+  var p = pgPane(), id = p ? p.id.replace(/^tab-/, '') : '';
+  if(id && id !== 'gl-account'){ DRS.push(id); if(DRS.length > 20) DRS.shift(); }
+  return _drAcct178.apply(this, arguments);
+};
+document.addEventListener('keydown', function(e){
+  if(!document.getElementById('app') || document.getElementById('app').classList.contains('hide')) return;
+  var t = e.target, p = pgPane(), pid = p ? p.id : '';
+  if(drIsOpen()){
+    if(e.key === 'F4'){ e.preventDefault(); drCopy(false); return; }
+    if(e.key === 'F8'){ e.preventDefault(); drCopy(true); return; }
+    if((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')){ e.preventDefault(); vpPrint(); return; }
+    if(e.key === 'Backspace' && !kbTyping(t)){ e.preventDefault(); drClose(); return; }
+    return;
+  }
+  if(pid === 'tab-journal' && (e.key === 'F4' || e.key === 'F8')){ e.preventDefault(); jvCopyDraft(e.key === 'F8'); return; }
+  if(e.key === 'Backspace' && !kbTyping(t) && !e.ctrlKey && !e.altKey && !e.metaKey && pid === 'tab-gl-account' && DRS.length){
+    e.preventDefault(); switchTab(DRS.pop());
+  }
+});
+var _sbKeys178 = sbKeys;
+sbKeys = function(p){
+  function f(k){ return k.map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join(''); }
+  if(drIsOpen()) return f([['F4', '복사'], ['F8', '역분개'], ['Ctrl P', '출력'], ['Esc', '닫기']]);
+  var h = _sbKeys178.apply(this, arguments);
+  if(p && p.id === 'tab-journal') h += f([['F4', '복사 초안'], ['F8', '역분개 초안']]);
+  if(p && p.id === 'tab-gl-account' && DRS.length) h += f([['Backspace', '상위로']]);
+  return h;
+};
+var _drOpen178 = drOpen; drOpen = async function(){ var r = await _drOpen178.apply(this, arguments); sbPaint(); return r; };
+var _drClose178 = drClose; drClose = function(){ var r = _drClose178.apply(this, arguments); setTimeout(sbPaint, 0); return r; };
+// (d) 행 높이 27 ↔ 33
+function denSet(v){
+  document.body.classList.toggle('den-33', v === '33');
+  var b = document.getElementById('pgDen'); if(b) b.textContent = v === '33' ? '행 좁게' : '행 넓게';
+  try { localStorage.setItem('ssjg_den', v); } catch(e){}
+}
+function denToggle(){ denSet(document.body.classList.contains('den-33') ? '27' : '33'); }
+(function(){ var v = '27'; try { v = localStorage.getItem('ssjg_den') || '27'; } catch(e){} denSet(v); })();
 
 window.addEventListener('DOMContentLoaded', initSupabase);
 </script>
