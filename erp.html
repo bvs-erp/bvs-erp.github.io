@@ -807,6 +807,7 @@ td.ed:hover{border-radius:0}
       <div id="homeGroupSec" style="margin-bottom:16px"></div>
       <div id="homeActionSec" style="margin-bottom:16px"></div>
       <div id="homeAbsReq" style="display:none"></div>
+      <div class="sec hide" id="homeMailSec" style="margin-bottom:16px"><h3>메일 수신함 <span class="cnt" id="homeMailN"></span><span class="r"><button class="btn sm" onclick="go('mail')">메일 →</button></span></h3></div>
       <div class="kgrps" id="homeKpi"></div>
       <div class="sec" id="homeDaySec" style="margin-bottom:16px"><h3>현장 일보 <span class="cnt" id="homeAttN"></span><span class="r tiny dim" id="homeMtd"></span><span class="r"><button class="btn sm" onclick="go('site')">현장 →</button></span></h3>
         <div class="kpis" id="homeDayKpi" style="margin-bottom:10px"></div>
@@ -1149,6 +1150,13 @@ td.ed:hover{border-radius:0}
         <div class="tb" id="gPjD"></div></div>
     </section>
 
+    <!-- 메일 수신함 -->
+    <section class="page" id="p-mail">
+      <div class="ph"><h2>메일 수신함</h2><div class="desc" id="mailDesc"></div><div class="act"><button class="btn sm" onclick="mailLoad()">새로고침</button></div></div>
+      <div class="al-filters" id="mailTabs"></div>
+      <div class="sec" id="sec-mail"><h3>수신 목록 <span class="cnt" id="mailN"></span></h3><div class="tb" id="gMail"></div></div>
+    </section>
+
     <!-- 프로젝트 -->
     <section class="page" id="p-project">
       <div class="ph"><h2>프로젝트</h2><div class="act"><button class="btn p" onclick="pjxNew()">신규</button></div></div>
@@ -1306,11 +1314,11 @@ function getAllowedPages(){
   if(!ME) return [];
   if(isEngLead()) return ['site', 'crew', 'pm', 'safety'];
   if(isPlanning()) return ['home', 'site', 'crew', 'sales', 'close', 'pm', 'hr', 'safety', 'tax', 'alerts'];
-  if(isOwner()) return ['home', 'alerts', 'sales', 'close', 'site', 'crew', 'pm', 'hr', 'money', 'safety', 'ht', 'settle', 'pl', 'tax', 'project', 'gl'];
+  if(isOwner()) return ['home', 'mail', 'alerts', 'sales', 'close', 'site', 'crew', 'pm', 'hr', 'money', 'safety', 'ht', 'settle', 'pl', 'tax', 'project', 'gl'];
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr pjc pjcs pjcm'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.79';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.80';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -1504,6 +1512,7 @@ var I={home:'<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/
 var MENU=[
   {g:'메인',id:'main',items:[
     {k:'main',p:'home',t:'메인 대시보드',kb:'1'},
+    {k:'mail',p:'mail',t:'메일 수신함'},
     {k:'alerts',p:'alerts',t:'알림·점검',kb:'2'}]},
   {g:'회계관리',id:'acc',items:[
     {k:'ac_journal',p:'pl',s:'sec-gMj',t:'전표입력'},
@@ -1565,13 +1574,14 @@ var MENU=[
     {k:'sy_sync',p:'ht',s:'sec-gHtRuns',t:'수집·동기화 기록'}]}
 ];
 /* 화면 키로 부를 때(go('site') 등) 표시할 기본 메뉴 */
-var PAGE_MENU={home:'main',alerts:'alerts',sales:'sd_quote',close:'sd_close',site:'op_att',crew:'op_crew',pm:'pm_mat',hr:'hr_info',money:'hr_calc',safety:'op_safety',ht:'fi_bank',settle:'fi_arap',pl:'ac_fs',tax:'ac_vat',project:'sd_project',gl:'ac_gl_acct'};
-var TITLE={home:'메인',alerts:'알림·점검',sales:'영업·계약',close:'청구·매출마감',site:'현장 투입',crew:'인력 배치',pm:'구매·외주·자재',hr:'인사·근로계약',money:'급여·노무비 정산',safety:'안전·교육',ht:'통장·카드·계산서',settle:'채권·채무',pl:'손익·전표',tax:'세무 신고',project:'프로젝트',gl:'회계 장부'};
+var PAGE_MENU={home:'main',mail:'mail',alerts:'alerts',sales:'sd_quote',close:'sd_close',site:'op_att',crew:'op_crew',pm:'pm_mat',hr:'hr_info',money:'hr_calc',safety:'op_safety',ht:'fi_bank',settle:'fi_arap',pl:'ac_fs',tax:'ac_vat',project:'sd_project',gl:'ac_gl_acct'};
+var TITLE={home:'메인',mail:'메일 수신함',alerts:'알림·점검',sales:'영업·계약',close:'청구·매출마감',site:'현장 투입',crew:'인력 배치',pm:'구매·외주·자재',hr:'인사·근로계약',money:'급여·노무비 정산',safety:'안전·교육',ht:'통장·카드·계산서',settle:'채권·채무',pl:'손익·전표',tax:'세무 신고',project:'프로젝트',gl:'회계 장부'};
 I.safety='<path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>';
 I.ht=I.ht||'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/>';I.settle='<path d="M3 6h13M3 12h9M3 18h6"/><circle cx="18" cy="15" r="3.5"/><path d="M18 13v2l1.5 1"/>';
 I.project='<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>';
 I.sys='<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>';
 I.gl='<path d="M4 4h16v16H4zM4 9h16M9 9v11M4 14h16"/>';
+I.mail='<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>';
 var MOD_IC={main:'home',acc:'pl',fund:'ht',sales:'sales',pur:'pm',op:'site',hr:'hr',sys:'sys'};
 var MENU_IX={};MENU.forEach(function(m){m.items.forEach(function(it){it.m=m;MENU_IX[it.k]=it})});
 function menuFind(k){return MENU_IX[k]||null}
@@ -1583,7 +1593,7 @@ function getFilteredNav(){
 }
 function niHtml(it,badge){
   return '<div class="ni" data-m="'+it.k+'" data-p="'+it.p+'" onclick="go(\''+it.k+'\')" title="'+esc(it.t)+'"><span class="ic"><svg viewBox="0 0 24 24">'+(I[it.p]||'')+'</svg></span><span class="nt">'+esc(it.t)+'</span>'
-    +(badge&&it.k==='alerts'?'<span class="bd hide" id="alertN"></span>':(badge&&it.kb?'<span class="kb">'+esc(it.kb)+'</span>':''))+'</div>';
+    +(badge&&it.k==='alerts'?'<span class="bd hide" id="alertN"></span>':(badge&&it.k==='mail'?'<span class="bd hide" id="mailNavN" style="background:var(--tx2)"></span>':(badge&&it.kb?'<span class="kb">'+esc(it.kb)+'</span>':'')))+'</div>';
 }
 var CHEV='<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
 function navFavRecHtml(){
@@ -1649,7 +1659,7 @@ function go(x){
   // 아직 렌더링되지 않았거나 데이터 변경으로 더티(dirty)인 경우 1회만 렌더링
   if(!_renderedPages[p] || _dirtyPages[p]){
     renderPage(p);
-  }
+  } else if(p === 'mail'){ try{mailLoad()}catch(e){console.error(e)} }
   if(it&&!plain){
     if(it.tab){try{var fn=window[it.tab[0]];if(typeof fn==='function')fn(it.tab[1])}catch(e){console.error(e)}}
     if(it.s){var sid=it.s;setTimeout(function(){menuScroll(sid)},80)}
@@ -2270,7 +2280,7 @@ var _renderedPages = {};
 var _dirtyPages = {
   home: true, site: true, sales: true, money: true, pl: true, pm: true,
   hr: true, safety: true, crew: true, close: true, tax: true, ht: true,
-  settle: true, alerts: true, project: true, gl: true
+  settle: true, alerts: true, project: true, gl: true, mail: true
 };
 
 function updateAlertBadge(){
@@ -2301,6 +2311,7 @@ function renderPage(p){
     else if(p === 'alerts') { renderAlerts(); }
     else if(p === 'project') { renderProject(); }
     else if(p === 'gl') { renderGl(); }
+    else if(p === 'mail') { renderMail(); }
     _renderedPages[p] = true;
     _dirtyPages[p] = false;
     try{var eb0=el('errbox'),o0=eb0&&eb0.querySelector('[data-rerr="'+p+'"]');if(o0)o0.remove()}catch(x){}
@@ -2594,8 +2605,116 @@ async function renderGroupPlSummary(){
   }
 }
 
+/* ═══════════ 메일 수신함 (v1.80) ═══════════
+   읽기·쓰기는 ceo_mail_list / ceo_mail_summary / ceo_mail_decide 로만 (mail 스키마 비노출, 대표 전용).
+   메일 제목·본문은 외부 입력 — 전부 esc() 로 출력. */
+var MAIL={rows:[],sum:null,tab:'open',busy:false};
+var MAIL_TABS=[['open','처리 대기',['신규','확인']],['req','보관요청',['보관요청']],['done','보관완료',['보관완료']],['ex','제외',['제외']],['all','전체',null]];
+var MAIL_KIND=['미분류','거래문서','세금계산서 알림','업무연락','기한 통지','광고·고지','보안 의심','시험·내부'];
+var MAIL_ENT=['BVS','HBS','PYRO','SSJG'];
+var MAIL_DOC=['견적','발주','계약','세금','정산','일보','영수','증명'];
+function mailDt(v,full){if(!v)return '–';var d=new Date(v);if(isNaN(d))return esc(v);
+  var p=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+  var o={};p.forEach(function(x){o[x.type]=x.value});
+  return (full?o.year+'-':'')+o.month+'-'+o.day+' '+o.hour+':'+o.minute}
+function mailSize(b){b=+b||0;if(!b)return '–';if(b>=1048576)return (b/1048576).toFixed(1)+'MB';if(b>=1024)return Math.round(b/1024)+'KB';return b+'B'}
+function mailPtnName(pid){if(!pid)return '';var p=(D.ptn||[]).filter(function(x){return x.partner_id===pid})[0];return p?p.name:pid}
+function mailDriveUrl(id){return /^[A-Za-z0-9_-]{10,}$/.test(String(id||''))?'https://drive.google.com/file/d/'+id+'/view':''}
+async function mailSummaryLoad(){
+  if(!isOwner()||!sb)return;
+  try{var r=await sb.rpc('ceo_mail_summary');if(r.error)throw r.error;MAIL.sum=r.data||{};mailBadge()}catch(e){console.error('mail summary',e)}
+}
+function mailBadge(){var n=MAIL.sum?(+MAIL.sum.unread||0):0;
+  var b=el('mailNavN');if(b){b.textContent=n;b.classList.toggle('hide',!n)}
+  var hs=el('homeMailSec');if(hs)hs.classList.toggle('hide',!isOwner());
+  var h=el('homeMailN');if(h)h.textContent='미확인 '+n.toLocaleString('ko-KR')+'건';
+  mailDesc()}
+function mailDesc(){var d=el('mailDesc');if(!d)return;var s=MAIL.sum;if(!s){d.textContent='';return}
+  var lr=s.last_run||null,t='마지막 수집 '+(lr?mailDt(lr.run_at):'없음');
+  if(lr&&lr.error)t+=' · 오류: '+String(lr.error).slice(0,120);
+  if(+s.errors_24h)t+=' · 24시간 오류 '+s.errors_24h+'회';
+  var old=lr?((Date.now()-new Date(lr.run_at).getTime())/60000):null;
+  d.innerHTML=(old!=null&&old>90)?'<span class="neg">'+esc(t+' · '+Math.round(old)+'분째 수집 없음')+'</span>':esc(t)}
+function renderMail(){
+  var tb=el('mailTabs');
+  if(tb)tb.innerHTML=MAIL_TABS.map(function(x){
+    return '<span class="chip'+(MAIL.tab===x[0]?' on':'')+'" onclick="mailTab(\''+x[0]+'\')">'+esc(x[1])+'</span>'}).join(' ');
+  mailSummaryLoad();mailLoad()}
+function mailTab(k){MAIL.tab=k;var tb=el('mailTabs');if(tb)Array.prototype.forEach.call(tb.children,function(c,i){c.classList.toggle('on',MAIL_TABS[i][0]===k)});mailLoad()}
+async function mailLoad(){
+  if(!isOwner()||!sb||MAIL.busy)return;MAIL.busy=true;
+  var tab=MAIL_TABS.filter(function(x){return x[0]===MAIL.tab})[0]||MAIL_TABS[0];
+  try{
+    var r=await sb.rpc('ceo_mail_list',{p_status:tab[2],p_q:null,p_limit:500,p_offset:0});
+    if(r.error)throw r.error;
+    var d=r.data||{};MAIL.rows=(d.rows||[]).map(function(m){
+      m._at=(m.attachments||[]).length;m._big=(m.attachments||[]).some(function(a){return a.is_big});
+      m._miss=(m.attachments||[]).some(function(a){return !a.fetch_ok});
+      m._from=m.from_name?(m.from_name+' <'+(m.from_addr||'')+'>'):(m.from_addr||'');
+      m._to=(m.to_addrs||[]).join(', ');m._ptn=mailPtnName(m.partner_id);return m});
+    var n=el('mailN');if(n)n.textContent=(+d.total||0).toLocaleString('ko-KR')+'건'+((+d.total||0)>MAIL.rows.length?' (최근 '+MAIL.rows.length+'건 표시)':'');
+    grid('gMail',[
+      {k:'received_at',t:'수신일시',w:92,f:function(v){return mailDt(v)}},
+      {k:'_to',t:'받는 주소',l:1,w:120},
+      {k:'_from',t:'보낸 사람',l:1,w:160},
+      {k:'subject',t:'제목',l:1,w:260,f:function(v,r){return (r.status==='신규'?'<b>':'')+esc(v||'(제목 없음)')+(r.status==='신규'?'</b>':'')}},
+      {k:'_at',t:'첨부',w:44,f:function(v,r){return v?(v+(r._big?' 대':'')+(r._miss?' <span class="neg">미수집</span>':'')):'<span class="dim">–</span>'}},
+      {k:'kind',t:'분류',l:1,w:80},
+      {k:'entity',t:'엔티티',w:52},
+      {k:'doc_type',t:'문서종류',w:60},
+      {k:'_ptn',t:'거래처',l:1,w:100},
+      {k:'status',t:'상태',w:60}
+    ],{rows:MAIL.rows,q:['subject','_from','_to','_ptn','kind'],qph:'제목·보낸 사람·받는 주소·거래처',page:50,
+       empty:'메일이 없습니다',onRow:function(r){mailOpen(r)}});
+  }catch(e){console.error(e);toast('메일 목록 오류: '+(e.message||e),'e')}
+  finally{MAIL.busy=false}
+}
+function mailSel(id,list,cur,blank){return '<select id="'+id+'" class="sel" style="width:100%">'+(blank?'<option value="">'+esc(blank)+'</option>':'')
+  +list.map(function(v){var val=Array.isArray(v)?v[0]:v,txt=Array.isArray(v)?v[1]:v;return '<option value="'+esc(val)+'"'+(val===cur?' selected':'')+'>'+esc(txt)+'</option>'}).join('')+'</select>'}
+async function mailOpen(m){
+  if(m.status==='신규'){
+    try{var r0=await sb.rpc('ceo_mail_decide',{p_mail_id:m.mail_id,p_action:'확인'});if(!r0.error&&r0.data&&r0.data.ok){m.status='확인';try{gRender('gMail')}catch(e){}mailSummaryLoad()}}catch(e){console.error(e)}
+  }
+  var at=(m.attachments||[]);
+  var atH=at.length?'<div class="tw"><table><thead><tr><th>#</th><th class="l">파일명</th><th>크기</th><th>수집</th><th>이동</th><th class="l">같은 파일</th></tr></thead><tbody>'
+    +at.map(function(a){var u=mailDriveUrl(a.drive_file_id);
+      return '<tr><td>'+esc(a.seq)+'</td><td class="l">'+(u?'<a href="'+u+'" target="_blank" rel="noopener">'+esc(a.file_name)+'</a>':esc(a.file_name))+(a.is_big?' <span class="dim">(대용량)</span>':'')+'</td>'
+        +'<td>'+mailSize(a.size_bytes)+'</td><td>'+yn(a.fetch_ok)+'</td><td>'+yn(a.drive_moved)+'</td>'
+        +'<td class="l">'+((a.dup_mail_ids||[]).length?esc((a.dup_mail_ids||[]).join(', ')):'<span class="dim">–</span>')+'</td></tr>'}).join('')
+    +'</tbody></table></div>':'<div class="dim">첨부 없음</div>';
+  var ed=(m.status==='신규'||m.status==='확인');
+  var ptns=(D.ptn||[]).slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name),'ko')}).map(function(p){return [p.partner_id,p.name]});
+  var form=ed?('<h4 style="margin:14px 0 6px">분류</h4>'
+    +'<div class="fr"><div class="f"><label>분류</label>'+mailSel('ml_kind',MAIL_KIND,m.kind)+'</div><div class="f"><label>엔티티</label>'+mailSel('ml_ent',MAIL_ENT,m.entity,'선택')+'</div></div>'
+    +'<div class="fr"><div class="f"><label>문서종류</label>'+mailSel('ml_doc',MAIL_DOC,m.doc_type,'선택')+'</div><div class="f"><label>거래처</label>'+mailSel('ml_ptn',ptns,m.partner_id,'선택')+'</div></div>'
+    +'<div class="fr"><div class="f"><label>문서 연결 (문서번호)</label><input id="ml_doc_no" class="in" value="'+esc(m.linked_doc_no||'')+'"></div><div class="f"><label>메모</label><input id="ml_memo" class="in" value="'+esc(m.memo||'')+'"></div></div>')
+    :kv([['분류',esc(m.kind)],['엔티티',esc(m.entity||'')],['문서종류',esc(m.doc_type||'')],['거래처',esc(m._ptn||'')],['문서 연결',esc(m.linked_doc_no||'')],['메모',esc(m.memo||'')]]);
+  var body=kv([['수신일시',mailDt(m.received_at,true)],['보낸 사람',esc(m._from)],['받는 주소',esc(m._to)],['참조',esc((m.cc_addrs||[]).join(', '))],['상태',esc(m.status)+(m.decided_at?' <span class="dim">'+mailDt(m.decided_at,true)+'</span>':'')],['메일 번호',esc(m.mail_id)]])
+    +'<h4 style="margin:14px 0 6px">본문 앞부분</h4><div class="desc" style="white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;background:var(--sf2);padding:8px;border-radius:6px">'+esc(m.body_snippet||'(없음)')+'</div>'
+    +'<h4 style="margin:14px 0 6px">첨부 '+at.length+'</h4>'+atH+form;
+  var id=m.mail_id,foot='';
+  if(ed)foot='<button class="btn p" onclick="mailAct('+id+',\'보관\')">보관</button> <button class="btn" onclick="mailAct('+id+',\'저장\')">저장</button> <button class="btn" onclick="mailAct('+id+',\'제외\')">제외</button> ';
+  else if(m.status==='제외'||(m.status==='보관요청'&&!at.some(function(a){return a.drive_moved})))foot='<button class="btn" onclick="mailAct('+id+',\'되돌리기\')">되돌리기</button> ';
+  foot+='<button class="btn" onclick="drClose()">닫기</button>';
+  drOpen(m.subject||'(제목 없음)',body,foot);el('dr').classList.add('wide');
+}
+function mailVal(id){var e=el(id);if(!e)return null;var v=String(e.value||'').trim();return v===''?null:v}
+async function mailAct(id,act){
+  var p={p_mail_id:id,p_action:act};
+  if(act==='저장'||act==='보관'){p.p_kind=mailVal('ml_kind');p.p_entity=mailVal('ml_ent');p.p_doc_type=mailVal('ml_doc');
+    p.p_partner_id=mailVal('ml_ptn');p.p_linked_doc_no=mailVal('ml_doc_no');p.p_memo=mailVal('ml_memo')}
+  if(act==='보관'&&(!p.p_entity||!p.p_doc_type)){toast('엔티티와 문서종류를 고르십시오','e');return}
+  try{var r=await sb.rpc('ceo_mail_decide',p);
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.ok){toast((r.data&&r.data.error)||'처리 실패','e');return}
+    toast(act+' 완료 · '+r.data.status,'g');drClose();mailLoad();mailSummaryLoad();
+  }catch(e){toast('처리 오류: '+(e.message||e),'e')}
+}
+setInterval(function(){try{if(!document.hidden&&isOwner()&&sb)mailSummaryLoad()}catch(e){}},600000);
+
 function renderHome(){
   try{renderGroupPlSummary()}catch(e){}
+  try{mailSummaryLoad()}catch(e){}
   var m=M(),dm=D.dash.filter(function(r){return r.period_ym===m})[0]||{};
   var set=D.set.filter(function(r){return r.period_ym===m});
   set.forEach(function(r){r._inc=/wage|근로/.test(String(r.income_type))?'wage':(/business|사업/.test(String(r.income_type))?'business':'');r._neg=(+r.company_margin||0)<0?'1':'0'});
