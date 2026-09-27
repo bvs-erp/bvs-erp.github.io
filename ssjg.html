@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.78">
+<meta name="app-version" content="1.79">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -369,6 +369,19 @@ html[data-theme="light"] footer{margin-top:10px;padding:8px;text-align:right;bac
 .pg-per{display:inline-flex;gap:2px;align-items:center}
 .pg-per .btn{padding:3px 8px!important;font-size:11.5px;min-width:0}
 @media print{.pg-per{display:none!important}}
+#f3p{position:fixed;top:96px;right:0;bottom:30px;width:320px;z-index:1100;background:#fff;border-left:1px solid #c9ced6;box-shadow:-4px 0 12px rgba(0,0,0,.08);display:none;flex-direction:column;font-size:12px;color:#16181d}
+#f3p.on{display:flex}
+#f3p .f3-h{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid #e3e6eb;font-weight:700}
+#f3p .f3-h span{flex:1}
+#f3p .f3-b{flex:1;overflow:auto;padding:10px 12px}
+#f3p .f3-s{font-size:11px;font-weight:700;color:#5b6270;margin:12px 0 4px;letter-spacing:.5px}
+#f3p .f3-s:first-child{margin-top:0}
+#f3p dl{display:grid;grid-template-columns:78px 1fr;gap:3px 8px;margin:0}
+#f3p dt{color:#5b6270}
+#f3p dd{margin:0;word-break:break-all}
+#f3p .f3-n{font-feature-settings:'tnum' 1}
+#f3p .f3-e{color:#5b6270}
+@media print{#f3p{display:none!important}}
 #sbar{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:900;display:flex;align-items:center;gap:14px;padding:0 14px;background:#f8f9fb;border-top:1px solid #c9ced6;font-size:12px;color:#3f4550;font-feature-settings:'tnum' 1;white-space:nowrap;overflow:hidden}
 #sbar .sb-k b{display:inline-block;font-weight:700;color:#16181d;border:1px solid #d5d9e0;border-radius:3px;padding:0 4px;margin-right:3px;background:#fff;line-height:16px}
 #sbar .sb-k{margin-right:8px}
@@ -1696,6 +1709,7 @@ body.perm-ro #tmType{display:none}
 
 </div>
 
+<aside id="f3p" aria-label="원천·이력"><div class="f3-h"><span>원천 · 이력</span><button class="btn" onclick="f3Close()">닫기</button></div><div class="f3-b" id="f3Body"></div></aside>
 <div id="sbar" role="status" aria-live="polite"><span id="sbKeys"></span><span class="sb-sp"></span><span id="sbCnt"></span><span id="sbLock" class="sb-lock" style="display:none"></span><span id="sbCo">주식회사 승승장구컴퍼니</span></div>
 <footer>
   주식회사 승승장구컴퍼니 · 사업자등록번호: 772-87-02119 · 대표이사: 이세영 · HBS MASTER COCKPIT 연계 시스템
@@ -1861,6 +1875,7 @@ async function startApp(){
     if(st && st.data) ME = st.data;
   } catch(e){ console.warn('my_status error:', e); }
 
+  try { switchTab('todo'); } catch(e){}
   await loadAllData();
   loadToday();
   gridInitIn(document.querySelector('.tab-pane.active'));
@@ -5433,6 +5448,101 @@ function denSet(v){
 }
 function denToggle(){ denSet(document.body.classList.contains('den-33') ? '27' : '33'); }
 (function(){ var v = '27'; try { v = localStorage.getItem('ssjg_den') || '27'; } catch(e){} denSet(v); })();
+
+// ── 시안 5 공통 규격 3차 (v1.79) ──
+// (b) F3 원천·이력 패널
+function f3Close(){ var p = document.getElementById('f3p'); if(p) p.classList.remove('on'); setTimeout(sbPaint, 0); }
+function f3Open(){ var p = document.getElementById('f3p'); return !!(p && p.classList.contains('on')); }
+function f3N(v){ v = Math.round(Number(v || 0)); return v ? v.toLocaleString('ko-KR') : ''; }
+function f3Dl(rows){
+  return '<dl>' + rows.filter(function(r){ return r[1] !== '' && r[1] != null; }).map(function(r){
+    return '<dt>' + gEsc(r[0]) + '</dt><dd' + (r[2] ? ' class="f3-n"' : '') + '>' + gEsc(String(r[1])) + '</dd>'; }).join('') + '</dl>';
+}
+function f3Ts(v){ return v ? String(v).replace('T', ' ').slice(0, 16) : ''; }
+async function f3Ti(q){
+  try { var r = await q; var t = r.data && r.data[0]; if(!t) return '';
+    return '<div class="f3-s">세금계산서</div>' + f3Dl([['승인번호', t.approval_no], ['작성일', t.write_date], ['구분', [t.flow, t.ti_type].filter(Boolean).join(' ')], ['공급자', t.supplier], ['공급받는자', t.buyer], ['품목', t.item], ['공급가', f3N(t.supply_amt), 1], ['세액', f3N(t.vat_amt), 1], ['합계', f3N(t.total_amt), 1], ['정산', t.settle_status]]);
+  } catch(e){ return ''; }
+}
+async function f3Load(doc, origin, oid, date, lines){
+  var box = document.getElementById('f3Body'); if(!box) return;
+  document.getElementById('f3p').classList.add('on'); setTimeout(sbPaint, 0);
+  box.innerHTML = '<div class="f3-e">불러오는 중</div>';
+  var h = '<div class="f3-s">전표</div>' + f3Dl([['전표번호', doc], ['일자', date || ''], ['원천', origin || '']]);
+  try {
+    if(origin === '통장'){
+      var bl = (lines || []).filter(function(l){ return String(l.acct_code) === '103'; })[0] || {};
+      var dep = Math.round(Number(bl.dr || 0)), wd = Math.round(Number(bl.cr || 0));
+      var bq = sb.from('ssjg_bank_all').select('txn_at,counterparty,description,deposit_amt,withdraw_amt,balance_amt,memo,source_file').eq('txn_date', date).limit(5);
+      bq = dep ? bq.eq('deposit_amt', dep) : bq.eq('withdraw_amt', wd);
+      var b = await bq, T = b.data || [];
+      h += '<div class="f3-s">통장 거래 (일자·금액 대조 ' + T.length + '건)</div>' + (T.length ? T.map(function(t){ return f3Dl([['거래일시', f3Ts(t.txn_at)], ['상대', t.counterparty], ['내용', t.description], ['입금', f3N(t.deposit_amt), 1], ['출금', f3N(t.withdraw_amt), 1], ['잔액', f3N(t.balance_amt), 1], ['메모', t.memo || ''], ['원본', t.source_file || '']]); }).join('<hr style="border:0;border-top:1px dashed #e3e6eb;margin:6px 0">') : '<div class="f3-e">같은 날 같은 금액의 통장 거래 없음</div>');
+    } else if(origin === '전표' && oid){
+      var j = await sb.from('ssjg_journal').select('id,doc_no,src,title,partner,vendor,item,supply_amt,vat_amt,total_amt,approval_no,memo').eq('id', oid).limit(1);
+      var x = j.data && j.data[0];
+      h += '<div class="f3-s">가져온 전표</div>' + (x ? f3Dl([['구분', x.src], ['적요', x.title], ['거래처', x.partner || x.vendor || ''], ['품목', x.item || ''], ['공급가', f3N(x.supply_amt), 1], ['세액', f3N(x.vat_amt), 1], ['합계', f3N(x.total_amt), 1], ['메모', x.memo || '']]) : '<div class="f3-e">원본 행 없음</div>');
+      if(x && x.approval_no) h += await f3Ti(sb.from('ssjg_tax_invoices').select('*').eq('approval_no', x.approval_no).limit(1));
+    } else {
+      var hd = await sb.from('ssjg_jv_head').select('id,jv_no,jv_date,kind,memo,src_ref,created_at,created_by,updated_at').eq('jv_no', doc).limit(1);
+      var v = hd.data && hd.data[0];
+      if(v){
+        h += '<div class="f3-s">입력 이력</div>' + f3Dl([['구분', v.kind], ['작성', f3Ts(v.created_at)], ['작성자', v.created_by || ''], ['최종 수정', v.updated_at && v.updated_at !== v.created_at ? f3Ts(v.updated_at) : ''], ['근거', v.src_ref || '직접 입력']]);
+        if(/^TI:/.test(v.src_ref || '')) h += await f3Ti(sb.from('ssjg_tax_invoices').select('*').eq('id', v.src_ref.slice(3)).limit(1));
+        if(/^REV:/.test(v.src_ref || '')) h += '<div class="f3-s">원전표</div><div><a href="javascript:void 0" onclick="drOpen(\'' + gEsc(v.src_ref.slice(4)) + '\',\'\')">' + gEsc(v.src_ref.slice(4)) + ' 열기</a></div>';
+      }
+    }
+    var rv = await sb.from('ssjg_jv_head').select('jv_no,jv_date,memo').eq('src_ref', 'REV:' + doc).limit(5);
+    h += '<div class="f3-s">역분개 · 취소</div>' + ((rv.data || []).length ? rv.data.map(function(r){ return '<div><a href="javascript:void 0" onclick="drOpen(\'' + gEsc(r.jv_no) + '\',\'\')">' + gEsc(r.jv_no) + '</a> ' + gEsc(r.jv_date) + ' ' + gEsc(r.memo || '') + '</div>'; }).join('') : '<div class="f3-e">없음</div>');
+    var ym = String(date || '').slice(0, 7);
+    if(ym){ var c = await sb.from('ssjg_close_months').select('ym').eq('ym', ym).limit(1);
+      h += '<div class="f3-s">마감</div><div>' + (c.data && c.data.length ? '<span class="bdg bdg-close">마감</span> ' + gEsc(ym) + ' — 수정 잠김, 정정은 열린 달에 역분개' : gEsc(ym) + ' 열림') + '</div>'; }
+  } catch(e){ h += '<div class="f3-e">조회 실패: ' + gEsc(e.message || String(e)) + '</div>'; }
+  box.innerHTML = h;
+}
+function f3Toggle(){
+  if(f3Open()){ f3Close(); return; }
+  if(drIsOpen() && (DR.lines || []).length){ var L = DR.lines[0]; f3Load(DR.doc, L.origin || DR.o, L.origin_id, L.doc_date, DR.lines); return; }
+  var p = pgPane();
+  if(p && p.id === 'tab-journal'){
+    if(!JV.id){ gToast('저장된 전표를 불러온 뒤 F3', true); return; }
+    f3Load((document.getElementById('jvNo').textContent || '').trim(), '입력전표', null, document.getElementById('jvDate').value); return;
+  }
+  var tr = p && p.querySelector('tr.dr-row.sel');
+  if(tr && tr.dataset.doc){ f3Load(tr.dataset.doc, tr.dataset.o || '', null, ''); return; }
+  gToast('전표 상세창이나 전표입력에서 F3', true);
+}
+// (c) F5 취소 = 역분개 전표 자동 저장
+async function jvCancel(){
+  if(PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
+  var doc, fromDr = drIsOpen();
+  if(fromDr){
+    doc = DR.doc;
+    if((DR.o || (DR.lines[0] || {}).origin) !== '입력전표'){ gToast('통장·가져온 전표는 원천 자료에서 정정합니다. 입력전표만 취소할 수 있습니다', true); return; }
+  } else {
+    if(!JV.id){ gToast('취소할 전표를 먼저 불러오십시오', true); return; }
+    doc = (document.getElementById('jvNo').textContent || '').trim();
+  }
+  if(!confirm(doc + ' 전표를 취소합니다.\n반대 분개 전표를 오늘 날짜로 저장하고, 원전표는 그대로 남깁니다.')) return;
+  if(fromDr) await drCopy(true); else await jvCopyDraft(true);
+  if(JV.srcRef !== 'REV:' + doc) return;
+  var m = document.getElementById('jvMemo'); m.value = '[취소] ' + m.value.replace(/^역분개\s+/, '');
+  await jvSave();
+}
+document.addEventListener('keydown', function(e){
+  if(!document.getElementById('app') || document.getElementById('app').classList.contains('hide')) return;
+  var p = pgPane(), pid = p ? p.id : '';
+  if(e.key === 'F3'){ e.preventDefault(); f3Toggle(); return; }
+  if(e.key === 'Escape' && f3Open() && !drIsOpen()){ e.preventDefault(); f3Close(); return; }
+  if(e.key === 'F5' && (drIsOpen() || pid === 'tab-journal')){ e.preventDefault(); jvCancel(); }
+}, true);
+var _sbKeys179 = sbKeys;
+sbKeys = function(p){
+  function f(k){ return k.map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join(''); }
+  var h = _sbKeys179.apply(this, arguments);
+  if(drIsOpen() || (p && p.id === 'tab-journal')) h += f([['F3', f3Open() ? '패널 닫기' : '원천'], ['F5', '취소']]);
+  return h;
+};
+var _drOpen179 = drOpen; drOpen = async function(){ var r = await _drOpen179.apply(this, arguments); if(f3Open() && (DR.lines || []).length){ var L = DR.lines[0]; f3Load(DR.doc, L.origin || DR.o, L.origin_id, L.doc_date, DR.lines); } return r; };
 
 window.addEventListener('DOMContentLoaded', initSupabase);
 </script>
