@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.06</title>
+<title>BVS 현장앱 v1.07</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231d4ed8'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g)'/%3E%3Ctext x='96' y='124' font-family='-apple-system,sans-serif' font-size='76' font-weight='900' fill='white' text-anchor='middle'%3EBV%3C/text%3E%3C/svg%3E">
 <style>
-/* ── [더존 Amaranth10 / BVS ERP 표준 디자인 시스템] ── */
+/* ── [BVS ERP 표준 디자인 시스템] ── */
 :root, html[data-theme="light"] {
   --font-sans: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   --bg: #f2f4f7;
@@ -156,7 +156,7 @@ button,input,select,textarea,table{font-family:var(--font-sans);color:inherit}
 .nav-btn.active{background:var(--ac2);border-color:var(--ac);color:var(--ac);font-weight:700}
 .nav-btn i{font-style:normal;font-size:10px}
 
-/* ── [더존 사원 정보 스트립 (.user-strip)] ── */
+/* ── [사원 정보 스트립 (.user-strip)] ── */
 .user-strip{
   display:flex;align-items:center;justify-content:space-between;
   background:var(--sf);border:1px solid var(--ln);border-radius:2px;
@@ -180,7 +180,7 @@ button,input,select,textarea,table{font-family:var(--font-sans);color:inherit}
 .user-strip .btn-tool.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{100%{transform:rotate(360deg)}}
 
-/* ── [더존 표준 비즈니스 카드 & 섹션 헤더] ── */
+/* ── [표준 비즈니스 카드 & 섹션 헤더] ── */
 .card{
   background:var(--sf);border:1px solid var(--ln);border-radius:2px;
   padding:12px 14px;margin-bottom:10px;box-shadow:none;
@@ -199,7 +199,7 @@ button,input,select,textarea,table{font-family:var(--font-sans);color:inherit}
 .in:focus{border-color:var(--ac);background:var(--sf);box-shadow:0 0 0 1px var(--ac)}
 textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 
-/* 버튼: 더존 직각 ERP 버튼 */
+/* 버튼: 직각 ERP 버튼 */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:5px;
   padding:7px 12px;border-radius:2px;border:1px solid var(--ln);background:var(--sf);
@@ -213,7 +213,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 .btn.sm{padding:4px 10px;min-height:28px;font-size:12px;font-weight:600;border-radius:2px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
-/* ── [장소 선택 더존 매트릭스 그리드 (.place-matrix)] ── */
+/* ── [장소 선택 매트릭스 그리드 (.place-matrix)] ── */
 .place-matrix{
   width:100%;border-collapse:collapse;margin:4px 0 8px;
   border:1px solid var(--ln);background:var(--sf);
@@ -412,6 +412,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 #moreSheet .mi svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
 #moreSheet .mi.alert::after,.tabs div.more.alert::after{content:'';position:absolute;top:5px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:var(--crit)}
 
+.tabs div.sec2{display:none!important}
 </style>
 </head>
 <body>
@@ -538,7 +539,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </header>
 
-    <!-- 더존 스마트A 스타일 사원 정보 스트립 (.user-strip) -->
+    <!-- 사원 정보 스트립 (.user-strip) -->
     <div class="user-strip">
       <div class="u-info">
         <span class="u-badge" id="uGradePill">엔지니어</span>
@@ -571,12 +572,12 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <a class="mob-nav-item" href="./pyro.html"><i style="color:#15803d">●</i> PYRO 제조 ERP</a>
           <a class="mob-nav-item on" href="./worker.html"><i style="color:#1D4ED8">●</i> BVS 현장앱 (현재)</a>
           <div class="mob-nav-grp" style="margin-top:10px">현장앱 주요 업무</div>
-          <div class="mob-nav-item" onclick="tab('in');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 출퇴근 및 공수 등록</div>
-          <div class="mob-nav-item" onclick="tab('log');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 작업일지 작성</div>
-          <div class="mob-nav-item" onclick="tab('sf');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 일일 안전점검</div>
-          <div class="mob-nav-item" onclick="tab('rec');closeMobNavModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 공수 및 근무기록</div>
-          <div class="mob-nav-item" onclick="tab('lead');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 리드 관리 (팀 공수 승인)</div>
-          <div class="mob-nav-item" onclick="tab('docs');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> 전자계약서</div>
+          <div class="mob-nav-item" onclick="go('in');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 출퇴근 및 공수 등록</div>
+          <div class="mob-nav-item" onclick="go('log');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 작업일지 작성</div>
+          <div class="mob-nav-item" onclick="go('safety');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 일일 안전점검</div>
+          <div class="mob-nav-item" onclick="go('list');closeMobNavModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 공수 및 근무기록</div>
+          <div class="mob-nav-item" onclick="go('lead');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 리드 관리 (팀 공수 승인)</div>
+          <div class="mob-nav-item" onclick="go('doc');closeMobNavModal()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> 전자계약서</div>
           <div class="mob-nav-grp" style="margin-top:10px">시스템 설정</div>
           <div class="mob-nav-item" onclick="toggleTheme()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> 테마 전환 (라이트/다크)</div>
           <div class="mob-nav-item" onclick="doLogout()" style="color:var(--crit)"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M21 3v18"/></svg> 로그아웃</div>
