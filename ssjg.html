@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.82">
+<meta name="app-version" content="1.83">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5592,11 +5592,7 @@ async function inbHist(){
   INB.hist = { P: P, T: T }; return INB.hist;
 }
 function inbTop(M){ if(!M) return null; var ks = Object.keys(M), n = 0, b = null; ks.forEach(function(k){ n += M[k]; if(!b || M[k] > M[b]) b = k; }); return b ? { c: b, m: M[b], n: n } : null; }
-function inbRp(name){
-  var n = tjvNorm(name || ''); if(!n || n === '(없음)') return false;
-  var ceo = tjvNorm((PRT.co && PRT.co.ceo) || '');
-  return (ceo && n.indexOf(ceo) >= 0) || !!trWho(name);
-}
+function inbRp(name){ return false; }
 function tiLines(x, cp){
   var sup = Math.round(Number(x.supply_amt || 0)), vat = Math.round(Number(x.vat_amt || 0)), tot = Math.round(Number(x.total_amt || 0)) || sup + vat, memo = x.item || '', L = [];
   if(x.flow === '매출'){
