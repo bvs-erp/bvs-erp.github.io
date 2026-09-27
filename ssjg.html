@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.83">
+<meta name="app-version" content="1.84">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3080,7 +3080,8 @@ function handleCafe24File(file){
         var ordererPhone = String(row['주문자전화번호'] || row['전화'] || '').trim();
         var ordererMobile = String(row['주문자핸드폰'] || row['핸드폰'] || '').trim();
         var receiver = String(row['수령인'] || row['받는사람'] || '').trim();
-        var receiverPhone = String(row['전화'] || row['수하인전화'] || '').trim();
+        var receiverPhone = String(row['전화번호'] || row['수령지전화'] || row['전화'] || row['수하인전화'] || '').trim();
+        var shipMsg = String(row['비고'] || row['배송메시지'] || row['배송메세지'] || '').trim();
         var receiverMobile = String(row['핸드폰'] || row['수령인핸드폰'] || receiverPhone).trim();
         var zipcode = String(row['우편번호'] || '').trim();
         var address = String(row['주소'] || '').trim();
@@ -3100,7 +3101,7 @@ function handleCafe24File(file){
           '수령인핸드폰': receiverMobile,
           '우편번호': zipcode,
           '배송지주소': address,
-          '배송메시지': '', // Claude 합의: 카페24 원본에 없으므로 공란 보장
+          '배송메시지': shipMsg,
           '상품명': productName,
           '옵션': option,
           '수량': qty,
