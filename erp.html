@@ -768,10 +768,10 @@ td.ed:hover{border-radius:0}
     <select id="msel" class="sel" onchange="setMonth(this.value)"></select>
     <span class="stamp" id="stamp">–</span>
     <div class="elinks">
-      <a class="nav-btn active" href="./erp.html"><i style="color:#1D4ED8">●</i> BVS 현장 ERP</a>
-      <a class="nav-btn" href="./ssjg.html"><i style="color:#dc2626">●</i> SSJG ERP</a>
-      <a class="nav-btn" href="./pyro.html"><i style="color:#15803d">●</i> PYRO 제조 콕핏</a>
-      <a class="nav-btn" href="./worker.html" target="_blank" rel="noopener noreferrer" title="현장 공수 ERP (새 탭)">공수 ERP</a>
+      <a class="nav-btn active" href="./erp.html"><i style="color:#1D4ED8">●</i> BVS</a>
+      <a class="nav-btn" href="./ssjg.html"><i style="color:#dc2626">●</i> SSJG</a>
+      <a class="nav-btn" href="./pyro.html"><i style="color:#15803d">●</i> PYRO</a>
+      <a class="nav-btn" href="./worker.html" target="_blank" rel="noopener noreferrer" title="현장 인원 공수 입력 (새 탭)">현장앱</a>
       <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
       <button class="nav-btn" onclick="doLogout()" title="로그아웃">로그아웃</button>
     </div>
@@ -1308,7 +1308,7 @@ function getAllowedPages(){
   return [];
 }
 var D={};'payp co pick disp plans attk att set dash pay ldr al sd sdm gap di alw cons retro pj pjl pji pjr pjq pjs pjk cm pjd pjm intg ptn close items pgap sup crew carpool lm sites staff rateh perh teamh trn roster ctr dlog pumpd apay tclaim mrev mrevl ht htm htv htr inbox bank card cash acct stl stp stm po esg esgt grd tgr pjc pjcs pjcm'.split(' ').forEach(function(k){D[k]=[]});
-var APPVER='1.71';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
+var APPVER='1.73';  /* 올릴 때마다 0.01씩 (1.00 → 1.01 → 1.02 …) */
 var ST={page:'home',month:null,pm:'items',sort:{}};
 function el(id){return document.getElementById(id)}
 function show(i){el(i).classList.remove('hide')} function hide(i){el(i).classList.add('hide')}
@@ -2052,17 +2052,15 @@ async function lqPaged(fn){var PS=1000,MAX=60000;
   var out=r.data.slice();
   for(var f=out.length;f<MAX;f+=PS){var x=await fn().range(f,f+PS-1);if(x.error)return x;var d=x.data||[];out=out.concat(d);if(d.length<PS)break}
   return {data:out,error:null}}
-async function loadAll(){
-  var gen=++LQ.gen;LOADING=true;
-  var t0=performance.now();LQ.t0=t0;el('stamp').textContent='불러오는 중…';if(el('errbox'))el('errbox').innerHTML='';
+function lzFns(){
   var Q=[
     ['att',function(){return sb.from('ceo_attendance').select('*').order('work_date',{ascending:false}).limit(3000)}],
     ['attk',function(){return sb.from('ceo_attendance_keys').select('*').order('work_date',{ascending:false}).limit(3000)}],
     ['set',function(){return sb.from('ceo_settlement').select('*').limit(5000)}],
-    ['dash',function(){return sb.from('ceo_dashboard').select('*').order('period_ym')}],
+    ['dash',function(){return sb.from('sys_dashboard_kpi').select('*').order('period_ym')}],
     ['pay',function(){return sb.from('ceo_pay_balance').select('*')}],
     ['ldr',function(){return sb.from('ceo_leader_balance').select('*').order('period_ym',{ascending:false}).limit(48)}],
-    ['al',function(){return sb.from('ceo_alerts').select('*').order('sort_ord')}],
+    ['al',function(){return sb.from('sys_alert_list').select('*').order('sort_ord')}],
     ['sd',function(){return sb.from('ceo_sd_docs').select('*').order('doc_date',{ascending:false}).limit(1500)}],
     ['sdm',function(){return sb.from('ceo_sd_month').select('*')}],
     ['gap',function(){return sb.from('ceo_sd_fi_gap').select('*').limit(300)}],
@@ -2076,14 +2074,14 @@ async function loadAll(){
     ['pmb',function(){return sb.from('ceo_pay_month_basis').select('*').order('period_ym',{ascending:false}).limit(2000)}],
     ['stk',function(){return sb.from('ceo_stock').select('*').order('item_code').limit(3000)}],
     ['stmv',function(){return sb.from('ceo_stock_moves').select('*').order('move_on',{ascending:false}).limit(3000)}],
-    ['ack',function(){return sb.from('ceo_alert_acks').select('*')}],
+    ['ack',function(){return sb.from('sys_alert_ack').select('*')}],
     ['tf',function(){return sb.from('ceo_tax_filings').select('*').order('due_on',{ascending:false}).limit(1000)}],
     ['sadj',function(){return sb.from('ceo_settle_adjustments').select('*').order('adj_on',{ascending:false}).limit(2000)}],
-    ['hol',function(){return sb.from('ceo_holidays').select('*').order('holiday_date')}],
-    ['seth',function(){return sb.from('ceo_settings_history').select('*').order('setting_key').order('valid_from',{ascending:false}).limit(2000)}],
+    ['hol',function(){return sb.from('core_holiday').select('*').order('holiday_date')}],
+    ['seth',function(){return sb.from('core_setting_ledger').select('*').order('setting_key').order('valid_from',{ascending:false}).limit(2000)}],
     ['tr',function(){return sb.from('ceo_tax_risk').select('*').order('voucher_date',{ascending:false}).limit(2000)}],
-    ['uacc',function(){return sb.rpc('ceo_erp_accounts')}],
-    ['uorp',function(){return sb.rpc('ceo_erp_orphans')}],
+    ['uacc',function(){return sb.rpc('sys_user_list')}],
+    ['uorp',function(){return sb.rpc('sys_user_orphan_list')}],
     ['sfk',function(){return sb.from('ceo_safety').select('*').order('work_date',{ascending:false}).limit(4000)}],
     ['eds',function(){return sb.from('ceo_training_sessions').select('*').order('held_on',{ascending:false}).limit(300)}],
     ['edg',function(){return sb.from('ceo_training_signs').select('*').limit(4000)}],
@@ -2110,7 +2108,7 @@ async function loadAll(){
     ['roster',function(){return sb.from('ceo_access_roster').select('*').order('name')}],
     ['ctr',function(){return sb.from('ceo_contracts').select('*').order('signed_on',{ascending:false}).limit(2000)}],
     ['dlog',function(){return sb.from('ceo_disclosure_log').select('*').order('disclosed_on',{ascending:false}).limit(500)}],
-    ['setg',function(){return sb.from('ceo_settings').select('*').order('setting_key')}],
+    ['setg',function(){return sb.from('core_setting').select('*').order('setting_key')}],
     ['pipe',function(){return sb.from('ceo_sd_pipeline').select('*')}],
     ['chk',function(){return sb.from('ceo_op_check').select('*')}],
     ['pcash',function(){return sb.from('ceo_partner_cash').select('*')}],
@@ -2122,8 +2120,8 @@ async function loadAll(){
     ['pumpd',function(){return sb.from('ceo_pump_daily').select('*').order('work_date',{ascending:false}).limit(120)}],
     ['apay',function(){return sb.from('ceo_auto_payments').select('*').order('paid_on',{ascending:false}).limit(400)}],
     ['tclaim',function(){return sb.from('ceo_team_claim').select('*').order('period_ym',{ascending:false}).limit(300)}],
-    ['intg',function(){return sb.from('ceo_integrity').select('*').order('sort_ord')}],
-    ['ptn',function(){return sb.from('ceo_partners').select('*').order('name')}],
+    ['intg',function(){return sb.from('sys_integrity_summary').select('*').order('sort_ord')}],
+    ['ptn',function(){return sb.from('core_partner').select('*').order('name')}],
     ['close',function(){return sb.from('ceo_month_close').select('*').order('period_ym',{ascending:false}).limit(24)}],
     ['items',function(){return sb.from('ceo_items').select('*').order('item_code').limit(2000)}],
     ['pgap',function(){return sb.from('ceo_price_gap').select('*').order('spread_pct',{ascending:false}).limit(1000)}],
@@ -2134,11 +2132,11 @@ async function loadAll(){
     ['mrevl',function(){return sb.from('ceo_month_revenue_lines').select('*').order('period_ym',{ascending:false}).limit(3000)}],
     ['disp',function(){return sb.from('ceo_disputes').select('*').order('created_at',{ascending:false}).limit(200)}],
     ['payp',function(){return sb.from('ceo_pay_profiles').select('*').order('person_name')}],
-    ['co',function(){return sb.from('ceo_company').select('*')}],
+    ['co',function(){return sb.from('core_company').select('*')}],
     ['ht',function(){return sb.from('ceo_hometax_invoices').select('*').order('issue_date',{ascending:false}).limit(3000)}],
     ['htm',function(){return sb.from('ceo_hometax_month').select('*').order('period_ym',{ascending:false})}],
     ['htv',function(){return sb.from('ceo_hometax_vs_sd').select('*').order('period_ym',{ascending:false}).limit(2000)}],
-    ['htr',function(){return sb.from('ceo_hometax_runs').select('*').limit(30)}],
+    ['htr',function(){return sb.from('sys_sync_run').select('*').limit(30)}],
     ['inbox',function(){return sb.from('ceo_fi_inbox').select('*').order('on_date',{ascending:false}).order('key',{ascending:false}).limit(1000)}],
     ['bank',function(){return sb.from('ceo_bank_txns').select('*').order('txn_at',{ascending:false}).order('txn_id',{ascending:false}).limit(1500)}],
     ['card',function(){return sb.from('ceo_card_txns').select('*').order('approved_at',{ascending:false}).order('row_key',{ascending:false}).limit(1500)}],
@@ -2162,70 +2160,97 @@ async function loadAll(){
     Q = Q.filter(function(q){ return LEAD_ALLOW[q[0]]; });
   }
   if(!isOwner()){ Q = Q.filter(function(q){ return q[0]!=='pjc'&&q[0]!=='pjcs'&&q[0]!=='pjcm'; }); }
-  var fns={};Q.forEach(function(q){fns[q[0]]=q[1]});
-  var first={};lqPageKeys(ST.page||'home').forEach(function(k){first[k]=1});
-  var keys=Q.map(function(q){return q[0]});
-  LQ.fns=fns;LQ.done={};LQ.errs=[];LQ.rendered={};LQ.retried={};GPL_CACHE={};try{glReset()}catch(e){}
-  LQ.queue=keys.filter(function(k){return first[k]}).concat(keys.filter(function(k){return !first[k]}));
-  if(LQ.busy>0)return new Promise(function(res){LQ.waiters.push(res)});   // 이미 돌고 있는 일꾼들이 새 순서로 이어서 가져감 · 끝나면 알림
-
-  async function runOne(k, fn, g, retries){
-    retries = retries || 0;
-    try{
-      var r = await lqPaged(fn);
-      if(g!==LQ.gen)return;   // 도중에 다시 불렀으면 옛 결과는 버림(새 순서에 다시 들어 있음)
-      if(r && r.error){
-        if((r.error.code === '57014' || /timeout|canceled|canceling/i.test(r.error.message||''))&&!LQ.retried[k]){
-          LQ.retried[k]=1;LQ.queue.push(k);return;   // 무거운 조회가 겹쳐 시간 초과 → 바로 다시 하지 않고 줄 끝에서 한 번 더
-        }
-        LQ.errs.push(k+': '+r.error.message);LQ.done[k]=1;
-        return;
-      }
-      D[k]=(r&&r.data)||[];LQ.done[k]=1;
-    }catch(e){
-      if(retries < 1){
-        await new Promise(function(res){ setTimeout(res, 800); });
-        return runOne(k, fn, g, retries + 1);
-      }
-      if(g===LQ.gen){LQ.errs.push(k+': '+(e&&e.message||e));LQ.done[k]=1}
+  var fns={};Q.forEach(function(q){fns[q[0]]=q[1]});return fns;
+}
+async function loadAll(extra){
+  LZ.fns=lzFns();LQ.fns=LZ.fns;var gen=++LZ.gen;LQ.gen=gen;
+  Object.keys(LZ.st).forEach(function(k){if(LZ.st[k]==='ok')LZ.st[k]='stale'});
+  var p=ST.page||'home',keys=lzNeed(p).concat(Array.isArray(extra)?extra:[]);
+  LOADING=true;var t0=performance.now();el('stamp').textContent='불러오는 중…';if(el('errbox'))el('errbox').innerHTML='';
+  var errs=await lzFetch(keys,false);
+  if(gen!==LZ.gen)return;
+  LOADING=false;_lastLoadTime=Date.now();GPL_CACHE={};try{glReset()}catch(e){}CAL.cache={};
+  var ms=Math.round(performance.now()-t0);
+  try{buildMonths()}catch(e){console.error(e)}
+  for(var k in _dirtyPages)_dirtyPages[k]=true;
+  renderPage(ST.page||'home');try{updateBrandSubtitle()}catch(e){}try{updateAlertBadge()}catch(e){}
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 조회 완료 ('+ms+'ms)'+(errs.length?' <span class="wn">· '+errs.length+'건 실패</span>':'');
+  LASTERR=errs;
+  if(errs.length)toast('조회 '+errs.length+'건 실패','e');
+  var eb=el('errbox');if(eb)eb.innerHTML=errs.length?'<div class="al" style="padding:8px 12px;border:1px solid var(--crit);border-radius:6px"><b>조회 실패 '+errs.length+'건</b> — 아래 화면의 숫자가 빠져 있을 수 있습니다<br>'+errs.map(function(x){return esc(x)}).join('<br>')+'</div>':'';
+  if(LZ.fns.dash&&!D.dash.length&&!errs.length&&!isEngLead())toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
+  lzIdle();
+}
+/* v1.73 화면별 조회: 로그인 때 전부 부르지 않고, 지금 여는 화면에 필요한 자료만 부른다. 조회 버튼은 지금 화면만 다시 부른다. */
+var PK={"home":["abs","acct","al","att","attk","co","dash","edg","eds","esgt","gap","hol","intg","lm","pay","pipe","plans","sd","sdm","set","setg","sfk","stl","tr"],"site":["abs","att","attk","chk","disp","lm","lrv","pj","pjl","plans","ptn","set","sites","srate","staff"],"sales":["acct","pipe","ptn","sd","sdm"],"money":["alw","apay","att","bank","co","cons","ctr","dash","dlog","esg","esgt","grd","hol","ldr","padj","pay","payp","perh","pmb","ptn","rateh","retro","roster","set","setg","seth","staff","tclaim","teamh","tgr","trn","uacc","uorp"],"pl":["acct","dash","di","lnc","lno","mj"],"pm":["items","mat","pgap","po","sites","stk","stmv","sup"],"hr":["alw","apay","att","bank","co","cons","ctr","dlog","esg","esgt","grd","hol","padj","pay","payp","perh","pmb","ptn","rateh","retro","roster","set","setg","seth","staff","teamh","tgr","trn","uacc","uorp"],"safety":["edg","eds","sfk"],"crew":["abs","att","carpool","co","crew","setg","staff"],"close":["acct","alw","apay","att","bank","close","cm","co","cons","ctr","dlog","esg","esgt","grd","hol","htv","mrev","mrevl","padj","pay","payp","perh","pj","pjd","pji","pjk","pjm","pjq","pjs","pmb","ptn","rateh","retro","roster","sd","set","setg","seth","sites","staff","teamh","tgr","trn","uacc","uorp"],"tax":["acct","card","pipe","sd","tf"],"ht":["acct","bank","bunm","card","cash","co","ht","htm","htr","htv","inbox","ptn","sd"],"settle":["bunm","pcash","po","sadj","stl","stm","stp"],"alerts":["ack","al","att","attk","edg","eds","gap","intg","pay","pj","pjl","po","set","setg","sfk","sites","stl","tr","trg","tro"],"project":["pjc","pjcm","pjcs","ptn","sites","srate","staff"],"gl":["acct","ht","pipe","sd"],"badge":["al","att","attk","edg","eds","gap","intg","pay","set","sfk","stl","tr"],"shell":["co","dash","hol","sdm"]};
+var SHELL_KEYS=['co','setg','hol','dash','sdm'];
+var LZ={st:{},fns:null,gen:0,run:{},fg:0,heavy:0,idle:null,waits:{}};
+function lzNeed(p){var s={},o=[];SHELL_KEYS.concat(PK[p]||[]).forEach(function(k){if(!s[k]&&LZ.fns&&LZ.fns[k]){s[k]=1;o.push(k)}});return o}
+async function lzOne(k){
+  var fn=LZ.fns[k];if(!fn)return null;
+  for(var a=0;a<2;a++){
+    try{var r=await lqPaged(fn);
+      if(r&&r.error){if(a===0&&(r.error.code==='57014'||/timeout|cancel/i.test(r.error.message||''))){await new Promise(function(z){setTimeout(z,600)});continue}return k+': '+r.error.message}
+      D[k]=(r&&r.data)||[];LZ.st[k]='ok';LQ.done[k]=1;return null}
+    catch(e){if(a===0){await new Promise(function(z){setTimeout(z,800)});continue}return k+': '+(e&&e.message||e)}
+  }
+  return k+': 시간 초과';
+}
+var LZW=[];function lzWake(){var w=LZW;LZW=[];w.forEach(function(f){f()})}
+function lzWait(){return new Promise(function(r){LZW.push(r)})}
+async function lzFetch(keys,bg){
+  keys=keys.filter(function(k,i){return LZ.fns&&LZ.fns[k]&&keys.indexOf(k)===i});
+  var errs=[],q=keys.slice(),mine=[];
+  if(!bg)LZ.fg++;
+  async function w(){
+    while(q.length){
+      if(bg&&LZ.fg>0){await lzWait();continue}
+      var idx=-1;for(var i=0;i<q.length;i++){if(!HEAVY_KEYS[q[i]]||LZ.heavy<HEAVY_MAX){idx=i;break}}
+      if(idx<0){await lzWait();continue}
+      var k=q.splice(idx,1)[0];
+      if(LZ.run[k]){mine.push(LZ.run[k]);continue}
+      if(bg&&LZ.st[k]==='ok')continue;
+      var hv=!!HEAVY_KEYS[k];if(hv)LZ.heavy++;
+      var pr=lzOne(k);LZ.run[k]=pr;
+      try{var e=await pr;if(e)errs.push(e)}finally{if(hv)LZ.heavy--;delete LZ.run[k];lzWake()}
     }
   }
-  function afterOne(){
-    var p=ST.page||'home';
-    if(!LQ.rendered[p+'@'+LQ.gen]&&lqPageReady(p)){LQ.rendered[p+'@'+LQ.gen]=1;
-      try{buildMonths();_dirtyPages[p]=true;renderPage(p);updateAlertBadge()}catch(e){console.error(e)}
-      el('stamp').textContent='화면 '+Math.round(performance.now()-LQ.t0)+'ms · 나머지 불러오는 중…'}
-  }
-  async function worker(){
-    LQ.busy++;
-    try{
-      while(LQ.queue.length){
-        var idx=-1;
-        for(var i=0;i<LQ.queue.length;i++){if(!HEAVY_KEYS[LQ.queue[i]]||LQ.heavy<HEAVY_MAX){idx=i;break}}
-        if(idx<0){await new Promise(function(r){setTimeout(r,40)});continue}   // 무거운 것만 남았고 자리가 없으면 잠깐 기다림
-        var k=LQ.queue.splice(idx,1)[0],g=LQ.gen,fn=LQ.fns[k];
-        if(!fn||LQ.done[k])continue;
-        var hv=!!HEAVY_KEYS[k];if(hv)LQ.heavy++;
-        try{await runOne(k,fn,g)}finally{if(hv)LQ.heavy--}
-        afterOne();
-      }
-    }finally{LQ.busy--}
-  }
-  await Promise.all([worker(),worker(),worker(),worker()]);
-  if(LQ.queue.length||LQ.busy>0)return new Promise(function(res){LQ.waiters.push(res)});
-  LOADING=false;
-  _lastLoadTime=Date.now();
-  var errs=LQ.errs;
-  var ms=Math.round(performance.now()-LQ.t0);
-  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 조회 완료 ('+ms+'ms)'+(errs.length?' <span class="wn">· '+errs.length+'건 실패</span>':'');
-  buildMonths();
-  renderAll();try{updateBrandSubtitle()}catch(e){}
-  LASTERR=errs;
-  if(errs.length){toast('조회 '+errs.length+'건 실패','e')}
-  var eb=el('errbox');if(eb)eb.innerHTML=errs.length?'<div class="al" style="padding:8px 12px;border:1px solid var(--crit);border-radius:6px"><b>조회 실패 '+errs.length+'건</b> — 아래 화면의 숫자가 빠져 있을 수 있습니다<br>'+errs.map(function(x){return esc(x)}).join('<br>')+'</div>':'';
-  if(!D.dash.length&&!errs.length&&!isEngLead())toast('연결은 됐는데 0건입니다. 로그인 계정이 대표(owner) 권한인지 확인이 필요합니다.','e');
-  var w=LQ.waiters;LQ.waiters=[];w.forEach(function(f){try{f()}catch(e){}});
+  try{var n=bg?1:4,ws=[];for(var i=0;i<n;i++)ws.push(w());await Promise.all(ws);await Promise.all(mine)}finally{if(!bg){LZ.fg--;lzWake()}}
+  return errs;
 }
+/* 화면을 열 때: 아직 안 불렀거나 오래된 자료만 부른 뒤 다시 그림 */
+async function lzEnsure(p){
+  if(!LZ.fns||!LQ.gen)return;
+  var miss=lzNeed(p).filter(function(k){return LZ.st[k]!=='ok'});if(!miss.length)return;
+  var t0=performance.now();el('stamp').textContent='불러오는 중…';
+  var errs=await lzFetch(miss,false);
+  if((ST.page||'home')!==p)return;
+  _dirtyPages[p]=true;renderPage(p);try{updateAlertBadge()}catch(e){}
+  el('stamp').innerHTML=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' 조회 완료 ('+Math.round(performance.now()-t0)+'ms)'+(errs.length?' <span class="wn">· '+errs.length+'건 실패</span>':'');
+  if(errs.length)toast('조회 '+errs.length+'건 실패','e');
+}
+/* 화면이 뜬 뒤 여유 시간에 경보 자료만 한 개씩 채움(화면 조회 중에는 멈춤) */
+function lzIdle(){
+  if(LZ.idle)clearTimeout(LZ.idle);
+  LZ.idle=setTimeout(async function(){
+    var badge=PK.badge||[];
+    await lzFetch(badge.filter(function(k){return LZ.st[k]!=='ok'}),true);
+    try{updateAlertBadge()}catch(e){}
+  },1500);
+}
+/* 안전망: 화면 코드가 아직 안 부른 자료를 찾으면 뒤에서 불러오고, 지금 화면에 쓰이면 다시 그림 */
+function lzLate(k){
+  if(!LZ.fns||!LZ.fns[k]||LZ.run[k]||LZ.st[k]==='ok'||LZ.waits[k])return;
+  LZ.waits[k]=1;
+  setTimeout(function(){lzFetch([k],true).then(function(){delete LZ.waits[k];
+    var p=ST.page||'home';for(var x in _dirtyPages)_dirtyPages[x]=true;
+    if((PK[p]||[]).indexOf(k)>=0||SHELL_KEYS.indexOf(k)>=0){renderPage(p)}
+    else if(el('dr')&&el('dr').classList.contains('on'))toast('필요한 자료를 방금 불러왔습니다. 창을 다시 열면 반영됩니다');
+    try{updateAlertBadge()}catch(e){}})},0);
+}
+D=new Proxy(D,{get:function(t,k){if(typeof k==='string'&&LZ.fns&&LZ.fns[k]&&LZ.st[k]!=='ok')lzLate(k);return t[k]}});
+HEAVY_MAX=2;
+
 var LASTERR=[];
 
 /* LAZY TAB RENDERING SYSTEM */
@@ -3101,7 +3126,7 @@ async function acctSaveRole(uid){
   var role = sel.value;
   var isLead = (role === 'eng_lead');
   toast('권한 저장 중…');
-  var r = await sb.rpc('ceo_set_user_role', {p_user_id: uid, p_role: role, p_is_lead: isLead});
+  var r = await sb.rpc('sys_user_role_save', {p_user_id: uid, p_role: role, p_is_lead: isLead});
   if(r.error || !(r.data && r.data.ok)){
     toast((r.error && r.error.message) || (r.data && r.data.error) || '권한 저장 실패', 'e');
     return;
@@ -3235,11 +3260,11 @@ async function edDelete(id){
 }
 
 /* ═══════════ 매출·문서 ═══════════ */
-function ptnSave(r,f,v){var p={partner_id:r.partner_id};p[f]=v;return sb.rpc('ceo_set_partner',{p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data})}
+function ptnSave(r,f,v){var p={partner_id:r.partner_id};p[f]=v;return sb.rpc('core_partner_save',{p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};return x.data})}
 function ptnNew(){drOpen('새 거래처','<div class="f"><label>거래처명 (상호)</label><input id="pn_name" class="in"></div><div class="fr"><div class="f"><label>사업자번호</label><input id="pn_biz" class="in" placeholder="000-00-00000"></div><div class="f"><label>대표자</label><input id="pn_ceo" class="in"></div></div><div class="f"><label>주소</label><input id="pn_addr" class="in"></div><div class="fr"><div class="f"><label>담당</label><input id="pn_ct" class="in"></div><div class="f"><label>연락처</label><input id="pn_tel" class="in"></div></div><div class="tiny dim" style="margin-top:6px">코드(C0000)는 자동 부여. 나머지 항목은 저장 후 표에서 더블클릭으로 채울 수 있습니다.</div>',
   '<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="ptnCreate()">저장</button>');setTimeout(function(){el('pn_name').focus()},60)}
 async function ptnCreate(){var nm=el('pn_name').value.trim();if(!nm){toast('거래처명을 입력하십시오','e');return}
-  var r=await sb.rpc('ceo_set_partner',{p:{name:nm,biz_no:el('pn_biz').value,ceo_name:el('pn_ceo').value,address:el('pn_addr').value,contact_name:el('pn_ct').value,contact_phone:el('pn_tel').value}});
+  var r=await sb.rpc('core_partner_save',{p:{name:nm,biz_no:el('pn_biz').value,ceo_name:el('pn_ceo').value,address:el('pn_addr').value,contact_name:el('pn_ct').value,contact_phone:el('pn_tel').value}});
   if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('거래처 등록 '+r.data.partner_id,'g');drClose();loadAll();}
 function sdAmt(v,r){var t=won(v);return (r.doc_kind!=='tax'||r.status==='void')?'<span class="dim" title="매출·매입 집계에 들어가지 않습니다">'+t+'</span>':t}
@@ -3278,7 +3303,7 @@ function renderSales(){
       {k:'last_doc_on',t:'최근거래',l:1,f:function(v){return v?'<span class="tiny dim">'+esc(v)+'</span>':'<span class="dim">-</span>'}},
       {k:'partner_id',t:'코드',l:1,cls:'tiny dim'}
     ],
-      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:function(r,f,v){if(f==='is_related_party'||f==='related_entity'||f==='is_active')return ptnFlagSave(r,f,v);if(f==='pay_terms_days'){var n=String(v).trim()===''?null:parseInt(v,10);if(n!=null&&!(n>=0&&n<=365))return Promise.resolve({ok:false,error:'0~365일'});return sb.rpc('ceo_partner_terms_set',{p_partner_id:r.partner_id,p_days:n}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok)r.pay_terms_days=n;return d})}return ptnSave(r,f,v)},empty:'거래처 없음'});
+      {rows:D.ptn||[],q:['name','biz_no','ceo_name','contact_name','partner_id'],qph:'거래처·사업자번호·담당',page:60,sort:{k:'doc_cnt',d:-1},save:function(r,f,v){if(f==='is_related_party'||f==='related_entity'||f==='is_active')return ptnFlagSave(r,f,v);if(f==='pay_terms_days'){var n=String(v).trim()===''?null:parseInt(v,10);if(n!=null&&!(n>=0&&n<=365))return Promise.resolve({ok:false,error:'0~365일'});return sb.rpc('core_partner_term_save',{p_partner_id:r.partner_id,p_days:n}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok)r.pay_terms_days=n;return d})}return ptnSave(r,f,v)},empty:'거래처 없음'});
   }
   var s=cur.filter(function(r){return r.trade_side==='sales'&&r.doc_kind==='tax'});
   var p=cur.filter(function(r){return r.trade_side==='purchase'&&r.doc_kind==='tax'});
@@ -3573,10 +3598,10 @@ async function docAcctSave(no,sel){
 async function deriveDoc(no,kind){var lab={statement:'거래명세표',receipt:'인수증',invoice:'청구서',tax:'세금계산서',order:'발주서'}[kind]||kind;
   var ok=await ask(lab+' 만들기',no+'의 라인을 복사해 '+lab+'를 임시 문서로 만듭니다.'+(kind==='order'?' 품목의 최저가 공급사 기준으로 공급사별로 나뉩니다.':'')+(kind==='receipt'?' 인수증은 수량만 싣고 금액은 비웁니다.':''),{ok:'만들기'});if(!ok)return;
   var r=await sb.rpc('sd_derive_doc',{p_from:no,p_kind:kind,p_opts:{}});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
-  var nos=r.data.doc_nos||[r.data.doc_no];toast(lab+' '+nos.join(', ')+' 생성','g');drClose();await loadAll();var nd=D.sd.filter(function(x){return x.doc_no===nos[0]})[0];if(nd)openDoc(nd)}
+  var nos=r.data.doc_nos||[r.data.doc_no];toast(lab+' '+nos.join(', ')+' 생성','g');drClose();await loadAll(['sd']);var nd=D.sd.filter(function(x){return x.doc_no===nos[0]})[0];if(nd)openDoc(nd)}
 async function genMonthDocs(pid,period,pname){var ok=await ask('월 문서 세트 생성',period+' '+pname+' 청구 기록으로 작업내역서 → 청구서 → 인수증 3건을 만듭니다. 내역서는 확정, 청구서·인수증은 임시로 생성됩니다.',{ok:'생성'});if(!ok)return;
   var r=await sb.rpc('sd_gen_month_docs',{p_partner:pid,p_period:period,p_date:todayKst()});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
-  toast('생성: 내역서 '+r.data.worklog+' · 청구서 '+r.data.invoice+' · 인수증 '+r.data.receipt+' · 합계 '+won(r.data.total),'g');await loadAll();var nd=D.sd.filter(function(x){return x.doc_no===r.data.worklog})[0];if(nd){await openDoc(nd);printDoc(nd.doc_no)}}
+  toast('생성: 내역서 '+r.data.worklog+' · 청구서 '+r.data.invoice+' · 인수증 '+r.data.receipt+' · 합계 '+won(r.data.total),'g');await loadAll(['sd']);var nd=D.sd.filter(function(x){return x.doc_no===r.data.worklog})[0];if(nd){await openDoc(nd);printDoc(nd.doc_no)}}
 function numKo(n){n=Math.round(+n||0);if(!n)return '영';var d='영일이삼사오육칠팔구',u=['','십','백','천'],big=['','만','억','조'],s='',i=0;while(n>0){var p=n%10000;if(p){var t='';for(var j=0;j<4;j++){var x=p%10;if(x)t=(x===1&&j>0?'':d[x])+u[j]+t;p=Math.floor(p/10)}s=t+big[i]+s}n=Math.floor(n/10000);i++}return s}
 var PR_TITLE={quote:'견 적 서',order:'발 주 서',tax:'거래명세서',settle:'정 산 서',contract:'계 약 서',receipt:'인 수 증',report:'작업일보',cert:'증 명 서',invoice:'청 구 서',statement:'거래명세표',worklog:'작업내역서'};
 var PR_SUB={quote:'QUOTATION',invoice:'INVOICE / 대금 청구서',statement:'TRANSACTION STATEMENT (공급받는자 보관용)',tax:'TAX INVOICE / 세금계산서',receipt:'RECEIPT / 물품·공정 인수증',order:'PURCHASE ORDER / 발주서',settle:'SETTLEMENT STATEMENT / 정산서',worklog:'WORKLOG STATEMENT / 작업내역서'};
@@ -3700,7 +3725,7 @@ async function wSave(st){var m=el('w_msg');
   var r=await sb.rpc('sd_save_doc',{p:p});
   if(r.error){m.innerHTML='<span class="neg">'+esc(r.error.message)+'</span>';return}
   var d=r.data;if(!d||!d.ok){m.innerHTML='<span class="neg">'+esc(d&&d.error||'실패')+'</span>';return}
-  toast('저장됨 '+d.doc_no+' · 합계 '+won(d.total),'g');drClose();await loadAll();
+  toast('저장됨 '+d.doc_no+' · 합계 '+won(d.total),'g');drClose();await loadAll(['sd']);
   var nd=D.sd.filter(function(x){return x.doc_no===d.doc_no})[0];if(nd){var ok=await ask('발행 완료','문서 '+d.doc_no+'가 저장되었습니다. 바로 인쇄/PDF로 여시겠습니까?',{ok:'인쇄 화면'});if(ok)openDoc(nd).then(function(){printDoc(d.doc_no)})}
 }
 /* ── 품목 등록 ── */
@@ -4648,7 +4673,7 @@ async function esgApply(emp){
     if(res.error||!res.data||!res.data.ok){toast(jobs[i][0]+' — '+((res.error&&res.error.message)||(res.data&&res.data.error)||'실패'),'e');return}
   }
   toast('급여기준 반영','g');
-  await loadAll();
+  await loadAll(['esgt','esg']);
   var row=(D.esgt||[]).filter(function(x){return x.employment_no===emp})[0];
   if(row)esgPreview(row);
 }
@@ -5817,11 +5842,11 @@ function sethOpen(r){var keys=Object.keys(by(D.seth||[],'setting_key')).sort();v
    +(k?'<button class="btn sm" onclick="sethNow()">현재 값 고치기</button> ':'')+'<button class="btn sm p" onclick="sethSave()">적용일부터 새 값</button>';
   drOpen(r.memo||k||'새 값 · 새 키',body,'<button class="btn" onclick="drClose()">닫기</button>')}
 async function sethNow(){var k=(el('sh_k').value||'').trim(),t=el('sh_t').value,n=el('sh_n').value;
-  var x=await sb.rpc('ceo_setting_set',{p_key:k,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});
+  var x=await sb.rpc('core_setting_save',{p_key:k,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});
   if(x.error||(x.data&&x.data.ok===false)){toast((x.error&&x.error.message)||(x.data&&x.data.error)||'실패','e');return}toast('저장했습니다','g');drClose();loadAll()}
 async function sethSave(){var k=(el('sh_k').value||'').trim(),f=el('sh_from').value,t=el('sh_t').value,n=el('sh_n').value;
   if(!k||!f){toast('키와 적용일을 넣으세요','e');return}if(t===''&&n===''){toast('값을 넣으세요','e');return}
-  var x=await sb.rpc('ceo_setting_set_from',{p_key:k,p_from:f,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});rpcDone(x,'저장했습니다')}
+  var x=await sb.rpc('core_setting_save',{p_key:k,p_from:f,p_text:t===''?null:t,p_num:n===''?null:+n,p_memo:(el('sh_m').value||'').trim()||null});rpcDone(x,'저장했습니다')}
 function renderHol(){if(!el('gHol'))return;var rows=(D.hol||[]).map(function(r){r._y=String(r.holiday_date).slice(0,4);return r});var ys=Object.keys(by(rows,'_y')).sort().reverse();
   el('holN').textContent=rows.length?rows.length+'일':'';
   grid('gHol',[{k:'holiday_date',t:'날짜',l:1},{k:'holiday_name',t:'이름',l:1},{k:'is_statutory',t:'법정',l:1,f:function(v){return v===false?'<span class="dim">아님</span>':'법정'}}],
@@ -5831,8 +5856,8 @@ function holOpen(r){var body='<div class="fr"><div class="f"><label>날짜</labe
    +'<button class="btn sm p" onclick="holSave()">저장</button>'+(r.holiday_date?' <button class="btn sm" onclick="holDel(\''+esc(r.holiday_date)+'\')">삭제</button>':'');
   drOpen(r.holiday_date?'공휴일':'공휴일 추가',body,'<button class="btn" onclick="drClose()">닫기</button>')}
 async function holSave(){var d=el('hl_d').value,n=(el('hl_n').value||'').trim();if(!d||!n){toast('날짜와 이름을 넣으세요','e');return}
-  var x=await sb.rpc('ceo_holiday_set',{p_date:d,p_name:n,p_statutory:el('hl_s').value==='true'});rpcDone(x,'저장했습니다')}
-async function holDel(d){var ok=await ask('공휴일 삭제',d+' 을(를) 공휴일에서 뺍니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('ceo_holiday_delete',{p_date:d});rpcDone(x,'삭제했습니다')}
+  var x=await sb.rpc('core_holiday_save',{p_date:d,p_name:n,p_statutory:el('hl_s').value==='true'});rpcDone(x,'저장했습니다')}
+async function holDel(d){var ok=await ask('공휴일 삭제',d+' 을(를) 공휴일에서 뺍니다.',{ok:'삭제',danger:true});if(!ok)return;var x=await sb.rpc('core_holiday_cancel',{p_date:d});rpcDone(x,'삭제했습니다')}
 /* ══════ 투입·매출 원장 (대표 입력: 매출처·매출액) ══════ */
 function lrvLocked(r){return !!r.is_locked}
 function renderLrv(){var sec=el('sec-gLrv');if(!sec)return;if(!isOwner()){sec.style.display='none';return}sec.style.display='';
@@ -5872,9 +5897,9 @@ function histEditHtml(emp,rh,ph,th){var inf=function(v){return v==null||v==='inf
      +(ok&&r.last?'<button class="stbtn" onclick="histEnd(\''+r.kind+'\','+r.id+',\''+esc(r.to||'')+'\')">종료일</button> ':'')
      +(ok&&!r.only?'<button class="stbtn x" onclick="histDel(\''+r.kind+'\','+r.id+')">삭제</button>':'')+'</td></tr>'}).join('')+'</tbody></table>'}
 async function histEnd(kind,id,cur){var v=await ask('종료일','비우면 종료 없음(현재까지)으로 됩니다.',{ok:'저장',html:'<input id="he_to" class="in" type="date" value="'+(cur&&cur!=='infinity'?esc(cur):'')+'">'});if(!v)return;
-  var to=el('he_to').value||null;var x=await sb.rpc('ceo_history_edit',{p_kind:kind,p_id:id,p_action:'end',p_valid_to:to});histDone(x,'종료일 저장')}
+  var to=el('he_to').value||null;var x=await sb.rpc('sys_history_save',{p_kind:kind,p_id:id,p_action:'end',p_valid_to:to});histDone(x,'종료일 저장')}
 async function histDel(kind,id){var ok=await ask('이력 삭제','이 행을 지우고 앞 행 기간을 이어 붙입니다.',{ok:'삭제',danger:true});if(!ok)return;
-  var x=await sb.rpc('ceo_history_edit',{p_kind:kind,p_id:id,p_action:'delete'});histDone(x,'삭제했습니다')}
+  var x=await sb.rpc('sys_history_save',{p_kind:kind,p_id:id,p_action:'delete'});histDone(x,'삭제했습니다')}
 function histDone(x,msg){var d=x.data||{};if(!x.error&&d.ok&&+d.draft_affected>0)msg+=' · 미승인 공수 '+d.draft_affected+'건 단가 재계산 대상';return rpcDone(x,msg)}
 
 /* ══════ B12 경보 확인 ══════ */
@@ -5883,8 +5908,8 @@ function alAckHtml(r){var a=r.ack;return '<div style="display:flex;gap:6px;align
   +'<input id="ak_memo" class="in" style="flex:1" value="'+esc(a&&a.memo||'')+'" placeholder="메모">'
   +'<button class="btn sm p" onclick="alAck('+JSON.stringify(r.title).replace(/"/g,'&quot;')+','+(+r.cnt||0)+')">확인함</button>'
   +(a?'<button class="btn sm" onclick="alUnack('+JSON.stringify(r.title).replace(/"/g,'&quot;')+')">확인 해제</button>':'')+'</div>'}
-async function alAck(t,c){var x=await sb.rpc('ceo_alert_ack_set',{p_title:t,p_cnt:c,p_memo:(el('ak_memo').value||'').trim()});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인함','g');loadAll()}
-async function alUnack(t){var x=await sb.rpc('ceo_alert_ack_delete',{p_title:t});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인 해제','g');loadAll()}
+async function alAck(t,c){var x=await sb.rpc('sys_alert_ack_save',{p_title:t,p_cnt:c,p_memo:(el('ak_memo').value||'').trim()});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인함','g');loadAll()}
+async function alUnack(t){var x=await sb.rpc('sys_alert_ack_cancel',{p_title:t});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인 해제','g');loadAll()}
 
 /* ══════ B13 견적 결과 · 거래처 특수관계 ══════ */
 function qOutHtml(d){var x=(D.pipe||[]).filter(function(z){return z.doc_no===d.doc_no})[0]||{};var cur=x.outcome||'';
@@ -5896,7 +5921,7 @@ function ptnFlagSave(r,f,v){var p={};var t=String(v).trim();
   if(f==='is_related_party'){if(!/^(예|아니오|y|n|true|false|1|0)$/i.test(t))return Promise.resolve({ok:false,error:'예 / 아니오'});p.is_related_party=/^(예|y|true|1)$/i.test(t)}
   else if(f==='is_active'){if(!/^(사용|안 씀|안씀)$/.test(t))return Promise.resolve({ok:false,error:'사용 / 안 씀'});p.is_active=(t==='사용')}
   else {t=t.toUpperCase();if(t&&['HBS','PYRO','SSJG','BVS'].indexOf(t)<0)return Promise.resolve({ok:false,error:'HBS / PYRO / SSJG / BVS'});p.related_entity=t}
-  return sb.rpc('ceo_partner_flags_set',{p_partner_id:r.partner_id,p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok){for(var k in p)r[k]=p[k]}return d})}
+  return sb.rpc('core_partner_flag_save',{p_partner_id:r.partner_id,p:p}).then(function(x){if(x.error)return {ok:false,error:x.error.message};var d=x.data||{};if(d.ok){for(var k in p)r[k]=p[k]}return d})}
 function setgNum(k,def){var r=(D.setg||[]).filter(function(x){return x.setting_key===k})[0];var n=r&&r.value_num!=null?+r.value_num:NaN;return isNaN(n)?def:n}
 /* ══════ 월급제 급여 기산 (월별 기산일·가감 일수) ══════ */
 function pmbOf(emp,ym){return (D.pmb||[]).filter(function(x){return x.employment_no===emp&&x.period_ym===ym})[0]||null}
@@ -7773,7 +7798,8 @@ function shSync(){if(ST.menu){var mid=shModOf(ST.menu);if(mid){SH.mod=mid;var ml
 function rowDen(){var on=document.documentElement.classList.toggle('rows-wide');lsSet('bvs_rowh',on?1:0);var b=el('pgDen');if(b)b.textContent=on?'행 좁게':'행 넓게'}
 (function(){
   if(lsGet('bvs_rowh',0)){document.documentElement.classList.add('rows-wide');setTimeout(function(){var b=el('pgDen');if(b)b.textContent='행 좁게'},0)}
-  var g0=go;go=function(x){var r=g0.apply(this,arguments);try{shSync()}catch(e){console.error(e)}return r};
+  var g0=go;go=function(x){var r=g0.apply(this,arguments);try{shSync()}catch(e){console.error(e)}try{lzEnsure(ST.page||'home')}catch(e){console.error(e)}return r};
+  var r0=renderPage;renderPage=function(){var r=r0.apply(this,arguments);setTimeout(function(){try{shCnt();shCo()}catch(e){}},300);return r};
   var b0=buildNav;buildNav=function(){var r=b0.apply(this,arguments);try{shBuildMod();shSync()}catch(e){console.error(e)}return r};
   var f0=navFilter;navFilter=function(q){var r=f0.apply(this,arguments);var n=el('nav');if(n)n.classList.toggle('q',!!String(q||'').trim());return r};
   setInterval(function(){if(!document.hidden&&el('app')&&!el('app').classList.contains('hide')){shCnt();shCo();var a=el('alertN'),b=el('alertNb');if(a&&b){b.textContent=a.textContent;b.classList.toggle('hide',a.classList.contains('hide')||!a.textContent)}}},2500);
