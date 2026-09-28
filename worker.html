@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.01</title>
+<title>BVS 현장앱 v1.02</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -984,6 +984,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
   <div data-p="pay" onclick="go('pay')"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>보상·정산</div>
 </div>
 <div id="toasts"></div>
+<script src="./erp-core.js"></script>
 <script>
 /* ═══════════ 테마 관리: 낮모드(라이트) vs 밤모드(다크) ═══════════ */
 function getPreferredTheme(){
@@ -1227,7 +1228,7 @@ function renderSafety(){
   if(rec&&!Object.keys(SF.sel).length){SF.sel={};items.forEach(function(it){SF.sel[it.code]=(rec.items&&rec.items[it.code]!==false)})}
   el('sfItems').innerHTML=items.map(function(it){
     var on=SF.sel[it.code]!==false;
-    return '<label class="sw" style="margin-bottom:8px"><input type="checkbox" id="sf_'+esc(it.code)+'"'+(on?' checked':'')+' onchange="sfTick(\''+esc(it.code)+'\',this.checked)"> <span>'+esc(it.label)+'</span></label>'}).join('');
+    return '<label class="sw" style="margin-bottom:8px"><input type="checkbox" id="sf_'+esc(it.code)+'"'+(on?' checked':'')+' onchange="sfTick('+ERPC.jsq(it.code)+',this.checked)"> <span>'+esc(it.label)+'</span></label>'}).join('');
   if(rec){el('sf_ng').value=rec.ng_note||'';el('sfMsg').innerHTML='<span class="dim tiny">'+kdate(d)+' 제출됨 · '+String(rec.signed_at||'').slice(11,16)+' — 다시 제출하면 덮어씁니다</span>'}
   else el('sfMsg').textContent='';
   var f=el('sfFeed');if(f){var rs=(D.safety||[]).slice(0,10);
@@ -1320,7 +1321,7 @@ function renderLines(){
   var ss=SEL.place?sitesOf(SEL.place):[];
   el('lineBox').classList.toggle('hide',ss.length<=1);
   el('w_line').innerHTML='<div class="line-grid">' + ss.map(function(s){
-    return '<button type="button" class="line-btn chip'+(s.site_id===SEL.site?' on':'')+'" onclick="pickLine(\''+esc(s.site_id)+'\')">'+esc(lineLabel(s))+'</button>';
+    return '<button type="button" class="line-btn chip'+(s.site_id===SEL.site?' on':'')+'" onclick="pickLine('+ERPC.jsq(s.site_id)+')">'+esc(lineLabel(s))+'</button>';
   }).join('') + '</div>';
   el('pumpBox').classList.toggle('hide',!placeRow(SEL.place).pump_ok);
   renderState();
@@ -1532,7 +1533,7 @@ async function shareText(id,title){var t=el(id).textContent;if(!t.trim()){toast(
   if(navigator.share){try{await navigator.share({title:title||'BVS',text:t});return}catch(e){if(e&&e.name==='AbortError')return}}
   copyText(id);toast('이 기기는 공유창이 없어 복사했습니다. 카톡에 붙여넣기 하세요')}
 function kdate(d){var x=new Date(d+'T00:00:00');return (x.getMonth()+1)+'월 '+x.getDate()+'일('+'일월화수목금토'[x.getDay()]+')'}
-function dateChips(id,dates,cur,fn){el(id).innerHTML=dates.map(function(d){return '<span class="chip'+(d===cur?' on':'')+'" onclick="'+fn+'(\''+d+'\')">'+(d===today()?'오늘':d.slice(5).replace('-','/'))+'</span>'}).join('')}
+function dateChips(id,dates,cur,fn){el(id).innerHTML=dates.map(function(d){return '<span class="chip'+(d===cur?' on':'')+'" onclick="'+fn+'('+ERPC.jsq(d)+')">'+(d===today()?'오늘':d.slice(5).replace('-','/'))+'</span>'}).join('')}
 function lastDays(n){var out=[];for(var i=0;i<n;i++){var d=new Date();d.setDate(d.getDate()-i);out.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return out}
 
 /* ══════ 업무일지 ══════ */
@@ -1974,7 +1975,7 @@ async function plOpen(d){PL.date=d||PL.date||tomorrow();el('pl_date').value=PL.d
   var r=await sb.rpc('lead_plan',{p_date:PL.date});PL.rows={};((r&&r.data&&r.data.rows)||[]).forEach(function(x){PL.rows[x.employment_no]={site_id:x.site_id,memo:x.memo||''}});
   plRender()}
 function plRender(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.site_id)});
-  el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows[\''+w.employment_no+'\']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur.site_id?' selected':'')+'>'+esc(s.site_name)+'</option>'}).join('')+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
+  el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows['+ERPC.jsq(w.employment_no)+']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+sites.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur.site_id?' selected':'')+'>'+esc(s.site_name)+'</option>'}).join('')+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
   plText()}
 function sitePlaceName(id){
   var s=D.sites.filter(function(x){return x.site_id===id})[0];
@@ -2007,7 +2008,7 @@ var PM={date:null,site:null,rows:[]};
 function pmOpen(d){PM.date=d||PM.date||today();el('pm_date').value=PM.date;pmLoadReport();
   var ss=D.sites.filter(function(s){return /^(IC|CJ)-/.test(s.site_id)&&!/-(IC|CJ)$/.test(s.site_id)});
   if(!PM.site){var last=D.labor.filter(function(r){return r.project_code==='PJ-PUMP'})[0];PM.site=last?last.site_id:(ss[0]&&ss[0].site_id)}
-  el('pm_line').innerHTML=ss.map(function(s){return '<span class="chip'+(s.site_id===PM.site?' on':'')+'" onclick="PM.site=\''+s.site_id+'\';pmOpen()">'+esc(s.site_name)+'</span>'}).join('');
+  el('pm_line').innerHTML=ss.map(function(s){return '<span class="chip'+(s.site_id===PM.site?' on':'')+'" onclick="PM.site='+ERPC.jsq(s.site_id)+';pmOpen()">'+esc(s.site_name)+'</span>'}).join('');
   if(!PM.rows.length)PM.rows=[{bay:'',item_code:'CABLE',qty:''}];pmRenderRows()}
 function pmRenderRows(){el('pmItems').innerHTML=PM.rows.map(function(r,i){return '<div class="pmrow"><input placeholder="Bay (예 F9)" value="'+esc(r.bay)+'" oninput="PM.rows['+i+'].bay=this.value"><select onchange="PM.rows['+i+'].item_code=this.value"><option value="CABLE"'+(r.item_code==='CABLE'?' selected':'')+'>포설</option><option value="HOOK"'+(r.item_code==='HOOK'?' selected':'')+'>후크밴드</option></select><input type="number" inputmode="numeric" placeholder="대" value="'+esc(r.qty)+'" oninput="PM.rows['+i+'].qty=this.value"><span class="x" onclick="PM.rows.splice('+i+',1);pmRenderRows()">✕</span></div>'}).join('')}
 function pmAddRow(){PM.rows.push({bay:'',item_code:'CABLE',qty:''});pmRenderRows()}
@@ -2034,7 +2035,7 @@ function renderList(){
   el('myKpi').innerHTML='<div class="kpi"><div class="k">'+ym+' 근무일</div><div class="v">'+cur.length+'</div></div><div class="kpi"><div class="k">공수</div><div class="v">'+md.toFixed(1)+'</div></div><div class="kpi"><div class="k">잔업 h</div><div class="v">'+ot.toFixed(1)+'</div></div>';
   el('listN').textContent=D.labor.length?'최근 '+D.labor.length+'건':'';
   el('list').innerHTML=D.labor.length?D.labor.map(function(r){var st=STMAP[r.status]||[r.status,''];var d=String(r.work_date);
-    return '<div class="item"><div class="d"><b>'+d.slice(8)+'</b><small>'+d.slice(5,7)+'월</small></div><div class="m"><div class="s">'+esc(r.site_name)+' <span class="pill '+st[1]+'">'+st[0]+'</span></div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end)+' · ':'')+esc(r.work_desc||'')+'</div></div><div class="r"><b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">'+((+r.ot_hours)>0?'+'+(+r.ot_hours)+'h':'공수')+'</small>'+(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+(function(){var d=(D.disp||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(d)return '<div class="tiny '+(d.status==='open'?'wn':'pos')+'" style="margin-top:4px">'+(d.status==='open'?'이의 접수됨':'처리됨'+(d.resolution?': '+esc(d.resolution):''))+'</div>';return r.status!=='void'?'<div><button class="btn sm" style="margin-top:4px" onclick="dispute('+r.entry_id+',\''+esc(d?'':r.work_date)+'\')">이의</button></div>':''})()+'</div></div>'}).join(''):'<div class="empty">기록 없음</div>';
+    return '<div class="item"><div class="d"><b>'+d.slice(8)+'</b><small>'+d.slice(5,7)+'월</small></div><div class="m"><div class="s">'+esc(r.site_name)+' <span class="pill '+st[1]+'">'+st[0]+'</span></div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end)+' · ':'')+esc(r.work_desc||'')+'</div></div><div class="r"><b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">'+((+r.ot_hours)>0?'+'+(+r.ot_hours)+'h':'공수')+'</small>'+(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+(function(){var d=(D.disp||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(d)return '<div class="tiny '+(d.status==='open'?'wn':'pos')+'" style="margin-top:4px">'+(d.status==='open'?'이의 접수됨':'처리됨'+(d.resolution?': '+esc(d.resolution):''))+'</div>';return r.status!=='void'?'<div><button class="btn sm" style="margin-top:4px" onclick="dispute('+r.entry_id+','+ERPC.jsq(d?'':r.work_date)+')">이의</button></div>':''})()+'</div></div>'}).join(''):'<div class="empty">기록 없음</div>';
 }
 async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용을 적어 주세요 (예: 연장 2시간 했는데 1시간으로 등록됨)');if(!msg)return;
   var r=await sb.rpc('my_dispute',{p_entry_id:id,p_message:msg});
@@ -2042,7 +2043,7 @@ async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용�
   toast('이의 접수됨','g');loadAll()}
 var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id',''],['ss_id',''],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
 function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0];return r?r.label:(d||'')}
-function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit(\''+f[0]+'\',\''+f[1]+'\')">수정</button>':'')+'</div>'}).join('')}
+function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit('+ERPC.jsq(f[0])+','+ERPC.jsq(f[1])+')">수정</button>':'')+'</div>'}).join('')}
 async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=prompt(label+(k==='own_vehicle_known'?' (유/무)':''),cur==null?'':String(cur));if(v===null)return;
   var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
 /* ══════ 내 보상 (월급제 본인 행만) ══════ */
@@ -2273,7 +2274,7 @@ var LV={kind:'휴가'};
 function lvToday(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function lvFmt(d){var x=new Date(d+'T00:00:00');return (x.getMonth()+1)+'/'+x.getDate()+'('+'일월화수목금토'[x.getDay()]+')'}
 function leaveOpen(){
-  el('lv_kind').innerHTML=['휴가','휴무','병가','기타'].map(function(k){return '<span class="chip'+(LV.kind===k?' on':'')+'" onclick="LV.kind=\''+k+'\';leaveOpen()">'+k+'</span>'}).join('');
+  el('lv_kind').innerHTML=['휴가','휴무','병가','기타'].map(function(k){return '<span class="chip'+(LV.kind===k?' on':'')+'" onclick="LV.kind='+ERPC.jsq(k)+';leaveOpen()">'+k+'</span>'}).join('');
   if(!el('lv_start').value){el('lv_start').value=lvToday()}
   if(!el('lv_end').value||el('lv_end').value<el('lv_start').value){el('lv_end').value=el('lv_start').value}
   leaveLoad()}

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.02">
+<meta name="app-version" content="1.03">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2046,10 +2046,10 @@ function gridMount(host){
   var g=GRID[tb]={tb:tb,host:host,rows:[],cols:[],pk:null,edit:false,page:0,q:''};
   host.className='panel g-panel';
   host.innerHTML='<div class="panel-head"><div class="panel-title">'+gEsc((GRID_TABLES[tb]||{}).t||tb)+' <span class="g-cnt" id="gc_'+tb+'"></span></div>'
-    +'<div class="g-bar"><input class="input" placeholder="검색" oninput="gridSearch(\''+tb+'\',this.value)">'
-    +'<button class="btn g-add hide" id="ga_'+tb+'" onclick="gridAdd(\''+tb+'\')">＋ 추가</button>'
-    +'<button class="btn g-ref" onclick="gridExcel(\''+tb+'\')">엑셀</button>'
-    +'<button class="btn g-ref" onclick="gridLoad(\''+tb+'\')">↻</button></div></div>'
+    +'<div class="g-bar"><input class="input" placeholder="검색" oninput="gridSearch('+ERPC.jsq(tb)+',this.value)">'
+    +'<button class="btn g-add hide" id="ga_'+tb+'" onclick="gridAdd('+ERPC.jsq(tb)+')">＋ 추가</button>'
+    +'<button class="btn g-ref" onclick="gridExcel('+ERPC.jsq(tb)+')">엑셀</button>'
+    +'<button class="btn g-ref" onclick="gridLoad('+ERPC.jsq(tb)+')">↻</button></div></div>'
     +'<div class="table-wrap"><table><thead id="gh_'+tb+'"></thead><tbody id="gb_'+tb+'"><tr><td>불러오는 중…</td></tr></tbody><tfoot id="gf_'+tb+'"></tfoot></table></div>'
     +'<div class="g-pg" id="gp_'+tb+'"></div>';
   gridLoad(tb);
@@ -2083,15 +2083,15 @@ function gridRender(tb){
   document.getElementById('gb_'+tb).innerHTML=slice.length?slice.map(function(r){
     var ri=r.__i;
     return '<tr>'+g.cols.map(function(c){var ed=g.edit&&c.name!==g.pk;
-      return '<td'+(ed?' class="g-ed" ondblclick="gridEdit(this,\''+tb+'\','+ri+',\''+c.name+'\')"':'')+(gIsNum(c.type)?' style="text-align:right"':'')+'>'+gEsc(gCell(r[c.name],c.type))+'</td>'}).join('')
-      +(g.edit?'<td><button class="btn g-del" onclick="gridDel(\''+tb+'\','+ri+')">삭제</button></td>':'')+'</tr>'}).join('')
+      return '<td'+(ed?' class="g-ed" ondblclick="gridEdit(this,'+ERPC.jsq(tb)+','+ri+','+ERPC.jsq(c.name)+')"':'')+(gIsNum(c.type)?' style="text-align:right"':'')+'>'+gEsc(gCell(r[c.name],c.type))+'</td>'}).join('')
+      +(g.edit?'<td><button class="btn g-del" onclick="gridDel('+ERPC.jsq(tb)+','+ri+')">삭제</button></td>':'')+'</tr>'}).join('')
     :'<tr><td colspan="'+(g.cols.length+1)+'">자료 없음</td></tr>';
   var SKIP=/(^id$|_id$|^row_no$|^yr$|^mo$|_no$|code|rate|price|pct|ratio|balance|_date$|_at$|year|month|^ord$)/;
   var sums=g.cols.map(function(c){if(!gIsNum(c.type)||SKIP.test(c.name))return null;var t=0;rows.forEach(function(r){var v=Number(r[c.name]);if(isFinite(v))t+=v});return t});
   var gf=document.getElementById('gf_'+tb);
   if(gf)gf.innerHTML=(n>1&&sums.some(function(v){return v!==null}))?'<tr class="g-sum">'+sums.map(function(v,i){return '<td'+(v!==null?' style="text-align:right"':'')+'>'+(v!==null?Math.round(v).toLocaleString('ko-KR'):(i===0?'합계':''))+'</td>'}).join('')+(g.edit?'<td></td>':'')+'</tr>':'';
   var pg=document.getElementById('gp_'+tb);
-  pg.innerHTML=pages>1?'<button class="btn" onclick="gridPage(\''+tb+'\',-1)">‹</button> '+(g.page+1)+' / '+pages+' <button class="btn" onclick="gridPage(\''+tb+'\',1)">›</button>':'';
+  pg.innerHTML=pages>1?'<button class="btn" onclick="gridPage('+ERPC.jsq(tb)+',-1)">‹</button> '+(g.page+1)+' / '+pages+' <button class="btn" onclick="gridPage('+ERPC.jsq(tb)+',1)">›</button>':'';
 }
 function gridPage(tb,d){var g=GRID[tb];g.page=Math.max(0,g.page+d);gridRender(tb)}
 function gridEdit(td,tb,ri,field){
@@ -2123,7 +2123,7 @@ function gridAdd(tb){
     +f.map(function(c){var t=/^date$/.test(c.type)?'date':(/^timestamp/.test(c.type)?'datetime-local':(gIsNum(c.type)?'number':'text'));
       if(/^boolean/.test(c.type))return '<label>'+gEsc(COL_KO[c.name]||c.name)+(c.required?' *':'')+'<select class="select" data-f="'+c.name+'"><option value=""></option><option value="true">예</option><option value="false">아니오</option></select></label>';
       return '<label>'+gEsc(COL_KO[c.name]||c.name)+(c.required?' *':'')+'<input class="input" type="'+t+'"'+(t==='number'?' step="any"':'')+' data-f="'+c.name+'"></label>'}).join('')
-    +'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn g-ref" onclick="gridModClose()">닫기</button><button class="btn btn-primary" style="padding:7px 16px" onclick="gridAddSave(\''+tb+'\')">저장</button></div></div>';
+    +'</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn g-ref" onclick="gridModClose()">닫기</button><button class="btn btn-primary" style="padding:7px 16px" onclick="gridAddSave('+ERPC.jsq(tb)+')">저장</button></div></div>';
   var m=document.getElementById('gMod');if(!m){m=document.createElement('div');m.id='gMod';m.className='g-mod';m.onclick=function(e){if(e.target===m)gridModClose()};document.body.appendChild(m)}
   m.innerHTML=h;m.style.display='flex';
 }
