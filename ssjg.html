@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.03">
+<meta name="app-version" content="1.04">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1837,7 +1837,8 @@ var allInventory = [];
 
 function mkClient(k){
   sb = window.supabase.createClient(SUPABASE_URL, k, {
-    auth: { persistSession: true, autoRefreshToken: true }
+    auth: { persistSession: true, autoRefreshToken: true },
+    global: window.ERPC && ERPC.fetchT ? { fetch: ERPC.fetchT } : undefined
   });
 }
 
@@ -5311,7 +5312,9 @@ function tdoVatDue(today){
   return null;
 }
 async function tdoLoad(){
-  if(!sb || TDO.busy) return; TDO.busy = true;
+  if(!sb) return;
+  if(TDO.busy && Date.now() - (TDO.t0 || 0) < 60000){ gToast('처리할 일을 불러오는 중입니다'); return; }  /* v1.04: 60초 넘게 안 끝난 조회는 멈춘 것으로 보고 다시 시작 */
+  TDO.busy = true; TDO.t0 = Date.now(); var myRun = TDO.t0;
   var rowsEl = document.getElementById('tdoRows'); rowsEl.innerHTML = '<tr><td colspan="6" class="td-empty">불러오는 중</td></tr>';
   try {
     var today = tdKst(), ym = today.slice(0, 7), y = Number(today.slice(0, 4)), items = [];
@@ -5366,8 +5369,8 @@ async function tdoLoad(){
     var last = Object.keys(closed).sort().pop() || '', target = last ? perAdd(last, 1) : perAdd(ym, -1);
     TDO.target = target < ym ? target : '';
     tdoPaint(); tdoCloseInfo(mon, closed, u199);
-  } catch(e){ rowsEl.innerHTML = '<tr><td colspan="6" class="td-empty">불러오지 못했습니다: ' + gEsc(e.message || e) + '</td></tr>'; }
-  TDO.busy = false;
+  } catch(e){ rowsEl.innerHTML = '<tr><td colspan="6" class="td-empty">불러오지 못했습니다: ' + gEsc((window.ERPC ? ERPC.errText(e) : (e.message || e))) + ' — 조회를 다시 눌러 주세요</td></tr>'; }
+  if(TDO.t0 === myRun) TDO.busy = false;
 }
 var TDO_K = { block: ['차단', 'bdg-block'], draft: ['초안', 'bdg-draft'], warn: ['경고', 'bdg-warn'] };
 function tdoPaint(){
