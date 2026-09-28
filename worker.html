@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.00</title>
+<title>BVS 현장앱 v1.01</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -398,6 +398,13 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 .page{display:none}.page.on{display:block}
 .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:2px;font-size:11px;font-weight:600;background:var(--sf2);border:1px solid var(--ln);color:var(--tx2)}
 .step{display:flex;align-items:center;gap:8px}
+.cf-base{display:flex;align-items:baseline;justify-content:space-between;padding:10px 12px;border:1px solid var(--ln);border-radius:2px;background:var(--sf2);margin:4px 0 12px}
+.cf-base b{font-size:16px}.cf-base span{font-size:13px;color:var(--tx2)}
+.cf-lbl{font-size:12px;font-weight:700;color:var(--tx2);margin:0 0 6px}
+.cf-ot{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.cf-ot button,.cf-half{height:40px;border:1px solid var(--ln);border-radius:2px;background:var(--sf);color:var(--tx);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.cf-ot button[aria-checked="true"],.cf-half[aria-pressed="true"]{border:2px solid var(--ac);color:var(--ac);background:var(--sf2)}
+.cf-half{width:100%;margin-top:6px;height:34px;font-size:12px;font-weight:500;color:var(--tx2)}
 .step button{width:42px;height:42px;border-radius:2px;border:1px solid var(--ln);background:var(--sf2);font-size:20px;cursor:pointer;font-weight:700}
 .step .v{flex:1;text-align:center;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .sw{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;border:1px solid var(--ln);border-radius:2px;background:var(--sf2)}
@@ -630,7 +637,17 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <div class="card hide" id="confirmCard">
         <h2>근무시간 확인</h2>
         <p class="tiny dim" id="cfWhy"></p>
-        <div class="step"><button onclick="cfStep(-0.5)">−</button><div class="v"><span id="cfHours">8</span><small class="dim" style="font-size:13px"> 시간</small></div><button onclick="cfStep(0.5)">＋</button></div>
+        <div class="cf-base"><b>기본 1공수</b><span>8시간</span></div>
+        <div class="cf-lbl">잔업</div>
+        <div class="cf-ot" id="cfOt" role="radiogroup" aria-label="잔업 시간">
+          <button type="button" role="radio" data-ot="0" onclick="cfPick(0)">없음</button>
+          <button type="button" role="radio" data-ot="1" onclick="cfPick(1)">1시간</button>
+          <button type="button" role="radio" data-ot="2" onclick="cfPick(2)">2시간</button>
+          <button type="button" role="radio" data-ot="3" onclick="cfPick(3)">3시간</button>
+          <button type="button" role="radio" data-ot="4" onclick="cfPick(4)">4시간</button>
+        </div>
+        <button type="button" class="cf-half" id="cfHalf" onclick="cfPick(-4)">일찍 끝났어요 · 반일(4시간)</button>
+        <div class="v" style="text-align:center;margin-top:10px;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums"><span id="cfHours">8</span><small class="dim" style="font-size:13px"> 시간</small></div>
         <p class="tiny" id="cfNote" style="margin:8px 0 12px;text-align:center"></p>
         <div class="row2"><button class="btn" onclick="cfCancel()">취소</button><button class="btn p" onclick="cfOk()">확정</button></div>
       </div>
@@ -1385,12 +1402,19 @@ var CF={hours:8,start:null,end:null,entry:null};
 function calcHours(st,en){var a=st.split(':'),b=en.split(':');var h=(+b[0]+ +b[1]/60)-(+a[0]+ +a[1]/60);if(h<0)h+=24;if(h>5)h-=1;return Math.max(0.5,Math.round(h*2)/2)}
 async function clockOut(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
   if(!e||!hhmm(e.work_start)){el('w_msg').innerHTML='<span class="neg">'+tm.noInMsg+'</span>';return}
-  var t=nowHM();CF={entry:e,start:hhmm(e.work_start),end:t,hours:calcHours(hhmm(e.work_start),t)};
+  /* v1.01: 출근을 일찍 눌러도 기본은 1공수 8시간. 잔업은 본인이 골라야 붙는다. 실제 체류시간은 참고로만 보여준다 */
+  var t=nowHM();CF={entry:e,start:hhmm(e.work_start),end:t,ot:0,half:false,hours:8,stay:calcHours(hhmm(e.work_start),t)};
   el('cfWhy').textContent=tm.cfWhy(CF.start,t);cfRender();
   el('todayCard').classList.add('hide');el('confirmCard').classList.remove('hide');window.scrollTo(0,0);
 }
-function cfRender(){el('cfHours').textContent=CF.hours;var ot=Math.max(0,CF.hours-8);el('cfNote').innerHTML=CF.hours>=8?'<b>1공수</b>'+(ot?' + 잔업 <b>'+ot+'시간</b>':''):'<b>'+(CF.hours/8).toFixed(2)+'공수</b> (8시간 미만)'}
-function cfStep(d){CF.hours=Math.max(0.5,Math.min(16,Math.round((CF.hours+d)*2)/2));cfRender()}
+function cfPick(v){if(v<0){CF.half=!CF.half;CF.ot=0}else{CF.half=false;CF.ot=v}CF.hours=CF.half?4:8+CF.ot;cfRender()}
+function cfRender(){el('cfHours').textContent=CF.hours;
+  [].forEach.call(document.querySelectorAll('#cfOt button'),function(b){b.setAttribute('aria-checked',(!CF.half&&+b.getAttribute('data-ot')===CF.ot)?'true':'false')});
+  el('cfHalf').setAttribute('aria-pressed',CF.half?'true':'false');
+  var note=CF.half?'<b>0.5공수</b> (반일 4시간)':'<b>1공수</b>'+(CF.ot?' + 잔업 <b>'+CF.ot+'시간</b>':'');
+  var room=Math.max(0,Math.floor(CF.stay-8));
+  if(!CF.half&&CF.ot>room)note+='<br><span class="neg">실제 체류 '+CF.stay+'시간(휴게 1시간 제외) 기준으로는 잔업 '+room+'시간까지입니다. 맞는지 확인해 주세요</span>';
+  el('cfNote').innerHTML=note}
 function cfCancel(){el('confirmCard').classList.add('hide');el('todayCard').classList.remove('hide')}
 async function cfOk(){cfCancel();var e=CF.entry,tm=termMap();
   await submitLabor({hours:CF.hours,work_start:CF.start,work_end:CF.end,site_id:e.site_id,project_code:e.project_code},tm.outSuccess(CF.end,CF.hours));
@@ -1458,7 +1482,7 @@ function termMap(){
     cfWhy: function(st,en){
       var sLbl=reg?'출근':'작업 시작';
       var eLbl=reg?'퇴근':'작업 종료';
-      return st+' '+sLbl+' → '+en+' '+eLbl+' (휴게 1시간 제외, 30분 단위)';
+      return st+' '+sLbl+' → '+en+' '+eLbl+' · 기본 8시간, 잔업이 있으면 아래에서 고르세요';
     }
   };
 }
@@ -1802,7 +1826,8 @@ async function leadOpen(d){
 
     var totalWorkers = rows.filter(function(x){ return x.project !== '휴무'; }).length;
     var totalMd = rows.reduce(function(s, x){ return s + (+x.md || 0); }, 0);
-    var pendingRows = rows.filter(function(x){ return x.status === 'submitted'; });
+    var pendingRows = rows.filter(function(x){ return x.status === 'submitted' && !x.lead_ok; });
+    LEAD.PEND = pendingRows;
 
     el('leadKpiWorkers').textContent = totalWorkers + '명';
     el('leadKpiMd').textContent = totalMd.toFixed(1) + ' M/D';
@@ -1885,19 +1910,22 @@ function renderLeadMonthlyRollup(rows){
     + '</table>';
 }
 
-function leadApproveRow(idx){
-  var row = LEAD.rows[idx];
-  if(row){
-    row.status = 'approved';
-    toast(row.name + ' 공수 확인 완료', 'g');
-    leadOpen(LEAD.date);
-  }
-}
-
-function leadApproveAll(){
-  LEAD.rows.forEach(function(r){ if(r.status === 'submitted') r.status = 'approved'; });
-  toast('팀 전원 공수 확인이 완료되었습니다', 'g');
+/* v1.01 W6: 리드 확인을 서버에 기록한다(lead_confirm_labor). 대표 승인과는 별개이며 상태는 바꾸지 않는다 */
+async function leadConfirm(ids, label){
+  var r = await sb.rpc('lead_confirm_labor', { p_date: LEAD.date, p_entry_ids: ids });
+  if(r.error || !r.data || !r.data.ok){ toast('확인 실패: ' + ((r.error && r.error.message) || (r.data && r.data.error) || ''), 'e'); return; }
+  toast(label + ' ' + r.data.confirmed + '건 확인', 'g');
   leadOpen(LEAD.date);
+}
+function leadApproveRow(idx){
+  var row = LEAD.PEND && LEAD.PEND[idx];
+  if(!row || !row.id){ toast('대상을 찾지 못했습니다. 새로고침 후 다시 눌러 주세요', 'e'); return; }
+  leadConfirm([row.id], row.name);
+}
+function leadApproveAll(){
+  var ids = (LEAD.PEND || []).map(function(x){ return x.id; }).filter(Boolean);
+  if(!ids.length) return;
+  leadConfirm(ids, '팀 전원');
 }
 
 /* ══════ 리드: 투입현황 ══════ */
