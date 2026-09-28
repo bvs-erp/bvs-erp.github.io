@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.89">
+<meta name="app-version" content="1.90">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,12 +134,12 @@ tr.row-warn td{background:rgba(245,158,11,.07)}
   .side{position:fixed;left:0;top:0;height:100vh;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.4)}
   .side.open{transform:none}
   .side-dim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60}
-  header{height:auto!important;min-height:48px;padding:6px 10px!important;flex-wrap:wrap;box-sizing:border-box}
-  .brand{display:flex;align-items:center;gap:8px;min-width:0}
-  .brand-title{font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
-  .brand-title:after{content:'▾';font-size:11px;opacity:0.6}
-  .nav-links{order:20;width:100%;overflow-x:auto;gap:4px;padding:4px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;display:flex;justify-content:flex-start}
-  .nav-btn{height:30px;padding:0 10px;flex:0 0 auto;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+  header{height:48px!important;min-height:48px!important;padding:0 12px!important;flex-wrap:nowrap!important;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer}
+  .brand-title{font-size:14.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;color:var(--text)}
+  .mob-header-ttl{font-size:13px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:2px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mob-header-ttl:after{content:'▾';font-size:10px;opacity:0.7;margin-left:2px}
+  .nav-links{display:none!important}
   #modbar,#mtabs,#sbar{display:none!important}
   #mnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--panel,#fff);border-top:1px solid var(--border,#d4d9e0);overflow-x:auto;z-index:950;padding-bottom:env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch;scrollbar-width:none}
   #mnav .mi{flex:1 0 54px;text-align:center;padding:7px 2px 5px;font-size:11px;color:var(--text-muted);white-space:nowrap;position:relative;cursor:pointer;user-select:none;text-decoration:none}
@@ -151,7 +151,7 @@ tr.row-warn td{background:rgba(245,158,11,.07)}
 }
 
 
-/* ── BVS 스타일 모바일 메뉴 드로어 (v1.89) ── */
+/* ── BVS 스타일 모바일 메뉴 드로어 (v1.90) ── */
 #mobMenuModal{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:9999;display:flex;justify-content:flex-start}
 #mobMenuModal.hide{display:none!important}
 .mob-menu-panel{background:var(--panel,#1e293b);width:310px;max-width:85vw;height:100%;box-shadow:4px 0 24px rgba(0,0,0,.35);display:flex;flex-direction:column;animation:mobSlideLeft .2s ease-out}
@@ -166,8 +166,15 @@ tr.row-warn td{background:rgba(245,158,11,.07)}
 .mob-menu-grp:first-child{border-top:none;margin-top:0}
 .mob-menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text,#f8fafc);transition:background .12s,color .12s}
 .mob-menu-item:hover,.mob-menu-item.on{background:rgba(239,68,68,0.15);color:var(--accent,#ef4444);font-weight:700}
-.mob-menu-item .m-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;display:block}
+.mob-menu-item .m-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
 .mob-menu-item .m-t{flex:1}
+.mob-menu-footer{padding:12px 14px;border-top:1px solid var(--border,#334155);background:var(--bg,#0f172a);display:flex;flex-direction:column;gap:8px}
+.mob-footer-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mob-footer-link{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:6px;background:var(--panel,#1e293b);color:var(--text,#f8fafc);font-size:11.5px;font-weight:600;text-decoration:none;border:1px solid var(--border,#334155)}
+.mob-footer-link:hover{border-color:var(--accent,#ef4444);color:var(--accent,#ef4444)}
+.mob-footer-actions{display:flex;gap:6px}
+.mob-footer-btn{flex:1;padding:7px 0;text-align:center;font-size:11.5px;border-radius:6px;border:1px solid var(--border,#334155);background:var(--panel,#1e293b);color:var(--text-muted,#94a3b8);cursor:pointer}
+.mob-footer-btn:hover{color:var(--text,#f8fafc);border-color:var(--text-muted,#94a3b8)}
 
 /* Ledger grid (v1.13) */
 .g-bar{display:flex;gap:6px;align-items:center}
@@ -646,15 +653,21 @@ body.perm-ro #tmType{display:none}
 
 
 <header>
-  <div class="brand">
-    <button class="menu-btn" onclick="openMobMenu()" aria-label="전체 메뉴">☰</button>
+  <div class="brand" onclick="openMobMenu()" title="전체 메뉴 열기">
+    <button class="menu-btn" aria-label="전체 메뉴"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     <img class="logo-img" src="ssjg-logo.png" alt="SSJG" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="logo" style="display:none">SS</div>
-    <div>
-      <div class="brand-title" onclick="openMobMenu()" title="전체 메뉴">SSJG ERP</div>
-      <div style="font-size:11px;color:var(--text-muted)" id="hdCo"></div>
+    <div style="display:flex;flex-direction:column;min-width:0">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="brand-title">SSJG ERP</span>
+        <span id="mobHeaderTtl" class="mob-header-ttl"></span>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-muted)" id="hdCo"></div>
     </div>
   </div>
-  <button class="nav-btn icon-btn" onclick="kpOpen()" title="검색 (Ctrl+K)" aria-label="검색" style="margin-left:auto"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+  <div style="display:flex;align-items:center;gap:4px;margin-left:auto">
+    <button class="nav-btn icon-btn" onclick="kpOpen()" title="검색 (Ctrl+K)" aria-label="검색"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+    <button class="nav-btn icon-btn" onclick="toggleTheme()" title="테마 전환" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+  </div>
   <div class="nav-links">
     <a href="https://bvs-erp.github.io/erp.html" class="nav-btn">
       <span style="color:var(--blue)">●</span> BVS 현장 ERP
@@ -668,7 +681,6 @@ body.perm-ro #tmType{display:none}
     <a href="./worker.html" target="_blank" rel="noopener noreferrer" class="nav-btn" style="border-color:rgba(59,130,246,0.5);color:#60a5fa" title="현장 근로자/리드 공수 ERP (새 탭)">
       공수 ERP
     </a>
-    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
     <span id="userEmail" style="font-size:11px;color:var(--text-muted);padding-left:8px"></span>
     <button class="nav-btn" onclick="doLogout()">로그아웃</button>
   </div>
@@ -676,15 +688,34 @@ body.perm-ro #tmType{display:none}
 
 <div class="side-dim" id="sideDim" onclick="toggleSide(false)"></div>
 
-<!-- ── 모바일 전체 메뉴 드로어 모달 (v1.89 BVS형) ── -->
+<!-- ── 모바일 전체 메뉴 드로어 모달 (v1.90 BVS형 최고급 셸) ── -->
 <div id="mobMenuModal" class="hide" onclick="if(event.target===this)closeMobMenu()">
   <div class="mob-menu-panel">
     <div class="mob-menu-hdr">
-      <b>SSJG ERP 전체 메뉴</b>
-      <button class="icon-btn" onclick="closeMobMenu()" style="width:30px;height:30px;font-size:16px;border:none;background:none;cursor:pointer;color:var(--text-muted)">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,0.6)"></span>
+        <div>
+          <b>SSJG ERP</b>
+          <div style="font-size:10.5px;color:var(--text-muted);font-weight:400">주식회사 승승장구컴퍼니</div>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="closeMobMenu()" style="width:32px;height:32px;font-size:18px;border:none;background:none;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div class="mob-menu-q"><input id="mobQ" placeholder="메뉴 검색" autocomplete="off" oninput="mobMenuFilter(this.value)" onkeydown="mobQKey(event)"></div>
+    <div class="mob-menu-q"><input id="mobQ" placeholder="메뉴 검색 (예: 분개장, 재고, 부가세)" autocomplete="off" oninput="mobMenuFilter(this.value)" onkeydown="mobQKey(event)"></div>
     <div class="mob-menu-list" id="mobMenuList"></div>
+    <div class="mob-menu-footer">
+      <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);letter-spacing:0.04em">전사 패밀리 시스템</div>
+      <div class="mob-footer-grid">
+        <a class="mob-footer-link" href="https://bvs-erp.github.io/erp.html"><span style="color:var(--blue)">●</span> BVS 현장 ERP</a>
+        <a class="mob-footer-link" href="https://goscrap.github.io/"><span style="color:var(--green)">●</span> PYRO 제조 콕핏</a>
+        <a class="mob-footer-link" href="./worker.html" target="_blank" rel="noopener noreferrer"><span style="color:#eab308">●</span> 현장 공수앱</a>
+        <div class="mob-footer-link" style="opacity:0.6;font-size:10.5px"><span style="color:#94a3b8">●</span> HBS 허브</div>
+      </div>
+      <div class="mob-footer-actions">
+        <button class="mob-footer-btn" onclick="toggleTheme();closeMobMenu()">테마 전환</button>
+        <button class="mob-footer-btn" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3605,6 +3636,8 @@ function pgUpdate(id){
   mo.g.forEach(function(gr){ gr.i.forEach(function(it){ if(it[0] === id) grp = gr.n; }); });
   document.getElementById('pgT').innerText = mi.t || '';
   document.getElementById('pgPath').innerText = (mo.m || '') + (grp ? ' > ' + grp : '');
+  var mobT = document.getElementById('mobHeaderTtl');
+  if(mobT) mobT.innerText = mi.t ? ' ' + mi.t : '';
   var p = document.getElementById('tab-' + id);
   if(p){ p.querySelectorAll('.b3-head button, .filter-bar button').forEach(function(x){ if(/^조회$/.test((x.innerText || x.textContent || '').trim())) x.classList.add('pg-hid'); }); }
   function chk(){
@@ -5930,7 +5963,49 @@ async function c24Register(){
 }
 
 
-// ── 모바일 하단 네비게이션 (v1.88 BVS ERP형 모바일 UI 이식) ──
+// ── SSJG 전용 Lucide SVG 벡터 아이콘 맵 (BVS 규격 일체화 v1.90) ──
+var SSJG_ICONS = {
+  'today': '<path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>',
+  'delivery': '<rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  'shiplog': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>',
+  'settlements': '<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/>',
+  'logistics': '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  'inventory': '<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>',
+  'todo': '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  'inbox': '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  'journal': '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  'jv-find': '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  'tax-jv': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>',
+  'gl-account': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  'gl-partner': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'gl-month': '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  'gl-trial': '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  'pt-month': '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  'bank': '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  'tax-invoices': '<path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/>',
+  'cards': '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  'fund-day': '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  'arap': '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  'ar-recon': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  'monthly': '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>',
+  'fa-reg': '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 7V3"/>',
+  'fa-dep': '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>',
+  'close': '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  'fs-is': '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  'is-month': '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  'fs-bs': '<rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/>',
+  'mgmt-pl': '<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  'channel-pl': '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  'dashboard': '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>',
+  'vat-sum': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/>',
+  'sales-recon': '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>',
+  'governance': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  'coa': '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/>',
+  'partners': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'items': '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'
+};
+
+// ── 모바일 하단 바텀 내비게이션 (v1.90 BVS ERP 규격 일체화) ──
 function renderMNav(){
   var mn = document.getElementById('mnav');
   if(!mn) return;
@@ -5939,7 +6014,7 @@ function renderMNav(){
   var isSales = (CUR_MOD === 0 && !isHome) || cur === 'tab-delivery' || cur === 'tab-shiplog' || cur === 'tab-settlements';
   var isPur = (CUR_MOD === 1 && !isHome) || cur === 'tab-logistics' || cur === 'tab-inventory';
   var isAcc = (CUR_MOD === 2 && !isHome) || cur === 'tab-journal' || cur === 'tab-jv-find' || cur === 'tab-tax-jv' || cur.indexOf('tab-gl') === 0 || cur === 'tab-bank' || cur === 'tab-tax-invoices' || cur === 'tab-cards';
-  var isTax = (CUR_MOD === 3 && !isHome) || cur === 'tab-dashboard' || cur === 'tab-vat-sum';
+  var isTax = (CUR_MOD === 3 && !isHome) || cur === 'tab-dashboard' || cur === 'tab-vat-sum' || cur === 'tab-sales-recon';
   var badgeHtml = '';
   try {
     var tdoCnt = (document.getElementById('tdoCnt')||{}).textContent || '';
@@ -5947,17 +6022,16 @@ function renderMNav(){
     if(n > 0) badgeHtml = '<span class="bd">' + n + '</span>';
   } catch(e){}
   mn.innerHTML = [
-    '<div class="mi' + (isHome ? ' on' : '') + '" onclick="switchTab(\'today\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>메인' + badgeHtml + '</div>',
-    '<div class="mi' + (isAcc ? ' on' : '') + '" onclick="selectModule(2);switchTab(\'journal\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 14l4-4 4 3 5-6"/></svg>회계</div>',
-    '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);switchTab(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>영업</div>',
-    '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);switchTab(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>구매/자재</div>',
-    '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);switchTab(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8M8 13h8M8 17h5"/></svg>세무</div>',
+    '<div class="mi' + (isHome ? ' on' : '') + '" onclick="switchTab(\'today\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>상황판' + badgeHtml + '</div>',
+    '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);switchTab(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>영업·주문</div>',
+    '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);switchTab(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>물류·재고</div>',
+    '<div class="mi' + (isAcc ? ' on' : '') + '" onclick="selectModule(2);switchTab(\'journal\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>회계·장부</div>',
+    '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);switchTab(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>세무·손익</div>',
     '<div class="mi" onclick="openMobMenu()"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>전체</div>'
   ].join('');
 }
 
-
-// ── BVS 스타일 모바일 전체 메뉴 드로어 (v1.89) ──
+// ── BVS 스타일 모바일 전체 메뉴 드로어 (v1.90) ──
 function mobMenuHtml(q){
   q = String(q||'').trim().toLowerCase();
   var cur = (document.querySelector('.tab-pane.active')||{}).id || '';
@@ -5974,11 +6048,12 @@ function mobMenuHtml(q){
     if(!grps.length) return '';
     return '<div class="mob-menu-grp">' + mo.m + '</div>'
       + grps.map(function(gr){
-          return '<div style="font-size:11px;color:var(--text-muted);padding:4px 10px 2px;font-weight:600">' + gr.n + '</div>'
+          return '<div style="font-size:11px;color:var(--text-muted);padding:6px 10px 2px;font-weight:700">' + gr.n + '</div>'
             + gr.i.map(function(it){
                 var isOn = it[0] === cur;
+                var ic = SSJG_ICONS[it[0]] || '<circle cx="12" cy="12" r="4"/>';
                 return '<div class="mob-menu-item ' + (isOn ? 'on' : '') + '" onclick="goAndClose(\'' + it[0] + '\',' + mi + ')">'
-                  + '<span class="m-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg></span>'
+                  + '<span class="m-ic"><svg viewBox="0 0 24 24">' + ic + '</svg></span>'
                   + '<span class="m-t">' + it[1] + '</span>'
                   + '</div>';
               }).join('');
