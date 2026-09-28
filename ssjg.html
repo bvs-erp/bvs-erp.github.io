@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.04">
+<meta name="app-version" content="1.05">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5667,7 +5667,7 @@ async function inbHist(){
   INB.hist = { P: P, T: T }; return INB.hist;
 }
 function inbTop(M){ if(!M) return null; var ks = Object.keys(M), n = 0, b = null; ks.forEach(function(k){ n += M[k]; if(!b || M[k] > M[b]) b = k; }); return b ? { c: b, m: M[b], n: n } : null; }
-function inbRp(name){ return false; }
+function inbRp(name){ return !!trWho(name); }  /* v1.05: 관계회사·대표 관련 거래는 자동 추천하지 않고 Tax-Risk 안내 */
 function tiLines(x, cp){
   var sup = Math.round(Number(x.supply_amt || 0)), vat = Math.round(Number(x.vat_amt || 0)), tot = Math.round(Number(x.total_amt || 0)) || sup + vat, memo = x.item || '', L = [];
   if(x.flow === '매출'){
@@ -5797,6 +5797,15 @@ document.addEventListener('keydown', function(e){
   else if(e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp'){ e.preventDefault(); inbMove(-1); }
   else if(e.key === 'e' || e.key === 'E'){ e.preventDefault(); inbEdit(); }
 });
+/* 바로 열기 (2026-09-28): 주소 뒤 #탭이름 이면 로그인 후 그 화면으로 — BVS 대표 승인함에서 이 ERP의 수신함·마감으로 바로 온다 */
+(function(){
+  var _st = startApp;
+  startApp = async function(){
+    var r = await _st.apply(this, arguments);
+    try { var h = decodeURIComponent((location.hash || '').slice(1)); if(h && document.getElementById('tab-' + h) && typeof switchTab === 'function') switchTab(h); } catch(e){}
+    return r;
+  };
+})();
 var _switchTab181 = switchTab; switchTab = function(tabId){ var r = _switchTab181.apply(this, arguments); if(tabId === 'inbox'){ INB.hist = null; inbLoad(); } return r; };
 var _pgAct181 = pgAct; pgAct = function(k){ var p = pgPane(); if(p && p.id === 'tab-inbox' && k === 'q'){ INB.hist = null; inbLoad(); return; } return _pgAct181(k); };
 var _sbKeys181 = sbKeys;
