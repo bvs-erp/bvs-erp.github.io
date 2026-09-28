@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.01">
+<meta name="app-version" content="1.02">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+<script src="./erp-core.js"></script>
 <style>
 :root{
   --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
@@ -2064,7 +2065,7 @@ async function gridLoad(tb){
   var all,res;
   if(pre)res=await pre;
   else if(ord){var os=[[ord,{ascending:false,nullsFirst:false}]];if(g.pk)os.push([g.pk,{ascending:false}]);res=await sbFetchPar(tb,'*',os,20000).then(function(d){return {d:d}},function(e){return {e:e}})}
-  else{res={d:[]};var from=0;while(true){var r=await sb.from(tb).select('*').range(from,from+999);if(r.error){res={e:r.error};break}res.d=res.d.concat(r.data||[]);if(!r.data||r.data.length<1000||res.d.length>=20000)break;from+=1000}}
+  else{res=await ERPC.pageAll({sb:sb,from:tb,select:'*',pk:g.pk||null,max:20000,label:tb}).then(function(d){return {d:d}},function(e){return {e:e}})}
   if(res.e){document.getElementById('gb_'+tb).innerHTML='<tr><td>'+gEsc(res.e.message||res.e)+'</td></tr>';return}
   all=res.d.slice(0,20000);
   all.forEach(function(r,i){Object.defineProperty(r,'__i',{value:i,enumerable:false,configurable:true,writable:true})});
@@ -2326,43 +2327,17 @@ function toggleAlert(id, btn){
 // ── 병렬 페이지 수집 (v1.60): 첫 페이지와 건수를 동시에 받고 나머지 페이지를 4개씩 동시에 받음. 정렬이 없으면 순차 ──
 // v1.62: flt(쿼리 필터 함수) 추가. 선택 열이 '*'가 아니면 나머지 선택 열 전부를 보조 정렬로 붙여 페이지 경계 중복·누락을 막고, 건수가 서버 count와 다르면 오류로 올린다.
 async function sbFetchPar(table, cols, orders, max, flt){
-  var PS = 1000; max = max || 100000;
+  /* v1.02: 공통 코어로 통일. 선택 열이 지정되면 모든 열을 보조 정렬로 붙여 고유 순서를 만들고(병렬 허용), '*'이면 순차로 받는다. 건수 대조는 코어가 한다 */
   var ords = (orders || []).slice(), used = {};
   ords.forEach(function(o){ used[o[0]] = 1; });
-  if(cols && cols !== '*') String(cols).split(',').forEach(function(k){ k = k.trim(); if(k && !used[k]){ used[k] = 1; ords.push([k, { ascending: true, nullsFirst: true }]); } });
-  function q(f){ var x = sb.from(table).select(cols); if(flt) x = flt(x); x = x.range(f, f + PS - 1); ords.forEach(function(o){ x = x.order(o[0], o[1] || { ascending: true }); }); return x; }
-  function hq(){ var x = sb.from(table).select(cols, { count: 'exact', head: true }); if(flt) x = flt(x); return x; }
-  var c = null, r0;
-  try { var pr = await Promise.all([q(0), hq()]); r0 = pr[0]; c = pr[1] && !pr[1].error ? pr[1].count : null; }
-  catch(e){ r0 = await q(0); }
-  if(r0.error) throw r0.error;
-  var out = (r0.data || []).slice();
-  if(out.length < PS) return out;
-  if(typeof c !== 'number'){
-    for(var f = PS; out.length < max; f += PS){ var r = await q(f); if(r.error) throw r.error; out = out.concat(r.data || []); if(!r.data || r.data.length < PS) break; }
-    return out;
-  }
-  var n = Math.min(c, max), starts = []; for(var s = PS; s < n; s += PS) starts.push(s);
-  for(var i = 0; i < starts.length; i += 4){
-    var rs = await Promise.all(starts.slice(i, i + 4).map(function(st){ return q(st); }));
-    for(var j = 0; j < rs.length; j++){ if(rs[j].error) throw rs[j].error; out = out.concat(rs[j].data || []); }
-  }
-  if(c <= max && out.length !== n) throw new Error(table + ' 건수 불일치 ' + out.length + '/' + n);
-  return out;
+  var uniq = false;
+  if(cols && cols !== '*'){ String(cols).split(',').forEach(function(k){ k = k.trim(); if(k && !used[k]){ used[k] = 1; ords.push([k, { ascending: true, nullsFirst: true }]); } }); uniq = true; }
+  return ERPC.pageAll({ sb: sb, from: table, select: cols, order: ords, filter: flt, max: max || 100000, unique: uniq, label: table });
 }
 async function sbAllR(table, cols, orders, flt){ try { return { data: await sbFetchPar(table, cols, orders, 200000, flt), error: null }; } catch(e){ return { data: null, error: e }; } }
 async function tdFetchAll(table, cols, orderCol){
   if(orderCol) return sbFetchPar(table, cols, [[orderCol, { ascending: true }]]);
-  var out = [];
-  for(var f = 0; ; f += 1000){
-    var q = sb.from(table).select(cols).range(f, f + 999);
-    if(orderCol) q = q.order(orderCol, { ascending: true });
-    var r = await q;
-    if(r.error) throw r.error;
-    out = out.concat(r.data || []);
-    if(!r.data || r.data.length < 1000) break;
-  }
-  return out;
+  return ERPC.pageAll({ sb: sb, from: table, select: cols, label: table });
 }
 
 function tdKst(){ var n = new Date(Date.now() + 9 * 3600000); return n.toISOString().slice(0, 10); }
@@ -4821,9 +4796,7 @@ function pmOpen(){
   if(!y.options.length){ var n = Number(glNowYm().slice(0, 4)); for(var i = n; i >= 2021; i--) y.insertAdjacentHTML('beforeend', '<option>' + i + '</option>'); pmSrcFill(); pmLoad(); }
 }
 async function pmAll(q){
-  var all = [], from = 0, r;
-  while(true){ r = await q().range(from, from + 999); if(r.error) throw r.error; all = all.concat(r.data || []); if(!r.data || r.data.length < 1000) break; from += 1000; }
-  return all;
+  return ERPC.pageAllMk(q);
 }
 async function pmLoad(){
   if(!sb) return;
