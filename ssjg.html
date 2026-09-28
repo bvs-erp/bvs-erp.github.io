@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.00">
+<meta name="app-version" content="1.01">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -426,6 +426,7 @@ footer[hidden]{display:none!important}
 #sbar .sb-k b{display:inline-block;font-weight:700;color:#16181d;border:1px solid #d5d9e0;border-radius:3px;padding:0 4px;margin-right:3px;background:#fff;line-height:16px}
 #sbar .sb-k{margin-right:8px}
 #sbar .sb-sp{flex:1}
+@media (min-width:901px){.hd-theme-ic{display:none!important}}
 #sbar .sb-lock{font-weight:600;color:#3f4550;border:1px solid #c9ced6;border-radius:4px;padding:0 6px;background:#fff}
 #app.hide #sbar{display:none}
 body.has-sbar{padding-bottom:30px}
@@ -666,23 +667,15 @@ body.perm-ro #tmType{display:none}
   </div>
   <div style="display:flex;align-items:center;gap:4px;margin-left:auto">
     <button class="nav-btn icon-btn" onclick="kpOpen()" title="검색 (Ctrl+K)" aria-label="검색"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
-    <button class="nav-btn icon-btn" onclick="toggleTheme()" title="테마 전환" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+    <button class="nav-btn icon-btn hd-theme-ic" onclick="toggleTheme()" title="테마 전환" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
   </div>
   <div class="nav-links">
-    <a href="https://bvs-erp.github.io/erp.html" class="nav-btn">
-      <span style="color:var(--blue)">●</span> BVS 현장 ERP
-    </a>
-    <a href="#" class="nav-btn active">
-      <span style="color:var(--accent)">●</span> SSJG ERP
-    </a>
-    <a href="https://goscrap.github.io/" class="nav-btn">
-      <span style="color:var(--green)">●</span> PYRO 제조 콕핏
-    </a>
-    <a href="./worker.html" target="_blank" rel="noopener noreferrer" class="nav-btn" style="border-color:rgba(59,130,246,0.5);color:#60a5fa" title="현장 근로자/리드 공수 ERP (새 탭)">
-      공수 ERP
-    </a>
-    <span id="userEmail" style="font-size:11px;color:var(--text-muted);padding-left:8px"></span>
-    <button class="nav-btn" onclick="doLogout()">로그아웃</button>
+    <a href="./erp.html" class="nav-btn"><span style="color:var(--blue)">●</span> BVS</a>
+    <a href="#" class="nav-btn active"><span style="color:var(--accent)">●</span> SSJG</a>
+    <a href="https://goscrap.github.io/" class="nav-btn"><span style="color:var(--green)">●</span> PYRO</a>
+    <a href="./worker.html" target="_blank" rel="noopener noreferrer" class="nav-btn" title="현장 인원 공수 입력 (새 탭)">현장앱</a>
+    <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
+    <button class="nav-btn" onclick="doLogout()" title="로그아웃">로그아웃</button>
   </div>
 </header>
 
@@ -706,9 +699,9 @@ body.perm-ro #tmType{display:none}
     <div class="mob-menu-footer">
       <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);letter-spacing:0.04em">전사 패밀리 시스템</div>
       <div class="mob-footer-grid">
-        <a class="mob-footer-link" href="https://bvs-erp.github.io/erp.html"><span style="color:var(--blue)">●</span> BVS 현장 ERP</a>
-        <a class="mob-footer-link" href="https://goscrap.github.io/"><span style="color:var(--green)">●</span> PYRO 제조 콕핏</a>
-        <a class="mob-footer-link" href="./worker.html" target="_blank" rel="noopener noreferrer"><span style="color:#eab308">●</span> 현장 공수앱</a>
+        <a class="mob-footer-link" href="https://bvs-erp.github.io/erp.html"><span style="color:var(--blue)">●</span> BVS</a>
+        <a class="mob-footer-link" href="https://goscrap.github.io/"><span style="color:var(--green)">●</span> PYRO</a>
+        <a class="mob-footer-link" href="./worker.html" target="_blank" rel="noopener noreferrer"><span style="color:#eab308">●</span> 현장앱</a>
         <div class="mob-footer-link" style="opacity:0.6;font-size:10.5px"><span style="color:#94a3b8">●</span> HBS 허브</div>
       </div>
       <div class="mob-footer-actions">
@@ -5445,15 +5438,17 @@ function sbKeys(p){
   if(p && p.querySelector('#jvRows')) k = [['Enter', '다음 칸'], ['F2', '코드도움'], ['Ctrl S', '저장']];
   else if(p && p.querySelector('[data-grid]')) k = [['Enter', '편집'], ['F2', '코드도움'], ['Ctrl S', '변경 저장']];
   else if(p && p.querySelector('.dr-row, #gltRows, #glmRows')) k = [['더블클릭', '원장 열기'], ['Esc', '닫기']];
-  k.push(['Ctrl K', '검색']);
+  if(!k.length) k = [['Ctrl K', '메뉴 검색'], ['/', '메뉴 필터'], ['R', '조회'], ['N', '신규']];
+  else k.push(['Ctrl K', '메뉴 검색']);
   return k.map(function(x){ return '<span class="sb-k"><b>' + x[0] + '</b>' + x[1] + '</span>'; }).join('');
 }
 function sbCnt(p){
   if(!p) return '';
   var c = p.querySelector('.g-cnt'); var t = c ? (c.textContent || '').trim() : '';
+  var m = t.replace(/,/g, '').match(/^(\d+)\s*(건|행)?$/); if(m) return '조회 ' + (+m[1]).toLocaleString('ko-KR') + '건';
   if(t) return t;
   var n = Array.prototype.filter.call(p.querySelectorAll('.table-wrap tbody tr'), function(tr){ return tr.offsetParent !== null && !tr.querySelector('td[colspan]'); }).length;
-  return n ? n.toLocaleString('ko-KR') + '행' : '';
+  return p.querySelector('.table-wrap tbody') ? '조회 ' + n.toLocaleString('ko-KR') + '건' : '';
 }
 function sbPaint(){
   var p = pgPane(), k = document.getElementById('sbKeys'), c = document.getElementById('sbCnt'); if(!k || !c) return;
@@ -5470,6 +5465,17 @@ async function sbLock(){
   } catch(e){}
 }
 document.body.classList.add('has-sbar');
+document.addEventListener('keydown', function(e){
+  if(e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+  var t = e.target, tag = (t && t.tagName || '').toLowerCase(); if(tag === 'input' || tag === 'select' || tag === 'textarea' || (t && t.isContentEditable)) return;
+  var app = document.getElementById('app'); if(!app || app.classList.contains('hide')) return;
+  var mm = document.getElementById('mobMenuModal'); if(mm && !mm.classList.contains('hide')) return;
+  if([].some.call(document.querySelectorAll('.ed-back, .kp-back, .modal, .mdl-back, [role="dialog"]'), function(x){ return x.offsetParent !== null || getComputedStyle(x).position === 'fixed' && getComputedStyle(x).display !== 'none'; })) return;
+  if(document.querySelector('.tab-pane.active td.g-cur')) return;
+  if(e.key === '/'){ e.preventDefault(); openMobMenu(); setTimeout(function(){ var q = document.getElementById('mobQ'); if(q) q.focus(); }, 30); }
+  else if(e.key === 'r' || e.key === 'R'){ e.preventDefault(); pgAct('q'); }
+  else if(e.key === 'n' || e.key === 'N'){ e.preventDefault(); pgAct('n'); }
+});
 var _switchTab176 = switchTab; switchTab = function(){ var r = _switchTab176.apply(this, arguments); setTimeout(sbPaint, 0); return r; };
 setInterval(function(){ if(document.hidden) return; sbPaint(); if(++SB.t % 60 === 1) sbLock(); }, 1000);
 
