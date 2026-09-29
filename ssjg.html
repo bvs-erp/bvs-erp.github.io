@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.06">
+<meta name="app-version" content="1.07">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5875,9 +5875,9 @@ async function c24Maps(){
   var cnt = {};
   (ol.data || []).forEach(function(x){ var p = String(x.mall_product_no || '').trim(), c = String(x.option_code || x.item_code || '').trim(); if(!p || !c) return; cnt[p] = cnt[p] || {}; cnt[p][c] = (cnt[p][c] || 0) + 1; });
   var m = {}; Object.keys(cnt).forEach(function(p){ var b = null; Object.keys(cnt[p]).forEach(function(c){ if(!b || cnt[p][c] > cnt[p][b]) b = c; }); m[p] = b; });
-  var it = await sb.from('ssjg_items').select('item_code,pl3_code').limit(500);
-  var pl = {}; (it.data || []).forEach(function(x){ if(x.pl3_code) pl[x.item_code] = x.pl3_code; });
-  C24.map = m; C24.pl3 = pl;
+  var it = await sb.from('ssjg_items').select('item_code,item_name,pl3_code').limit(500);
+  var pl = {}, nm = {}; (it.data || []).forEach(function(x){ if(x.pl3_code) pl[x.item_code] = x.pl3_code; if(x.item_name) nm[x.item_code] = x.item_name; });
+  C24.map = m; C24.pl3 = pl; C24.nm = nm;
 }
 async function c24Enrich(){
   if(!sb || !rawCafe24Rows.length) return;
@@ -5944,10 +5944,25 @@ var _dlEz187 = downloadEzadminOrderExcel;
 downloadEzadminOrderExcel = function(){
   var bad = rawCafe24Rows.filter(function(r){ return !(r._chk && r._chk.ok); });
   if(bad.length){ gToast('검사 불합격 ' + bad.length + '건: ' + bad.map(function(r){ return r['주문번호'] + ' ' + ((r._chk || {}).why || ''); }).join(', '), true); return; }
-  var keep = rawCafe24Rows;
-  rawCafe24Rows = keep.map(function(r){ var o = {}; Object.keys(r).forEach(function(k){ if(k.charAt(0) !== '_') o[k] = r[k]; }); return o; });
-  try { return _dlEz187.apply(this, arguments); } finally { rawCafe24Rows = keep; }
+  ezOrderXlsx(rawCafe24Rows);
 };
+/* v1.07: 이지어드민(3PL) 주문등록 양식 — 3PL이 헤더 이름으로 읽으므로 10열 순서·이름 고정 (2026-08-31 대표 확정 양식)
+   상품명 = 완제품명 (완제품코드), 수량 = 출고 수량(4개입은 2개입×2), 주문자 비면 받는사람, 배송메시지 = 카페24 비고, 비고 = 공란 */
+var EZ_ORDER_HEAD = ['상품명', '수량', '주문자', '받는사람', '전화번호1', '전화번호2', '우편번호', '주소', '배송메시지', '비고'];
+function ezOrderXlsx(L){
+  var rows = L.map(function(r){
+    var k = r._chk || {}, ship = k.ship || '', nm = ship && (C24.nm || {})[ship];
+    var tel1 = r['수령인전화'] || r['수령인핸드폰'] || '', tel2 = r['수령인핸드폰'] || '';
+    return [nm ? nm + ' (' + ship + ')' : (r['상품명'] || ''), Number(r['수량']) || 1, r['주문자명'] || r['수령인명'] || '', r['수령인명'] || '',
+      tel1, tel2, r['우편번호'] || '', r['배송지주소'] || '', r['배송메시지'] || '', ''];
+  });
+  var ws = XLSX.utils.aoa_to_sheet([EZ_ORDER_HEAD].concat(rows));
+  ws['!cols'] = [{wch:40},{wch:6},{wch:10},{wch:10},{wch:15},{wch:15},{wch:8},{wch:50},{wch:30},{wch:10}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '이지어드민주문');
+  var today = new Date(Date.now() + 9 * 3600000).toISOString().slice(2, 10).replace(/-/g, '');
+  XLSX.writeFile(wb, today + '_SSJG_이지어드민_주문등록_v1.0.xlsx');
+}
 async function c24Register(){
   if(PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
   var L = rawCafe24Rows.filter(function(r){ return !r._have && r._chk && r._chk.ok; });
