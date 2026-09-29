@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.09">
+<meta name="app-version" content="1.10">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
 <script src="./erp-core.js?v=1.03"></script>
+<script src="./erp-grid.js?v=1.01"></script>
 <style>
 :root{
   --bg:#0f172a;--panel:#1e293b;--panel-card:#1e293b;--panel-border:#334155;--border:#334155;
@@ -4074,7 +4075,9 @@ function gsPlain(t){
   });
   gsResizers(t);
 }
-function gsInitPlain(){ document.querySelectorAll('.tab-pane table').forEach(function(t){ try { gsPlain(t); } catch(e){} }); }
+/* v1.10 R3: 일반 표는 3사 공통 표 부품(erp-grid.js)으로 — 정렬·필터줄·열 너비·첫 열 고정·필터 합계줄. 편집 그리드(GRID)·전표·3단 표는 그대로 */
+function gsSkip(t){ return !t || t.dataset.gs || t._eg || t.closest('.g-panel') || t.classList.contains('jv-tbl') || t.classList.contains('b3-tbl') || !t.tHead || !t.tBodies[0] || (t.tHead.id || '').indexOf('gh_') === 0; }
+function gsInitPlain(){ document.querySelectorAll('.tab-pane table').forEach(function(t){ try { if(gsSkip(t)) return; if(window.ERPG) ERPG.enhance(t); else gsPlain(t); } catch(e){} }); }
 gsInitPlain();
 var _switchTab1 = switchTab;
 switchTab = function(id, el){ var r = _switchTab1(id, el); setTimeout(gsInitPlain, 300); return r; };
