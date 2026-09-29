@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.12">
+<meta name="app-version" content="1.13">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1983,11 +1983,9 @@ async function startApp(){
     if(st && st.data) ME = st.data;
   } catch(e){ console.warn('my_status error:', e); }
 
-  try { switchTab('todo'); } catch(e){}
-  pgBusy(true, '불러오는 중…');
-  try { await loadAllData(); } finally { pgBusy(false); }
-  loadToday();
-  gridInitIn(document.querySelector('.tab-pane.active'));
+  /* v1.13 조회 버튼 방식: 로그인 때는 회사 정보만. 화면마다 「조회」를 눌러야 자료를 부른다 */
+  await sqShell();
+  try { sqNav('todo'); } catch(e){}
 }
 
 document.addEventListener('keydown', function(ev){
@@ -2222,7 +2220,7 @@ function buildMenu(){
   side.innerHTML = MENU.map(function(mo, mi){
     return '<div class="mod-tree" data-mod="' + mi + '">' + mo.g.map(function(gr){
       return '<div class="side-grp">' + gr.n + '</div>' + gr.i.map(function(it){
-        return '<div class="tab-item" data-tab="' + it[0] + '" onclick="switchTab(\'' + it[0] + '\',this)">' + it[1] + (it[0] === 'dashboard' ? '<span class="side-badge" id="sideTaxBadge"></span>' : '') + '</div>';
+        return '<div class="tab-item" data-tab="' + it[0] + '" onclick="sqNav(\'' + it[0] + '\',this)">' + it[1] + (it[0] === 'dashboard' ? '<span class="side-badge" id="sideTaxBadge"></span>' : '') + '</div>';
       }).join('');
     }).join('') + '</div>';
   }).join('');
@@ -2237,7 +2235,7 @@ function renderTabs(active){
   var el = document.getElementById('mtabs'); if(!el) return;
   el.innerHTML = OPEN_TABS.map(function(id){
     var t = (MENU_IDX[id] || {}).t || id;
-    return '<div class="mtab' + (id === active ? ' on' : '') + '" onclick="switchTab(\'' + id + '\')">' + t
+    return '<div class="mtab' + (id === active ? ' on' : '') + '" onclick="sqNav(\'' + id + '\')">' + t
       + (id === 'today' ? '' : '<span class="mtab-x" onclick="event.stopPropagation();closeTab(\'' + id + '\')">×</span>') + '</div>';
   }).join('');
 }
@@ -2245,7 +2243,7 @@ function closeTab(id){
   var i = OPEN_TABS.indexOf(id); if(i < 0) return;
   OPEN_TABS.splice(i, 1);
   var cur = (document.querySelector('.tab-pane.active') || {}).id;
-  if(cur === 'tab-' + id) switchTab(OPEN_TABS[Math.max(0, i - 1)] || 'today');
+  if(cur === 'tab-' + id) sqNav(OPEN_TABS[Math.max(0, i - 1)] || 'today');
   else renderTabs(String(cur || '').replace(/^tab-/, ''));
 }
 
@@ -5283,7 +5281,7 @@ buildMenu = function(){
 try { if(localStorage.getItem('ssjg_side_min')) document.body.classList.add('side-min'); } catch(e){}
 async function kpItems(q){
   var s = String(q || '').trim().toLowerCase(), out = [];
-  MENU.forEach(function(mo){ mo.g.forEach(function(gr){ gr.i.forEach(function(it){ out.push({ k: '메뉴', n: it[1], x: mo.m + ' > ' + gr.n, go: function(){ switchTab(it[0]); } }); }); }); });
+  MENU.forEach(function(mo){ mo.g.forEach(function(gr){ gr.i.forEach(function(it){ out.push({ k: '메뉴', n: it[1], x: mo.m + ' > ' + gr.n, go: function(){ sqNav(it[0]); } }); }); }); });
   if(s){
     try { (await chData('acct')).forEach(function(a){ out.push({ k: '계정', n: a.c + ' ' + a.n, x: '계정별원장', go: function(){ drAcct(a.c, '', ''); } }); }); } catch(e){}
     try { (await chData('partner')).forEach(function(p){ var nm = p.v || p.n || p.c; out.push({ k: '거래처', n: nm, x: '전표 조회', go: function(){ switchTab('jv-find'); var i = document.getElementById('jfCp'); if(i){ i.value = nm; document.getElementById('jfFrom').value = ''; document.getElementById('jfTo').value = ''; jfLoad(); } } }); }); } catch(e){}
@@ -5943,11 +5941,11 @@ function renderMNav(){
     if(n > 0) badgeHtml = '<span class="bd">' + n + '</span>';
   } catch(e){}
   mn.innerHTML = [
-    '<div class="mi' + (isHome ? ' on' : '') + '" onclick="switchTab(\'today\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>상황판' + badgeHtml + '</div>',
-    '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);switchTab(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>영업·주문</div>',
-    '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);switchTab(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>물류·재고</div>',
-    '<div class="mi' + (isAcc ? ' on' : '') + '" onclick="selectModule(2);switchTab(\'journal\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>회계·장부</div>',
-    '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);switchTab(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>세무·손익</div>',
+    '<div class="mi' + (isHome ? ' on' : '') + '" onclick="sqNav(\'today\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>상황판' + badgeHtml + '</div>',
+    '<div class="mi' + (isSales ? ' on' : '') + '" onclick="selectModule(0);sqNav(\'delivery\');renderMNav()"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>영업·주문</div>',
+    '<div class="mi' + (isPur ? ' on' : '') + '" onclick="selectModule(1);sqNav(\'logistics\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>물류·재고</div>',
+    '<div class="mi' + (isAcc ? ' on' : '') + '" onclick="selectModule(2);sqNav(\'journal\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>회계·장부</div>',
+    '<div class="mi' + (isTax ? ' on' : '') + '" onclick="selectModule(3);sqNav(\'dashboard\');renderMNav()"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>세무·손익</div>',
     '<div class="mi" onclick="openMobMenu()"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>전체</div>'
   ].join('');
 }
@@ -6014,11 +6012,64 @@ function closeMobMenu(){
 function goAndClose(tabId, modIdx){
   closeMobMenu();
   if(typeof modIdx === 'number') selectModule(modIdx);
-  switchTab(tabId);
+  sqNav(tabId);
   renderMNav();
 }
 
 window.addEventListener('DOMContentLoaded', function(){ initSupabase(); renderMNav(); });
+/* ═══ v1.13 조회 버튼 방식 (아마란스10과 같이) ═══
+   로그인 때는 권한·회사 정보만 부른다. 메뉴로 화면을 열면 안내만 보이고, 「조회」를 눌러야 그 화면 자료를 부른다.
+   한 번 조회한 화면은 다시 열어도 그때 결과를 보여 주고, 「조회」를 다시 누르면 새로 부른다.
+   화면 안에서 눌러 넘어가는 이동(전표 → 원장 등)과 저장 뒤 다시 부르기는 그대로 바로 조회한다. */
+var SQ = { manual: true, asked: {}, free: { delivery: 1 },
+  reload: { today: 1, dashboard: 1, bank: 1, monthly: 1, 'mgmt-pl': 1, 'channel-pl': 1, settlements: 1, 'tax-invoices': 1, 'ar-recon': 1, inventory: 1, governance: 1 } };
+async function sqShell(){
+  try {
+    var r = await sb.from('ssjg_company').select('*').limit(1), c = r.data && r.data[0];
+    if(c){ compInfo = c; try { coFill(c); } catch(e){}
+      var f = function(id, v){ var e = document.getElementById(id); if(e && !e.value && v) e.value = v; };
+      f('cfgSenderAddr', c.address); f('cfgSenderPhone', c.phone); f('cfgSenderName', c.corp_name);
+      var ga = document.getElementById('govAddress'); if(ga && c.address) ga.innerText = c.address; }
+  } catch(e){ console.warn('ssjg_company', e); }
+}
+function sqPh(pane, id){
+  pane.classList.add('sq-wait');
+  var ph = pane.querySelector(':scope>.sq-ph');
+  if(!ph){ ph = document.createElement('div'); ph.className = 'sq-ph'; pane.insertBefore(ph, pane.firstChild); }
+  ph.innerHTML = '<div class="sq-box"><div class="sq-t">' + gEsc((MENU_IDX[id] || {}).t || id) + '</div><div class="sq-s">조회 조건을 확인하고 조회를 누르세요</div><button class="btn btn-primary" onclick="pgAct(\'q\')">조회</button></div>';
+}
+function sqNav(id, el){
+  if(!SQ.manual || SQ.asked[id] || SQ.free[id]) return switchTab(id, el);
+  document.querySelectorAll('.tab-item').forEach(function(x){ x.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(function(x){ x.classList.remove('active'); });
+  var item = el || document.querySelector('.tab-item[data-tab="' + id + '"]'); if(item) item.classList.add('active');
+  var pane = document.getElementById('tab-' + id); if(pane){ pane.classList.add('active'); sqPh(pane, id); }
+  try { renderMNav(); } catch(e){}
+  try { toggleSide(false); } catch(e){}
+  if(OPEN_TABS.indexOf(id) < 0) OPEN_TABS.push(id);
+  renderTabs(id);
+  if(MENU_IDX[id] && MENU_IDX[id].m !== CUR_MOD) selectModule(MENU_IDX[id].m);
+  pgUpdate(id); window.scrollTo(0, 0);
+  try { setTimeout(sbPaint, 0); } catch(e){}
+}
+var _pgActSQ = pgAct;
+pgAct = function(k){
+  if(k === 'q' && SQ.manual){
+    var p = pgPane(), id = p && p.id.replace(/^tab-/, '');
+    if(id && !SQ.asked[id]){
+      SQ.asked[id] = true; p.classList.remove('sq-wait');
+      switchTab(id);
+      if(SQ.reload[id]) pgReload(p); else gToast('조회 ' + pgHm());
+      return;
+    }
+  }
+  return _pgActSQ.apply(this, arguments);
+};
+/* 화면 안 이동(switchTab 직접 호출)은 조회한 것으로 본다 */
+var _switchTabSQ = switchTab;
+switchTab = function(id){ SQ.asked[id] = true; var p = document.getElementById('tab-' + id); if(p) p.classList.remove('sq-wait'); return _switchTabSQ.apply(this, arguments); };
+(function(){ var c = document.createElement('style'); c.textContent = '.tab-pane.sq-wait>:not(.sq-ph){display:none!important}.sq-ph{display:none}.tab-pane.sq-wait>.sq-ph{display:flex;justify-content:center;padding:80px 16px}.sq-box{text-align:center;border:1px dashed var(--border);border-radius:10px;padding:32px 40px;max-width:420px}.sq-t{font-weight:700;font-size:16px;margin-bottom:6px}.sq-s{color:var(--text-muted);font-size:13px;margin-bottom:16px}'; document.head.appendChild(c); })();
+
 </script>
 <nav id="mnav"></nav>
 </body>
