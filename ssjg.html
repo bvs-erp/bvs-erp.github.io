@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-co="ssjg">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.08">
+<meta name="app-version" content="1.09">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -592,6 +592,7 @@ input.tr-on{border-color:#c0392b!important;background:#fdecec!important}
 .tr-box{border:1px solid #c0392b;color:#c0392b;padding:5px 8px;margin:8px 0 0;font-size:12px}
 body.perm-ro #tmType{display:none}
 </style>
+<link rel="stylesheet" href="./erp-ui.css?v=1.00">
 </head>
 <body>
 <!-- ── Supabase 인증 게이트 (WO-1 보안 정상화) ── -->
@@ -676,9 +677,9 @@ body.perm-ro #tmType{display:none}
     <button class="nav-btn icon-btn hd-theme-ic" onclick="toggleTheme()" title="테마 전환" style="display:inline-flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
   </div>
   <div class="nav-links">
-    <a href="./erp.html" class="nav-btn"><span style="color:var(--blue)">●</span> BVS</a>
-    <a href="#" class="nav-btn active"><span style="color:var(--accent)">●</span> SSJG</a>
-    <a href="https://goscrap.github.io/" class="nav-btn"><span style="color:var(--green)">●</span> PYRO</a>
+    <a href="./erp.html" class="nav-btn"><span class="co-dot bvs">●</span> BVS</a>
+    <a href="#" class="nav-btn active"><span class="co-dot ssjg">●</span> SSJG</a>
+    <a href="https://goscrap.github.io/" class="nav-btn"><span class="co-dot pyro">●</span> PYRO</a>
     <a href="./worker.html" target="_blank" rel="noopener noreferrer" class="nav-btn" title="현장 인원 공수 입력 (새 탭)">현장앱</a>
     <button class="nav-btn" onclick="toggleTheme()" title="테마 전환 (라이트/다크)">테마</button>
     <button class="nav-btn" onclick="doLogout()" title="로그아웃">로그아웃</button>
@@ -705,8 +706,8 @@ body.perm-ro #tmType{display:none}
     <div class="mob-menu-footer">
       <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);letter-spacing:0.04em">전사 패밀리 시스템</div>
       <div class="mob-footer-grid">
-        <a class="mob-footer-link" href="https://bvs-erp.github.io/erp.html"><span style="color:var(--blue)">●</span> BVS</a>
-        <a class="mob-footer-link" href="https://goscrap.github.io/"><span style="color:var(--green)">●</span> PYRO</a>
+        <a class="mob-footer-link" href="https://bvs-erp.github.io/erp.html"><span class="co-dot bvs">●</span> BVS</a>
+        <a class="mob-footer-link" href="https://goscrap.github.io/"><span class="co-dot pyro">●</span> PYRO</a>
         <a class="mob-footer-link" href="./worker.html" target="_blank" rel="noopener noreferrer"><span style="color:#eab308">●</span> 현장앱</a>
         <div class="mob-footer-link" style="opacity:0.6;font-size:10.5px"><span style="color:#94a3b8">●</span> HBS 허브</div>
       </div>
