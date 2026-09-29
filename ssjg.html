@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.07">
+<meta name="app-version" content="1.08">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -985,11 +985,11 @@ body.perm-ro #tmType{display:none}
       <!-- 1단계: 이지어드민 -> 로젠택배 변환 -->
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title"><span class="step-no">2</span>이지어드민 출고 → 로젠 접수</div>
+          <div class="panel-title"><span class="step-no">2</span>3PL 출고데이터(이지어드민) → 송장 DB 등록 · 로젠 접수</div>
         </div>
         <div style="padding:16px">
           <div class="dropzone" id="dropEzadmin" onclick="document.getElementById('fileEzadmin').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleEzadminFile(event.dataTransfer.files[0])">
-            <div style="font-weight:600;font-size:13px" id="ezadminDropText">이지어드민 출고 엑셀</div>
+            <div style="font-weight:600;font-size:13px" id="ezadminDropText">이지어드민 출고 엑셀 (3PL이 보낸 출고데이터 .xls)</div>
             <input type="file" id="fileEzadmin" style="display:none" accept=".xlsx,.xls" onchange="handleEzadminFile(this.files[0])">
           </div>
           
@@ -1062,12 +1062,13 @@ body.perm-ro #tmType{display:none}
       </div>
     </div>
 
+    <div class="panel table-wrap" id="ezImportResult" style="display:none;padding:12px 16px;font-size:12px"></div>
     <!-- 변환 미리보기 데이터 테이블 -->
     <div class="panel">
       <div class="panel-head">
         <div class="panel-title">올린 출고 <span id="delivTableCount">0</span>건</div>
         <div style="display:flex;gap:8px">
-          <button class="btn" onclick="saveDeliveryToSupabase()" id="btnSaveToDb" style="padding:4px 10px;font-size:11px;background:#334155;color:#fff" disabled>DB 저장</button>
+          <button class="btn" onclick="saveDeliveryToSupabase()" id="btnSaveToDb" style="padding:4px 10px;font-size:11px;background:var(--blue);color:#fff;font-weight:700" disabled>송장 DB 등록</button>
           <button class="btn" onclick="clearDeliveryData()" style="padding:4px 10px;font-size:11px;background:#1e293b;color:var(--text-muted);border:1px solid var(--border)">초기화</button>
         </div>
       </div>
@@ -3226,6 +3227,8 @@ function handleEzadminFile(file){
         return;
       }
 
+      /* v1.08: 3PL(이지어드민) 출고데이터 끝의 「합계」 줄은 주문이 아님 → 제외 */
+      json = json.filter(function(row){ var o = String(row['주문번호'] || '').trim(); return o !== '합계' && Object.keys(row).some(function(k){ return String(row[k]).trim() !== ''; }); });
       rawDeliveryRows = json.map((row, idx) => {
         var orderNo = row['주문번호'] || row['관리번호'] || row['관리코드1'] || ('ORD-' + (idx+1));
         var receiver = row['받는사람'] || row['수하인명'] || row['주문자'] || '';
@@ -3251,7 +3254,15 @@ function handleEzadminFile(file){
           qty: qty,
           delivery_msg: String(msg).trim(),
           option_name: String(opt).trim(),
-          invoice_no: String(invoiceNo).trim()
+          invoice_no: String(invoiceNo).trim(),
+          mg: String(row['관리번호'] || '').trim(),
+          seller: String(row['판매처'] || '').trim(),
+          item_text: String(row['상품명'] || '').trim(),
+          ship_date: String(row['발주일'] || '').trim().slice(0, 10),
+          order_date: String(row['주문일'] || '').trim().slice(0, 10),
+          memo: String(row['비고'] || '').trim(),
+          ez_status: String(row['상태'] || '').trim(),
+          cs: String(row['CS'] || '').trim()
         };
       });
 
@@ -3292,8 +3303,10 @@ function delivCheck(){
     else if(!/^0\d{8,11}$/.test(p || p2)) e.push('전화 형식');
     if(!(r.qty >= 1) || Math.floor(r.qty) !== r.qty) e.push('수량 오류');
     else if(r.qty > 10) w.push('수량 ' + r.qty);
-    if(seen[r._k] > 1) w.push('같은 받는 사람 ' + seen[r._k] + '건');
-    if(seenOrd[r.order_no] > 1) w.push('주문번호 중복');
+    var multiBox = r.mg && seenOrd[r.order_no] > 1 && seenOrd[r.order_no] === seen[r._k];
+    if(multiBox) w.push('박스 ' + seenOrd[r.order_no] + '개 중 하나');
+    else { if(seen[r._k] > 1) w.push('같은 받는 사람 ' + seen[r._k] + '건'); if(seenOrd[r.order_no] > 1) w.push('주문번호 중복'); }
+    if(r.cs && r.cs !== '정상') e.push('CS ' + r.cs);
     if(/^\s*(제주|제주특별자치도)/.test(r.address) || /울릉|백령|연평|흑산|거문|추자|가파|마라/.test(r.address)) w.push('도서산간');
     r._err = e; r._warn = w;
     if(e.length) nErr++; else if(w.length) nWarn++;
@@ -3475,50 +3488,38 @@ function downloadEzadminUploadExcel(){
 }
 
 async function saveDeliveryToSupabase(){
-  if(rawDeliveryRows.length === 0){
-    alert('보관할 출고 데이터가 없습니다.');
-    return;
-  }
-  if(!sb){
-    alert('DB 연결 없음');
-    return;
-  }
-
-  var btn = document.getElementById('btnSaveToDb');
-  btn.disabled = true;
-  btn.innerText = '저장 중';
-
+  /* v1.08: 3PL 출고데이터(송장번호 포함) → 출고 내역(ssjg_shipments)에 송장 등록. 주문번호별 1줄, 박스별 송장은 쉼표로.
+     같은 파일을 다시 올려도 중복되지 않음(관리번호·이지어드민 주문번호 기준). 카페24 주문과 자동 연결: 비고의 주문번호 → 받는사람·품목·14일 */
+  if(rawDeliveryRows.length === 0){ alert('올린 출고 데이터가 없습니다.'); return; }
+  if(!sb){ alert('DB 연결 없음'); return; }
+  if(typeof PERM !== 'undefined' && PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
+  var noMg = rawDeliveryRows.filter(function(r){ return !r.mg; }).length;
+  if(noMg){ alert('관리번호가 없는 줄이 ' + noMg + '건입니다. 3PL(이지어드민)에서 받은 출고데이터 원본 파일을 올려 주세요.'); return; }
+  var noTrk = rawDeliveryRows.filter(function(r){ return !r.invoice_no; }).length;
+  if(noTrk && !confirm('송장번호가 없는 줄이 ' + noTrk + '건 있습니다. 나머지만 송장이 들어갑니다. 계속할까요?')) return;
+  var btn = document.getElementById('btnSaveToDb'); btn.disabled = true; btn.innerText = '등록 중';
   try {
-    var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
-    var payload = rawDeliveryRows.map((r, idx) => ({
-      order_no: r.order_no,
-      order_seq: idx + 1,
-      order_date: new Date().toISOString(),
-      shop_name: '이지어드민출고',
-      product_name: r.product_name,
-      option_name: r.option_name || '',
-      qty: r.qty,
-      freight_amt: freight,
-      invoice_no: r.invoice_no || null,
-      courier_name: '로젠택배',
-      status: r.invoice_no ? 'DISPATCHED' : 'PENDING',
-      source_file: 'ssjg_delivery_upload'
-    }));
-
-    // PostgREST 경유 SECURITY DEFINER RPC 호출 (Claude WO-1/WO-6 규격 준수)
-    var { data, error } = await sb.rpc('ssjg_ezadmin_upsert', { p: payload });
-    if(error){
-      console.warn('RPC upsert error:', error);
-      alert('출고 내역 저장 실패: ' + error.message);
-    } else {
-      var count = (data && data.count) || rawDeliveryRows.length;
-      gToast('저장 완료 ' + count + '건');
+    var payload = rawDeliveryRows.map(function(r){ return { ez: r.order_no, mg: r.mg, seller: r.seller, item: r.item_text || r.product_name, outname: r.product_name, qty: r.qty,
+      rcv: r.receiver, trk: r.invoice_no, ship: r.ship_date, odate: r.order_date, memo: r.memo, st: r.ez_status, cs: r.cs }; });
+    var res = await sb.rpc('ssjg_ezadmin_ship_import', { p: payload });
+    if(res.error) throw new Error(res.error.message);
+    var d = res.data || {};
+    var box = document.getElementById('ezImportResult');
+    if(box){
+      var L = d.list || [];
+      box.style.display = '';
+      box.innerHTML = '<div style="font-weight:700;margin-bottom:6px">송장 등록 결과 · 주문 ' + (d.orders || 0) + '건 (줄 ' + (d.lines || 0) + ')'
+        + ' · 카페24 주문 연결 ' + (d.matched || 0) + ' · 미연결 ' + (d.unmatched || 0) + (d.cs_skipped ? ' · CS 건너뜀 ' + d.cs_skipped : '') + (d.skipped ? ' · 제외 줄 ' + d.skipped : '') + '</div>'
+        + '<table><thead><tr><th>이지어드민 주문</th><th>품목</th><th style="text-align:right">박스</th><th>송장번호</th><th>연결된 주문</th></tr></thead><tbody>'
+        + L.map(function(x){ return '<tr><td>' + gEsc(x.ez) + '</td><td>' + gEsc(x.item || '') + '</td><td style="text-align:right">' + gEsc(x.boxes == null ? '' : x.boxes) + '</td><td style="font-family:monospace">' + gEsc(x.trk || '') + '</td><td>'
+          + (x.result ? '<span class="bdg bdg-block">' + gEsc(x.result) + '</span>' : x.order_no ? '<span class="bdg bdg-ok">' + gEsc(x.order_no) + '</span> <span style="color:var(--text-muted);font-size:11px">' + gEsc(x.how || '') + '</span>' : '<span class="bdg bdg-draft">미연결 — 카페24 주문을 ERP 등록 후 다시 올리면 연결</span>') + '</td></tr>'; }).join('')
+        + '</tbody></table>';
     }
-  } catch(e) {
-    alert('저장 오류: ' + e.message);
+    gToast('송장 등록 — 새로 ' + (d.inserted || 0) + ' · 갱신 ' + (d.updated || 0) + ' · 주문 연결 ' + (d.matched || 0) + '/' + ((d.orders || 0) - (d.cs_skipped || 0)));
+  } catch(e){
+    alert('송장 등록 실패: ' + (e.message || e));
   } finally {
-    btn.disabled = false;
-    btn.innerText = 'DB 저장';
+    btn.disabled = false; btn.innerText = '송장 DB 등록';
   }
 }
 
@@ -5947,14 +5948,15 @@ downloadEzadminOrderExcel = function(){
   ezOrderXlsx(rawCafe24Rows);
 };
 /* v1.07: 이지어드민(3PL) 주문등록 양식 — 3PL이 헤더 이름으로 읽으므로 10열 순서·이름 고정 (2026-08-31 대표 확정 양식)
-   상품명 = 완제품명 (완제품코드), 수량 = 출고 수량(4개입은 2개입×2), 주문자 비면 받는사람, 배송메시지 = 카페24 비고, 비고 = 공란 */
+   상품명 = 완제품명 (완제품코드), 수량 = 출고 수량(4개입은 2개입×2), 주문자 비면 받는사람, 배송메시지 = 카페24 비고,
+   비고 = 카페24 주문번호 (v1.08 — 3PL 출고데이터가 돌아올 때 주문과 정확히 연결하려고. 헤더·열 순서는 그대로) */
 var EZ_ORDER_HEAD = ['상품명', '수량', '주문자', '받는사람', '전화번호1', '전화번호2', '우편번호', '주소', '배송메시지', '비고'];
 function ezOrderXlsx(L){
   var rows = L.map(function(r){
     var k = r._chk || {}, ship = k.ship || '', nm = ship && (C24.nm || {})[ship];
     var tel1 = r['수령인전화'] || r['수령인핸드폰'] || '', tel2 = r['수령인핸드폰'] || '';
     return [nm ? nm + ' (' + ship + ')' : (r['상품명'] || ''), Number(r['수량']) || 1, r['주문자명'] || r['수령인명'] || '', r['수령인명'] || '',
-      tel1, tel2, r['우편번호'] || '', r['배송지주소'] || '', r['배송메시지'] || '', ''];
+      tel1, tel2, r['우편번호'] || '', r['배송지주소'] || '', r['배송메시지'] || '', r['주문번호'] || ''];
   });
   var ws = XLSX.utils.aoa_to_sheet([EZ_ORDER_HEAD].concat(rows));
   ws['!cols'] = [{wch:40},{wch:6},{wch:10},{wch:10},{wch:15},{wch:15},{wch:8},{wch:50},{wch:30},{wch:10}];
