@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.05</title>
+<title>BVS 현장앱 v1.06</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -984,7 +984,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
   <div data-p="pay" onclick="go('pay')"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>보상·정산</div>
 </div>
 <div id="toasts"></div>
-<script src="./erp-core.js?v=1.03"></script>
+<script src="./erp-core.js?v=1.04"></script>
 <script>
 /* ═══════════ 테마 관리: 낮모드(라이트) vs 밤모드(다크) ═══════════ */
 function getPreferredTheme(){
@@ -1386,7 +1386,7 @@ async function submitLabor(p,okMsg){var m=el('w_msg');
 }
 /* ── 출근 / 작업 시작 ── */
 async function clockIn(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
-  if(e&&hhmm(e.work_start)){if(!confirm(tm.alreadyInMsg(hhmm(e.work_start))))return}
+  if(e&&hhmm(e.work_start)){if(!(await ERPC.ask('확인', tm.alreadyInMsg(hhmm(e.work_start)))))return}
   var t=nowHM();await submitLabor({hours:8,work_start:t,work_end:null,site_id:e?e.site_id:null,project_code:e?e.project_code:null},tm.inSuccess(t));
   sfNudge(d);
 }
@@ -1423,7 +1423,7 @@ async function cfOk(){cfCancel();var e=CF.entry,tm=termMap();
 }
 /* ── 시간보정 ── */
 async function fixSubmit(h,label){var d=el('w_date').value,e=entryOf(d);
-  if(e&&!confirm(d+' 기록('+(+e.work_md).toFixed(1)+'공수)을 '+label+'로 바꿀까요?'))return;
+  if(e&&!(await ERPC.ask('확인', d+' 기록('+(+e.work_md).toFixed(1)+'공수)을 '+label+'로 바꿀까요?')))return;
   await submitLabor({hours:h,work_start:e?hhmm(e.work_start)||null:null,work_end:null,site_id:e?e.site_id:null},d+' '+label+' 등록');
 }
 
@@ -1627,10 +1627,10 @@ function copyPendingLogNotice(text, name){
     navigator.clipboard.writeText(text).then(function(){
       toast(name + '님 일지 작성 독려 문구 복사 완료', 'g');
     }).catch(function(){
-      prompt('독려 문구를 복사하세요:', text);
+      ERPC.ask('독려 문구','아래 문구를 복사하세요.',{input:true,value:text,hideCancel:true,ok:'닫기'});
     });
   } else {
-    prompt('독려 문구를 복사하세요:', text);
+    ERPC.ask('독려 문구','아래 문구를 복사하세요.',{input:true,value:text,hideCancel:true,ok:'닫기'});
   }
 }
 
@@ -2026,7 +2026,7 @@ async function pmLoadReport(){el('pmText').textContent='불러오는 중…';var
   (d.lines||[]).forEach(function(l){lines.push('작업내용 : '+l.line);(l.items||[]).forEach(function(it){lines.push((it.bay?(/베이$/.test(it.bay)?it.bay:it.bay+'베이')+' ':'')+it.label+' '+(+it.qty)+'대')})});
   el('pmText').textContent=lines.join('\n')}
 
-async function withdraw(id){if(!confirm('이 기록을 취소할까요?'))return;
+async function withdraw(id){if(!(await ERPC.ask('확인', '이 기록을 취소할까요?', {danger:true})))return;
   var r=await sb.rpc('op_withdraw_labor',{p_entry_id:id});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('취소됨');loadAll()}
@@ -2038,14 +2038,14 @@ function renderList(){
   el('list').innerHTML=D.labor.length?D.labor.map(function(r){var st=STMAP[r.status]||[r.status,''];var d=String(r.work_date);
     return '<div class="item"><div class="d"><b>'+d.slice(8)+'</b><small>'+d.slice(5,7)+'월</small></div><div class="m"><div class="s">'+esc(r.site_name)+' <span class="pill '+st[1]+'">'+st[0]+'</span></div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end)+' · ':'')+esc(r.work_desc||'')+'</div></div><div class="r"><b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">'+((+r.ot_hours)>0?'+'+(+r.ot_hours)+'h':'공수')+'</small>'+(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+(function(){var d=(D.disp||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(d)return '<div class="tiny '+(d.status==='open'?'wn':'pos')+'" style="margin-top:4px">'+(d.status==='open'?'이의 접수됨':'처리됨'+(d.resolution?': '+esc(d.resolution):''))+'</div>';return r.status!=='void'?'<div><button class="btn sm" style="margin-top:4px" onclick="dispute('+r.entry_id+','+ERPC.jsq(d?'':r.work_date)+')">이의</button></div>':''})()+'</div></div>'}).join(''):'<div class="empty">기록 없음</div>';
 }
-async function dispute(id,d){var msg=prompt(d+' 기록에 대한 이의 내용을 적어 주세요 (예: 연장 2시간 했는데 1시간으로 등록됨)');if(!msg)return;
+async function dispute(id,d){var msg=await ERPC.ask('공수 이의',d+' 기록에 대한 이의 내용을 적어 주세요',{input:true,placeholder:'예: 연장 2시간 했는데 1시간으로 등록됨',ok:'보내기'});if(!msg)return;
   var r=await sb.rpc('my_dispute',{p_entry_id:id,p_message:msg});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('이의 접수됨','g');loadAll()}
 var ME_F=[['rank_title','직급'],['affiliation','소속'],['work_type','업무'],['primary_area','우선지역'],['secondary_area','2차지역'],['home_area','거주지',1],['lodging_area','숙소',1],['carpool_driver','카풀',1],['own_vehicle_known','자차',1,'yn'],['suit_size','방진복',1],['shoe_size','방진화',1],['goggle_size','고글',1],['glove_size','장갑',1],['sk_id',''],['ss_id',''],['edu_basic','기본교육 A-D'],['edu_heavy','중량물'],['edu_newpjt','신규PJT'],['edu_leader','작업지휘자'],['edu_critical','급소'],['edu_haz2h','유해물질 2H'],['edu_haz8h_off','유해물질 8H(OFF)'],['edu_haz8h_on','유해물질 8H(ON)']];
 function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0];return r?r.label:(d||'')}
 function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit('+ERPC.jsq(f[0])+','+ERPC.jsq(f[1])+')">수정</button>':'')+'</div>'}).join('')}
-async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=prompt(label+(k==='own_vehicle_known'?' (유/무)':''),cur==null?'':String(cur));if(v===null)return;
+async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=await ERPC.ask(label,k==='own_vehicle_known'?'유 / 무':'',{input:true,value:cur==null?'':String(cur),ok:'저장'});if(v===null)return;
   var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
 /* ══════ 내 보상 (월급제 본인 행만) ══════ */
 var CP={ten:null,grade:null};
@@ -2297,7 +2297,7 @@ async function leaveSubmit(){var m=el('lvMsg');var a=el('lv_start').value,b=el('
   var r=await sb.rpc('my_absence_request',{p_kind:LV.kind,p_start:a,p_end:b,p_memo:memo});
   if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
   m.innerHTML='<span class="pos">신청했습니다.</span>';toast('휴가 신청 완료','g');el('lv_memo').value='';leaveLoad()}
-async function leaveCancel(id){if(!confirm('이 신청을 취소할까요?'))return;
+async function leaveCancel(id){if(!(await ERPC.ask('확인', '이 신청을 취소할까요?', {danger:true})))return;
   var r=await sb.rpc('my_absence_cancel',{p_id:id});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
   toast('신청을 취소했습니다','g');leaveLoad()}

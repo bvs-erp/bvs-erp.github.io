@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.10">
+<meta name="app-version" content="1.11">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
-<script src="./erp-core.js?v=1.03"></script>
+<script src="./erp-core.js?v=1.04"></script>
 <script src="./erp-grid.js?v=1.01"></script>
 <style>
 :root{
@@ -593,7 +593,7 @@ input.tr-on{border-color:#c0392b!important;background:#fdecec!important}
 .tr-box{border:1px solid #c0392b;color:#c0392b;padding:5px 8px;margin:8px 0 0;font-size:12px}
 body.perm-ro #tmType{display:none}
 </style>
-<link rel="stylesheet" href="./erp-ui.css?v=1.00">
+<link rel="stylesheet" href="./erp-ui.css?v=1.01">
 </head>
 <body>
 <!-- ── Supabase 인증 게이트 (WO-1 보안 정상화) ── -->
@@ -1910,7 +1910,7 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  if(!confirm('로그아웃 하시겠습니까?')) return;
+  if(!(await ERPC.ask('로그아웃', '로그아웃 하시겠습니까?'))) return;
   try {
     if(sb && sb.auth) await sb.auth.signOut();
   } catch(e){}
@@ -1961,7 +1961,7 @@ async function doReset(){
 }
 function saveKey(){
   var k = document.getElementById('akey').value.trim();
-  if(k.length < 20){ alert('키가 너무 짧습니다.'); return; }
+  if(k.length < 20){ ERPC.say('키가 너무 짧습니다.', 'e'); return; }
   try { localStorage.setItem(LS_KEY, k); } catch(e){}
   mkClient(k);
   document.getElementById('stepkey').classList.add('hide');
@@ -2123,7 +2123,7 @@ function gridEdit(td,tb,ri,field){
 }
 async function gridDel(tb,ri){
   var g=GRID[tb],row=g.rows[ri];if(!row||!g.pk)return;var key=String(row[g.pk]);
-  if(!confirm('이 행을 삭제합니다. 사본은 삭제 보관함에 남습니다.'))return;
+  if(!(await ERPC.ask('확인', '이 행을 삭제합니다. 사본은 삭제 보관함에 남습니다.', {danger:true})))return;
   var r=await sb.rpc('ssjg_delete_row',{p_table:tb,p_key:key,p_reason:'ERP 화면 삭제'});
   if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'삭제 실패',true);return}
   gToast('삭제됨');gridLoad(tb);
@@ -2177,7 +2177,7 @@ async function b3Save(replace){
   rows=rows.map(function(r){var o=Object.assign({},r),q=b3Num(r.qty),u=b3Num(r.unit_price),sp=b3Num(r.supply_amt);if(sp==null&&q!=null&&u!=null)sp=Math.round(q*u);var v=b3Num(r.vat_amt);if(v==null&&sp!=null)v=Math.round(sp*0.1);
     if('qty' in o)o.qty=q;if('unit_price' in o)o.unit_price=u;o.supply_amt=sp;o.vat_amt=v;if('total_amt' in o)o.total_amt=(sp||0)+(v||0);return o});
   var r=await sb.rpc('ssjg_3pl_bulk',{p_ym:ym,p_date:dt,p_vendor:vd,p_rows:rows,p_replace:!!replace});
-  if(r.data&&r.data.exists&&!replace){if(confirm(r.data.error+'. 새로 입력한 내용으로 바꿉니까? (기존 줄은 삭제 보관함에 남습니다)'))return b3Save(true);return}
+  if(r.data&&r.data.exists&&!replace){if((await ERPC.ask('확인', r.data.error+'. 새로 입력한 내용으로 바꿉니까? (기존 줄은 삭제 보관함에 남습니다)', {danger:true})))return b3Save(true);return}
   if(r.error||!r.data||!r.data.ok){gToast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패',true);return}
   gToast(ym+' '+r.data.inserted+'줄 저장 · 합계 '+Number(r.data.total).toLocaleString('ko-KR')+'원');b3Reset();b3Load();if(GRID.ssjg_3pl_bills)gridLoad('ssjg_3pl_bills')}
 async function b3Load(){if(!sb)return;var r=await sbAllR('ssjg_3pl_bills','bill_ym,vendor,supply_amt,vat_amt,total_amt',[['bill_ym',{ascending:false}],['id', { ascending: true }]]);
@@ -3131,7 +3131,7 @@ function handleCafe24File(file){
       var json = XLSX.utils.sheet_to_json(sheet, {raw: false, defval: ''});
 
       if(!json || json.length === 0){
-        alert('카페24 엑셀에 주문 데이터가 없습니다.');
+        ERPC.say('카페24 엑셀에 주문 데이터가 없습니다.', 'e');
         return;
       }
 
@@ -3183,7 +3183,7 @@ function handleCafe24File(file){
       c24Enrich();
 
     } catch(err) {
-      alert('카페24 엑셀 파싱 오류: ' + err.message);
+      ERPC.say('카페24 엑셀 파싱 오류: ' + err.message, 'e');
       document.getElementById('cafe24DropText').innerHTML = '읽기 실패';
     }
   };
@@ -3192,7 +3192,7 @@ function handleCafe24File(file){
 
 function downloadEzadminOrderExcel(){
   if(rawCafe24Rows.length === 0){
-    alert('변환할 카페24 주문 데이터가 없습니다.');
+    ERPC.say('변환할 카페24 주문 데이터가 없습니다.', 'e');
     return;
   }
 
@@ -3225,7 +3225,7 @@ function handleEzadminFile(file){
       var json = XLSX.utils.sheet_to_json(sheet, {defval: ''});
 
       if(!json || json.length === 0){
-        alert('엑셀에 데이터가 없습니다.');
+        ERPC.say('엑셀에 데이터가 없습니다.', 'e');
         return;
       }
 
@@ -3278,7 +3278,7 @@ function handleEzadminFile(file){
       document.getElementById('kpiDelivStatusSub').textContent = '';
 
     } catch(err) {
-      alert('엑셀 파싱 오류: ' + err.message);
+      ERPC.say('엑셀 파싱 오류: ' + err.message, 'e');
       document.getElementById('ezadminDropText').innerHTML = '읽기 실패';
     }
   };
@@ -3361,21 +3361,21 @@ function recalcDeliveryKpi(){
   if(fsEl) fsEl.innerText = '박스당 ' + freight.toLocaleString('ko-KR') + '원 · 운임구분 ' + (document.getElementById('cfgFreightType').value || '10');
 }
 
-function downloadLogenExcel(){
+async function downloadLogenExcel(){
   if(rawDeliveryRows.length === 0){
-    alert('출고 데이터가 없습니다.');
+    ERPC.say('출고 데이터가 없습니다.', 'e');
     return;
   }
   var ck = delivCheck();
   renderDeliveryTable();
   if(ck.err){
     var bad = rawDeliveryRows.filter(r => r._err.length).slice(0, 8).map(r => r.idx + '번 ' + (r.receiver || r.order_no) + ' : ' + r._err.join(', '));
-    alert('로젠 파일을 만들지 않았습니다. 오류 ' + ck.err + '건\n\n' + bad.join('\n') + (ck.err > 8 ? '\n…' : ''));
+    ERPC.say('로젠 파일을 만들지 않았습니다. 오류 ' + ck.err + '건\n\n' + bad.join('\n') + (ck.err > 8 ? '\n…' : ''), 'e');
     return;
   }
   if(ck.warn){
     var wl = rawDeliveryRows.filter(r => r._warn.length).slice(0, 8).map(r => r.idx + '번 ' + (r.receiver || r.order_no) + ' : ' + r._warn.join(', '));
-    if(!confirm('확인 ' + ck.warn + '건\n\n' + wl.join('\n') + (ck.warn > 8 ? '\n…' : '') + '\n\n이대로 로젠 파일을 만들까요?')) return;
+    if(!(await ERPC.ask('확인', '확인 ' + ck.warn + '건\n\n' + wl.join('\n') + (ck.warn > 8 ? '\n…' : '') + '\n\n이대로 로젠 파일을 만들까요?'))) return;
   }
 
   var freight = Number(document.getElementById('cfgFreight').value) || SSJG_FREIGHT_DEFAULT;
@@ -3427,7 +3427,7 @@ function handleInvoiceFile(file){
       var json = XLSX.utils.sheet_to_json(sheet, {defval: ''});
 
       if(!json || json.length === 0){
-        alert('송장 엑셀 파일에 데이터가 없습니다.');
+        ERPC.say('송장 엑셀 파일에 데이터가 없습니다.', 'e');
         return;
       }
 
@@ -3458,7 +3458,7 @@ function handleInvoiceFile(file){
       document.getElementById('kpiDelivStatusSub').textContent = invMismatch ? '송장 수 불일치 ' + invMismatch + '건' : '';
 
     } catch(err) {
-      alert('송장 파일 처리 오류: ' + err.message);
+      ERPC.say('송장 파일 처리 오류: ' + err.message, 'e');
       document.getElementById('invoiceDropText').innerHTML = '읽기 실패';
     }
   };
@@ -3468,7 +3468,7 @@ function handleInvoiceFile(file){
 function downloadEzadminUploadExcel(){
   var matched = rawDeliveryRows.filter(r => r.invoice_no);
   if(matched.length === 0){
-    alert('매칭된 송장 번호가 없습니다.');
+    ERPC.say('매칭된 송장 번호가 없습니다.', 'e');
     return;
   }
 
@@ -3492,13 +3492,13 @@ function downloadEzadminUploadExcel(){
 async function saveDeliveryToSupabase(){
   /* v1.08: 3PL 출고데이터(송장번호 포함) → 출고 내역(ssjg_shipments)에 송장 등록. 주문번호별 1줄, 박스별 송장은 쉼표로.
      같은 파일을 다시 올려도 중복되지 않음(관리번호·이지어드민 주문번호 기준). 카페24 주문과 자동 연결: 비고의 주문번호 → 받는사람·품목·14일 */
-  if(rawDeliveryRows.length === 0){ alert('올린 출고 데이터가 없습니다.'); return; }
-  if(!sb){ alert('DB 연결 없음'); return; }
+  if(rawDeliveryRows.length === 0){ ERPC.say('올린 출고 데이터가 없습니다.', 'e'); return; }
+  if(!sb){ ERPC.say('DB 연결 없음', 'e'); return; }
   if(typeof PERM !== 'undefined' && PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
   var noMg = rawDeliveryRows.filter(function(r){ return !r.mg; }).length;
-  if(noMg){ alert('관리번호가 없는 줄이 ' + noMg + '건입니다. 3PL(이지어드민)에서 받은 출고데이터 원본 파일을 올려 주세요.'); return; }
+  if(noMg){ ERPC.say('관리번호가 없는 줄이 ' + noMg + '건입니다. 3PL(이지어드민)에서 받은 출고데이터 원본 파일을 올려 주세요.', 'e'); return; }
   var noTrk = rawDeliveryRows.filter(function(r){ return !r.invoice_no; }).length;
-  if(noTrk && !confirm('송장번호가 없는 줄이 ' + noTrk + '건 있습니다. 나머지만 송장이 들어갑니다. 계속할까요?')) return;
+  if(noTrk && !(await ERPC.ask('확인', '송장번호가 없는 줄이 ' + noTrk + '건 있습니다. 나머지만 송장이 들어갑니다. 계속할까요?'))) return;
   var btn = document.getElementById('btnSaveToDb'); btn.disabled = true; btn.innerText = '등록 중';
   try {
     var payload = rawDeliveryRows.map(function(r){ return { ez: r.order_no, mg: r.mg, seller: r.seller, item: r.item_text || r.product_name, outname: r.product_name, qty: r.qty,
@@ -3519,14 +3519,14 @@ async function saveDeliveryToSupabase(){
     }
     gToast('송장 등록 — 새로 ' + (d.inserted || 0) + ' · 갱신 ' + (d.updated || 0) + ' · 주문 연결 ' + (d.matched || 0) + '/' + ((d.orders || 0) - (d.cs_skipped || 0)));
   } catch(e){
-    alert('송장 등록 실패: ' + (e.message || e));
+    ERPC.say('송장 등록 실패: ' + (e.message || e), 'e');
   } finally {
     btn.disabled = false; btn.innerText = '송장 DB 등록';
   }
 }
 
-function clearDeliveryData(){
-  if(!confirm('출고 데이터를 초기화하시겠습니까?')) return;
+async function clearDeliveryData(){
+  if(!(await ERPC.ask('확인', '출고 데이터를 초기화하시겠습니까?', {danger:true}))) return;
   rawDeliveryRows = [];
   renderDeliveryTable();
   recalcDeliveryKpi();
@@ -3659,7 +3659,7 @@ gridRender = function(tb){ _gridRender0(tb); gMark(tb); };
 var _gridLoad0 = gridLoad;
 gridLoad = async function(tb){
   var n = gDirtyCnt(tb);
-  if(n && !confirm('저장하지 않은 변경 ' + n + '건이 있습니다. 버리고 다시 불러올까요?')) return;
+  if(n && !(await ERPC.ask('확인', '저장하지 않은 변경 ' + n + '건이 있습니다. 버리고 다시 불러올까요?', {danger:true}))) return;
   GDIRTY[tb] = {}; return _gridLoad0(tb);
 };
 function gCur(td){
@@ -3848,7 +3848,7 @@ async function jvSave(){
 }
 async function jvDelete(){
   if(!JV.id){ gToast('불러온 전표가 없습니다', true); return; }
-  if(!confirm(document.getElementById('jvNo').textContent + ' 전표를 삭제합니다.')) return;
+  if(!(await ERPC.ask('확인', document.getElementById('jvNo').textContent + ' 전표를 삭제합니다.', {danger:true}))) return;
   var r = await sb.rpc('ssjg_jv_delete', { p_id: JV.id });
   if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '삭제 실패', true); return; }
   gToast('삭제됨 ' + r.data.jv_no); jvNew(); jvList();
@@ -3953,7 +3953,7 @@ async function prtRun(){
   var h = p.querySelector('.prt-head');
   if(!h){ h = document.createElement('div'); h.className = 'prt-head'; p.insertBefore(h, p.firstChild); }
   var title = (document.getElementById('pgT') || {}).innerText || '';
-  h.innerHTML = '<div class="ph-t">' + gEsc(title) + '</div><div class="ph-row"><span>' + gEsc(co.name) + (co.bizno ? '  (' + gEsc(co.bizno) + ')' : '') + '</span><span>' + gEsc(prtPeriod(p)) + '</span></div>';
+  h.innerHTML = '<div class="ph-t">' + gEsc(title) + '</div><div class="ph-row"><span>' + gEsc(co.name) + (co.bizno ? '  (' + gEsc(co.bizno) + ')' : '') + '</span><span>' + gEsc(prtPeriod(p)) + '</span><span>출력 ' + gEsc(new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 16).replace('T', ' ')) + '</span></div>';
   window.print();
 }
 var _pgAct2 = pgAct;
@@ -4184,7 +4184,7 @@ async function clLoad(){
   document.getElementById('clRows').innerHTML = h;
 }
 async function clSet(ym, close){
-  if(!confirm(ym + (close ? ' 을 마감합니다. 이 달 전표는 추가·수정·삭제할 수 없게 됩니다.' : ' 마감을 해제합니다.'))) return;
+  if(!(await ERPC.ask('확인', ym + (close ? ' 을 마감합니다. 이 달 전표는 추가·수정·삭제할 수 없게 됩니다.' : ' 마감을 해제합니다.'), {danger:true}))) return;
   var r = await sb.rpc('ssjg_close_set', { p_ym: ym, p_close: close });
   if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '처리 실패', true); return; }
   gToast(ym + (close ? ' 마감' : ' 마감 해제')); clLoad();
@@ -4321,7 +4321,7 @@ async function tmSave(){
 async function tmDel(id){
   if(typeof permDeny === 'function' && permDeny()) return;
   var x = (TJV.rows || []).find(function(r){ return r.id === id; }); if(!x) return;
-  if(!confirm((x.approval_no || '') + ' ' + (x.cp || '') + ' ' + Number(x.total_amt || 0).toLocaleString('ko-KR') + '원 수기 계산서를 삭제합니다')) return;
+  if(!(await ERPC.ask('확인', (x.approval_no || '') + ' ' + (x.cp || '') + ' ' + Number(x.total_amt || 0).toLocaleString('ko-KR') + '원 수기 계산서를 삭제합니다', {danger:true}))) return;
   try {
     var r = await sb.rpc('ssjg_tax_manual_delete', { p_id: id });
     if(r.error) throw r.error;
@@ -4657,7 +4657,7 @@ async function alLink(i){
 }
 async function alDel(alias){
   if(typeof permDeny === 'function' && permDeny()) return;
-  if(!confirm(alias + ' 별칭 연결을 해제합니다')) return;
+  if(!(await ERPC.ask('확인', alias + ' 별칭 연결을 해제합니다', {danger:true}))) return;
   var r = await sb.rpc('ssjg_alias_del', { p_alias: alias });
   if(r.error || !r.data || !r.data.ok){ gToast((r.error && r.error.message) || (r.data && r.data.error) || '해제 실패', true); return; }
   gToast('해제 ' + alias); alLoad();
@@ -5648,7 +5648,7 @@ async function jvCancel(){
     if(!JV.id){ gToast('취소할 전표를 먼저 불러오십시오', true); return; }
     doc = (document.getElementById('jvNo').textContent || '').trim();
   }
-  if(!confirm(doc + ' 전표를 취소합니다.\n반대 분개 전표를 오늘 날짜로 저장하고, 원전표는 그대로 남깁니다.')) return;
+  if(!(await ERPC.ask('확인', doc + ' 전표를 취소합니다.\n반대 분개 전표를 오늘 날짜로 저장하고, 원전표는 그대로 남깁니다.', {danger:true}))) return;
   if(fromDr) await drCopy(true); else await jvCopyDraft(true);
   if(JV.srcRef !== 'REV:' + doc) return;
   var m = document.getElementById('jvMemo'); m.value = '[취소] ' + m.value.replace(/^역분개\s+/, '');
@@ -5973,7 +5973,7 @@ async function c24Register(){
   if(PERM.ro){ gToast('열람 권한만 있습니다', true); return; }
   var L = rawCafe24Rows.filter(function(r){ return !r._have && r._chk && r._chk.ok; });
   if(!L.length){ gToast('등록할 주문이 없습니다', true); return; }
-  if(!confirm('카페24 주문 ' + L.length + '건을 ERP에 등록합니다.')) return;
+  if(!(await ERPC.ask('확인', '카페24 주문 ' + L.length + '건을 ERP에 등록합니다.'))) return;
   var btn = document.getElementById('btnC24Reg'); btn.disabled = true;
   var ok = 0, skip = 0, fail = [];
   for(var i = 0; i < L.length; i++){
