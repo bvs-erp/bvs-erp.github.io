@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.18">
+<meta name="app-version" content="1.19">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3459,13 +3459,24 @@ var _dvDup117 = dvDupPaint; dvDupPaint = function(){ _dvDup117();
 };
 document.addEventListener('click', function(e){
   var td = e.target && e.target.closest ? e.target.closest('#delivTableBody td, #lgImportResult td') : null; if(!td) return;
-  var v = String(td.textContent || '').trim(); if(/^\d{10,14}$/.test(v)) ssCopy(v, '송장번호 ' + v + ' 복사');
+  if(e.target.closest('a')) return; var v = td.dataset.trk || ''; if(!v){ v = String(td.textContent || '').trim(); if(!/^\d{10,14}$/.test(v)) return; } ssCopy(v.split(',').join('\n'), '송장번호 ' + v.split(',').length + '건 복사');
 });
 (function(){ var box = document.getElementById('lgImportResult'); if(!box || !window.MutationObserver) return;
   new MutationObserver(function(){ if(!LGR.length || document.getElementById('lgTrkBtn')) return;
     var b = document.createElement('button'); b.id = 'lgTrkBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;margin:0 0 6px';
     b.textContent = '송장번호 복사 (' + LGR.length + ')'; b.onclick = function(){ trkCopyAll(LGR.map(function(x){ return x.trk; })); }; box.insertBefore(b, box.firstChild); }).observe(box, { childList: true });
 })();
+// v1.19 송장번호 옆 「추적」: 로젠 화물추적 페이지를 새 창으로 (주소 형식은 안티그래비티 확인분)
+var LOGEN_TRACE = 'https://www.ilogen.com/web/personal/trace/';
+function trkLinkify(root){ if(!root) return;
+  root.querySelectorAll('td').forEach(function(td){ if(td.dataset.trk || !/monospace/.test(td.getAttribute('style') || '')) return;
+    var raw = String(td.textContent || '').trim(); if(!/^\d{10,14}(\s*,\s*\d{10,14})*$/.test(raw)) return;
+    var L = raw.split(',').map(function(x){ return x.trim(); }); td.dataset.trk = L.join(',');
+    td.innerHTML = L.map(function(n){ return gEsc(n) + ' <a href="' + LOGEN_TRACE + encodeURIComponent(n) + '" target="_blank" rel="noopener noreferrer" style="font-family:inherit;font-size:10.5px;font-weight:600;color:var(--accent);text-decoration:underline">추적</a>'; }).join('<br>'); });
+}
+var _rdt119 = renderDeliveryTable; renderDeliveryTable = function(){ _rdt119.apply(this, arguments); trkLinkify(document.getElementById('delivTableBody')); };
+(function(){ var box = document.getElementById('lgImportResult'); if(!box || !window.MutationObserver) return;
+  new MutationObserver(function(){ trkLinkify(box); }).observe(box, { childList: true, subtree: true }); })();
 function recalcDeliveryKpi(){
   var a = rawCafe24Rows.filter(function(r){ return r._via === '3PL'; }).length;
   var boxes = rawDeliveryRows.reduce(function(s, r){ return s + (r.qty || 1); }, 0);
