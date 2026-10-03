@@ -706,7 +706,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
             
           </div>
           <p class="tiny dim" style="margin:0 0 12px">
-            ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인하고 승인합니다.<br>
+            ※ 현장 리드(팀장) 전용 관제 화면입니다. 팀원의 당일 출퇴근과 M/D 공수를 확인합니다. 기록은 찍는 즉시 확정됩니다.<br>
             <span style="color:var(--good);font-weight:600">개인정보 보호</span>: 팀원 개인의 일급·월급·계좌정보는 원천 은닉되며, 팀장 본인 정산만 조회 가능합니다.
           </p>
           <div class="chips" id="leadDates" style="margin-bottom:10px"></div>
@@ -720,7 +720,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
               <div style="font-size:18px;font-weight:700;color:var(--good)" id="leadKpiMd">- M/D</div>
             </div>
             <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:11px;color:var(--tx3)">승인 대기</div>
+              <div style="font-size:11px;color:var(--tx3)">팀장 확인 전</div>
               <div style="font-size:18px;font-weight:700;color:var(--warn)" id="leadKpiPending">- 건</div>
             </div>
           </div>
@@ -729,7 +729,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
         <!-- 승인 대기 건 카드 -->
         <div class="card" id="leadApprovalCard">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <h2>공수 승인 대기 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
+            <h2>팀장 확인 전 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
             <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
           </div>
           <div id="leadPendingRows"></div>
@@ -1089,7 +1089,7 @@ var URL_='https://buchnmdsdjlcvqnjaaxe.supabase.co', KEY='sb_publishable_8IbvXKS
 var D={sites:[],labor:[],pay:[],safety:[],edu:[],sfItems:[]};
 var SF={sel:{},date:null};
 var SEL={place:null,site:null};
-var STMAP={draft:['임시',''],submitted:['제출','b'],approved:['확정','g'],settled:['정산완료','g'],void:['취소','']};
+var STMAP={draft:['확정','g'],submitted:['확정','g'],approved:['확정','g'],settled:['정산완료','g'],void:['취소','']};
 function el(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function won(n){return (n==null||isNaN(n))?'–':Math.round(n).toLocaleString('ko-KR')}
@@ -1285,7 +1285,7 @@ function placeOf(sid){var x=(D.sites||[]).filter(function(s){return s.site_id===
 function sitesOf(pf){return D.sites.filter(function(s){return (s.place_code||String(s.site_id).split('-')[0])===pf})}  /* v1.05: 라인은 묶음의 장소 코드로 */
 function lineLabel(s){if(s.line_name){return s.line_name==='-'?'라인 미정':s.line_name}var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
   if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
-  var pf=String(s.site_id).split('-')[0];if(pf==='IC'&&l==='이천')return '이천 (라인 미정)';if(pf==='CJ'&&l==='청주')return '청주 (라인 미정)';return l}
+  var pf=String(s.site_id).split('-')[0];return l}
 function renderPlaces(){
   if(!SEL.site){var last=D.labor.filter(function(r){return r.status!=='void'})[0];if(last)SEL.site=last.site_id;}
   if(SEL.site&&!SEL.place)SEL.place=placeOf(SEL.site);
@@ -1838,14 +1838,14 @@ async function leadOpen(d){
     el('leadWorkersN').textContent = rows.length + '명';
 
     if(pendingRows.length === 0){
-      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">미승인 공수 없음</div>';
+      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">확인할 공수 없음</div>';
       el('btnApproveAll').disabled = true;
     } else {
       el('btnApproveAll').disabled = false;
       el('leadPendingRows').innerHTML = pendingRows.map(function(x, idx){
         return '<div class="item" style="border-left:3px solid var(--warn)">'
           + '<div class="m">'
-          +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill y">승인 대기</span></div>'
+          +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill y">팀장 확인 전</span></div>'
           +   '<div class="t">' + esc(x.site || '') + ' · ' + esc(x.project) + (x.start ? ' · ' + hhmm(x.start) + ' 출근' : '') + '</div>'
           + '</div>'
           + '<div class="r">'
@@ -1859,8 +1859,8 @@ async function leadOpen(d){
     el('leadWorkersRows').innerHTML = rows.map(function(x){
       var isSubmitted = x.status === 'submitted';
       var isApproved = x.status === 'approved';
-      var pillCls = isApproved ? 'g' : (isSubmitted ? 'y' : 'b');
-      var pillText = isApproved ? '승인완료' : (isSubmitted ? '대기중' : (STMAP[x.status]||[x.status])[0]);
+      var pillCls = (STMAP[x.status]||['',''])[1]||'b';
+      var pillText = (STMAP[x.status]||[x.status])[0];
       return '<div class="item">'
         + '<div class="m">'
         +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill ' + pillCls + '">' + esc(pillText) + '</span></div>'
