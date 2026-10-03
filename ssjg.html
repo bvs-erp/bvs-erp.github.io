@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.17">
+<meta name="app-version" content="1.18">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -915,7 +915,7 @@ body.perm-ro #tmType{display:none}
         <div>
           <div class="panel-title">품목별 재고</div>
         </div>
-        <button class="btn btn-xs" id="invDiffBtn" onclick="invOnlyDiff()" style="display:none"></button>
+        <button class="btn btn-xs" id="invDiffBtn" onclick="invOnlyDiff()" style="display:none"></button><button class="btn btn-xs" id="invLowBtn" onclick="invOnlyLow()" style="display:none"></button><input id="invLowN" class="input" type="number" min="0" style="width:56px;padding:2px 6px;font-size:11px;display:none" title="이 수량 이하" onchange="invLowSet(this.value)">
       </div>
       <div class="table-wrap">
         <table>
@@ -3606,6 +3606,22 @@ function invOnlyDiff(){
   tb.querySelectorAll('tr').forEach(function(t){ t.style.display = (!on || t.dataset.diff === '1') ? '' : 'none'; });
   var n = tb.querySelectorAll('tr[data-diff="1"]').length, b = document.getElementById('invDiffBtn'); if(b) b.textContent = on ? '전체 보기' : '차이 있는 품목만 (' + n + ')';
 }
+// v1.18 재고: 품절 임박(실사 수량, 없으면 장부 수량이 기준 이하) 품목만 보기 — 기준 수량은 옆 칸에서 바꿈(이 PC에 기억)
+var INV_LOW = (function(){ try { var v = localStorage.getItem('ssjg_inv_low'); return v === null ? 5 : Number(v); } catch(e){ return 5; } })();
+function invLowSet(v){ INV_LOW = Math.max(0, Number(v) || 0); try { localStorage.setItem('ssjg_inv_low', String(INV_LOW)); } catch(e){} if(window._invRows) renderInventory(window._invRows); }
+function invOnlyLow(){
+  var tb = document.getElementById('invTableRows'); if(!tb) return;
+  var on = tb.dataset.low !== '1'; tb.dataset.low = on ? '1' : ''; if(on) tb.dataset.diff = '';
+  tb.querySelectorAll('tr').forEach(function(t){ t.style.display = (!on || t.dataset.low === '1') ? '' : 'none'; });
+  invLowPaint();
+}
+function invLowPaint(){
+  var tb = document.getElementById('invTableRows'), b = document.getElementById('invLowBtn'), n = document.getElementById('invLowN'); if(!tb || !b) return;
+  var k = tb.querySelectorAll('tr[data-low="1"]').length, has = (window._invRows || []).length > 0;
+  b.style.display = has ? '' : 'none'; if(n){ n.style.display = has ? '' : 'none'; if(document.activeElement !== n) n.value = INV_LOW; }
+  b.textContent = tb.dataset.low === '1' ? '전체 보기' : '품절 임박 (' + k + ')';
+  var db = document.getElementById('invDiffBtn'); if(db && tb.dataset.low === '1') db.textContent = db.textContent.replace('전체 보기', '차이 있는 품목만');
+}
 // ── OP재고 렌더러 (WO-34) ──
 function renderInventory(rows){
   var tbody = document.getElementById('invTableRows');
@@ -3654,6 +3670,16 @@ function renderInventory(rows){
     `;
   }).join('');
 }
+var _invOnlyDiff118 = invOnlyDiff; invOnlyDiff = function(){ var tb = document.getElementById('invTableRows'); if(tb && tb.dataset.low === '1'){ tb.dataset.low = ''; tb.dataset.diff = ''; } _invOnlyDiff118(); invLowPaint(); };
+var _renderInv118 = renderInventory; renderInventory = function(rows){
+  window._invRows = rows; _renderInv118.apply(this, arguments);
+  var tb = document.getElementById('invTableRows'); if(!tb || !rows) return; var trs = tb.querySelectorAll('tr');
+  rows.forEach(function(r, i){ var tr = trs[i]; if(!tr) return; var sub = /(1P|4P)$/.test(String(r.item_code || ''));
+    var q = r.pl3_qty !== null && r.pl3_qty !== undefined ? Number(r.pl3_qty) : Number(r.book_qty);
+    var low = !sub && !isNaN(q) && q <= INV_LOW; tr.dataset.low = low ? '1' : '0';
+    if(tb.dataset.low === '1') tr.style.display = low ? '' : 'none'; });
+  invLowPaint();
+};
 
 // ── 행 선택 (v1.27) ──
 document.addEventListener('click', function(e){
