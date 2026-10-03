@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.16">
+<meta name="app-version" content="1.17">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3444,6 +3444,28 @@ function dvDupPaint(){
     .sort(function(a, c){ return a.r._k < c.r._k ? -1 : a.r._k > c.r._k ? 1 : a.r.idx - c.r.idx; });
   trs.forEach(function(tr){ tr.style.display = 'none'; }); L.forEach(function(x){ x.tr.style.display = ''; tb.appendChild(x.tr); });
 }
+// v1.17 송장번호: 칸을 누르면 그 번호 복사 · 「송장번호 복사 (N)」로 한 줄에 하나씩 모두 복사 (로젠 접수 대상·로젠 송장 결과)
+function ssCopy(t, msg){
+  var ok = function(){ gToast(msg || '복사했습니다'); }, fb = function(){ var a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch(e){ gToast('복사 실패', true); } a.remove(); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, fb); else fb();
+}
+function trkCopyAll(L){ L = L.filter(function(x, i){ return x && L.indexOf(x) === i; }); if(!L.length){ gToast('송장번호 없음', true); return; } ssCopy(L.join('\n'), '송장번호 ' + L.length + '건 복사'); }
+var _dvDup117 = dvDupPaint; dvDupPaint = function(){ _dvDup117();
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var L = []; rawDeliveryRows.forEach(function(r){ String(r.invoice_no || '').split(',').forEach(function(x){ x = x.trim(); if(x) L.push(x); }); });
+  var b = document.getElementById('dvTrkBtn');
+  if(!b){ b = document.createElement('button'); b.id = 'dvTrkBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;background:#1e293b;color:var(--text-muted);border:1px solid var(--border)'; hd.insertBefore(b, hd.firstChild); }
+  b.style.display = L.length ? '' : 'none'; b.textContent = '송장번호 복사 (' + L.length + ')'; b.onclick = function(){ trkCopyAll(L); };
+};
+document.addEventListener('click', function(e){
+  var td = e.target && e.target.closest ? e.target.closest('#delivTableBody td, #lgImportResult td') : null; if(!td) return;
+  var v = String(td.textContent || '').trim(); if(/^\d{10,14}$/.test(v)) ssCopy(v, '송장번호 ' + v + ' 복사');
+});
+(function(){ var box = document.getElementById('lgImportResult'); if(!box || !window.MutationObserver) return;
+  new MutationObserver(function(){ if(!LGR.length || document.getElementById('lgTrkBtn')) return;
+    var b = document.createElement('button'); b.id = 'lgTrkBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;margin:0 0 6px';
+    b.textContent = '송장번호 복사 (' + LGR.length + ')'; b.onclick = function(){ trkCopyAll(LGR.map(function(x){ return x.trk; })); }; box.insertBefore(b, box.firstChild); }).observe(box, { childList: true });
+})();
 function recalcDeliveryKpi(){
   var a = rawCafe24Rows.filter(function(r){ return r._via === '3PL'; }).length;
   var boxes = rawDeliveryRows.reduce(function(s, r){ return s + (r.qty || 1); }, 0);
