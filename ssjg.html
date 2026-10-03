@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.13">
+<meta name="app-version" content="1.14">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3501,6 +3501,13 @@ function handleInvoiceFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// v1.14 송장 등록 결과: 문제 건(주문 없음 등)만 보기 / 전체 보기
+function lgOnlyBad(){
+  var box = document.getElementById('lgImportResult'), on = box.dataset.bad !== '1';
+  box.dataset.bad = on ? '1' : '';
+  box.querySelectorAll('tbody tr').forEach(function(t){ t.style.display = (!on || t.dataset.bad === '1') ? '' : 'none'; });
+  var b = document.getElementById('lgBadBtn'); if(b) b.textContent = on ? '전체 보기' : '문제 건만 보기 (' + box.querySelectorAll('tbody tr[data-bad="1"]').length + '건)';
+}
 // ── B-3 송장 DB 등록 (로젠) ──
 async function lgSave(){
   if(!LGR.length){ ERPC.say('올린 로젠 송장이 없습니다.', 'e'); return; }
@@ -3513,9 +3520,12 @@ async function lgSave(){
     var d = res.data || {}, L = d.list || [];
     TRK_DONE.B = L.filter(function(x){ return x.ord && x.trk && x.result !== 'ERP에 주문 없음 — 주문 등록 후 다시 올리기'; }).map(function(x){ return { ord: x.ord, trk: x.trk }; });
     var box = document.getElementById('lgImportResult'); box.style.display = '';
-    box.innerHTML = '<div style="font-weight:700;margin-bottom:6px">B 송장 등록 결과 · 새로 ' + (d.inserted || 0) + ' · 송장 채움 ' + (d.updated || 0) + ' · 이미 있음 ' + (d.dup || 0) + ' · 주문 없음 ' + (d.unmatched || 0) + '</div>'
+    box.dataset.bad = '';
+    var nBad = L.filter(function(x){ return x.result && x.result !== '이미 등록됨'; }).length;
+    box.innerHTML = '<div style="font-weight:700;margin-bottom:6px">B 송장 등록 결과 · 새로 ' + (d.inserted || 0) + ' · 송장 채움 ' + (d.updated || 0) + ' · 이미 있음 ' + (d.dup || 0) + ' · 주문 없음 ' + (d.unmatched || 0)
+      + (nBad ? ' <button class="btn btn-xs" id="lgBadBtn" onclick="lgOnlyBad()">문제 건만 보기 (' + nBad + '건)</button>' : '') + '</div>'
       + '<table><thead><tr><th>주문번호</th><th>송장번호</th><th>결과</th></tr></thead><tbody>'
-      + L.map(function(x){ return '<tr><td>' + gEsc(x.ord || '-') + '</td><td style="font-family:monospace">' + gEsc(x.trk || '') + '</td><td>'
+      + L.map(function(x){ return '<tr' + (x.result && x.result !== '이미 등록됨' ? ' data-bad="1"' : '') + '><td>' + gEsc(x.ord || '-') + '</td><td style="font-family:monospace">' + gEsc(x.trk || '') + '</td><td>'
         + (x.result ? '<span class="bdg ' + (x.result === '이미 등록됨' ? 'bdg-close' : 'bdg-block') + '">' + gEsc(x.result) + '</span>' : '<span class="bdg bdg-ok">등록</span> <span style="color:var(--text-muted);font-size:11px">' + gEsc(x.how || '') + '</span>') + '</td></tr>'; }).join('')
       + '</tbody></table>';
     document.getElementById('btnC24TrkB').disabled = !TRK_DONE.B.length;
