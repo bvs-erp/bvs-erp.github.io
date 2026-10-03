@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.06</title>
+<title>BVS 현장앱 v1.07</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -610,9 +610,11 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
         <div id="w_place"></div>
 
         <div class="f" id="lineBox" style="margin-top:8px">
-          <div class="sec-h"><span>세부 라인 선택</span></div>
+          <div class="sec-h"><span>세부 선택</span></div>
           <div id="w_line"></div>
         </div>
+
+        <div class="f" style="margin-top:8px"><input id="w_lm" class="in" placeholder="라인 (선택) 예: M15X" autocomplete="off" maxlength="20"></div>
 
         <div class="f hide" id="pumpBox" style="margin-top:8px">
           <label class="sw"><input type="checkbox" id="w_pump" onchange="savePump()"> <span>펌프실 작업</span></label>
@@ -1283,7 +1285,7 @@ function placesBuild(){var rows=(D.places||[]).slice();
   PLACE_GROUPS=g}
 function placeOf(sid){var x=(D.sites||[]).filter(function(s){return s.site_id===sid})[0];return (x&&x.place_code)||String(sid||'').split('-')[0]}
 function sitesOf(pf){return D.sites.filter(function(s){return (s.place_code||String(s.site_id).split('-')[0])===pf})}  /* v1.05: 라인은 묶음의 장소 코드로 */
-function lineLabel(s){if(s.line_name){return s.line_name==='-'?'라인 미정':s.line_name}var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
+function lineLabel(s){if(s.line_name){return s.line_name==='-'?'라인 미정':s.line_name}if(s.work_name)return s.work_name; /* v1.07 장소만 있는 곳은 업무 이름 */var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
   if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
   var pf=String(s.site_id).split('-')[0];return l}
 function renderPlaces(){
@@ -1379,7 +1381,7 @@ function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');
 async function submitLabor(p,okMsg){var m=el('w_msg');
   if(!SEL.site){m.innerHTML='<span class="neg">장소와 라인을 골라 주세요</span>';return null}
   m.textContent='등록 중…';
-  var body={work_date:el('w_date').value,site_id:p.site_id||SEL.site,project_code:p.project_code||projectCode(),hours:p.hours,work_start:p.work_start||null,work_end:p.work_end||null,work_desc:el('w_desc').value||p.work_desc||null};
+  var body={work_date:el('w_date').value,site_id:p.site_id||SEL.site,project_code:p.project_code||projectCode(),hours:p.hours,work_start:p.work_start||null,work_end:p.work_end||null,work_desc:el('w_desc').value||p.work_desc||null,line_memo:(el('w_lm')&&el('w_lm').value.trim())||null};
   var r=await sb.rpc('op_submit_labor',{p:body});
   if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return null}
   m.innerHTML='<span class="pos">'+okMsg+'</span>';toast(okMsg,'g');el('w_desc').value='';await loadAll();return r.data;
@@ -1983,7 +1985,7 @@ function sitePlaceName(id){
   if(!s) return id;
   var code=placeOf(s.site_id);
   var found=PLACES.filter(function(p){return p[0]===code})[0];
-  if(found){var pr=placeRow(code);return (pr.group_name&&pr.group_name!=='비근무'&&pr.group_name!==found[1]?pr.group_name+' ':'')+found[1]}
+  if(found){var pr=placeRow(code);return (pr.group_name&&pr.group_name!=='비근무'&&pr.group_name!==found[1]?pr.group_name:'')+found[1]} /* v1.07 SK이천·삼성평택처럼 붙여 씀 */
   return (s.site_name||'').split(' ')[0]||s.site_name||id;
 }
 function plText(){
