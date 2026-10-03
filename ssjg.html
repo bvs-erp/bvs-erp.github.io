@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.14">
+<meta name="app-version" content="1.15">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -915,6 +915,7 @@ body.perm-ro #tmType{display:none}
         <div>
           <div class="panel-title">품목별 재고</div>
         </div>
+        <button class="btn btn-xs" id="invDiffBtn" onclick="invOnlyDiff()" style="display:none"></button>
       </div>
       <div class="table-wrap">
         <table>
@@ -3558,6 +3559,13 @@ async function clearDeliveryData(){
   document.getElementById('invoiceDropText').textContent = 'B-2 로젠 송장(완료) 엑셀 올리기';
   document.getElementById('invoiceMatchCount').innerText = '송장 0건';
 }
+// v1.15 재고: 장부와 3PL 실사 차이가 있는 품목만 보기
+function invOnlyDiff(){
+  var tb = document.getElementById('invTableRows'); if(!tb) return;
+  var on = tb.dataset.diff !== '1'; tb.dataset.diff = on ? '1' : '';
+  tb.querySelectorAll('tr').forEach(function(t){ t.style.display = (!on || t.dataset.diff === '1') ? '' : 'none'; });
+  var n = tb.querySelectorAll('tr[data-diff="1"]').length, b = document.getElementById('invDiffBtn'); if(b) b.textContent = on ? '전체 보기' : '차이 있는 품목만 (' + n + ')';
+}
 // ── OP재고 렌더러 (WO-34) ──
 function renderInventory(rows){
   var tbody = document.getElementById('invTableRows');
@@ -3582,14 +3590,17 @@ function renderInventory(rows){
   var dN = rows.filter(r => Number(r.diff_qty) !== 0 && r.diff_qty !== null && r.diff_qty !== undefined).length;
   setT('invKpiDateSub', dN ? '차이 ' + dN + '품목' : '차이 없음');
 
+  var nDiff = rows.filter(r => Number(r.diff_qty) !== 0 && r.diff_qty !== null && r.diff_qty !== undefined).length;
+  var db = document.getElementById('invDiffBtn'); if(db){ db.style.display = nDiff ? '' : 'none'; db.textContent = tbody.dataset.diff === '1' ? '전체 보기' : '차이 있는 품목만 (' + nDiff + ')'; }
   tbody.innerHTML = rows.map(r => {
     var isSubUnit = /(1P|4P)$/.test(String(r.item_code || ''));
     var bookDisplay = isSubUnit ? '<span class="tag tag-wait">0 (박스통합)</span>' : fmt(r.book_qty);
     var pl3Display = r.pl3_qty !== null && r.pl3_qty !== undefined ? fmt(r.pl3_qty) : '-';
     var diffDisplay = r.diff_qty !== null && r.diff_qty !== undefined ? fmt(r.diff_qty) : '-';
     var verdictHtml = r.verdict ? (r.verdict.includes('일치') ? `<span class="tag tag-deposit">${gEsc(r.verdict)}</span>` : `<span class="tag tag-wait">${gEsc(r.verdict)}</span>`) : '-';
+    var hasDiff = Number(r.diff_qty) !== 0 && r.diff_qty !== null && r.diff_qty !== undefined;
     return `
-      <tr>
+      <tr data-diff="${hasDiff ? 1 : 0}"${tbody.dataset.diff === '1' && !hasDiff ? ' style="display:none"' : ''}>
         <td><span class="badge">${gEsc(r.item_kind || '-')}</span></td>
         <td><code>${gEsc(r.item_code)}</code></td>
         <td><strong>${gEsc(r.item_name)}</strong></td>
