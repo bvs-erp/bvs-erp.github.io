@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.15">
+<meta name="app-version" content="1.16">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3425,6 +3425,24 @@ function renderDeliveryTable(){
     + '<td style="text-align:right;font-weight:700">' + gEsc(r.qty) + '</td><td style="text-align:right;color:var(--accent)">' + fmt(freight * r.qty) + '</td>'
     + '<td style="font-family:monospace;font-weight:700;color:' + (r.invoice_no ? 'var(--green)' : 'var(--text-muted)') + '">' + gEsc(r.invoice_no || '미발급') + '</td>'
     + '<td style="font-size:11px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">' + gEsc(r.delivery_msg || '-') + '</td></tr>'; }).join('');
+}
+// v1.16 로젠 접수 대상: 같은 받는 사람(이름·전화·주소) 묶음만 모아 보기 — 합포장·중복 결제 확인
+var dvDupOnly = false;
+var _rdt116 = renderDeliveryTable; renderDeliveryTable = function(){ _rdt116(); dvDupPaint(); };
+function dvDupPaint(){
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var b = document.getElementById('dvDupBtn');
+  if(!b){ b = document.createElement('button'); b.id = 'dvDupBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;background:rgba(217,119,6,.15);color:#d97706;border:1px solid rgba(217,119,6,.5)';
+    b.onclick = function(){ dvDupOnly = !dvDupOnly; renderDeliveryTable(); }; hd.insertBefore(b, hd.firstChild); }
+  var cnt = {}; rawDeliveryRows.forEach(function(r){ if(r._k) cnt[r._k] = (cnt[r._k] || 0) + 1; });
+  var dup = rawDeliveryRows.filter(function(r){ return r._k && cnt[r._k] > 1; }), grp = Object.keys(cnt).filter(function(k){ return cnt[k] > 1; }).length;
+  if(!dup.length){ dvDupOnly = false; b.style.display = 'none'; return; }
+  b.style.display = ''; b.textContent = dvDupOnly ? '전체 보기' : '같은 받는 사람 ' + grp + '명 · ' + dup.length + '건';
+  if(!dvDupOnly) return;
+  var tb = document.getElementById('delivTableBody'), trs = Array.prototype.slice.call(tb.rows);
+  var L = rawDeliveryRows.map(function(r, i){ return { r: r, tr: trs[i] }; }).filter(function(x){ return x.tr && x.r._k && cnt[x.r._k] > 1; })
+    .sort(function(a, c){ return a.r._k < c.r._k ? -1 : a.r._k > c.r._k ? 1 : a.r.idx - c.r.idx; });
+  trs.forEach(function(tr){ tr.style.display = 'none'; }); L.forEach(function(x){ x.tr.style.display = ''; tb.appendChild(x.tr); });
 }
 function recalcDeliveryKpi(){
   var a = rawCafe24Rows.filter(function(r){ return r._via === '3PL'; }).length;
