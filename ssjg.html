@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.19">
+<meta name="app-version" content="1.20">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3477,6 +3477,23 @@ function trkLinkify(root){ if(!root) return;
 var _rdt119 = renderDeliveryTable; renderDeliveryTable = function(){ _rdt119.apply(this, arguments); trkLinkify(document.getElementById('delivTableBody')); };
 (function(){ var box = document.getElementById('lgImportResult'); if(!box || !window.MutationObserver) return;
   new MutationObserver(function(){ trkLinkify(box); }).observe(box, { childList: true, subtree: true }); })();
+// v1.20 로젠 접수 대상: 송장번호가 붙은 줄을 출고 검수용 목록으로 인쇄(송장번호·받는 사람·주소·물품·박스)
+function dvLabelPrint(){
+  var L = rawDeliveryRows.filter(function(r){ return String(r.invoice_no || '').trim(); }); if(!L.length){ gToast('송장번호가 붙은 줄이 없습니다', true); return; }
+  var w = window.open('', '_blank'); if(!w){ gToast('팝업이 막혔습니다', true); return; }
+  var d = (typeof dvDate === 'function' ? dvDate() : new Date().toISOString().slice(0, 10));
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + d.replace(/-/g, '').slice(2) + '_SSJG_출고검수_로젠</title><style>body{font:12px/1.45 "Malgun Gothic",sans-serif;margin:12mm}h1{font-size:15px;margin:0 0 8px}.lb{border:1px solid #333;padding:8px 10px;margin:0 0 8px;page-break-inside:avoid;display:grid;grid-template-columns:150px 1fr 60px;gap:4px 12px}.t{font:700 15px/1.2 monospace}.n{font-weight:700;font-size:14px}.b{text-align:right;font-weight:700}.a{grid-column:2/4}.p{grid-column:1/4;color:#555}.ck{width:14px;height:14px;border:1px solid #333;display:inline-block;margin-right:6px;vertical-align:middle}@media print{body{margin:8mm}}</style></head><body>'
+    + '<h1>출고 검수 · 로젠 ' + L.length + '건 · ' + d + '</h1>'
+    + L.map(function(r){ return '<div class="lb"><div class="t"><span class="ck"></span>' + gEsc(String(r.invoice_no).split(',').join(' / ')) + '</div><div class="n">' + gEsc(r.receiver) + ' <span style="font-weight:400;color:#555">' + gEsc(r.order_no) + '</span></div><div class="b">' + gEsc(r.qty) + '박스</div><div></div><div class="a">' + gEsc(r.address) + '</div><div class="p">' + gEsc(r.product_name || '') + (r.delivery_msg ? ' · ' + gEsc(r.delivery_msg) : '') + '</div></div>'; }).join('')
+    + '</body></html>');
+  w.document.close(); setTimeout(function(){ try { w.focus(); w.print(); } catch(e){} }, 300);
+}
+var _dvDup120 = dvDupPaint; dvDupPaint = function(){ _dvDup120();
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var n = rawDeliveryRows.filter(function(r){ return String(r.invoice_no || '').trim(); }).length, b = document.getElementById('dvLblBtn');
+  if(!b){ b = document.createElement('button'); b.id = 'dvLblBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;background:#1e293b;color:var(--text-muted);border:1px solid var(--border)'; b.onclick = dvLabelPrint; hd.insertBefore(b, hd.firstChild); }
+  b.style.display = n ? '' : 'none'; b.textContent = '검수 목록 인쇄 (' + n + ')';
+};
 function recalcDeliveryKpi(){
   var a = rawCafe24Rows.filter(function(r){ return r._via === '3PL'; }).length;
   var boxes = rawDeliveryRows.reduce(function(s, r){ return s + (r.qty || 1); }, 0);
