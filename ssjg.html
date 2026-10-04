@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.20">
+<meta name="app-version" content="1.21">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6184,6 +6184,23 @@ pgAct = function(k){
 var _switchTabSQ = switchTab;
 switchTab = function(id){ SQ.asked[id] = true; var p = document.getElementById('tab-' + id); if(p) p.classList.remove('sq-wait'); return _switchTabSQ.apply(this, arguments); };
 (function(){ var c = document.createElement('style'); c.textContent = '.tab-pane.sq-wait>:not(.sq-ph){display:none!important}.sq-ph{display:none}.tab-pane.sq-wait>.sq-ph{display:flex;justify-content:center;padding:80px 16px}.sq-box{text-align:center;border:1px dashed var(--border);border-radius:10px;padding:32px 40px;max-width:420px}.sq-t{font-weight:700;font-size:16px;margin-bottom:6px}.sq-s{color:var(--text-muted);font-size:13px;margin-bottom:16px}'; document.head.appendChild(c); })();
+
+// v1.21 채널별 출고·정산·마진율: 실차익이 적자인 줄 마진율 빨강 + 「역마진 N」 칩(누르면 적자 줄만)
+var CHNEG121 = false;
+var _renderChannelPl121 = renderChannelPl;
+renderChannelPl = function(rows){
+  rows = rows || [];
+  var neg = rows.filter(function(r){ return Number(r.gross_after_ship) < 0; });
+  var show = CHNEG121 ? neg : rows;
+  _renderChannelPl121(show);
+  try {
+    var tb = document.getElementById('channelPlTableRows');
+    if(tb && show.length) Array.prototype.forEach.call(tb.querySelectorAll('tr'), function(tr, i){ var r = show[i]; if(r && Number(r.gross_after_ship) < 0){ var b = tr.querySelector('td:last-child .badge'); if(b) b.style.cssText = 'background:rgba(239,68,68,0.18);color:#dc2626;font-weight:700'; } });
+    var s = document.getElementById('channelSearch'), c = document.getElementById('chNegChip');
+    if(s && !c){ c = document.createElement('button'); c.id = 'chNegChip'; c.type = 'button'; c.className = 'btn'; c.style.cssText = 'padding:4px 10px;font-size:12px;margin-left:6px'; c.onclick = function(){ CHNEG121 = !CHNEG121; filterChannelPl(); }; s.parentNode.insertBefore(c, s.nextSibling); }
+    if(c){ c.textContent = '역마진 ' + neg.length; c.style.display = (neg.length || CHNEG121) ? '' : 'none'; c.style.background = CHNEG121 ? 'rgba(239,68,68,0.18)' : ''; c.style.color = neg.length ? '#dc2626' : ''; }
+  } catch(e){ console.error(e); }
+};
 
 </script>
 <nav id="mnav"></nav>
