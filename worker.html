@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.08</title>
+<title>BVS 현장앱 v1.09</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1189,7 +1189,7 @@ async function afterLogin(){
   if(ME.status!=='ok'){el('lmsg').innerHTML='<span class="neg">'+esc(ME.message||'사용할 수 없는 계정입니다')+'</span>';el('loginCard').classList.remove('hide');el('pwCard').classList.add('hide');return}
   el('gate').classList.add('hide');el('app').classList.remove('hide');el('tabs').classList.remove('hide');
   el('uName').textContent=ME.name||ME.email||'';
-  el('uSub').textContent=(ME.employment_no?'ID '+ME.employment_no+' · ':'')+today();
+  el('uSub').textContent=((ME.staff_no||ME.employment_no)?'사번 '+(ME.staff_no||ME.employment_no)+' · ':'')+today(); /* v1.09 사번 BE/BC */
   if(el('uAvatar')){
     var nm=(ME.name||ME.email||'BV').trim();
     el('uAvatar').textContent=nm.slice(0,2);
