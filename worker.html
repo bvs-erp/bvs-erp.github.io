@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.24</title>
+<title>BVS 데일리 v1.25</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2841,6 +2841,17 @@ logOpen=function(d){
     var _p=tbm115Paint;tbm115Paint=function(){_p.apply(this,arguments);var s=el('tbmState');if(s&&!tbm115All())s.textContent='작업 전 4개 확인'};
   }catch(e){}
 })();
+
+
+/* ═══ 1.25 (대표 지적 10/07 07:30) 근태 현황 달력이 화면 밖으로 튀어나오는 문제 — 7칸 격자를 minmax(0,1fr)로 두고 칸·꼬리표에 min-width:0을 줘 폰 너비 안에 맞춤(정산 달력 .pcal도 같이) ═══ */
+(function(){try{var c=document.createElement('style');c.id='fix125';c.textContent=
+ '.kcal,.pcal{grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%;max-width:100%;box-sizing:border-box}'
++'.kcal .dy,.pcal .c{min-width:0;overflow:hidden;box-sizing:border-box}'
++'.kcal .dy{padding:4px 3px}.kcal .tg{max-width:100%;display:block}'
++'.kcal .dy .n{font-size:11.5px}'
++'@media (max-width:420px){.kcal{gap:2px}.kcal .dy{min-height:50px;padding:3px 2px;border-radius:3px}.kcal .tg{font-size:9.5px;padding:1px 2px}.kcal .wd{font-size:10px}}'
++'.card,.sec,.panel{max-width:100%;overflow-x:hidden}';
+document.head.appendChild(c)}catch(e){}})();
 
 </script>
 </body>
