@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.20</title>
+<title>BVS 데일리 v1.21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2740,6 +2740,41 @@ saveLog=async function(){
     ta.value=t;
   }
   return _saveLog120.apply(this,arguments);
+};
+
+
+/* ═══ 1.21 (안티그래비티 R72 #1) 위험작업 「화기」를 고르면 화기작업 안전점검 3개 체크(소화기 비치·방화포 설치·화재감시자 배치) — 모두 체크하고 저장하면 [화기안전 점검완료] 꼬리표 ═══ */
+var FW121={items:[['ext','소화기 2대 작업 반경 5m 내 비치'],['blanket','불티 비산방지포(방화포) 설치'],['watch','화재감시자 지정·배치']],TAG:'[화기안전 점검완료]'};
+function fw121All(){return FW121.items.every(function(it){var c=el('fw_'+it[0]);return c&&c.checked})}
+function fw121Paint(){var b=el('fwBox'),on=el('hz_fire')&&el('hz_fire').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',fw121All());var s=el('fwState');if(s)s.textContent=fw121All()?'점검완료 — 저장 시 일지에 기록':'화기작업 전 3개 확인'}
+var _hzTog121=hz117Tog;
+hz117Tog=function(k){_hzTog121.apply(this,arguments);try{fw121Paint()}catch(e){}};
+var _logOpen121=logOpen;
+logOpen=function(d){
+  _logOpen121.apply(this,arguments);
+  try{
+    var ta=el('logText'),anchor=el('csBox')||el('hcBox')||el('hzBox');if(!ta||!anchor)return;
+    if(!el('fwBox')){
+      var st=document.createElement('style');st.textContent='#fwBox{border:1px dashed #d97706;border-radius:12px;padding:10px 12px;margin:0 0 10px;background:#fffbeb}#fwBox.ok{border-style:solid;border-color:#16a34a;background:#f0fdf4}#fwBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}#fwBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280}#fwBox.ok .tt span{color:#16a34a}#fwBox label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px}#fwBox input{width:18px;height:18px}';document.head.appendChild(st);
+      var b=document.createElement('div');b.id='fwBox';
+      b.innerHTML='<div class="tt">화기작업 안전점검 <span id="fwState"></span></div>'+FW121.items.map(function(it){return '<label><input type="checkbox" id="fw_'+it[0]+'" onchange="fw121Paint()">'+it[1]+'</label>'}).join('')+'<div style="font-size:11px;color:#6b7280;margin-top:4px">산업안전보건기준에 관한 규칙 제241조(화재위험작업 시 준수사항)·제241조의2(화재감시자)</div>';
+      anchor.insertAdjacentElement('afterend',b);
+    }
+    var has=ta.value.indexOf(FW121.TAG)>=0;
+    FW121.items.forEach(function(it){var c=el('fw_'+it[0]);if(c)c.checked=has});
+    fw121Paint();
+  }catch(e){}
+};
+var _saveLog121=saveLog;
+saveLog=async function(){
+  var ta=el('logText');
+  if(ta&&el('fwBox')){
+    var t=ta.value.replace(/\s*\[화기안전 점검완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+    var on=el('hz_fire')&&el('hz_fire').classList.contains('on');
+    if(on&&fw121All())t=(t?t+'\n':'')+FW121.TAG;
+    ta.value=t;
+  }
+  return _saveLog121.apply(this,arguments);
 };
 
 </script>
