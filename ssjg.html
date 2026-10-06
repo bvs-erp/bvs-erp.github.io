@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.25">
+<meta name="app-version" content="1.26">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6292,6 +6292,29 @@ function pk125Print(){
 (function(){
   try{var b=document.getElementById('btnDownloadLogen');if(!b||document.getElementById('pk125'))return;var x=document.createElement('button');x.id='pk125';x.className='btn';x.style.cssText='width:100%;padding:9px;margin-top:6px';x.textContent='피킹 리스트 인쇄 (상품별 출고 수량)';x.onclick=pk125Print;b.insertAdjacentElement('afterend',x)}catch(e){}
 })();
+
+
+/* ═══ 1.26 (안티그래비티 R78 #3) 주문·배송 › 모은 주문 검사 › 「합포장 가능 N묶음」 — 수령인명+연락처+배송지가 같은 주문을 묶어 표시(같은 발송경로끼리). 송장 1개로 자동 합치기는 로젠 접수파일·ERP 주문 등록 단위를 바꿔야 해 다음 회차 ═══ */
+var MP126={open:false};
+function mp126Key(r){var nm=String(r['수령인명']||'').replace(/\s+/g,'').toLowerCase(),ph=String(r['수령인핸드폰']||r['수령인전화']||'').replace(/\D/g,''),ad=String(r['배송지주소']||'').replace(/\s+/g,'').toLowerCase();if(!nm||(!ph&&!ad))return '';return (r._via==='3PL'?'A':'B')+'|'+nm+'|'+ph+'|'+ad}
+function mp126Groups(){var by={};(rawCafe24Rows||[]).forEach(function(r,i){var k=mp126Key(r);if(!k)return;(by[k]=by[k]||[]).push(i)});
+  return Object.keys(by).map(function(k){return by[k]}).filter(function(a){var nos={};a.forEach(function(i){nos[String(rawCafe24Rows[i]['주문번호']||'')]=1});return Object.keys(nos).length>=2})}
+function mp126Paint(){
+  var cnt=document.getElementById('c24ChkCnt');if(!cnt)return;
+  var head=cnt.closest('.panel-head');var box=document.getElementById('mp126');
+  if(!box){box=document.createElement('div');box.id='mp126';box.style.cssText='margin:6px 0 8px';if(head)head.insertAdjacentElement('afterend',box);else cnt.parentNode.appendChild(box)}
+  var G=mp126Groups();var tbl=document.getElementById('c24ChkRows');
+  if(!G.length){box.innerHTML='';return}
+  var n=G.reduce(function(s,a){return s+a.length},0);
+  var idx={};G.forEach(function(a,gi){a.forEach(function(i){idx[i]=gi+1})});
+  if(tbl){Array.prototype.forEach.call(tbl.querySelectorAll('tr'),function(tr,i){if(idx[i]){var td=tr.cells[0];if(td&&!td.querySelector('.mp126b')){var s=document.createElement('span');s.className='bdg mp126b';s.style.cssText='background:#ffedd5;color:#c2410c;margin-left:4px';s.textContent='합포장 '+idx[i];td.appendChild(s)}}})}
+  box.innerHTML='<button class="btn" type="button" style="background:#ffedd5;color:#c2410c;border-color:#fdba74;font-weight:700" onclick="MP126.open=!MP126.open;mp126Paint()">합포장 가능 '+G.length+'묶음 ('+n+'건) — 같은 수령인·연락처·주소</button>'
+    +(MP126.open?'<div class="table-wrap" style="margin-top:6px"><table><thead><tr><th>묶음</th><th>수령인</th><th>경로</th><th>주문번호</th><th>상품 · 수량</th><th>박스 합계</th></tr></thead><tbody>'
+      +G.map(function(a,gi){var r0=rawCafe24Rows[a[0]];var nos=[],prods=[],bx=0;a.forEach(function(i){var r=rawCafe24Rows[i];var no=String(r['주문번호']||'');if(nos.indexOf(no)<0)nos.push(no);prods.push((r._pno?'#'+r._pno+' ':'')+(r._prod||r['상품명']||'-')+' ×'+(r._oqty||r['수량']||1));bx+=Number(r._chk&&r._chk.boxes)||0});
+        return '<tr><td>'+(gi+1)+'</td><td>'+gEsc(r0['수령인명']||'')+'</td><td>'+(r0._via==='3PL'?'A 3PL':'B 로젠')+'</td><td>'+nos.map(gEsc).join('<br>')+'</td><td>'+prods.map(gEsc).join('<br>')+'</td><td class="num">'+(bx||'-')+'</td></tr>'}).join('')
+      +'</tbody></table></div><div class="muted" style="font-size:11px;margin-top:4px">현재는 묶음 표시만 합니다. 로젠 접수파일은 주문 1건 = 송장 1건으로 나가므로, 한 송장으로 보내려면 묶음 안의 나머지 주문을 「빼기」 하고 남긴 주문의 박스 수를 수정하십시오. 송장 1개 자동 합치기는 접수파일·ERP 등록 단위 변경 후 반영 예정</div>':'');
+}
+(function(){try{var _p=c24Paint;c24Paint=function(){var r=_p.apply(this,arguments);try{mp126Paint()}catch(e){console.error(e)}return r}}catch(e){}})();
 
 </script>
 <nav id="mnav"></nav>
