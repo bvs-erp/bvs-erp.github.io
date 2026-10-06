@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.21">
+<meta name="app-version" content="1.22">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6202,6 +6202,61 @@ renderChannelPl = function(rows){
   } catch(e){ console.error(e); }
 };
 
+// v1.22 로젠 접수 대상: 「송장 미발급 N건」 칩(누르면 송장번호 없는 줄만) · 재고: 판매 순위 카드와 품목별 소진 예상일
+var dvNoTrk122 = false;
+var _dvDup122 = dvDupPaint; dvDupPaint = function(){ _dvDup122();
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var has = function(r){ return !!String(r.invoice_no || '').trim(); };
+  var tot = rawDeliveryRows.length, no = rawDeliveryRows.filter(function(r){ return !has(r); }).length;
+  var b = document.getElementById('dvNoTrkBtn');
+  if(!b){ b = document.createElement('button'); b.id = 'dvNoTrkBtn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.5)';
+    b.onclick = function(){ dvNoTrk122 = !dvNoTrk122; renderDeliveryTable(); }; hd.insertBefore(b, hd.firstChild); }
+  if(!(no > 0 && no < tot)){ dvNoTrk122 = false; b.style.display = 'none'; return; }
+  b.style.display = ''; b.textContent = dvNoTrk122 ? '전체 보기' : '송장 미발급 ' + no + '건';
+  if(!dvNoTrk122) return;
+  var byIdx = {}; rawDeliveryRows.forEach(function(r){ byIdx[String(r.idx)] = r; });
+  Array.prototype.forEach.call(document.getElementById('delivTableBody').rows, function(tr){ var c = tr.cells[0]; var r = c && byIdx[String(c.textContent).trim()]; if(r && has(r)) tr.style.display = 'none'; });
+};
+
+var INV_SALE122 = null;
+function invFam122(c){ c = String(c || ''); var m = /^(.*)-(\d+)P$/.exec(c); return m ? { f: m[1], p: Number(m[2]) } : null; }
+async function invSaleLoad122(){
+  if(!sb) return null;
+  var d0 = new Date(Date.now() + 9 * 3600000 - 30 * 86400000).toISOString().slice(0, 10);
+  var o = await sb.from('ssjg_orders').select('order_id,ordered_at').gte('ordered_at', d0).limit(5000); if(o.error || !o.data) return null;
+  var at = {}; o.data.forEach(function(x){ at[x.order_id] = String(x.ordered_at || '').slice(0, 10); });
+  var ids = Object.keys(at), L = [];
+  for(var i = 0; i < ids.length; i += 200){ var r = await sb.from('ssjg_order_lines').select('order_id,item_code,qty').in('order_id', ids.slice(i, i + 200)); if(r.error) return null; L = L.concat(r.data || []); }
+  return L.map(function(x){ return { d: at[x.order_id], c: String(x.item_code || ''), q: Number(x.qty) || 0 }; });
+}
+function invSalePaint122(rows){
+  var L = INV_SALE122; if(!L || !rows) return;
+  var today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10), d7 = new Date(Date.now() + 9 * 3600000 - 7 * 86400000).toISOString().slice(0, 10);
+  var nm = {}; rows.forEach(function(r){ nm[r.item_code] = r.item_name; });
+  var rank = function(from){ var s = {}; L.forEach(function(x){ if(x.d >= from && x.d <= today && x.c) s[x.c] = (s[x.c] || 0) + x.q; }); return Object.keys(s).map(function(k){ return { c: k, q: s[k] }; }).sort(function(a, b){ return b.q - a.q; }).slice(0, 10); };
+  var top = rank(d7), per = '최근 7일'; if(!top.length){ top = rank('0000'); per = '최근 30일'; }
+  var tb = document.getElementById('invTableRows'); if(!tb) return; var panel = tb.closest('.panel'); if(!panel) return;
+  var card = document.getElementById('invTop122');
+  if(!card){ card = document.createElement('div'); card.id = 'invTop122'; card.className = 'panel'; panel.parentNode.insertBefore(card, panel); }
+  card.innerHTML = '<div class="panel-head"><div class="panel-title">판매 순위 Top 10 <span style="font-size:12px;color:var(--text-muted);font-weight:400">' + per + '</span></div></div>'
+    + (top.length ? '<div class="table-wrap"><table><thead><tr><th style="width:40px">#</th><th>품목코드</th><th>품목명</th><th style="text-align:right">판매 수량</th></tr></thead><tbody>'
+      + top.map(function(x, i){ return '<tr><td>' + (i + 1) + '</td><td><code>' + gEsc(x.c) + '</code></td><td><strong>' + gEsc(nm[x.c] || '') + '</strong></td><td style="text-align:right;font-weight:700">' + fmt(x.q) + '</td></tr>'; }).join('')
+      + '</tbody></table></div>' : '<div style="padding:12px 16px;color:var(--text-muted);font-size:12px">최근 30일 판매 없음</div>');
+  var use = {}; L.forEach(function(x){ var p = invFam122(x.c); if(p) use[p.f] = (use[p.f] || 0) + x.q * p.p; });
+  var trs = tb.querySelectorAll('tr');
+  rows.forEach(function(r, i){ var tr = trs[i]; if(!tr) return; var p = invFam122(r.item_code); if(!p || p.p !== 2 || !/^FG-/.test(r.item_code)) return;
+    var q = r.pl3_qty !== null && r.pl3_qty !== undefined ? Number(r.pl3_qty) : Number(r.book_qty); if(isNaN(q)) return;
+    var td = tr.cells[2]; if(!td || td.querySelector('.inv-dn')) return;
+    var u = (use[p.f] || 0) / 30, s = document.createElement('span'); s.className = 'tag inv-dn'; s.style.marginLeft = '6px';
+    if(!(u > 0)){ s.textContent = '30일 판매 없음'; s.style.opacity = '.7'; }
+    else { var dn = Math.floor(q * p.p / u); s.textContent = '소진 D-' + dn; s.title = '30일 판매 ' + fmt(use[p.f]) + '포 · 재고 ' + fmt(q * p.p) + '포';
+      s.style.background = dn <= 14 ? 'rgba(239,68,68,.18)' : dn <= 30 ? 'rgba(217,119,6,.18)' : 'rgba(34,197,94,.15)'; s.style.color = dn <= 14 ? '#ef4444' : dn <= 30 ? '#d97706' : 'var(--green)'; }
+    td.appendChild(s); });
+}
+var _renderInv122 = renderInventory; renderInventory = function(rows){ _renderInv122.apply(this, arguments);
+  if(INV_SALE122){ invSalePaint122(rows); return; }
+  invSaleLoad122().then(function(L){ if(!L) return; INV_SALE122 = L; invSalePaint122(window._invRows || rows); }).catch(function(e){ console.error(e); });
+};
 </script>
 <nav id="mnav"></nav>
 </body>
