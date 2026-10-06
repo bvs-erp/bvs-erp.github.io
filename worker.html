@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.23</title>
+<title>BVS 데일리 v1.24</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2832,6 +2832,15 @@ logOpen=function(d){
   _logOpen123.apply(this,arguments);
   try{var btn=document.querySelector('button[onclick="saveLog()"]');if(!btn||el('dr123'))return;var b=document.createElement('button');b.id='dr123';b.className='btn w';b.style.marginTop='8px';b.textContent='일일보고 복사 (단톡방용)';b.onclick=dr123Copy;btn.insertAdjacentElement('afterend',b)}catch(e){}
 };
+
+
+/* ═══ 1.24 (안티그래비티 R75 #1, 변형) 「오늘의 TBM 확인」에 4번째 항목 「공구·장비 작동 전 점검(전원선 피복·비상정지·방호장치)」 추가 — 4개 모두 체크해야 [TBM 확인완료]. 별도 상자 대신 TBM에 넣어 일지를 간단하게 유지 ═══ */
+(function(){
+  try{
+    if(TBM115&&TBM115.items&&!TBM115.items.some(function(it){return it[0]==='tool'}))TBM115.items.push(['tool','공구·장비 작동 전 점검 (전원선 피복·비상정지·방호장치)']);
+    var _p=tbm115Paint;tbm115Paint=function(){_p.apply(this,arguments);var s=el('tbmState');if(s&&!tbm115All())s.textContent='작업 전 4개 확인'};
+  }catch(e){}
+})();
 
 </script>
 </body>
