@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.22">
+<meta name="app-version" content="1.23">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6257,6 +6257,16 @@ var _renderInv122 = renderInventory; renderInventory = function(rows){ _renderIn
   if(INV_SALE122){ invSalePaint122(rows); return; }
   invSaleLoad122().then(function(L){ if(!L) return; INV_SALE122 = L; invSalePaint122(window._invRows || rows); }).catch(function(e){ console.error(e); });
 };
+// v1.23 재고: 「30일 판매 없음 (N)」 필터 — 최근 30일 주문에 한 번도 안 나간 완제품만 보기
+var INV_NOSALE=false;
+function invNoSaleSet(){var tb=document.getElementById('invTableRows');if(!tb||!window._invRows||!INV_SALE122)return;
+  var sold={};INV_SALE122.forEach(function(x){if(x.c)sold[x.c]=(sold[x.c]||0)+x.q});
+  var trs=tb.querySelectorAll('tr'),n=0;window._invRows.forEach(function(r,i){var tr=trs[i];if(!tr)return;var fg=/^FG-/.test(String(r.item_code||''))&&!/(1P|4P)$/.test(String(r.item_code||''));var ns=fg&&!(sold[r.item_code]>0);tr.dataset.nosale=ns?'1':'0';if(ns)n++;
+    if(INV_NOSALE)tr.style.display=ns?'':'none'});
+  var hd=document.getElementById('invLowBtn');if(!hd)return;var b=document.getElementById('invNoSaleBtn');
+  if(!b){b=document.createElement('button');b.id='invNoSaleBtn';b.className='btn btn-xs';b.style.marginLeft='6px';b.onclick=function(){INV_NOSALE=!INV_NOSALE;if(INV_NOSALE){tb.dataset.low='';tb.dataset.diff='';tb.querySelectorAll('tr').forEach(function(t){t.style.display=t.dataset.nosale==='1'?'':'none'})}else tb.querySelectorAll('tr').forEach(function(t){t.style.display=''});b.textContent=INV_NOSALE?'전체 보기':'30일 판매 없음 ('+n+')';b.style.background=INV_NOSALE?'rgba(217,119,6,.18)':''};hd.parentNode.insertBefore(b,hd.nextSibling)}
+  b.style.display=window._invRows.length?'':'none';b.textContent=INV_NOSALE?'전체 보기':'30일 판매 없음 ('+n+')'}
+var _invSalePaint123=invSalePaint122;invSalePaint122=function(rows){_invSalePaint123(rows);try{invNoSaleSet()}catch(e){console.error(e)}};
 </script>
 <nav id="mnav"></nav>
 </body>
