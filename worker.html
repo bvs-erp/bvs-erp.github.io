@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.09</title>
+<title>BVS 현장앱 v1.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2340,6 +2340,35 @@ function closeMobNavModal(){
   var m=el('mobNavModal');if(m)m.classList.add('hide');
 }
 
+/* v1.10 내 기록: 월 고르기 · 정규직은 근태 현황(잔업 시간만), 용역은 공수 · 취소된 줄과 내부 메모는 숨김 */
+var LIST={ym:'',showVoid:false};
+function listDesc(t){return String(t||'').replace(/\s*\[[^\]]*\]\s*/g,' ').replace(/\s{2,}/g,' ').trim()}
+function listSetYm(ym){LIST.ym=ym;LIST.showVoid=false;renderList()}
+function renderList(){
+  var reg=isRegularWorker(),all=D.labor||[],tm=today().slice(0,7);
+  var months={};all.forEach(function(r){var m=String(r.work_date).slice(0,7);if(m)months[m]=1});months[tm]=1;
+  var ms=Object.keys(months).sort().reverse();
+  if(!LIST.ym||!months[LIST.ym])LIST.ym=tm;
+  var ym=LIST.ym,rows=all.filter(function(r){return String(r.work_date).slice(0,7)===ym}),live=rows.filter(function(r){return r.status!=='void'}),vd=rows.length-live.length;
+  var md=live.reduce(function(a,r){return a+(+r.work_md||0)},0),ot=live.reduce(function(a,r){return a+(+r.ot_hours||0)},0),otd=live.filter(function(r){return (+r.ot_hours)>0}).length;
+  var mon=(+ym.slice(5,7))+'월';
+  var um=el('uMon');if(um){um.textContent=reg?((+tm.slice(5,7))+'월 근무 '+all.filter(function(r){return r.status!=='void'&&String(r.work_date).slice(0,7)===tm}).length+'일'):((+tm.slice(5,7))+'월 '+all.filter(function(r){return r.status!=='void'&&String(r.work_date).slice(0,7)===tm}).reduce(function(a,r){return a+(+r.work_md||0)},0).toFixed(1)+'공수');um.classList.toggle('hide',false)}
+  var h=el('list')&&el('list').parentNode.querySelector('h2');if(h){h.firstChild.textContent=reg?'근태 현황 ':'내 기록 '}
+  el('myKpi').innerHTML='<div class="chips" style="grid-column:1/-1;margin-bottom:8px">'+ms.map(function(m){return '<span class="chip'+(m===ym?' on':'')+'" onclick="listSetYm('+ERPC.jsq(m)+')">'+(m.slice(0,4)!==tm.slice(0,4)?m.slice(2,4)+'년 ':'')+(+m.slice(5,7))+'월</span>'}).join('')+'</div>'
+    +'<div class="kpi"><div class="k">'+mon+' 근무일</div><div class="v">'+live.length+'</div></div>'
+    +(reg?'<div class="kpi"><div class="k">잔업</div><div class="v">'+ot.toFixed(1)+'<small> h</small></div></div><div class="kpi"><div class="k">잔업 있는 날</div><div class="v">'+otd+'</div></div>'
+         :'<div class="kpi"><div class="k">공수</div><div class="v">'+md.toFixed(1)+'</div></div><div class="kpi"><div class="k">잔업</div><div class="v">'+ot.toFixed(1)+'<small> h</small></div></div>');
+  el('listN').textContent=live.length?mon+' '+live.length+'건':'';
+  var show=LIST.showVoid?rows:live;
+  el('list').innerHTML=(show.length?show.map(function(r){var v=r.status==='void',st=STMAP[r.status]||[r.status,''],d=String(r.work_date),ds=listDesc(r.work_desc);
+    var right=v?'<small class="dim">취소</small>':reg?((+r.ot_hours)>0?'<b>+'+(+r.ot_hours)+'</b><small class="dim">h 잔업</small>':'<b class="dim">–</b><small class="dim">정상</small>'):'<b>'+(+r.work_md).toFixed(1)+'</b><small class="dim">공수'+((+r.ot_hours)>0?' +'+(+r.ot_hours)+'h':'')+'</small>';
+    var dp=(D.disp||[]).filter(function(x){return x.entry_id===r.entry_id})[0];
+    var act=v?'':(dp?'<div class="tiny '+(dp.status==='open'?'wn':'pos')+'" style="margin-top:4px">'+(dp.status==='open'?'이의 접수됨':'처리됨'+(dp.resolution?': '+esc(dp.resolution):''))+'</div>'
+      :(r.status==='submitted'&&!r.settled_ym?'<div><button class="btn sm d" style="margin-top:4px" onclick="withdraw('+r.entry_id+')">취소</button></div>':'')+'<div><button class="btn sm" style="margin-top:4px" onclick="dispute('+r.entry_id+','+ERPC.jsq(r.work_date)+')">이의</button></div>');
+    return '<div class="item"'+(v?' style="opacity:.55"':'')+'><div class="d"><b>'+d.slice(8)+'</b><small>'+(+d.slice(5,7))+'월</small></div><div class="m"><div class="s">'+esc(r.site_name||'')+(v?' <span class="pill">취소</span>':(r.status==='settled'?' <span class="pill g">정산완료</span>':''))+'</div><div class="t">'+(r.work_start?hhmm(r.work_start)+'–'+hhmm(r.work_end):'')+(ds?(r.work_start?' · ':'')+esc(ds):'')+'</div></div><div class="r">'+right+act+'</div></div>'}).join('')
+    :'<div class="empty">'+mon+' 기록 없음</div>')
+    +(vd?'<div style="text-align:center;margin-top:10px"><button class="btn sm" onclick="LIST.showVoid=!LIST.showVoid;renderList()">'+(LIST.showVoid?'취소된 기록 숨기기':'취소된 기록 '+vd+'건 보기')+'</button></div>':'');
+}
 </script>
 </body>
 </html>
