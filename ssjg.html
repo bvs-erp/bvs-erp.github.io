@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.23">
+<meta name="app-version" content="1.24">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6267,6 +6267,11 @@ function invNoSaleSet(){var tb=document.getElementById('invTableRows');if(!tb||!
   if(!b){b=document.createElement('button');b.id='invNoSaleBtn';b.className='btn btn-xs';b.style.marginLeft='6px';b.onclick=function(){INV_NOSALE=!INV_NOSALE;if(INV_NOSALE){tb.dataset.low='';tb.dataset.diff='';tb.querySelectorAll('tr').forEach(function(t){t.style.display=t.dataset.nosale==='1'?'':'none'})}else tb.querySelectorAll('tr').forEach(function(t){t.style.display=''});b.textContent=INV_NOSALE?'전체 보기':'30일 판매 없음 ('+n+')';b.style.background=INV_NOSALE?'rgba(217,119,6,.18)':''};hd.parentNode.insertBefore(b,hd.nextSibling)}
   b.style.display=window._invRows.length?'':'none';b.textContent=INV_NOSALE?'전체 보기':'30일 판매 없음 ('+n+')'}
 var _invSalePaint123=invSalePaint122;invSalePaint122=function(rows){_invSalePaint123(rows);try{invNoSaleSet()}catch(e){console.error(e)}};
+// v1.24 로젠 접수 대상: 배송메시지에 공동현관 비밀번호·부재 시 요청 등이 있으면 노랗게 강조하고 전체 문구를 보여 줌
+var _rdt124=renderDeliveryTable;renderDeliveryTable=function(){_rdt124.apply(this,arguments);try{var tb=document.getElementById('delivTableBody');if(!tb)return;
+  var re=/(비밀번호|비번|공동현관|현관|문앞|경비실|부재|택배함|무인|호출|전화|연락|조심|파손|깨지|주의)/;
+  Array.prototype.forEach.call(tb.rows,function(tr){var td=tr.cells[tr.cells.length-1];if(!td)return;var t=(td.textContent||'').trim();if(!t||t==='-'||!re.test(t))return;
+    td.style.cssText='font-size:11.5px;max-width:260px;white-space:normal;background:rgba(245,158,11,.18);color:var(--text);font-weight:600;border-left:3px solid #d97706';td.title=t})}catch(e){console.error(e)}};
 </script>
 <nav id="mnav"></nav>
 </body>
