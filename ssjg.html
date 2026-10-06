@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.24">
+<meta name="app-version" content="1.25">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6272,6 +6272,27 @@ var _rdt124=renderDeliveryTable;renderDeliveryTable=function(){_rdt124.apply(thi
   var re=/(비밀번호|비번|공동현관|현관|문앞|경비실|부재|택배함|무인|호출|전화|연락|조심|파손|깨지|주의)/;
   Array.prototype.forEach.call(tb.rows,function(tr){var td=tr.cells[tr.cells.length-1];if(!td)return;var t=(td.textContent||'').trim();if(!t||t==='-'||!re.test(t))return;
     td.style.cssText='font-size:11.5px;max-width:260px;white-space:normal;background:rgba(245,158,11,.18);color:var(--text);font-weight:600;border-left:3px solid #d97706';td.title=t})}catch(e){console.error(e)}};
+/* ═══ 1.25 (안티그래비티 R75 #3) 출고 › B 로젠 자체발송 › 「피킹 리스트 인쇄」 — 모은 주문 중 로젠 건을 상품별로 묶어 당일 출고 총 수량·주문 건수를 A4 1장으로 ═══ */
+function pk125Rows(){
+  var L=(rawCafe24Rows||[]).filter(function(r){return r._via!=='3PL'}),by={};
+  L.forEach(function(r){var k=(r._pno?'#'+r._pno+' ':'')+(r._prod||r['상품명']||'(상품 미확인)');var o=by[k]=by[k]||{name:k,qty:0,orders:0,boxes:0};o.qty+=Number(r._oqty)||1;o.orders++;o.boxes+=Number((r._chk||{}).boxes)||1});
+  return Object.keys(by).map(function(k){return by[k]}).sort(function(a,b){return a.name.localeCompare(b.name,'ko')});
+}
+function pk125Print(){
+  var R=pk125Rows();if(!R.length){gToast('로젠 출고 대상 주문이 없습니다 — 먼저 주문 파일을 올리십시오',true);return}
+  var d=new Date(Date.now()+9*3600e3).toISOString().slice(0,10),tq=R.reduce(function(s,o){return s+o.qty},0),to=R.reduce(function(s,o){return s+o.orders},0);
+  var html='<!doctype html><meta charset="utf-8"><title>'+d+' 피킹 리스트</title><style>body{font-family:"Malgun Gothic",sans-serif;font-size:12px;margin:0}.pg{width:180mm;margin:10mm auto}h1{font-size:18px;text-align:center;margin:0 0 4px;letter-spacing:4px}.sub{text-align:center;color:#555;margin-bottom:10px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:5px 7px}th{background:#f3f4f6}.n{text-align:right}.ck{width:28px;text-align:center}.t td{font-weight:700;background:#fafafa}.note{margin-top:8px;color:#555;font-size:10.5px}</style>'
+    +'<div class="pg"><h1>피킹 리스트</h1><div class="sub">승승장구컴퍼니 · 출고일 '+d+' · 로젠 자체발송 '+to+'건</div>'
+    +'<table><tr><th class="ck">확인</th><th>상품 (옵션)</th><th class="n">출고 수량</th><th class="n">주문 건수</th><th class="n">박스</th><th>선반 위치</th></tr>'
+    +R.map(function(o){return '<tr><td class="ck">☐</td><td>'+gEsc(o.name)+'</td><td class="n"><b>'+o.qty+'</b></td><td class="n">'+o.orders+'</td><td class="n">'+o.boxes+'</td><td>&nbsp;</td></tr>'}).join('')
+    +'<tr class="t"><td></td><td>합계 '+R.length+'종</td><td class="n">'+tq+'</td><td class="n">'+to+'</td><td class="n">'+R.reduce(function(s,o){return s+o.boxes},0)+'</td><td></td></tr></table>'
+    +'<div class="note">선반 위치는 손으로 적습니다(품목 마스터에 로케이션 칸이 없음). 3PL(이지어드민) 건은 제외.</div></div>';
+  var w=window.open('','_blank');if(!w){gToast('팝업이 막혀 있습니다',true);return}w.document.write(html);w.document.close();setTimeout(function(){w.print()},300);
+}
+(function(){
+  try{var b=document.getElementById('btnDownloadLogen');if(!b||document.getElementById('pk125'))return;var x=document.createElement('button');x.id='pk125';x.className='btn';x.style.cssText='width:100%;padding:9px;margin-top:6px';x.textContent='피킹 리스트 인쇄 (상품별 출고 수량)';x.onclick=pk125Print;b.insertAdjacentElement('afterend',x)}catch(e){}
+})();
+
 </script>
 <nav id="mnav"></nav>
 </body>
