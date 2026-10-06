@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.14</title>
+<title>BVS 데일리 v1.15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2567,6 +2567,38 @@ async function logCopyPrev(){var cur=LOG.date||today();var prev=(D.labor||[]).fi
   if(!prev){toast('복사할 이전 일지가 없습니다','e');return}
   var ta=el('logText');if(ta.value.trim()&&!(await ERPC.ask('일지 복사',kdate(prev.work_date)+' 일지로 지금 적힌 내용을 바꿉니다. 계속할까요?',{ok:'바꾸기'})))return;
   ta.value=prev.work_log;ta.focus();toast(kdate(prev.work_date)+' 일지를 가져왔습니다. 오늘 바뀐 부분만 고치고 저장하십시오','g')}
+
+/* ═══ 1.15 (R60 #3) 일지 상단 「오늘의 TBM 3대 확인」 — 보호구 착용 · 작업허가 확인 · 위험요소 인지. 3개 다 체크하면 일지에 [TBM 확인완료] 꼬리표가 붙고, 목록에서는 숨겨짐 ═══ */
+var TBM115={items:[['pp','보호구 착용 (안전모·안전화·보안경)'],['pw','작업허가 확인'],['hz','위험요소 인지·공유']],TAG:'[TBM 확인완료]'};
+function tbm115All(){return TBM115.items.every(function(it){var c=el('tbm_'+it[0]);return c&&c.checked})}
+function tbm115Paint(){var b=el('tbmBox');if(!b)return;b.classList.toggle('ok',tbm115All());var s=el('tbmState');if(s)s.textContent=tbm115All()?'확인완료 — 저장 시 일지에 기록':'작업 전 3개 확인'}
+var _logOpen115=logOpen;
+logOpen=function(d){
+  _logOpen115.apply(this,arguments);
+  try{
+    var ta=el('logText');if(!ta)return;
+    if(!el('tbmBox')){
+      var st=document.createElement('style');st.textContent='#tbmBox{border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:var(--card,#fff)}#tbmBox.ok{border-color:#16a34a;background:#f0fdf4}#tbmBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}#tbmBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280}#tbmBox.ok .tt span{color:#16a34a}#tbmBox label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px}#tbmBox input{width:18px;height:18px}';document.head.appendChild(st);
+      var b=document.createElement('div');b.id='tbmBox';
+      b.innerHTML='<div class="tt">오늘의 TBM 확인 <span id="tbmState"></span></div>'+TBM115.items.map(function(it){return '<label><input type="checkbox" id="tbm_'+it[0]+'" onchange="tbm115Paint()">'+it[1]+'</label>'}).join('');
+      ta.insertAdjacentElement('beforebegin',b);
+    }
+    var has=ta.value.indexOf(TBM115.TAG)>=0;
+    TBM115.items.forEach(function(it){var c=el('tbm_'+it[0]);if(c)c.checked=has});
+    tbm115Paint();
+  }catch(e){}
+};
+var _saveLog115=saveLog;
+saveLog=async function(){
+  var ta=el('logText');
+  if(ta&&el('tbmBox')){
+    var t=ta.value.replace(/\s*\[TBM 확인완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+    if(tbm115All())t=(t?t+'\n':'')+TBM115.TAG;
+    ta.value=t;
+  }
+  return _saveLog115.apply(this,arguments);
+};
+
 </script>
 </body>
 </html>
