@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.18</title>
+<title>BVS 데일리 v1.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2671,6 +2671,41 @@ saveLog=async function(){
     var _p=s5116Paint;s5116Paint=function(){_p.apply(this,arguments);var s=el('s5State');if(s&&!s5116All())s.textContent='퇴근 전 3개 확인'};
   }catch(e){}
 })();
+
+
+/* ═══ 1.19 (안티그래비티 R70 #3) 위험작업 「고소」를 고르면 아래에 고소장비 안전점검 3개 체크(과상승방지봉·아웃트리거·안전고리) — 모두 체크하고 저장하면 [고소장비 점검완료] 꼬리표 ═══ */
+var HC119={items:[['stop','과상승방지봉 정상'],['out','아웃트리거 설치·수평 확인'],['hook','안전고리(안전대) 체결']],TAG:'[고소장비 점검완료]'};
+function hc119All(){return HC119.items.every(function(it){var c=el('hc_'+it[0]);return c&&c.checked})}
+function hc119Paint(){var b=el('hcBox'),on=el('hz_high')&&el('hz_high').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',hc119All());var s=el('hcState');if(s)s.textContent=hc119All()?'점검완료 — 저장 시 일지에 기록':'고소장비 사용 전 3개 확인'}
+var _hzTog119=hz117Tog;
+hz117Tog=function(k){_hzTog119.apply(this,arguments);try{hc119Paint()}catch(e){}};
+var _logOpen119=logOpen;
+logOpen=function(d){
+  _logOpen119.apply(this,arguments);
+  try{
+    var ta=el('logText'),anchor=el('hzBox');if(!ta||!anchor)return;
+    if(!el('hcBox')){
+      var st=document.createElement('style');st.textContent='#hcBox{border:1px dashed #d97706;border-radius:12px;padding:10px 12px;margin:0 0 10px;background:#fffbeb}#hcBox.ok{border-style:solid;border-color:#16a34a;background:#f0fdf4}#hcBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}#hcBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280}#hcBox.ok .tt span{color:#16a34a}#hcBox label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px}#hcBox input{width:18px;height:18px}';document.head.appendChild(st);
+      var b=document.createElement('div');b.id='hcBox';
+      b.innerHTML='<div class="tt">고소장비 안전점검 <span id="hcState"></span></div>'+HC119.items.map(function(it){return '<label><input type="checkbox" id="hc_'+it[0]+'" onchange="hc119Paint()">'+it[1]+'</label>'}).join('');
+      anchor.insertAdjacentElement('afterend',b);
+    }
+    var has=ta.value.indexOf(HC119.TAG)>=0;
+    HC119.items.forEach(function(it){var c=el('hc_'+it[0]);if(c)c.checked=has});
+    hc119Paint();
+  }catch(e){}
+};
+var _saveLog119=saveLog;
+saveLog=async function(){
+  var ta=el('logText');
+  if(ta&&el('hcBox')){
+    var t=ta.value.replace(/\s*\[고소장비 점검완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+    var on=el('hz_high')&&el('hz_high').classList.contains('on');
+    if(on&&hc119All())t=(t?t+'\n':'')+HC119.TAG;
+    ta.value=t;
+  }
+  return _saveLog119.apply(this,arguments);
+};
 
 </script>
 </body>
