@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.22</title>
+<title>BVS 데일리 v1.23</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2810,6 +2810,27 @@ saveLog=async function(){
     ta.value=t;
   }
   return _saveLog122.apply(this,arguments);
+};
+
+
+/* ═══ 1.23 (안티그래비티 R74 #1) 일지 › 「일일보고 복사」 — 현장·날짜·공수·연장·작업내용·안전점검(TBM·5S·위험작업 점검) 꼬리표를 모아 단톡방용 보고 문구를 클립보드에 복사 ═══ */
+function dr123Text(){
+  var d=LOG.date||today(),e=entryOf(d),t=(el('logText')&&el('logText').value)||(e&&e.work_log)||'';
+  var tags=(t.match(/\[[^\]]+\]/g)||[]).map(function(s){return s.slice(1,-1)});
+  var body=t.replace(/\s*\[[^\]]*\]\s*/g,' ').replace(/\s{2,}/g,' ').trim();
+  var safe=[];if(tags.some(function(x){return /TBM/.test(x)}))safe.push('TBM 확인');if(tags.some(function(x){return /5S/.test(x)}))safe.push('5S 마감');
+  tags.filter(function(x){return /점검완료$/.test(x)}).forEach(function(x){safe.push(x)});
+  var hz=tags.filter(function(x){return /^위험요소:/.test(x)}).map(function(x){return x.replace(/^위험요소:\s*/,'')});
+  var site=e?siteName(e.site_id):'(현장 미등록)',md=e?(+e.work_md||0):0,ot=e?(+e.ot_hours||0):0;
+  return '[BVS 현장일보] '+site+'\n작업일: '+d+' · '+((typeof ME!=='undefined'&&ME&&ME.name)||'')+'\n공수: '+md.toFixed(1)+(ot?' · 연장 '+ot+'h':'')+'\n주요작업: '+(body||'(일지 없음)')+(hz.length?'\n위험작업: '+hz.join(', '):'')+'\n안전점검: '+(safe.length?safe.join(' · '):'해당 없음');
+}
+function dr123Copy(){var txt=dr123Text(),done=function(){toast('일일보고 문구를 복사했습니다','g')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,function(){dr123Fb(txt,done)});else dr123Fb(txt,done)}
+function dr123Fb(txt,done){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){toast('복사 실패','e')}ta.remove()}
+var _logOpen123=logOpen;
+logOpen=function(d){
+  _logOpen123.apply(this,arguments);
+  try{var btn=document.querySelector('button[onclick="saveLog()"]');if(!btn||el('dr123'))return;var b=document.createElement('button');b.id='dr123';b.className='btn w';b.style.marginTop='8px';b.textContent='일일보고 복사 (단톡방용)';b.onclick=dr123Copy;btn.insertAdjacentElement('afterend',b)}catch(e){}
 };
 
 </script>
