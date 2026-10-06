@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.16</title>
+<title>BVS 데일리 v1.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2629,6 +2629,38 @@ saveLog=async function(){
     ta.value=t;
   }
   return _saveLog116.apply(this,arguments);
+};
+
+
+/* ═══ 1.17 (안티그래비티 R67 #3) 일지 TBM 상자 아래 「오늘의 위험작업」 4개 토글(화기·고소 2m 이상·밀폐공간·활선 전기) — 고른 것은 일지에 [위험요소: 화기, 고소] 꼬리표로 저장(목록에선 숨김) ═══ */
+var HZ117={items:[['fire','화기'],['high','고소 (2m 이상)'],['conf','밀폐공간'],['live','활선·전기']],RE:/\s*\[위험요소:[^\]]*\]\s*/g};
+function hz117Sel(){return HZ117.items.filter(function(it){var b=el('hz_'+it[0]);return b&&b.classList.contains('on')}).map(function(it){return it[1].replace(/\s*\(.*\)$/,'')})}
+function hz117Tog(k){var b=el('hz_'+k);if(!b)return;b.classList.toggle('on');var s=el('hzState');if(s)s.textContent=hz117Sel().length?hz117Sel().join(', ')+' — 저장 시 일지에 기록':'해당 없으면 비워 두십시오'}
+var _logOpen117=logOpen;
+logOpen=function(d){
+  _logOpen117.apply(this,arguments);
+  try{
+    var ta=el('logText'),anchor=el('s5Box')||el('tbmBox');if(!ta||!anchor)return;
+    if(!el('hzBox')){
+      var st=document.createElement('style');st.textContent='#hzBox{border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:var(--card,#fff)}#hzBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}#hzBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280}#hzBox .hzb{display:inline-block;border:1px solid #d1d5db;border-radius:999px;padding:6px 12px;margin:3px 6px 3px 0;font-size:13px;background:#fff}#hzBox .hzb.on{background:#fef3c7;border-color:#d97706;color:#92400e;font-weight:700}';document.head.appendChild(st);
+      var b=document.createElement('div');b.id='hzBox';
+      b.innerHTML='<div class="tt">오늘의 위험작업 <span id="hzState"></span></div>'+HZ117.items.map(function(it){return '<span class="hzb" id="hz_'+it[0]+'" onclick="hz117Tog(\''+it[0]+'\')">'+it[1]+'</span>'}).join('');
+      anchor.insertAdjacentElement('afterend',b);
+    }
+    var m=ta.value.match(/\[위험요소:([^\]]*)\]/),has=m?m[1]:'';
+    HZ117.items.forEach(function(it){var b=el('hz_'+it[0]);if(b)b.classList.toggle('on',has.indexOf(it[1].replace(/\s*\(.*\)$/,''))>=0)});
+    var s=el('hzState');if(s)s.textContent=hz117Sel().length?hz117Sel().join(', ')+' — 저장 시 일지에 기록':'해당 없으면 비워 두십시오';
+  }catch(e){}
+};
+var _saveLog117=saveLog;
+saveLog=async function(){
+  var ta=el('logText');
+  if(ta&&el('hzBox')){
+    var t=ta.value.replace(HZ117.RE,'\n').replace(/\n{3,}/g,'\n\n').trim(),sel=hz117Sel();
+    if(sel.length)t=(t?t+'\n':'')+'[위험요소: '+sel.join(', ')+']';
+    ta.value=t;
+  }
+  return _saveLog117.apply(this,arguments);
 };
 
 </script>
