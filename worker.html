@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 현장앱">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 현장앱 v1.10</title>
+<title>BVS 현장앱 v1.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2369,6 +2369,89 @@ function renderList(){
     :'<div class="empty">'+mon+' 기록 없음</div>')
     +(vd?'<div style="text-align:center;margin-top:10px"><button class="btn sm" onclick="LIST.showVoid=!LIST.showVoid;renderList()">'+(LIST.showVoid?'취소된 기록 숨기기':'취소된 기록 '+vd+'건 보기')+'</button></div>':'');
 }
+/* v1.11 내 경력(업무경험, 장비별 근무 이력) · 월별 정산 카드 → 그 달 달력(공수·잔업·수당 붙은 날) */
+(function(){var c=document.createElement('style');c.textContent=
+ '.xq{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.xq .kpi{flex:1;min-width:90px}'
++'.xt{width:100%;border-collapse:collapse;font-size:12.5px}.xt th,.xt td{padding:6px 4px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}.xt th{font-weight:600;color:var(--tx2);font-size:11.5px}.xt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}'
++'.xd{margin-top:14px;border-top:1px solid var(--ln);padding-top:8px}.xd summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--tx2);padding:6px 0}'
++'.pcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px 0 6px}.pcal .h{font-size:10.5px;color:var(--tx3);text-align:center;padding:2px 0}.pcal .c{min-height:44px;border:1px solid var(--ln);border-radius:2px;padding:3px 4px;font-size:11px;background:var(--sf)}.pcal .c.off{background:var(--sf2);opacity:.6}.pcal .c.w{border-color:var(--ac)}.pcal .c.a{background:color-mix(in srgb,var(--ac) 10%,var(--sf))}'
++'.pcal .c .d{font-weight:700;font-size:11.5px}.pcal .c .m{color:var(--tx2);font-size:10.5px;white-space:nowrap}.pcal .c .o{color:var(--wn,#b45309);font-size:10.5px;white-space:nowrap}.pcal .c .al{color:var(--ac);font-weight:700;font-size:10.5px;white-space:nowrap}'
++'.pal{font-size:12px;margin-top:6px}.pal .item{padding:6px 0}.pay-card{cursor:pointer}.pay-card .pc-hint{font-size:11px;color:var(--tx3);margin-top:6px}';document.head.appendChild(c)})();
+var MX={data:null,busy:false};
+var _renderMe111=renderMe;
+renderMe=function(){
+  var box=el('meRows');if(!box)return;
+  var h=box.parentNode.querySelector('h2');if(h)h.innerHTML='내 경력 <small class="dim tiny">작업일지로 쌓인 장비별 근무 이력</small>';
+  var p=box.parentNode.querySelector('p.tiny');if(p)p.style.display='none';
+  var nv=document.querySelector('.tabs div[data-p="me"]');if(nv){var tn=nv.lastChild;if(tn&&tn.nodeType===3)tn.textContent='내 경력'}
+  box.innerHTML='<div id="mxBox"><div class="empty">불러오는 중…</div></div><details class="xd"><summary>장비 사이즈 · 출입ID · 교육 이수 <span class="dim tiny">(수정)</span></summary><div id="meRows2"></div><p class="tiny dim" style="margin:8px 0 0">사이즈·거주지·카풀은 직접 고칠 수 있습니다.</p></details>';
+  var inner=el('meRows2'),outer=el('meRows');try{outer.id='meRows0';inner.id='meRows';_renderMe111()}finally{inner.id='meRows2';outer.id='meRows'}
+  if(MX.data){mxPaint();return}
+  if(MX.busy)return;MX.busy=true;
+  sb.rpc('my_work_exp').then(function(r){MX.busy=false;if(r.error){el('mxBox').innerHTML='<div class="empty">경력을 불러오지 못했습니다</div>';return}MX.data=r.data||{};mxPaint()},function(){MX.busy=false});
+}
+function mxTypes(t,n){if(!t)return '';return Object.keys(t).sort(function(a,b){return t[b]-t[a]}).slice(0,n||99).map(function(k){return esc(k)+' '+t[k]}).join(' · ')}
+function mxPaint(){var x=MX.data||{},box=el('mxBox');if(!box)return;var E=x.e||[];
+  if(!(+x.days)){box.innerHTML='<div class="empty">아직 작업일지로 쌓인 이력이 없습니다. 일지 탭에서 그날 한 장비와 작업을 적으면 여기에 쌓입니다.</div>';return}
+  var per=function(a,b){return a?(String(a).slice(2).replace(/-/g,'.')+(b&&b!==a?'~'+String(b).slice(2).replace(/-/g,'.'):'')):''};
+  box.innerHTML='<div class="xq"><div class="kpi"><div class="k">근무일</div><div class="v">'+(+x.days)+'</div></div><div class="kpi"><div class="k">장비</div><div class="v">'+(+x.eqn||0)+'<small> 대</small></div></div><div class="kpi"><div class="k">일지 쓴 날</div><div class="v">'+(+x.logs||0)+'</div></div></div>'
+   +'<div class="tiny" style="margin-bottom:4px"><b>기간</b> '+per(x.d1,x.d2)+'</div>'
+   +(x.t&&Object.keys(x.t).length?'<div class="tiny" style="margin-bottom:4px"><b>작업</b> '+mxTypes(x.t)+'</div>':'')
+   +(x.v&&Object.keys(x.v).length?'<div class="tiny" style="margin-bottom:4px"><b>장비사</b> '+mxTypes(x.v)+'</div>':'')
+   +(x.pl&&Object.keys(x.pl).length?'<div class="tiny" style="margin-bottom:8px"><b>장소</b> '+mxTypes(x.pl,6)+'</div>':'')
+   +(E.length?'<table class="xt"><thead><tr><th>장비</th><th>라인 · 모델</th><th class="n">일수</th><th>작업</th></tr></thead><tbody>'
+     +E.map(function(e){return '<tr><td><b>'+esc(e.c)+'</b><div class="tiny dim">'+per(e.d1,e.d2)+'</div></td><td>'+esc([e.v,e.l,e.m].filter(Boolean).join(' '))+'</td><td class="n"><b>'+(+e.days)+'</b></td><td class="tiny">'+mxTypes(e.t,3)+'</td></tr>'}).join('')
+     +'</tbody></table>':'<div class="tiny dim">장비 번호가 적힌 일지가 아직 없습니다.</div>');
+}
+var PC={open:null,cache:{}};
+var _renderPay111=renderPay;
+renderPay=function(){_renderPay111();var box=el('pay');if(!box||!D.pay)return;
+  Array.prototype.forEach.call(box.querySelectorAll('.pay-card'),function(card,i){var r=D.pay[i];if(!r)return;var ym=String(r.period_ym);card.setAttribute('data-ym',ym);
+    var hint=document.createElement('div');hint.className='pc-hint';hint.textContent=PC.open===ym?'달력 닫기 ▴':'누르면 그 달 달력 — 공수·잔업·수당 붙은 날 ▾';card.appendChild(hint);
+    var cal=document.createElement('div');cal.className='pcbox';cal.id='pc_'+ym.replace('-','');card.appendChild(cal);
+    card.onclick=function(ev){if(ev.target.closest&&ev.target.closest('.pcbox'))return;pcToggle(ym)};
+    if(PC.open===ym)pcPaint(ym)})}
+function pcToggle(ym){PC.open=PC.open===ym?null:ym;renderPay()}
+function pcPaint(ym){var box=el('pc_'+ym.replace('-',''));if(!box)return;
+  if(PC.cache[ym]){box.innerHTML=pcHtml(ym,PC.cache[ym]);return}
+  box.innerHTML='<div class="empty">불러오는 중…</div>';
+  sb.rpc('my_pay_days',{p_ym:ym}).then(function(r){if(r.error){box.innerHTML='<div class="empty">달력을 불러오지 못했습니다</div>';return}PC.cache[ym]=r.data||{days:[],month:[]};var b=el('pc_'+ym.replace('-',''));if(b)b.innerHTML=pcHtml(ym,PC.cache[ym])})}
+function pcHtml(ym,x){var reg=isRegularWorker(),y=+ym.slice(0,4),m=+ym.slice(5,7),first=new Date(y,m-1,1),n=new Date(y,m,0).getDate(),dow=first.getDay();
+  var byD={};(x.days||[]).forEach(function(d){byD[String(d.d).slice(8)]=d});var hol=(D.hol||[]);
+  var h='<div class="pcal">'+'일월화수목금토'.split('').map(function(c){return '<div class="h">'+c+'</div>'}).join('');
+  for(var i=0;i<dow;i++)h+='<div></div>';
+  for(var d=1;d<=n;d++){var k=String(d).padStart(2,'0'),r=byD[k],wd=new Date(y,m-1,d).getDay(),al=r&&r.allow?r.allow.reduce(function(a,b){return a+(+b.a||0)},0):0;
+    h+='<div class="c'+(wd===0||wd===6?' off':'')+(r&&(+r.md>0||+r.ot>0)?' w':'')+(al?' a':'')+'"'+(r?' title="'+esc((r.place||'')+(r.desc?' · '+r.desc:''))+'"':'')+'><div class="d">'+d+'</div>'
+      +(r?(reg?((+r.md>0)?'<div class="m">근무</div>':''):((+r.md>0)?'<div class="m">'+(+r.md).toFixed(1)+' 공수</div>':''))+((+r.ot>0)?'<div class="o">+'+(+r.ot)+'h</div>':'')+(al?'<div class="al">'+(al>=10000?(Math.round(al/1000)/10)+'만':al.toLocaleString('ko-KR'))+'</div>':''):'')+'</div>'}
+  h+='</div>';
+  var days=(x.days||[]).filter(function(d){return d.allow&&d.allow.length});
+  h+='<div class="pal">';
+  if(days.length||(x.month||[]).length){h+='<div style="font-weight:600;margin-bottom:2px">수당 '+won(x.allow_sum)+'원</div>'
+    +days.map(function(d){return '<div class="item"><div class="m"><div class="t"><b>'+kdate(d.d)+'</b> <span class="dim">'+esc(d.place||'')+'</span></div><div class="s tiny">'+d.allow.map(function(a){return esc(a.n)+' '+won(a.a)+'원'}).join(' · ')+'</div></div></div>'}).join('')
+    +(x.month||[]).map(function(a){return '<div class="item"><div class="m"><div class="t">'+esc(a.n)+' <span class="dim tiny">월 항목</span></div></div><div class="r"><b>'+won(a.a)+'</b></div></div>'}).join('')}
+  else h+='<div class="tiny dim">이 달에는 붙은 수당이 없습니다.</div>';
+  h+='<div class="tiny dim" style="margin-top:6px">출장일비는 그날 간 현장이 기본 지역 밖이면 자동으로 붙습니다. 금액이 다르면 「기록」에서 그날 「이의」를 누르십시오.</div></div>';
+  return h}
+/* v1.11 날짜 칩 → 날짜 고르기(일지), 칩 모양 정리 · 펌프실 탭 제거(프로젝트 종료) */
+(function(){var c=document.createElement('style');c.textContent=
+ '.chips{display:flex;flex-wrap:wrap;gap:6px}.chips .chip{display:inline-block;padding:5px 10px;border:1px solid var(--ln);border-radius:2px;font-size:12px;background:var(--sf);color:var(--tx2);cursor:pointer;white-space:nowrap}.chips .chip.on{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}'
++'#logDates{display:none!important}.tabs div[data-p="pump"]{display:none!important}#p-pump{display:none!important}.logpick{display:flex;align-items:center;gap:8px;margin-bottom:10px}.logpick input{flex:1;max-width:190px}';document.head.appendChild(c)})();
+var _logOpen111=logOpen;
+logOpen=function(d){_logOpen111(d);var lb=el('logDates');if(!lb)return;var pk=el('logPick');
+  if(!pk){pk=document.createElement('div');pk.id='logPick';pk.className='logpick';pk.innerHTML='<input type="date" class="in" id="logDateIn" onchange="if(this.value)logOpen(this.value)"><button class="btn sm" onclick="logOpen(today())">오늘</button><button class="btn sm" onclick="logOpen(lastDays(2)[1])">어제</button>';lb.parentNode.insertBefore(pk,lb.nextSibling)}
+  var inp=el('logDateIn');if(inp){inp.value=LOG.date;inp.max=today()}}
+var _pmOpen111=typeof pmOpen==='function'?pmOpen:null;
+pmOpen=function(){toast('펌프실 작업보고는 프로젝트 종료로 닫혔습니다');go('in')}
+var _moreItems111=moreItems;moreItems=function(){return _moreItems111().filter(function(t){return t.dataset.p!=='pump'})}
+/* v1.11 리드 › 내일 배치: 장소 고르기를 청구처별로 묶고 「장소 · 하는 일 (청구처)」로 표기 — 같은 이름(BVS이천 3개·교육 2개) 구분 */
+function plBill(s){var b=String(s.billing_short||'').toUpperCase();return b==='WJ'?'우주':b==='BVS'||b==='BV'?'BVS':b||'기타'}
+function plLabel(s){var w=s.work_name||((s.line_name&&s.line_name!=='-')?s.line_name:'');return s.site_name+(w&&s.site_name.indexOf(w)<0?' · '+w:'')}
+plRender=function(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.site_id)}),grp={},ord=[];
+  sites.forEach(function(s){var b=plBill(s);if(!grp[b]){grp[b]=[];ord.push(b)}grp[b].push(s)});
+  ord.sort(function(a,b){return a==='우주'?-1:b==='우주'?1:a==='BVS'?1:b==='BVS'?-1:a.localeCompare(b,'ko')});
+  var opts=function(cur){return ord.map(function(b){return '<optgroup label="'+esc(b)+' 청구">'+grp[b].map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur?' selected':'')+'>'+esc(plLabel(s))+' ('+esc(b)+')</option>'}).join('')+'</optgroup>'}).join('')};
+  el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows['+ERPC.jsq(w.employment_no)+']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+opts(cur.site_id)+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
+  plText()};
 </script>
 </body>
 </html>
