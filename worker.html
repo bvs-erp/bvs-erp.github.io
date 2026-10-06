@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.12</title>
+<title>BVS 데일리 v1.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2561,6 +2561,13 @@ clockIn=async function(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
 var _clockOut112=clockOut;clockOut=async function(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
   if(e&&hhmm(e.work_end)){if(!(await ERPC.ask(tm.outLabel+' 수정',hhmm(e.work_end)+'에 '+tm.outLabel+'한 것으로 등록되어 있습니다.\n지금 시각('+nowHM()+')으로 다시 계산하시겠습니까?',{ok:'수정'})))return}
   return _clockOut112.apply(this,arguments)};
+/* v1.13 일지: 「어제 일지 복사」 — 가장 최근에 쓴 일지(그날 이전)를 오늘 칸에 채움 */
+var _logOpen113=logOpen;logOpen=function(d){_logOpen113(d);var pk=el('logPick');if(!pk||el('logCopyPrev'))return;
+  var b=document.createElement('button');b.id='logCopyPrev';b.className='btn sm';b.textContent='어제 일지 복사';b.onclick=logCopyPrev;pk.appendChild(b)};
+async function logCopyPrev(){var cur=LOG.date||today();var prev=(D.labor||[]).filter(function(r){return r.work_log&&String(r.work_date)<cur&&r.status!=='void'}).sort(function(a,b){return String(b.work_date).localeCompare(String(a.work_date))})[0];
+  if(!prev){toast('복사할 이전 일지가 없습니다','e');return}
+  var ta=el('logText');if(ta.value.trim()&&!(await ERPC.ask('일지 복사',kdate(prev.work_date)+' 일지로 지금 적힌 내용을 바꿉니다. 계속할까요?',{ok:'바꾸기'})))return;
+  ta.value=prev.work_log;ta.focus();toast(kdate(prev.work_date)+' 일지를 가져왔습니다. 오늘 바뀐 부분만 고치고 저장하십시오','g')}
 </script>
 </body>
 </html>
