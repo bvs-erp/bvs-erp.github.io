@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.25</title>
+<title>BVS 데일리 v1.26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2852,6 +2852,34 @@ logOpen=function(d){
 +'@media (max-width:420px){.kcal{gap:2px}.kcal .dy{min-height:50px;padding:3px 2px;border-radius:3px}.kcal .tg{font-size:9.5px;padding:1px 2px}.kcal .wd{font-size:10px}}'
 +'.card,.sec,.panel{max-width:100%;overflow-x:hidden}';
 document.head.appendChild(c)}catch(e){}})();
+
+
+/* ═══ 1.26 (안티그래비티 R78 #1) 업무일지 › 글 입력 중 화면 맨 아래 「일지 저장」 고정 바 — 키패드가 올라와도 저장 버튼이 보이도록 visualViewport 기준으로 키패드 바로 위에 붙임 ═══ */
+(function(){try{
+  var c=document.createElement('style');c.id='sv126css';c.textContent='#sv126{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:580px;z-index:35;display:none;padding:8px 12px;background:var(--sf);border-top:1px solid var(--ln);box-shadow:0 -4px 12px rgba(0,0,0,.08);box-sizing:border-box}#sv126.on{display:flex;gap:8px;align-items:center}#sv126 .btn{flex:1}#sv126 .cnt{font-size:11px;color:var(--dim,#888);white-space:nowrap}';
+  document.head.appendChild(c);
+  var bar=document.createElement('div');bar.id='sv126';bar.innerHTML='<span class="cnt" id="sv126n"></span><button class="btn p" type="button" id="sv126b">일지 저장</button>';
+  document.body.appendChild(bar);
+  var ta=document.getElementById('logText');if(!ta)return;
+  var tabs=document.querySelector('.tabs');
+  function place(){
+    var vv=window.visualViewport,kb=0,th=0;
+    if(vv){kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop)}
+    var kbOpen=vv&&vv.height<window.innerHeight*0.8;
+    if(!kbOpen&&tabs)th=tabs.offsetHeight||0;
+    bar.style.bottom=(kb+th)+'px';
+    var n=document.getElementById('sv126n');if(n)n.textContent=(ta.value||'').length?(ta.value.length+'자'):'';
+  }
+  function show(){var pg=document.getElementById('p-log');if(!pg||!pg.classList.contains('on'))return;bar.classList.add('on');place()}
+  function hide(){bar.classList.remove('on')}
+  ta.addEventListener('focus',show);ta.addEventListener('input',place);
+  ta.addEventListener('blur',function(){setTimeout(function(){if(document.activeElement!==ta)hide()},150)});
+  bar.addEventListener('pointerdown',function(e){e.preventDefault()});
+  document.getElementById('sv126b').addEventListener('click',function(){try{saveLog()}catch(e){console.error(e)}hide();try{ta.blur()}catch(e){}});
+  if(window.visualViewport){window.visualViewport.addEventListener('resize',place);window.visualViewport.addEventListener('scroll',place)}
+  window.addEventListener('resize',place);
+  var _go=typeof go==='function'?go:null;if(_go){go=function(p){var r=_go.apply(this,arguments);if(p!=='log')hide();return r}}
+}catch(e){console.error(e)}})();
 
 </script>
 </body>
