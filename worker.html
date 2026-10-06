@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.17</title>
+<title>BVS 데일리 v1.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2662,6 +2662,15 @@ saveLog=async function(){
   }
   return _saveLog117.apply(this,arguments);
 };
+
+
+/* ═══ 1.18 (안티그래비티 R69 #3) 작업 마감 5S에 「공구 배터리 전용 방화함 보관·충전」 항목 추가 — 3개 모두 체크해야 [5S 완료] ═══ */
+(function(){
+  try{
+    if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='batt'}))S5116.items.push(['batt','전동공구 배터리 충전기 분리·전용 방화함 보관']);
+    var _p=s5116Paint;s5116Paint=function(){_p.apply(this,arguments);var s=el('s5State');if(s&&!s5116All())s.textContent='퇴근 전 3개 확인'};
+  }catch(e){}
+})();
 
 </script>
 </body>
