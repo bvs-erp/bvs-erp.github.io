@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.13</title>
+<title>BVS 데일리 v1.14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -791,8 +791,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
             </div>
           </div>
           <p class="tiny dim" style="margin:0 0 10px">
-            ※ 팀원별 일자별 투입 공수(M/D) 및 연장(OT)을 확인합니다.<br>
-            <span style="color:var(--good);font-weight:600">금액 비공개</span>: 급여·단가·정산액은 완전 비공개 처리됩니다.
+            ※ 팀원별 일자별 근무(M/D)와 잔업(OT)을 확인합니다.
           </p>
           <div class="cal-table-wrap">
             <table class="cal-table" id="leadCalTable">
@@ -1802,7 +1801,7 @@ async function leadMonthCalendarOpen(ym){
     }).join('');
 
     if(tbody) tbody.innerHTML = tbodyHtml;
-    if(el('leadCalMsg')) el('leadCalMsg').textContent = '※ 출근 인원: ' + workers.length + '명 · 금액 제외 안전 모드 가동 중';
+    if(el('leadCalMsg')) el('leadCalMsg').textContent = '※ 출근 인원: ' + workers.length + '명';
   } catch(e) {
     console.error('Lead calendar render error:', e);
     if(tbody) tbody.innerHTML = '<tr><td colspan="' + (daysArr.length + 4) + '" style="padding:20px;text-align:center" class="neg tiny">달력 생성 중 오류가 발생했습니다.</td></tr>';
