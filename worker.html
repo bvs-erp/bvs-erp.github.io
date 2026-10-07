@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.30</title>
+<title>BVS 데일리 v1.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2975,6 +2975,17 @@ logOpen=function(d){_logOpen130.apply(this,arguments);
     var has=ta.value.indexOf(RA130.TAG)>=0;RA130.items.forEach(function(it){var c=el('ra_'+it[0]);if(c)c.checked=has});ra130Paint()}catch(e){}};
 var _saveLog130=saveLog;
 saveLog=async function(){try{var ta=el('logText');if(ta&&el('raBox')){var t=ta.value.replace(/\s*\[위험성평가 완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(ra130All())t=(t?t+'\n':'')+RA130.TAG;ta.value=t}}catch(e){}return _saveLog130.apply(this,arguments)};
+
+
+/* ═══ 1.31 (안티그래비티 R89 #2) 일지 › 「공구함 시건」 한 줄 — 퇴근 전 공구함 잠금·열쇠 보관 확인하면 [공구함 시건 완료] 꼬리표(일일보고 복사에 포함) ═══ */
+var TL131={TAG:'[공구함 시건 완료]'};
+var _logOpen131=logOpen;
+logOpen=function(d){_logOpen131.apply(this,arguments);try{var ta=el('logText');if(!ta)return;
+  if(!el('tlBox')){var b=document.createElement('div');b.id='tlBox';b.style.cssText='border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card,#fff)';b.innerHTML='<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="tl_lock" onchange="var b=el(\'tlBox\');b.style.borderColor=this.checked?\'#16a34a\':\'\';b.style.background=this.checked?\'#f0fdf4\':\'\'"><b>공구함 시건</b> — 퇴근 전 공구함 잠금·열쇠 보관 확인</label>';
+    var anchor=el('raBox')||el('amBox')||el('s5Box')||el('tbmBox');if(anchor)anchor.insertAdjacentElement('afterend',b);else ta.insertAdjacentElement('beforebegin',b)}
+  var c=el('tl_lock');if(c){c.checked=ta.value.indexOf(TL131.TAG)>=0;c.dispatchEvent(new Event('change'))}}catch(e){}};
+var _saveLog131=saveLog;
+saveLog=async function(){try{var ta=el('logText'),c=el('tl_lock');if(ta&&c){var t=ta.value.replace(/\s*\[공구함 시건 완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(c.checked)t=(t?t+'\n':'')+TL131.TAG;ta.value=t}}catch(e){}return _saveLog131.apply(this,arguments)};
 
 </script>
 </body>
