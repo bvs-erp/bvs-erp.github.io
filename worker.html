@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.37</title>
+<title>BVS 데일리 v1.38</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3073,6 +3073,20 @@ saveLog=async function(){try{var ta=el('logText');if(ta&&el('gsBox')){var t=ta.v
     if(on&&(v.o2!=null||v.h2s!=null||v.co!=null))t=(t?t+'\n':'')+'[가스 측정 O2 '+(v.o2==null?'-':v.o2)+'% H2S '+(v.h2s==null?'-':v.h2s)+'ppm CO '+(v.co==null?'-':v.co)+'ppm]';ta.value=t}}catch(e){}return _saveLog137.apply(this,arguments)};
 var _dr123Text137=dr123Text;
 dr123Text=function(){var t=_dr123Text137.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[가스 측정[^\]]*\]/);if(m)t+='\n밀폐공간 '+m[0].slice(1,-1)}catch(e){}return t};
+
+/* ═══ 1.38 (안티그래비티 R110 #2) 일지 › 「관리감독자 순회점검」 토글 + 조치사항 한 줄 — 산안법 §16(관리감독자 업무)·안전보건규칙 §35 일일 순회점검. 저장 시 [관리감독자 순회점검 완료 · 조치 N건: …] 꼬리표, 일일보고 복사·A4 인쇄(관리감독자 확인 줄) 인자 ═══ */
+var SV138={RE:/\[관리감독자 순회점검[^\]]*\]/g};
+var _logOpen138=logOpen;
+logOpen=function(d){_logOpen138.apply(this,arguments);try{var ta=el('logText');if(!ta)return;
+  if(!el('svBox')){var b=document.createElement('div');b.id='svBox';b.style.cssText='border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:var(--card,#fff)';
+    b.innerHTML='<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="sv138" onchange="var b=el(\'svBox\');b.style.borderColor=this.checked?\'#16a34a\':\'\';b.style.background=this.checked?\'#f0fdf4\':\'\'"><b>관리감독자 순회점검</b> — 오늘 작업구역 1회 이상 순회, 위험 발견 시 즉시 조치</label><input class="in" id="sv138_note" placeholder="조치사항 (없으면 비움) 예: 사다리 단독작업 중지시킴, 안전고리 미체결 1명 시정" style="margin-top:6px;font-size:13px;padding:5px 8px"><div style="font-size:11px;color:#6b7280;margin-top:3px">산업안전보건법 제16조·안전보건규칙 제35조 — 리드가 관리감독자</div>';
+    var anchor=el('tlBox')||el('raBox')||el('amBox');if(anchor)anchor.insertAdjacentElement('afterend',b);else ta.insertAdjacentElement('beforebegin',b)}
+  var m=ta.value.match(/\[관리감독자 순회점검 완료(?: · 조치: ([^\]]*))?\]/);var c=el('sv138'),n=el('sv138_note');if(c){c.checked=!!m;c.dispatchEvent(new Event('change'))}if(n)n.value=m&&m[1]?m[1]:''}catch(e){}};
+var _saveLog138=saveLog;
+saveLog=async function(){try{var ta=el('logText'),c=el('sv138');if(ta&&c){var t=ta.value.replace(SV138.RE,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();var note=((el('sv138_note')||{}).value||'').trim().replace(/[\[\]]/g,'');if(c.checked)t=(t?t+'\n':'')+'[관리감독자 순회점검 완료'+(note?' · 조치: '+note:'')+']';ta.value=t}}catch(e){}return _saveLog138.apply(this,arguments)};
+var _dr123Text138=dr123Text;
+dr123Text=function(){var t=_dr123Text138.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[관리감독자 순회점검[^\]]*\]/);if(m)t+='\n'+m[0].slice(1,-1)}catch(e){}return t};
+(function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[관리감독자 순회점검 완료(?: · 조치: ([^\]]*))?\]/);var row='<tr><th>관리감독자 순회점검</th><td>'+(m?'이행 완료'+(m[1]?' · 조치: '+String(m[1]).replace(/</g,'&lt;'):' · 조치사항 없음'):'<span class="dim">기록 없음</span>')+'</td></tr>';h=h.replace('<table class="sig">',row.replace('<tr>','<table><tr>')+'</table><table class="sig">')}catch(e){}return h}}catch(e){}})();
 
 </script>
 </body>
