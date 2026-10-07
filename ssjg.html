@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.26">
+<meta name="app-version" content="1.27">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6315,6 +6315,23 @@ function mp126Paint(){
       +'</tbody></table></div><div class="muted" style="font-size:11px;margin-top:4px">현재는 묶음 표시만 합니다. 로젠 접수파일은 주문 1건 = 송장 1건으로 나가므로, 한 송장으로 보내려면 묶음 안의 나머지 주문을 「빼기」 하고 남긴 주문의 박스 수를 수정하십시오. 송장 1개 자동 합치기는 접수파일·ERP 등록 단위 변경 후 반영 예정</div>':'');
 }
 (function(){try{var _p=c24Paint;c24Paint=function(){var r=_p.apply(this,arguments);try{mp126Paint()}catch(e){console.error(e)}return r}}catch(e){}})();
+
+
+/* ═══ 1.27 (안티그래비티 R84 #3) 주문·배송 › 「CS 답변 복사」 — 고객명·송장번호 넣고 [배송 안내]·[단순변심 반품 안내]·[A/S 안내] 누르면 문구가 클립보드로. 왕복 배송비·계좌는 설정값(cs_return_fee, cs_refund_account)이 있으면 쓰고 없으면 빈칸 ═══ */
+var CS127={fee:6000};
+function cs127Txt(kind){var nm=(document.getElementById('cs127_nm')||{}).value||'',tr=(document.getElementById('cs127_tr')||{}).value||'',n=nm?nm+' 고객님':'고객님';
+  if(kind==='ship')return n+', 주문하신 상품은 '+(tr?'로젠택배 송장번호 '+tr+'로 ':'')+'발송되었습니다. 보통 발송 다음 날~2일 안에 도착하며, 로젠택배 홈페이지나 앱에서 송장번호로 실시간 위치를 확인하실 수 있습니다. 감사합니다.';
+  if(kind==='ret')return n+', 단순 변심 반품은 왕복 배송비 '+(CS127.fee||6000).toLocaleString('ko-KR')+'원이 고객 부담입니다(전자상거래법 제18조). 상품을 받으신 날부터 7일 이내 미사용·포장 훼손 없이 회수되며, 검수 후 배송비를 뺀 금액을 결제수단으로 환불해 드립니다. 회수 요청은 이 창에 받으신 주소와 연락처를 남겨 주시면 접수해 드리겠습니다.';
+  return n+', 불편을 드려 죄송합니다. 제품 상태를 알 수 있는 사진과 구매하신 주문번호를 보내 주시면 확인 후 교환 또는 A/S를 바로 진행해 드리겠습니다. 제품 하자로 확인되면 배송비는 당사가 부담합니다.'}
+function cs127Copy(kind){var t=cs127Txt(kind);var done=function(){gToast('답변 문구 복사됨')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()});else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+(function(){try{
+  var b=document.getElementById('pk125')||document.getElementById('btnDownloadLogen');if(!b||document.getElementById('cs127'))return;
+  var d=document.createElement('div');d.id='cs127';d.style.cssText='margin-top:10px;padding:8px 10px;border:1px dashed #cbd5e1;border-radius:8px;font-size:12px';
+  d.innerHTML='<div style="font-weight:700;margin-bottom:6px">CS 답변 복사</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><input id="cs127_nm" class="input" placeholder="고객명" style="width:110px"><input id="cs127_tr" class="input" placeholder="송장번호" style="width:150px"></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" onclick="cs127Copy(\'ship\')">배송 안내</button><button class="btn" type="button" onclick="cs127Copy(\'ret\')">단순변심 반품 안내</button><button class="btn" type="button" onclick="cs127Copy(\'as\')">A/S 안내</button></div>';
+  b.insertAdjacentElement('afterend',d);
+}catch(e){}})();
 
 </script>
 <nav id="mnav"></nav>
