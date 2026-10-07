@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.39">
+<meta name="app-version" content="1.40">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6453,6 +6453,15 @@ function bd139Apply(){var tb=document.getElementById('delivTableBody');if(!tb)re
 document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#delivTableBody .bd138');if(!b)return;e.stopPropagation();e.preventDefault();var tr=b.closest('tr'),no=tr&&tr.cells[2]&&String(tr.cells[2].textContent||'').trim(),k=null;(rawDeliveryRows||[]).some(function(r){if(String(r.order_no)===no){k=r._k;return true}});
   if(BD139){BD139=null;renderDeliveryTable()}else{BD139=k;bd139Apply()}},true);
 (function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{if(BD139&&!(rawDeliveryRows||[]).some(function(x){return x._k===BD139}))BD139=null;bd139Apply()}catch(e){}return r}})();
+/* ═══ 1.40 (안티그래비티 R148 #3) 출고 › 「송장 미발급 N건」 옆 「송장 발급 M건」 — 누르면 송장번호가 붙은 줄만(라벨 부착 검수), 다시 누르면 전체 ═══ */
+var dvInv140=false;
+(function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{dv140Paint()}catch(e){}return r}})();
+function dv140Paint(){var a=document.getElementById('dv136Btn');if(!a)return;var b=document.getElementById('dv140Btn');
+  if(!b){b=document.createElement('button');b.id='dv140Btn';b.className='btn';b.style.cssText='padding:4px 10px;font-size:11px;background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.45);margin-right:6px';b.onclick=function(){dvInv140=!dvInv140;if(dvInv140)dvNoInv136=false;renderDeliveryTable()};a.insertAdjacentElement('afterend',b)}
+  var rows=rawDeliveryRows||[],has=rows.filter(function(r){return !!r.invoice_no}).length;if(!has||has===rows.length){dvInv140=false;b.style.display='none';return}
+  if(dvInv140)dvNoInv136=false;b.style.display='';b.textContent=dvInv140?'전체 보기':'송장 발급 '+has+'건';if(dvInv140&&a)a.textContent='송장 미발급 '+(rows.length-has)+'건';
+  if(!dvInv140)return;var tb=document.getElementById('delivTableBody');if(!tb)return;Array.prototype.forEach.call(tb.rows,function(tr){var c=tr.cells[9];var no=c?String(c.textContent||'').replace(/복사|추적/g,'').trim():'';if(!no||no==='미발급')tr.style.display='none'})}
+(function(){var a0=null;document.addEventListener('click',function(e){if(e.target&&e.target.id==='dv136Btn'&&dvInv140){dvInv140=false}},true)})();
 </script>
 <nav id="mnav"></nav>
 </body>
