@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.46</title>
+<title>BVS 데일리 v1.48</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3161,6 +3161,31 @@ function lg146Paint(){var b=el('lg146');if(!b)return;var d=(el('w_date')&&el('w_
 (function(){var m=el('w_msg');if(m&&!el('lg146')){var b=document.createElement('button');b.type='button';b.id='lg146';b.className='btn w';b.style.cssText='margin-top:10px;min-height:48px;font-size:16px;font-weight:800';b.textContent='일지 입력';b.onclick=lg146Go;m.insertAdjacentElement('beforebegin',b)}
   try{var _r=renderState;renderState=function(){var r=_r.apply(this,arguments);try{lg146Paint()}catch(e){}return r}}catch(e){}
   var w=el('w_date');if(w)w.addEventListener('change',function(){try{lg146Paint()}catch(e){}});try{lg146Paint()}catch(e){}})();
+/* ═══ 1.47 (안티그래비티 R155 #2) 일지 화면 위 「← 출퇴근 화면」 — 1.46 「일지 입력」으로 넘어온 뒤 한 번에 돌아감(출퇴근 ↔ 일지 왕복) ═══ */
+(function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{var pg=el('p-log');if(pg&&!el('bk147')){var c=pg.querySelector('.card');if(c){var b=document.createElement('button');b.type='button';b.id='bk147';b.className='btn sm';b.style.cssText='margin:0 0 8px;min-height:36px';b.textContent='← 출퇴근 화면';b.onclick=function(){go('in')};c.insertBefore(b,c.firstChild)}}}catch(e){}return r}})();
+/* ═══ 1.48 (대표 지시 10/08 정정) 출퇴근 화면 「퇴근」 바로 아래에 일지 입력 칸 — 화면을 옮기지 않고 그 자리에서 적고 「일지 저장」. 위에서 고른 날짜 기준, 그날 근무 기록(출근)이 있어야 저장됨. 날씨·안전 체크까지 하려면 아래 「일지 화면에서 자세히」. 1.46 「일지 입력」 단추는 이 칸으로 대체 ═══ */
+var QL148={d:null,dirty:false};
+function ql148Date(){return (el('w_date')&&el('w_date').value)||today()}
+function ql148Paint(force){var box=el('ql148');if(!box)return;var d=ql148Date(),e=null;try{e=entryOf(d)}catch(x){}var ta=el('ql148t'),st=el('ql148s'),bt=el('ql148b');
+  if(force||QL148.d!==d||!QL148.dirty){QL148.d=d;QL148.dirty=false;ta.value=(e&&e.work_log)||'';try{if(window.AX_FIT)AX_FIT(box)}catch(x){}}
+  var ok=!!e&&e.status!=='settled';ta.disabled=!ok;bt.disabled=!ok;
+  ta.placeholder=!e?'출근을 등록하면 여기에 바로 일지를 적을 수 있습니다':(e.status==='settled'?'정산 완료된 날은 수정할 수 없습니다':'오늘 한 일을 적으세요 (예: M15X 5EAL7005 반입, EFEM 레벨링)');
+  el('ql148h').textContent=(d===today()?'오늘':(typeof kdate==='function'?kdate(d):d))+' 일지';
+  st.textContent=QL148.dirty?'저장 전':(e&&String(e.work_log||'').trim()?'저장됨':'')}
+async function ql148Save(){var ta=el('ql148t'),st=el('ql148s'),bt=el('ql148b'),d=ql148Date();bt.disabled=true;st.textContent='저장 중…';
+  try{var r=await sb.rpc('my_save_worklog',{p_date:d,p_text:ta.value.trim()});if(r.error||!r.data||!r.data.ok){st.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';bt.disabled=false;return false}
+    QL148.dirty=false;toast('일지 저장','g');await loadAll();ql148Paint(true);try{if(typeof lg146Paint==='function')lg146Paint()}catch(x){}return true}catch(e){st.innerHTML='<span class="neg">저장 실패 — 연결 확인</span>';bt.disabled=false;return false}}
+async function ql148More(){if(QL148.dirty){var ok=await ql148Save();if(!ok)return}try{LOG.date=ql148Date()}catch(e){}go('log')}
+(function(){var m=el('w_msg');if(!m||el('ql148'))return;var old=el('lg146');if(old)old.style.display='none';
+  var b=document.createElement('div');b.id='ql148';b.style.cssText='margin-top:12px;padding:12px;border:1px solid var(--line,#e2e8f0);border-radius:10px;background:var(--bg2,#f8fafc)';
+  b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b id="ql148h" style="font-size:15px">오늘 일지</b><span id="ql148s" class="tiny dim"></span></div>'
+   +'<textarea id="ql148t" class="in" rows="3" style="width:100%;font-size:15px;min-height:84px"></textarea>'
+   +'<div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="ql148b" class="btn p" style="flex:1;min-height:46px;font-size:16px;font-weight:800" onclick="ql148Save()">일지 저장</button><button type="button" class="btn" style="flex:none;min-height:46px;padding:0 12px;font-size:13px" onclick="ql148More()">일지 화면에서<br>자세히</button></div>';
+  m.insertAdjacentElement('beforebegin',b);
+  el('ql148t').addEventListener('input',function(){QL148.dirty=true;var s=el('ql148s');if(s)s.textContent='저장 전'});
+  try{var _r=renderState;renderState=function(){var r=_r.apply(this,arguments);try{ql148Paint()}catch(e){}return r}}catch(e){}
+  try{var _p=lg146Paint;lg146Paint=function(){var r=_p.apply(this,arguments);var o=el('lg146');if(o)o.style.display='none';return r}}catch(e){}
+  var w=el('w_date');if(w)w.addEventListener('change',function(){QL148.dirty=false;try{ql148Paint(true)}catch(e){}});try{ql148Paint(true)}catch(e){}})();
 </script>
 </body>
 </html>
