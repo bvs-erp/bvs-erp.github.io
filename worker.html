@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.31</title>
+<title>BVS 데일리 v1.32</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2986,6 +2986,28 @@ logOpen=function(d){_logOpen131.apply(this,arguments);try{var ta=el('logText');i
   var c=el('tl_lock');if(c){c.checked=ta.value.indexOf(TL131.TAG)>=0;c.dispatchEvent(new Event('change'))}}catch(e){}};
 var _saveLog131=saveLog;
 saveLog=async function(){try{var ta=el('logText'),c=el('tl_lock');if(ta&&c){var t=ta.value.replace(/\s*\[공구함 시건 완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(c.checked)t=(t?t+'\n':'')+TL131.TAG;ta.value=t}}catch(e){}return _saveLog131.apply(this,arguments)};
+
+/* ═══ 1.32 (안티그래비티 R92 #2·R93 #2·R96 #2) 일지 › 「오늘 최고기온·폭염 수칙」 + 「내일 출근 예정」 칩 + 고소장비 점검에 「비상정지 스위치」 항목 ═══ */
+(function(){try{if(HC119&&HC119.items&&!HC119.items.some(function(it){return it[0]==='estop'}))HC119.items.push(['estop','비상정지 스위치·하강 레버 작동 확인'])}catch(e){}})();
+var WX132={TAG:/\[폭염 수칙 이행[^\]]*\]/g,NX:/\[내일 출근 예정[^\]]*\]/g};
+function wx132Paint(){var t=parseFloat((el('wxTemp')||{}).value),hot=isFinite(t)&&t>=33,warm=isFinite(t)&&t>=31;var r=el('wxRule'),s=el('wxState');if(r)r.style.display=hot||warm?'':'none';
+  if(s)s.textContent=!isFinite(t)?'체감·최고기온을 적으면 폭염 수칙이 뜹니다':hot?'폭염특보 수준(33℃ 이상) — 매시간 15분 휴식·물·그늘 의무':warm?'폭염주의(31℃ 이상) — 휴식·수분 권고':'폭염 수칙 해당 없음';
+  var b=el('wxBox');if(b)b.classList.toggle('ok',hot?!!(el('wx_ok')&&el('wx_ok').checked):isFinite(t))}
+function nx132Paint(){var n=+((el('nxOff')||{}).value||0),s=el('nxState');if(s)s.textContent=n>0?'휴무 '+n+'명 — 본사에서 대체 투입 검토':'전원 출근 예정'}
+var _logOpen132=logOpen;
+logOpen=function(d){_logOpen132.apply(this,arguments);try{var ta=el('logText');if(!ta)return;
+  if(!el('wxBox')){var st=document.createElement('style');st.textContent='#wxBox,#nxBox{border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:var(--card,#fff)}#wxBox.ok,#nxBox.ok{border-color:#16a34a;background:#f0fdf4}#wxBox .tt,#nxBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}#wxBox .tt span,#nxBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280;text-align:right}#wxBox label,#nxBox label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px}#wxBox input[type=number],#nxBox input[type=number]{width:72px;font-size:14px;padding:4px 6px}#wxRule{font-size:12px;color:#b45309}';document.head.appendChild(st);
+    var b=document.createElement('div');b.id='wxBox';b.innerHTML='<div class="tt">오늘 현장 기온 <span id="wxState"></span></div><label>최고기온 <input type="number" id="wxTemp" step="0.1" placeholder="℃" oninput="wx132Paint()"> ℃ (휴대폰 날씨 또는 현장 온도계)</label><div id="wxRule" style="display:none"><label><input type="checkbox" id="wx_ok" onchange="wx132Paint()" style="width:18px;height:18px">폭염 수칙 이행 — 냉수 제공·그늘 휴식처·매시간 15분 휴식·작업 시간 조정</label><div style="font-size:11px;color:#6b7280">산업안전보건기준에 관한 규칙 제566조(휴식)·제567조(휴게시설), 고용노동부 폭염 대비 가이드(33℃ 이상 매시간 15분)</div></div>';
+    var anchor=el('raBox')||el('amBox')||el('hzBox');if(anchor)anchor.insertAdjacentElement('afterend',b);else ta.insertAdjacentElement('beforebegin',b);
+    var n=document.createElement('div');n.id='nxBox';n.innerHTML='<div class="tt">내일 출근 예정 <span id="nxState"></span></div><label>휴무·불참 예정 <input type="number" id="nxOff" min="0" step="1" value="0" oninput="nx132Paint()"> 명 <input class="in" id="nxWho" placeholder="이름·사유 (선택)" style="flex:1;font-size:13px;padding:4px 6px"></label>';
+    b.insertAdjacentElement('afterend',n)}
+  var v=ta.value,m=v.match(/\[폭염 수칙 이행 ([\d.]+)℃\]/),m2=v.match(/\[기온 ([\d.]+)℃\]/);var tp=el('wxTemp');if(tp)tp.value=m?m[1]:m2?m2[1]:'';var ok=el('wx_ok');if(ok)ok.checked=!!m;
+  var m3=v.match(/\[내일 출근 예정 전원\]/),m4=v.match(/\[내일 출근 예정 휴무 (\d+)명([^\]]*)\]/);var no=el('nxOff'),nw=el('nxWho');if(no)no.value=m4?m4[1]:'0';if(nw)nw.value=m4?String(m4[2]||'').replace(/^[\s:·]+/,''):'';
+  wx132Paint();nx132Paint()}catch(e){}};
+var _saveLog132=saveLog;
+saveLog=async function(){try{var ta=el('logText');if(ta&&el('wxBox')){var t=ta.value.replace(WX132.TAG,'').replace(/\[기온 [\d.]+℃\]/g,'').replace(WX132.NX,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+    var tp=parseFloat((el('wxTemp')||{}).value);if(isFinite(tp)){if(tp>=33&&el('wx_ok')&&el('wx_ok').checked)t=(t?t+'\n':'')+'[폭염 수칙 이행 '+tp+'℃]';else t=(t?t+'\n':'')+'[기온 '+tp+'℃]'}
+    var no=+((el('nxOff')||{}).value||0),nw=((el('nxWho')||{}).value||'').trim();t=(t?t+'\n':'')+(no>0?'[내일 출근 예정 휴무 '+no+'명'+(nw?' · '+nw:'')+']':'[내일 출근 예정 전원]');ta.value=t}}catch(e){}return _saveLog132.apply(this,arguments)};
 
 </script>
 </body>
