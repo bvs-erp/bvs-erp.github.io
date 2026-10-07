@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.27</title>
+<title>BVS 데일리 v1.28</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2909,6 +2909,40 @@ function dr127Offer(){var b=el('dr127bar');if(b)b.remove();var d=dr127Read();if(
   var _lo=logOpen;logOpen=function(){var r=_lo.apply(this,arguments);try{setTimeout(dr127Offer,50)}catch(e){}return r};
   var _sv=saveLog;saveLog=async function(){var r=await _sv.apply(this,arguments);try{var m=el('logMsg');if(m&&/저장됨/.test(m.textContent))dr127Clear()}catch(e){}return r};
 }catch(e){console.error(e)}})();
+
+
+/* ═══ 1.28 (안티그래비티 R83 #2 + R84 #2) 일지 › ① 「음주 측정·보호구」 상자 — 음주 측정 정상(0.000%)·4대 보호구(안전모·안전화·각반·보안경) 둘 다 체크하면 [음주측정 정상·보호구 착용] 꼬리표 ② 「자재·공구 메모」 한 줄 — 저장 시 일지 끝에 [자재] 줄로 붙고 다시 열면 칸에 돌아옴. 일일보고 복사(1.23)에도 같이 나감 ═══ */
+var AM128={items:[['alc','음주 측정 정상 (0.000%)'],['ppe','보호구 착용 — 안전모·안전화·각반·보안경']],TAG:'[음주측정 정상·보호구 착용]'};
+function am128All(){return AM128.items.every(function(it){var c=el('am_'+it[0]);return c&&c.checked})}
+function am128Paint(){var b=el('amBox');if(!b)return;b.classList.toggle('ok',am128All());var s=el('amState');if(s)s.textContent=am128All()?'확인완료 — 저장 시 일지에 기록':'출근 전 2개 확인'}
+function mt128Get(t){var m=String(t||'').match(/^\[자재\]\s*(.*)$/m);return m?m[1].trim():''}
+function mt128Strip(t){return String(t||'').replace(/^\[자재\].*$/mg,'').replace(/\n{3,}/g,'\n\n').trim()}
+var _logOpen128=logOpen;
+logOpen=function(d){
+  _logOpen128.apply(this,arguments);
+  try{var ta=el('logText');if(!ta)return;
+    if(!el('amBox')){
+      var st=document.createElement('style');st.textContent='#amBox{border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:var(--card,#fff)}#amBox.ok{border-color:#16a34a;background:#f0fdf4}#amBox .tt{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}#amBox .tt span{font-weight:400;font-size:11.5px;color:#6b7280}#amBox label{display:flex;gap:8px;align-items:center;font-size:13px;padding:4px 0}#mtBox{margin:0 0 10px}#mtBox label{font-size:12px;color:#6b7280;display:block;margin-bottom:4px}';document.head.appendChild(st);
+      var b=document.createElement('div');b.id='amBox';b.innerHTML='<div class="tt">음주 측정·보호구 <span id="amState"></span></div>'+AM128.items.map(function(it){return '<label><input type="checkbox" id="am_'+it[0]+'" onchange="am128Paint()">'+it[1]+'</label>'}).join('');
+      var anchor=el('elBox')||el('fwBox')||el('csBox')||el('hcBox')||el('hzBox')||el('s5Box')||el('tbmBox');
+      if(anchor)anchor.insertAdjacentElement('afterend',b);else ta.insertAdjacentElement('beforebegin',b);
+      var m=document.createElement('div');m.id='mtBox';m.innerHTML='<label>자재·공구 메모 (예: 랜선 2롤 사용·잔여 3롤, 앵커볼트 1박스 반출)</label><input id="mt128" class="in" placeholder="오늘 입출고·잔여 수량 한 줄">';
+      b.insertAdjacentElement('afterend',m);
+    }
+    var has=ta.value.indexOf(AM128.TAG)>=0;AM128.items.forEach(function(it){var c=el('am_'+it[0]);if(c)c.checked=has});am128Paint();
+    var mt=el('mt128');if(mt)mt.value=mt128Get(ta.value);
+  }catch(e){}
+};
+var _saveLog128=saveLog;
+saveLog=async function(){
+  try{var ta=el('logText');if(ta&&el('amBox')){
+    var t=ta.value.replace(/\s*\[음주측정 정상·보호구 착용\]\s*/g,'\n');t=mt128Strip(t);
+    var mt=(el('mt128')&&el('mt128').value||'').trim();
+    if(am128All())t=(t?t+'\n':'')+AM128.TAG;
+    if(mt)t=(t?t+'\n':'')+'[자재] '+mt;
+    ta.value=t.replace(/\n{3,}/g,'\n\n').trim()}}catch(e){}
+  return _saveLog128.apply(this,arguments);
+};
 
 </script>
 </body>
