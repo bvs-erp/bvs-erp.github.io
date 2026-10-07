@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.35</title>
+<title>BVS 데일리 v1.36</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3040,6 +3040,23 @@ dr123Text=function(){var t=_dr123Text134.apply(this,arguments);try{var v=(el('lo
 (function(){try{if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='lock'}))S5116.items.push(['lock','퇴실 점검 — 작업구역 출입문 시건·전등 소등 확인'])}catch(e){}})();
 var _dr123Text135=dr123Text;
 dr123Text=function(){var t=_dr123Text135.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'';if(/\[5S 완료\]/.test(v)&&t.indexOf('시건·소등')<0)t+='\n퇴실 점검: 출입문 시건·소등 완료'}catch(e){}return t};
+
+/* ═══ 1.36 (안티그래비티 R104 #2) 일지 › 「일일보고 인쇄(A4)」 — 일일보고 복사(1.23) 내용 + 점검 꼬리표(TBM·5S·위험작업·고소·밀폐·화기·음주보호구·기온·자재·보호구)를 A4 한 장 서식으로 새 창에 띄움(브라우저 인쇄 → PDF 저장). 사진·서명은 저장소 정책 결정 뒤 ═══ */
+function pr136Html(){var d=LOG.date||today(),e=(typeof entryOf==='function'?entryOf(d):null),raw=(el('logText')&&el('logText').value)||(e&&e.work_log)||'';
+  var tags=(raw.match(/\[[^\]]+\]/g)||[]).map(function(s){return s.slice(1,-1)}),body=raw.replace(/\s*\[[^\]]*\]\s*/g,'\n').replace(/\n{2,}/g,'\n').trim();
+  var site=e?siteName(e.site_id):'',md=e?(+e.work_md||0):0,ot=e?(+e.ot_hours||0):0,me=(typeof ME!=='undefined'&&ME&&ME.name)||'';
+  var esc_=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+  var groups=[['안전점검',/확인완료|점검완료|5S 완료|음주측정|위험성평가|시건/],['위험작업',/^위험요소/],['현장 상황',/기온|폭염|내일 출근|자재|보호구/]];
+  var rows=groups.map(function(g){var L=tags.filter(function(t){return g[1].test(t)});return '<tr><th>'+g[0]+'</th><td>'+(L.length?L.map(esc_).join(' · '):'<span class="dim">해당 없음</span>')+'</td></tr>'}).join('');
+  var rest=tags.filter(function(t){return !groups.some(function(g){return g[1].test(t)})});
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>현장 일일보고 '+esc_(d)+'</title><style>body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#111;margin:16mm 14mm}h1{font-size:18px;margin:0 0 12px;text-align:center;letter-spacing:4px}table{border-collapse:collapse;width:100%;margin-bottom:10px}th,td{border:1px solid #333;padding:6px 8px;vertical-align:top;font-size:12px}th{background:#f2f2f2;width:110px;text-align:left}.dim{color:#777}pre{white-space:pre-wrap;font-family:inherit;margin:0;min-height:80px}.sig td{height:48px}.foot{font-size:10px;color:#666;margin-top:8px}@media print{button{display:none}}</style></head><body>'
+   +'<h1>현장 일일 안전·작업 보고</h1><table><tr><th>현장</th><td>'+esc_(site||'(현장 미등록)')+'</td><th>작업일</th><td>'+esc_(d)+'</td></tr><tr><th>작성자(리드)</th><td>'+esc_(me)+'</td><th>공수 · 연장</th><td>'+md.toFixed(1)+' 공수'+(ot?' · 연장 '+ot+'h':'')+'</td></tr></table>'
+   +'<table><tr><th>주요 작업</th><td><pre>'+esc_(body||'(일지 없음)')+'</pre></td></tr>'+rows+(rest.length?'<tr><th>기타</th><td>'+rest.map(esc_).join(' · ')+'</td></tr>':'')+'</table>'
+   +'<table class="sig"><tr><th>작성(리드)</th><td></td><th>확인(본사)</th><td></td><th>확인(원청·감리)</th><td></td></tr></table>'
+   +'<div class="foot">주식회사 비브이에스 · 산업안전보건법 제36조 위험성평가, 안전보건규칙 제619조 밀폐공간, 제566조 폭염 휴식 · 본 보고는 데일리 앱 일지에서 생성('+new Date().toISOString().slice(0,16).replace('T',' ')+')</div><button onclick="window.print()" style="margin-top:14px">인쇄 / PDF 저장</button></body></html>'}
+function pr136Open(){var h=pr136Html();var w=window.open('','_blank');if(!w){toast('팝업이 막혀 있습니다 — 브라우저 팝업 허용 후 다시','e');return}w.document.write(h);w.document.close();setTimeout(function(){try{w.print()}catch(e){}},400)}
+var _logOpen136=logOpen;
+logOpen=function(d){_logOpen136.apply(this,arguments);try{var b=el('dr123');if(!b||el('pr136'))return;var p=document.createElement('button');p.id='pr136';p.className='btn w';p.style.marginTop='8px';p.textContent='일일보고 인쇄 (A4 · 감리 제출용)';p.onclick=pr136Open;b.insertAdjacentElement('afterend',p)}catch(e){}};
 
 </script>
 </body>
