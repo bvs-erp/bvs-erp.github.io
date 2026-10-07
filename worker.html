@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.34</title>
+<title>BVS 데일리 v1.35</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3035,6 +3035,11 @@ var _saveLog134=saveLog;
 saveLog=async function(){try{var ta=el('logText');if(ta&&el('prBox')){var t=ta.value.replace(PR134.RE,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();var o=pr134Get();if(o.length)t=(t?t+'\n':'')+'[보호구 교체 요청: '+o.join('·')+']';ta.value=t}}catch(e){}return _saveLog134.apply(this,arguments)};
 var _dr123Text134=dr123Text;
 dr123Text=function(){var t=_dr123Text134.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[보호구 교체 요청:([^\]]*)\]/);if(m)t+='\n보호구 교체 요청:'+m[1]}catch(e){}return t};
+
+/* ═══ 1.35 (안티그래비티 R107 #2) 5S 마감에 「퇴실 점검 — 작업구역 출입문 시건·전등 소등」 항목 추가(모두 체크 시 [5S 완료] 꼬리표, 일일보고 복사에 「시건·소등 완료」 문구) ═══ */
+(function(){try{if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='lock'}))S5116.items.push(['lock','퇴실 점검 — 작업구역 출입문 시건·전등 소등 확인'])}catch(e){}})();
+var _dr123Text135=dr123Text;
+dr123Text=function(){var t=_dr123Text135.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'';if(/\[5S 완료\]/.test(v)&&t.indexOf('시건·소등')<0)t+='\n퇴실 점검: 출입문 시건·소등 완료'}catch(e){}return t};
 
 </script>
 </body>
