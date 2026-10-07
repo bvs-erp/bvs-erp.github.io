@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.42</title>
+<title>BVS 데일리 v1.43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3133,6 +3133,12 @@ logOpen=function(d){var r=_logOpen140.apply(this,arguments);oq140Bar();return r}
 /* ═══ 1.41 (안티그래비티 R116 #5 조율) 일일보고 A4 인쇄 — @page A4 세로·여백 12mm를 지정하고 본문 여백 이중 적용을 없앰, 표·서명란이 쪽 경계에서 잘리지 않게(break-inside:avoid). 브라우저 기본 여백 차이로 2쪽으로 밀리던 문제 차단 ═══ */
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{h=h.replace('margin:16mm 14mm}','margin:0}').replace('</style>','@page{size:A4 portrait;margin:12mm 12mm 12mm 12mm}table,tr,.sig,pre{break-inside:avoid;page-break-inside:avoid}@media print{body{margin:0}}</style>')}catch(e){}return h}}catch(e){}})();
 
+/* ═══ 1.43 (안티그래비티 R135 #5) 일지 작업내용 등 긴 글 칸이 글 길이에 맞춰 저절로 늘어남(화면 60%까지) — 휴대폰에서 칸 안 스크롤과 화면 스크롤이 엉키지 않게. 일지를 열 때 이미 적힌 글도 맞춰 펼침 ═══ */
+(function(){function ax(t){if(!t||t.tagName!=='TEXTAREA'||t.getAttribute('data-noax')!=null||!t.isConnected||!t.offsetParent)return;if(t._ax0==null)t._ax0=t.offsetHeight||0;t.style.overflowY='hidden';t.style.height='auto';var h=t.scrollHeight+2,mx=Math.max(160,Math.round(window.innerHeight*0.6));if(h>mx){t.style.height=mx+'px';t.style.overflowY='auto'}else t.style.height=Math.max(h,t._ax0)+'px'}
+  window.AX_FIT=function(root){try{(root||document).querySelectorAll('textarea').forEach(ax)}catch(e){}};
+  document.addEventListener('input',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true);
+  document.addEventListener('focusin',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true)})();
+(function(){try{if(typeof logOpen!=='function')return;var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);setTimeout(function(){AX_FIT()},60);return r}}catch(e){}})();
 </script>
 </body>
 </html>
