@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.28</title>
+<title>BVS 데일리 v1.29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2943,6 +2943,21 @@ saveLog=async function(){
     ta.value=t.replace(/\n{3,}/g,'\n\n').trim()}}catch(e){}
   return _saveLog128.apply(this,arguments);
 };
+
+
+/* ═══ 1.29 (안티그래비티 R85 #2) 안전 › 맨 위 「작업중지 — 긴급 대피」 빨간 버튼 — 사유(가스·화재·추락·붕괴·감전·기타) 고르면 대피 안내 문구가 클립보드에 복사되고(단톡방 붙여넣기), 오늘 일지 맨 앞에 [작업중지 HH:MM 사유] 줄이 서버에 기록됨. 근거: 산업안전보건법 제52조(근로자의 작업중지권), 제51조(사업주의 작업중지) ═══ */
+var ST129={items:[['gas','유해가스·질식'],['fire','화재·폭발'],['fall','추락·고소 위험'],['col','붕괴·낙하물'],['elec','감전·활선'],['etc','기타 급박한 위험']],open:false};
+function st129Text(why){var hm=nowHM?nowHM():'',who=(typeof ME!=='undefined'&&ME&&ME.name)||'',site='';try{site=(typeof siteName==='function'&&siteName(el('w_site')&&el('w_site').value))||''}catch(e){}
+  return '[긴급 작업중지] '+hm+(site?' '+site:'')+'\n사유: '+why+'\n전원 즉시 작업 중단하고 안전한 곳으로 대피하십시오. 장비 전원·밸브는 안전하면 차단, 아니면 그대로 두고 나오십시오.\n집결지에서 인원 확인 후 대표·원청 안전팀에 보고합니다. 위험이 해소될 때까지 재진입 금지.\n보고: '+who+' (산업안전보건법 제52조 작업중지권)'}
+async function st129Fire(code){var it=ST129.items.filter(function(x){return x[0]===code})[0];if(!it)return;var why=it[1],t=st129Text(why);
+  var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()};var copy=function(){try{if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t).catch(fb)}catch(e){}fb();return Promise.resolve()};
+  await copy();toast('대피 문구 복사됨 — 단톡방에 붙여넣으십시오','g');
+  try{var d=today(),cur='';var e=(D.labor||[]).filter(function(r){return String(r.work_date)===d&&r.status!=='void'&&r.work_log})[0];cur=e?String(e.work_log||''):'';
+    var line='[작업중지 '+(nowHM?nowHM():'')+' '+why+']';if(cur.indexOf(line)<0){var r=await sb.rpc('my_save_worklog',{p_date:d,p_text:(line+'\n'+cur).trim()});if(r.error||!r.data||!r.data.ok)toast('일지 기록 실패 — 문구는 복사됐습니다','e');else{toast('오늘 일지에 작업중지 기록됨','g');try{await loadAll()}catch(e){}}}}catch(e){}
+  ST129.open=false;st129Paint()}
+function st129Paint(){var b=el('st129');if(!b)return;b.innerHTML='<button type="button" class="btn w" style="background:#dc2626;color:#fff;border-color:#b91c1c;font-weight:800;font-size:15px;padding:12px" onclick="ST129.open=!ST129.open;st129Paint()">'+(ST129.open?'사유를 고르십시오 (다시 누르면 닫힘)':'작업중지 — 긴급 대피')+'</button>'
+  +(ST129.open?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">'+ST129.items.map(function(it){return '<button type="button" class="btn" style="border-color:#dc2626;color:#b91c1c;font-weight:700" onclick="st129Fire(\''+it[0]+'\')">'+it[1]+'</button>'}).join('')+'</div><div class="tiny dim" style="margin-top:6px">누르면 대피 문구가 복사되고 오늘 일지에 [작업중지] 줄이 기록됩니다. 급박한 위험이 있으면 누구나 작업을 멈출 수 있고 불이익을 받지 않습니다(산업안전보건법 제52조).</div>':'')}
+(function(){try{var card=el('sfCard');if(!card||el('st129'))return;var d=document.createElement('div');d.id='st129';d.style.cssText='margin:0 0 12px';card.insertAdjacentElement('afterbegin',d);st129Paint()}catch(e){}})();
 
 </script>
 </body>
