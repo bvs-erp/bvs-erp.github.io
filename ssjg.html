@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.40">
+<meta name="app-version" content="1.41">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6462,6 +6462,9 @@ function dv140Paint(){var a=document.getElementById('dv136Btn');if(!a)return;var
   if(dvInv140)dvNoInv136=false;b.style.display='';b.textContent=dvInv140?'전체 보기':'송장 발급 '+has+'건';if(dvInv140&&a)a.textContent='송장 미발급 '+(rows.length-has)+'건';
   if(!dvInv140)return;var tb=document.getElementById('delivTableBody');if(!tb)return;Array.prototype.forEach.call(tb.rows,function(tr){var c=tr.cells[9];var no=c?String(c.textContent||'').replace(/복사|추적/g,'').trim():'';if(!no||no==='미발급')tr.style.display='none'})}
 (function(){var a0=null;document.addEventListener('click',function(e){if(e.target&&e.target.id==='dv136Btn'&&dvInv140){dvInv140=false}},true)})();
+/* ═══ 1.41 (안티그래비티 R155 #3) 출고 › 로젠 접수 대상 표의 연락처 칸을 누르면 그 번호 복사(주소 1.37·메시지 1.34와 같은 방식) ═══ */
+function tl141Mark(){var tb=document.getElementById('delivTableBody');if(!tb)return;Array.prototype.forEach.call(tb.rows,function(tr){var td=tr.cells[4];if(!td||td.dataset.tl141||tr.cells.length<10)return;var v=String(td.textContent||'').trim();if(!v||v==='-')return;td.dataset.tl141='1';td.title=v+' (누르면 복사)';td.style.cursor='copy';td.addEventListener('click',function(e){e.stopPropagation();cp134(v,'연락처 복사')})})}
+(function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{tl141Mark()}catch(e){}return r}})();
 </script>
 <nav id="mnav"></nav>
 </body>
