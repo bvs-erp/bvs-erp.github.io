@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.31">
+<meta name="app-version" content="1.32">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6387,6 +6387,19 @@ cs127Txt=function(kind){if(kind!=='review'&&kind!=='subst')return _cs127Txt131.a
   return n+', 주문하신 '+(pd||'상품')+'이(가) 공급처 사정으로 일시 품절되어 바로 보내드리기 어렵습니다. 같은 가격에 상위 구성(또는 동급) 상품으로 대체 출고해 드리고자 하는데 괜찮으실까요? 대체 출고에 동의해 주시면 오늘 바로 발송하고, 원하지 않으시면 전액 취소·환불해 드립니다(전자상거래법 제15조 제2항 — 공급 곤란 시 지체 없이 통지·환급). 회신 부탁드립니다.'};
 (function(){try{var d=document.getElementById('cs127');if(!d||d.querySelector('.cs131'))return;var top=d.querySelector('div[style*="margin-bottom:6px"]');if(top)top.insertAdjacentHTML('beforeend','<input id="cs131_pd" class="input" placeholder="상품명(대체 출고용)" style="width:160px"><input id="cs131_pt" class="input" type="number" placeholder="적립 포인트" style="width:100px">');
   var row=d.querySelector('div:last-child');if(row)row.insertAdjacentHTML('beforeend','<button class="btn cs131" type="button" onclick="cs127Copy(\'review\')">포토리뷰 감사</button><button class="btn cs131" type="button" onclick="cs127Copy(\'subst\')">대체 출고 동의 요청</button>')}catch(e){}})();
+
+/* ═══ 1.32 (안티그래비티 R110 #3) CS 답변 복사 아래 「반품 환불 계산기」 — 결제액·출고 배송비(무료/유료)·반품 사유(단순변심/하자)로 차감 배송비(무료배송 출고는 왕복, 유료 출고는 편도 회수비)와 환불액을 계산, 안내문 복사(전자상거래법 §17·§18) ═══ */
+function rf132Calc(){var g=function(id){return (document.getElementById(id)||{}).value};var pay=Number(g('rf132_pay'))||0,ship=g('rf132_ship')||'free',why=g('rf132_why')||'change',one=Number(g('rf132_one'))||Math.round((CS127.fee||6000)/2);
+  var ded=why==='defect'?0:(ship==='free'?one*2:one);var refund=Math.max(pay-ded,0);var o=document.getElementById('rf132_out');if(!o)return;
+  o.innerHTML=pay>0?'차감 배송비 <b>'+fmt(ded)+'</b> ('+(why==='defect'?'하자·오배송 — 판매자 부담, 차감 없음':(ship==='free'?'무료배송 출고 → 왕복 '+fmt(one)+'×2':'유료배송 출고 → 회수 편도 '+fmt(one)))+') · 환불액 <b style="color:var(--green)">'+fmt(refund)+'</b>':'<span style="color:var(--text-muted)">결제액을 넣으면 계산됩니다</span>';rf132Calc._v={pay:pay,ded:ded,refund:refund,ship:ship,why:why,one:one}}
+function rf132Copy(){rf132Calc();var v=rf132Calc._v||{};if(!v.pay){gToast('결제액을 먼저 입력하세요',true);return}var nm=(document.getElementById('cs127_nm')||{}).value||'',n=nm?nm+' 고객님':'고객님';
+  var t=v.why==='defect'?n+', 불편을 드려 죄송합니다. 제품 하자(오배송)로 확인되어 배송비 차감 없이 결제하신 '+fmt(v.pay)+'원 전액을 환불해 드립니다. 회수 택배비는 당사가 부담하며, 검수 후 1~3영업일 안에 결제수단으로 환불 처리됩니다.'
+    :n+', 반품 접수가 완료되었습니다. 단순 변심 반품은 전자상거래법 제18조 제9항에 따라 반품 배송비를 고객님이 부담하시게 되며, '+(v.ship==='free'?'무료배송으로 출고된 주문이라 보내드린 배송비와 회수 배송비(왕복 '+fmt(v.ded)+'원)':'회수 배송비(편도 '+fmt(v.ded)+'원)')+'를 뺀 '+fmt(v.refund)+'원이 검수 후 결제수단으로 환불됩니다. 상품은 받으신 상태 그대로 원포장에 넣어 주세요.';
+  var done=function(){gToast('환불 안내문 복사됨')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()});else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+(function(){try{var d=document.getElementById('cs127');if(!d||document.getElementById('rf132'))return;var one=Math.round((CS127.fee||6000)/2);
+  var b=document.createElement('div');b.id='rf132';b.style.cssText='margin-top:8px;padding:8px 10px;border:1px dashed #cbd5e1;border-radius:8px;font-size:12px';
+  b.innerHTML='<div style="font-weight:700;margin-bottom:6px">반품 환불 계산기</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input id="rf132_pay" class="input" type="number" placeholder="결제액(원)" style="width:110px" oninput="rf132Calc()"><select id="rf132_ship" class="input" onchange="rf132Calc()"><option value="free">무료배송 출고</option><option value="paid">유료배송 출고</option></select><select id="rf132_why" class="input" onchange="rf132Calc()"><option value="change">단순 변심</option><option value="defect">하자·오배송</option></select><input id="rf132_one" class="input" type="number" value="'+one+'" style="width:90px" title="편도 택배비" oninput="rf132Calc()"><span style="color:var(--text-muted)">편도</span><button class="btn" type="button" onclick="rf132Copy()">환불 안내문 복사</button></div><div id="rf132_out" style="margin-top:6px"></div>';
+  d.insertAdjacentElement('afterend',b);rf132Calc()}catch(e){}})();
 
 </script>
 <nav id="mnav"></nav>
