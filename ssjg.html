@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.30">
+<meta name="app-version" content="1.31">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6379,6 +6379,14 @@ var _mg129Calc130=mg129Calc;
 mg129Calc=function(){_mg129Calc130.apply(this,arguments);try{var o=document.getElementById('mg129_out'),ff=ff130Amt();if(!o||!ff.amt)return;var g=function(id){return Number((document.getElementById(id)||{}).value)||0};var price=g('mg129_p');if(price<=0)return;
   var net=price-Math.round(price*g('mg129_f')/100)-g('mg129_s')-g('mg129_k')-g('mg129_c')-g('mg129_cp')-ff.amt,rate=Math.round(net/price*1000)/10;
   o.innerHTML+='<br><span>풀필먼트 차감 '+fmt(ff.amt)+'</span> · <b style="color:'+(net<=0?'#ef4444':'var(--green)')+'">풀필먼트 반영 실질 마진 '+fmt(net)+' ('+rate+'%)</b>'+(net<=0?' <span style="color:#ef4444;font-weight:700">역마진</span>':'')+(ff.days>30?' <span style="color:#d97706">장기보관 '+ff.days+'일 — 보관료 할증 구간 주의</span>':'')}catch(e){}};
+
+/* ═══ 1.31 (안티그래비티 R103 #3·R104 #3) CS 답변 복사에 「포토리뷰 감사」·「대체 출고 동의 요청」 문구 추가 — 고객명·상품·적립 포인트 칸 ═══ */
+var _cs127Txt131=cs127Txt;
+cs127Txt=function(kind){if(kind!=='review'&&kind!=='subst')return _cs127Txt131.apply(this,arguments);var nm=(document.getElementById('cs127_nm')||{}).value||'',pd=(document.getElementById('cs131_pd')||{}).value||'',pt=Number((document.getElementById('cs131_pt')||{}).value)||0,n=nm?nm+' 고객님':'고객님';
+  if(kind==='review')return n+', 정성스러운 포토 후기 감사합니다. 남겨 주신 사진과 말씀은 다음 고객분들께 큰 도움이 됩니다.'+(pt?' 감사의 뜻으로 적립금 '+pt.toLocaleString('ko-KR')+'원을 드렸으니 다음 주문 때 사용해 주세요.':'')+' 사용하시다 불편한 점이 있으면 언제든 문의 주시면 바로 도와드리겠습니다. 다시 한번 감사드립니다.';
+  return n+', 주문하신 '+(pd||'상품')+'이(가) 공급처 사정으로 일시 품절되어 바로 보내드리기 어렵습니다. 같은 가격에 상위 구성(또는 동급) 상품으로 대체 출고해 드리고자 하는데 괜찮으실까요? 대체 출고에 동의해 주시면 오늘 바로 발송하고, 원하지 않으시면 전액 취소·환불해 드립니다(전자상거래법 제15조 제2항 — 공급 곤란 시 지체 없이 통지·환급). 회신 부탁드립니다.'};
+(function(){try{var d=document.getElementById('cs127');if(!d||d.querySelector('.cs131'))return;var top=d.querySelector('div[style*="margin-bottom:6px"]');if(top)top.insertAdjacentHTML('beforeend','<input id="cs131_pd" class="input" placeholder="상품명(대체 출고용)" style="width:160px"><input id="cs131_pt" class="input" type="number" placeholder="적립 포인트" style="width:100px">');
+  var row=d.querySelector('div:last-child');if(row)row.insertAdjacentHTML('beforeend','<button class="btn cs131" type="button" onclick="cs127Copy(\'review\')">포토리뷰 감사</button><button class="btn cs131" type="button" onclick="cs127Copy(\'subst\')">대체 출고 동의 요청</button>')}catch(e){}})();
 
 </script>
 <nav id="mnav"></nav>
