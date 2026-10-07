@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.34">
+<meta name="app-version" content="1.35">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6418,6 +6418,11 @@ function sh134Mark(root){if(!root)return;try{
 var _rdt134=renderDeliveryTable;renderDeliveryTable=function(){var r=_rdt134.apply(this,arguments);sh134Mark(document.getElementById('delivTableBody'));return r};
 (function(){var box=document.getElementById('lgImportResult');if(!box||!window.MutationObserver)return;new MutationObserver(function(){sh134Mark(box)}).observe(box,{childList:true,subtree:true})})();
 
+/* ═══ 1.35 (안티그래비티 R136 #3) 출고 › 배송메시지에 챙길 말이 있으면 칸 앞에 작은 표시 — 「문앞」(문앞·부재 시) 「파손주의」(파손·깨짐·조심·유리) 「연락요망」(전화·연락·문자) 「보관」(경비실·택배함·보관함). 메시지 문구는 그대로, 누르면 전체 복사(1.34) ═══ */
+var KW135=[['문앞',/문\s*앞|부재/],['파손주의',/파손|깨지|깨짐|조심|유리|뽁뽁/],['연락요망',/전화|연락|문자|콜/],['보관',/경비실|택배함|보관함|관리실/]];
+function kw135Mark(root){if(!root)return;try{root.querySelectorAll('td[data-msg134]').forEach(function(td){if(td.dataset.kw135)return;td.dataset.kw135='1';var t=(td.textContent||'');var hit=KW135.filter(function(k){return k[1].test(t)});if(!hit.length)return;
+  var w=document.createElement('span');w.className='kw135';hit.forEach(function(k){var b=document.createElement('span');b.textContent=k[0];b.style.cssText='display:inline-block;font-size:10px;font-weight:700;line-height:1.4;padding:0 4px;margin-right:3px;border-radius:4px;background:'+(k[0]==='파손주의'?'#fee2e2;color:#b91c1c':k[0]==='연락요망'?'#dbeafe;color:#1d4ed8':'#fef3c7;color:#92400e');w.appendChild(b)});td.insertBefore(w,td.firstChild)})}catch(e){}}
+(function(){var _m=sh134Mark;sh134Mark=function(root){var r=_m.apply(this,arguments);kw135Mark(root);return r}})();
 </script>
 <nav id="mnav"></nav>
 </body>
