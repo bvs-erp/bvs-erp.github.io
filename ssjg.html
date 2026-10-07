@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.32">
+<meta name="app-version" content="1.33">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6400,6 +6400,15 @@ function rf132Copy(){rf132Calc();var v=rf132Calc._v||{};if(!v.pay){gToast('결�
   var b=document.createElement('div');b.id='rf132';b.style.cssText='margin-top:8px;padding:8px 10px;border:1px dashed #cbd5e1;border-radius:8px;font-size:12px';
   b.innerHTML='<div style="font-weight:700;margin-bottom:6px">반품 환불 계산기</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input id="rf132_pay" class="input" type="number" placeholder="결제액(원)" style="width:110px" oninput="rf132Calc()"><select id="rf132_ship" class="input" onchange="rf132Calc()"><option value="free">무료배송 출고</option><option value="paid">유료배송 출고</option></select><select id="rf132_why" class="input" onchange="rf132Calc()"><option value="change">단순 변심</option><option value="defect">하자·오배송</option></select><input id="rf132_one" class="input" type="number" value="'+one+'" style="width:90px" title="편도 택배비" oninput="rf132Calc()"><span style="color:var(--text-muted)">편도</span><button class="btn" type="button" onclick="rf132Copy()">환불 안내문 복사</button></div><div id="rf132_out" style="margin-top:6px"></div>';
   d.insertAdjacentElement('afterend',b);rf132Calc()}catch(e){}})();
+
+/* ═══ 1.33 (안티그래비티 R111 #3) 채널 손익 › 마진 계산기 아래 「최저 방어 판매가」 — 수수료율·배송비·포장비·원가·쿠폰을 넣으면 부가세(판매가의 1/11)까지 빼고 손익 0원이 되는 판매가와 마진 5%를 남기는 판매가를 바로 표시. 지금 판매가가 하한 미만이면 적색 「역마진 — 가격비교 매칭 인하 금지」, 5% 미만이면 주황 ═══ */
+function mg133Floor(){var g=function(id){return Number((document.getElementById(id)||{}).value)||0};var price=g('mg129_p'),f=g('mg129_f')/100,cost=g('mg129_s')+g('mg129_k')+g('mg129_c')+g('mg129_cp');
+  var den0=1-1/11-f,den5=den0-0.05,p0=den0>0?Math.ceil(cost/den0/10)*10:null,p5=den5>0?Math.ceil(cost/den5/10)*10:null;return {price:price,cost:cost,p0:p0,p5:p5}}
+var _mg129Calc133=mg129Calc;
+mg129Calc=function(){var r=_mg129Calc133.apply(this,arguments);try{var o=document.getElementById('mg129_out');if(!o)return r;var x=mg133Floor(),old=document.getElementById('mg133');if(old)old.remove();if(!x.cost)return r;
+  var s=document.createElement('div');s.id='mg133';s.style.cssText='margin-top:4px';var st='';
+  if(x.price>0&&x.p0&&x.price<x.p0)st=' <b style="color:#ef4444">역마진 — 가격비교 매칭 인하 금지</b>';else if(x.price>0&&x.p5&&x.price<x.p5)st=' <b style="color:#d97706">마진 5% 미만</b>';
+  s.innerHTML='최저 방어 판매가(부가세 포함 손익 0원) <b>'+(x.p0?fmt(x.p0):'산출 불가 — 수수료율 확인')+'</b> · 마진 5% 판매가 <b>'+(x.p5?fmt(x.p5):'산출 불가')+'</b>'+st;o.insertAdjacentElement('afterend',s)}catch(e){}return r};
 
 </script>
 <nav id="mnav"></nav>
