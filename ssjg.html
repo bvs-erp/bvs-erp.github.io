@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.35">
+<meta name="app-version" content="1.36">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6423,6 +6423,21 @@ var KW135=[['문앞',/문\s*앞|부재/],['파손주의',/파손|깨지|깨짐|�
 function kw135Mark(root){if(!root)return;try{root.querySelectorAll('td[data-msg134]').forEach(function(td){if(td.dataset.kw135)return;td.dataset.kw135='1';var t=(td.textContent||'');var hit=KW135.filter(function(k){return k[1].test(t)});if(!hit.length)return;
   var w=document.createElement('span');w.className='kw135';hit.forEach(function(k){var b=document.createElement('span');b.textContent=k[0];b.style.cssText='display:inline-block;font-size:10px;font-weight:700;line-height:1.4;padding:0 4px;margin-right:3px;border-radius:4px;background:'+(k[0]==='파손주의'?'#fee2e2;color:#b91c1c':k[0]==='연락요망'?'#dbeafe;color:#1d4ed8':'#fef3c7;color:#92400e');w.appendChild(b)});td.insertBefore(w,td.firstChild)})}catch(e){}}
 (function(){var _m=sh134Mark;sh134Mark=function(root){var r=_m.apply(this,arguments);kw135Mark(root);return r}})();
+/* ═══ 1.36 (안티그래비티 R139 #3) 출고 › 로젠 접수 대상 표 위 「송장 미발급 N건」 단추 — 누르면 송장번호가 아직 없는 줄만, 다시 누르면 전체. 일부만 발급된 때에만 보임 ═══ */
+var dvNoInv136 = false;
+(function(){ var _r = renderDeliveryTable; renderDeliveryTable = function(){ var r = _r.apply(this, arguments); try { dv136Paint(); } catch(e){} return r; }; })();
+function dv136Paint(){
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var b = document.getElementById('dv136Btn');
+  if(!b){ b = document.createElement('button'); b.id = 'dv136Btn'; b.className = 'btn'; b.style.cssText = 'padding:4px 10px;font-size:11px;background:rgba(37,99,235,.12);color:#2563eb;border:1px solid rgba(37,99,235,.45);margin-right:6px';
+    b.onclick = function(){ dvNoInv136 = !dvNoInv136; renderDeliveryTable(); }; hd.insertBefore(b, hd.firstChild); }
+  var rows = rawDeliveryRows || [], miss = rows.filter(function(r){ return !r.invoice_no; }).length;
+  if(!miss || miss === rows.length){ dvNoInv136 = false; b.style.display = 'none'; return; }
+  b.style.display = ''; b.textContent = dvNoInv136 ? '전체 보기' : '송장 미발급 ' + miss + '건';
+  if(!dvNoInv136) return;
+  var tb = document.getElementById('delivTableBody'); if(!tb) return;
+  Array.prototype.forEach.call(tb.rows, function(tr){ var c = tr.cells[9]; var no = c ? String(c.textContent || '').replace(/복사|추적/g, '').trim() : ''; if(no && no !== '미발급') tr.style.display = 'none'; });
+}
 </script>
 <nav id="mnav"></nav>
 </body>
