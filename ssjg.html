@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.28">
+<meta name="app-version" content="1.29">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6343,6 +6343,29 @@ function cs127Copy(kind){var t=cs127Txt(kind);var done=function(){gToast('답변
     return _t.apply(this,arguments)};
   var d=document.getElementById('cs127');if(d&&!document.getElementById('cs128')){var row=document.createElement('div');row.id='cs128';row.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';row.innerHTML='<span class="muted" style="font-size:11px;align-self:center">부정 리뷰 대응</span><button class="btn" type="button" style="border-color:#fdba74" onclick="cs127Copy(\'dmg\')">배송 파손 사과</button><button class="btn" type="button" style="border-color:#fdba74" onclick="cs127Copy(\'def\')">불량 즉시 맞교환</button><button class="btn" type="button" style="border-color:#fdba74" onclick="cs127Copy(\'use\')">사용법 오해 안내</button>';d.appendChild(row)}
 }catch(e){}})();
+
+/* ═══ 1.29 (안티그래비티 R94 #3·R95 #3·R97 #3·R98 #3) 채널 수익성 「실질 마진 계산기」(역마진 경고) / 출고 표 받는 사람 옆 「배송 안내」·도서산간 「추가 배송비 안내」 복사 / CS 답변에 「반품 회수 안내」 추가 ═══ */
+function mg129Calc(){var g=function(id){return Number((document.getElementById(id)||{}).value)||0};var price=g('mg129_p'),fee=g('mg129_f'),ship=g('mg129_s'),pkg=g('mg129_k'),cogs=g('mg129_c'),cp=g('mg129_cp');
+  var feeAmt=Math.round(price*fee/100),vat=Math.round(price/11),net=price-feeAmt-ship-pkg-cogs-cp,rate=price>0?Math.round(net/price*1000)/10:0,o=document.getElementById('mg129_out');if(!o)return;
+  o.innerHTML=price>0?'<span>수수료 '+fmt(feeAmt)+'</span> · <span>부가세(매출세액) '+fmt(vat)+'</span> · <b style="color:'+(net<=0?'#ef4444':net<vat?'#d97706':'var(--green)')+'">실질 마진 '+fmt(net)+' ('+rate+'%)</b>'+(net<=0?' <span style="color:#ef4444;font-weight:700">역마진 — 이 가격·쿠폰으로 팔면 손해</span>':net<vat?' <span style="color:#d97706">부가세 납부분보다 적음 — 쿠폰 중복 주의</span>':''):'<span style="color:var(--text-muted)">판매가를 넣으면 계산됩니다</span>'}
+(function(){try{var tb=document.getElementById('channelPlTableRows');if(!tb||document.getElementById('mg129'))return;var host=tb.closest('.table-wrap')||tb.closest('table');if(!host)return;
+  var d=document.createElement('div');d.id='mg129';d.style.cssText='margin:10px 0;padding:8px 10px;border:1px dashed #cbd5e1;border-radius:8px;font-size:12px';
+  d.innerHTML='<div style="font-weight:700;margin-bottom:6px">실질 마진 계산기 <span style="font-weight:400;color:var(--text-muted)">할인·쿠폰 적용 뒤 소비자 결제가 기준</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    +'<input id="mg129_p" class="input" type="number" placeholder="결제가(원)" style="width:110px" oninput="mg129Calc()"><input id="mg129_f" class="input" type="number" step="0.01" placeholder="플랫폼 수수료 %" style="width:120px" oninput="mg129Calc()"><input id="mg129_s" class="input" type="number" placeholder="택배비" style="width:90px" oninput="mg129Calc()"><input id="mg129_k" class="input" type="number" placeholder="포장재" style="width:90px" oninput="mg129Calc()"><input id="mg129_c" class="input" type="number" placeholder="상품 원가" style="width:100px" oninput="mg129Calc()"><input id="mg129_cp" class="input" type="number" placeholder="쿠폰 부담(선택)" style="width:110px" oninput="mg129Calc()"></div><div id="mg129_out" style="margin-top:6px"></div>';
+  host.insertAdjacentElement('beforebegin',d);mg129Calc()}catch(e){}})();
+function sh129Copy(i,kind){var r=rawDeliveryRows[i];if(!r)return;var n=r.receiver?r.receiver+' 고객님':'고객님',t;
+  if(kind==='island')t=n+', 주문하신 배송지가 제주·도서산간 지역으로 확인되어 택배사 추가 배송비가 발생합니다. 추가 배송비 결제 또는 안내드린 계좌 입금이 확인되면 바로 출고하겠습니다. 번거롭게 해 드려 죄송합니다.';
+  else t=n+', 주문하신 상품('+(r.product_name||'')+(r.qty>1?' '+r.qty+'박스':'')+')이 '+(r.invoice_no?'로젠택배 송장번호 '+r.invoice_no+'로 ':'')+'오늘 발송되었습니다. 보통 발송 다음 날~2일 안에 도착하며, 로젠택배 홈페이지나 앱에서 송장번호로 배송 위치를 확인하실 수 있습니다. 감사합니다.';
+  var done=function(){gToast((kind==='island'?'추가 배송비 안내':'배송 안내')+' 복사: '+(r.receiver||''))};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()});else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+var _renderDeliveryTable129=renderDeliveryTable;
+renderDeliveryTable=function(){_renderDeliveryTable129.apply(this,arguments);try{var tb=document.getElementById('delivTableBody');if(!tb||!rawDeliveryRows.length)return;
+  tb.querySelectorAll('tr').forEach(function(tr,i){var r=rawDeliveryRows[i];if(!r||tr.cells.length<4)return;var c=tr.cells[3];if(c.querySelector('.sh129'))return;
+    c.insertAdjacentHTML('beforeend','<div class="sh129" style="margin-top:2px;font-size:11px;font-weight:400"><a href="#" onclick="event.preventDefault();sh129Copy('+i+',\'ship\')">배송 안내</a>'+((r._warn||[]).indexOf('도서산간')>=0?' · <a href="#" style="color:#d97706" onclick="event.preventDefault();sh129Copy('+i+',\'island\')">추가 배송비 안내</a>':'')+'</div>')})}catch(e){}};
+var _cs127Txt129=cs127Txt;
+cs127Txt=function(kind){if(kind!=='pickup')return _cs127Txt129.apply(this,arguments);var nm=(document.getElementById('cs127_nm')||{}).value||'',n=nm?nm+' 고객님':'고객님';
+  return n+', 반품(교환) 접수가 완료되었습니다. 접수 다음 날부터 영업일 기준 1~3일 안에 로젠택배 기사님이 방문해 회수합니다. 상품은 받으신 상태 그대로 원래 포장(지퍼백·박스)에 넣어 문 앞에 두시거나 기사님께 전달해 주세요. 개봉·사용 흔적이 있으면 반품이 어렵습니다(전자상거래법 제17조 제2항). 회수 확인 후 검수를 거쳐 단순 변심은 왕복 배송비 '+(CS127.fee||6000).toLocaleString('ko-KR')+'원을 뺀 금액이, 상품 하자는 전액이 결제수단으로 환불됩니다.'};
+(function(){try{var d=document.getElementById('cs127');if(!d||d.querySelector('.cs129'))return;var row=d.querySelector('div:last-child');if(row)row.insertAdjacentHTML('beforeend','<button class="btn cs129" type="button" onclick="cs127Copy(\'pickup\')">반품 회수 안내</button>')}catch(e){}})();
 
 </script>
 <nav id="mnav"></nav>
