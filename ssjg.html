@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.29">
+<meta name="app-version" content="1.30">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6366,6 +6366,19 @@ var _cs127Txt129=cs127Txt;
 cs127Txt=function(kind){if(kind!=='pickup')return _cs127Txt129.apply(this,arguments);var nm=(document.getElementById('cs127_nm')||{}).value||'',n=nm?nm+' 고객님':'고객님';
   return n+', 반품(교환) 접수가 완료되었습니다. 접수 다음 날부터 영업일 기준 1~3일 안에 로젠택배 기사님이 방문해 회수합니다. 상품은 받으신 상태 그대로 원래 포장(지퍼백·박스)에 넣어 문 앞에 두시거나 기사님께 전달해 주세요. 개봉·사용 흔적이 있으면 반품이 어렵습니다(전자상거래법 제17조 제2항). 회수 확인 후 검수를 거쳐 단순 변심은 왕복 배송비 '+(CS127.fee||6000).toLocaleString('ko-KR')+'원을 뺀 금액이, 상품 하자는 전액이 결제수단으로 환불됩니다.'};
 (function(){try{var d=document.getElementById('cs127');if(!d||d.querySelector('.cs129'))return;var row=d.querySelector('div:last-child');if(row)row.insertAdjacentHTML('beforeend','<button class="btn cs129" type="button" onclick="cs127Copy(\'pickup\')">반품 회수 안내</button>')}catch(e){}})();
+
+/* ═══ 1.30 (안티그래비티 R100 #3) 실질 마진 계산기에 「풀필먼트 차감」 — 일 보관료×보관 일수 + 출고 작업비(피킹·포장)를 빼고, 30일 초과 보관이면 할증 주의 ═══ */
+(function(){try{var d=document.getElementById('mg129');if(!d||document.getElementById('ff130'))return;
+  var row=d.querySelector('div[style*="flex-wrap"]');if(!row)return;
+  var f=document.createElement('div');f.id='ff130';f.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px';
+  f.innerHTML='<label style="display:flex;gap:4px;align-items:center;font-size:12px"><input type="checkbox" id="ff130_on" onchange="ff130Tog()"> 풀필먼트(창고) 차감</label><span id="ff130_in" style="display:none;gap:6px;flex-wrap:wrap"><input id="ff130_d" class="input" type="number" step="0.1" placeholder="일 보관료(원/일)" style="width:120px" oninput="mg129Calc()"><input id="ff130_n" class="input" type="number" placeholder="보관 일수" style="width:90px" oninput="mg129Calc()"><input id="ff130_p" class="input" type="number" placeholder="출고 작업비(피킹·포장)" style="width:150px" oninput="mg129Calc()"></span>';
+  row.insertAdjacentElement('afterend',f)}catch(e){}})();
+function ff130Tog(){var on=!!(document.getElementById('ff130_on')||{}).checked,s=document.getElementById('ff130_in');if(s)s.style.display=on?'flex':'none';mg129Calc()}
+function ff130Amt(){var on=!!(document.getElementById('ff130_on')||{}).checked;if(!on)return {amt:0,days:0};var g=function(id){return Number((document.getElementById(id)||{}).value)||0};var days=g('ff130_n');return {amt:Math.round(g('ff130_d')*days+g('ff130_p')),days:days}}
+var _mg129Calc130=mg129Calc;
+mg129Calc=function(){_mg129Calc130.apply(this,arguments);try{var o=document.getElementById('mg129_out'),ff=ff130Amt();if(!o||!ff.amt)return;var g=function(id){return Number((document.getElementById(id)||{}).value)||0};var price=g('mg129_p');if(price<=0)return;
+  var net=price-Math.round(price*g('mg129_f')/100)-g('mg129_s')-g('mg129_k')-g('mg129_c')-g('mg129_cp')-ff.amt,rate=Math.round(net/price*1000)/10;
+  o.innerHTML+='<br><span>풀필먼트 차감 '+fmt(ff.amt)+'</span> · <b style="color:'+(net<=0?'#ef4444':'var(--green)')+'">풀필먼트 반영 실질 마진 '+fmt(net)+' ('+rate+'%)</b>'+(net<=0?' <span style="color:#ef4444;font-weight:700">역마진</span>':'')+(ff.days>30?' <span style="color:#d97706">장기보관 '+ff.days+'일 — 보관료 할증 구간 주의</span>':'')}catch(e){}};
 
 </script>
 <nav id="mnav"></nav>

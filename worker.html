@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.32</title>
+<title>BVS 데일리 v1.33</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3008,6 +3008,18 @@ var _saveLog132=saveLog;
 saveLog=async function(){try{var ta=el('logText');if(ta&&el('wxBox')){var t=ta.value.replace(WX132.TAG,'').replace(/\[기온 [\d.]+℃\]/g,'').replace(WX132.NX,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
     var tp=parseFloat((el('wxTemp')||{}).value);if(isFinite(tp)){if(tp>=33&&el('wx_ok')&&el('wx_ok').checked)t=(t?t+'\n':'')+'[폭염 수칙 이행 '+tp+'℃]';else t=(t?t+'\n':'')+'[기온 '+tp+'℃]'}
     var no=+((el('nxOff')||{}).value||0),nw=((el('nxWho')||{}).value||'').trim();t=(t?t+'\n':'')+(no>0?'[내일 출근 예정 휴무 '+no+'명'+(nw?' · '+nw:'')+']':'[내일 출근 예정 전원]');ta.value=t}}catch(e){}return _saveLog132.apply(this,arguments)};
+
+/* ═══ 1.33 (안티그래비티 R100 #2·R99 #2) 5S 마감에 「폐자재·잔재물 반출(지정 장소 처리)」 항목 추가 + 자재 메모 옆 「부족 — 긴급 발주」 토글(저장 시 [자재 부족] 꼬리표, 일일보고 복사에 「자재 부족」 표시) ═══ */
+(function(){try{if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='waste'}))S5116.items.push(['waste','폐자재·잔재물 반출 — 지정 집하장 처리, 작업구역 방치 없음'])}catch(e){}})();
+var MS133={TAG:'[자재 부족]'};
+var _logOpen133=logOpen;
+logOpen=function(d){_logOpen133.apply(this,arguments);try{var ta=el('logText'),m=el('mtBox');if(!ta||!m)return;
+  if(!el('ms133')){var w=document.createElement('label');w.id='ms133w';w.style.cssText='display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px;color:inherit';w.innerHTML='<input type="checkbox" id="ms133" onchange="var l=el(\'ms133w\');l.style.color=this.checked?\'#b45309\':\'\'"><b>필수 자재 부족</b> — 내일 작업분이 모자라 긴급 발주 필요(품목·수량은 위 메모에)';m.appendChild(w)}
+  var c=el('ms133');if(c){c.checked=ta.value.indexOf(MS133.TAG)>=0;c.dispatchEvent(new Event('change'))}}catch(e){}};
+var _saveLog133=saveLog;
+saveLog=async function(){try{var ta=el('logText'),c=el('ms133');if(ta&&c){var t=ta.value.replace(/\s*\[자재 부족\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(c.checked)t=(t?t+'\n':'')+MS133.TAG;ta.value=t}}catch(e){}return _saveLog133.apply(this,arguments)};
+var _dr123Text133=dr123Text;
+dr123Text=function(){var t=_dr123Text133.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'';if(v.indexOf(MS133.TAG)>=0)t+='\n자재: 부족 — 긴급 발주 요청'+(mt128Get(v)?' ('+mt128Get(v)+')':'');if(/\[5S 완료\]/.test(v))t+='\n정리정돈·잔재물 반출 이상 없음'}catch(e){}return t};
 
 </script>
 </body>
