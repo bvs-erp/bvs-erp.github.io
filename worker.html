@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.41</title>
+<title>BVS 데일리 v1.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3099,6 +3099,7 @@ hz117Tog=function(k){_hzTog139.apply(this,arguments);hz139Apply()};
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);if(HZ139.off.indexOf('conf')>=0)h=h.replace('안전보건규칙 제619조 밀폐공간, ','');return h}}catch(e){}})();
 
 
+/* ═══ 1.42 보완(R119 #2): 보관본 자동 저장 전 서버 일지가 그 사이 바뀌었으면 멈추고 「보관본 불러오기/버리기」 선택 ═══ */
 /* ═══ 1.40 (안티그래비티 R114 F3·UI2 / R115 #2·#5 조율) ① 일지 저장 때 통신이 끊겨 있으면(FAB·지하 피트) 그 일지를 이 폰에 보관하고 「연결되면 자동 저장」 — 연결이 돌아오면(또는 1분마다) 순서대로 서버에 저장, 같은 날짜를 그 사이 다시 저장했으면 보관본은 버림. 임시저장(1.27)은 그대로 ② 일지 화면 「일지 저장」 단추를 화면 아래(하단 탭 위)에 붙여 엄지로 바로 누름, 높이 48px ═══ */
 var OQ140={KEY:'oq140',busy:false};
 (function(){var s=document.createElement('style');s.textContent='#p-log button[onclick="saveLog()"]{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));z-index:30;min-height:48px;box-shadow:0 4px 14px rgba(0,0,0,.18)}#oq140bar{margin:0 0 8px;padding:8px 10px;border-radius:10px;background:#ecfdf5;border:1px solid #16a34a;color:#166534;font-size:12.5px}';document.head.appendChild(s)})();
@@ -3106,7 +3107,9 @@ function oq140Read(){try{return JSON.parse(localStorage.getItem(OQ140.KEY)||'[]'
 function oq140Write(a){try{if(a.length)localStorage.setItem(OQ140.KEY,JSON.stringify(a));else localStorage.removeItem(OQ140.KEY)}catch(e){}oq140Bar()}
 function oq140Net(err){return (typeof navigator!=='undefined'&&navigator.onLine===false)||/fetch|network|failed|load failed|timeout|abort/i.test(String((err&&err.message)||err||''))}
 function oq140Bar(){try{var a=oq140Read(),b=el('oq140bar'),ta=el('logText');if(!a.length){if(b)b.remove();return}if(!ta)return;if(!b){b=document.createElement('div');b.id='oq140bar';ta.insertAdjacentElement('beforebegin',b)}
-  b.textContent='연결 없음 — 일지 '+a.length+'건('+a.map(function(x){return String(x.d).slice(5)}).join(', ')+')을 이 폰에 보관 중. 연결되면 자동으로 서버에 저장됩니다'}catch(e){}}
+  var cf=a.filter(function(x){return x.c});b.style.cssText=cf.length?'background:#fffbeb;border-color:#d97706;color:#92400e':'';b.innerHTML=cf.length?'서버 일지가 그 사이 바뀌어 자동 저장을 멈췄습니다('+cf.map(function(x){return String(x.d).slice(5)}).join(', ')+'). 이 폰 보관본을 넣으려면 <button class="btn sm" type="button" onclick="oq142Use()">보관본 불러오기</button> 후 저장, 버리려면 <button class="btn sm" type="button" onclick="oq142Drop()">보관본 버리기</button>':'연결 없음 — 일지 '+a.length+'건('+a.map(function(x){return String(x.d).slice(5)}).join(', ')+')을 이 폰에 보관 중. 연결되면 자동으로 서버에 저장됩니다'}catch(e){}}
+function oq142Use(){var a=oq140Read(),d=(typeof LOG!=='undefined'&&LOG.date)||'',x=a.filter(function(y){return y.d===d&&y.c})[0]||a.filter(function(y){return y.c})[0];if(!x)return;if(x.d!==d&&typeof logOpen==='function')logOpen(x.d);var ta=el('logText');if(ta)ta.value=x.t;toast('보관본을 불러왔습니다 — 서버 내용과 비교해 고친 뒤 저장','g')}
+function oq142Drop(){var d=(typeof LOG!=='undefined'&&LOG.date)||'';oq140Write(oq140Read().filter(function(y){return !(y.c&&(!d||y.d===d))}));toast('보관본을 버렸습니다','g')}
 var _saveLog140=saveLog;
 saveLog=async function(){if(typeof sb==='undefined'||!sb||!sb.rpc)return _saveLog140.apply(this,arguments);
   var orig=sb.rpc,args=null,net=false,ok=false;
@@ -3114,11 +3117,11 @@ saveLog=async function(){if(typeof sb==='undefined'||!sb||!sb.rpc)return _saveLo
     return Promise.resolve(p).then(function(r){if(r&&r.error&&oq140Net(r.error))net=true;else if(r&&r.data&&r.data.ok)ok=true;return r},function(e){net=oq140Net(e)||true;throw e})};
   var res;try{res=await _saveLog140.apply(this,arguments)}catch(e){if(!net){sb.rpc=orig;throw e}}finally{sb.rpc=orig}
   try{if(args){var q=oq140Read().filter(function(x){return x.d!==args.p_date});
-    if(net){q.push({d:args.p_date,t:args.p_text,at:Date.now()});oq140Write(q);var m=el('logMsg');if(m)m.innerHTML='<span class="pos">연결 없음 — 이 폰에 보관했습니다. 연결되면 자동 저장</span>';toast('통신이 끊겨 이 폰에 보관했습니다 — 연결되면 자동 저장','g')}
+    if(net){var _e=(typeof entryOf==='function'?entryOf(args.p_date):null);q.push({d:args.p_date,t:args.p_text,at:Date.now(),b:(_e&&_e.work_log)||''});oq140Write(q);var m=el('logMsg');if(m)m.innerHTML='<span class="pos">연결 없음 — 이 폰에 보관했습니다. 연결되면 자동 저장</span>';toast('통신이 끊겨 이 폰에 보관했습니다 — 연결되면 자동 저장','g')}
     else if(ok)oq140Write(q)}}catch(e){}
   return res};
 async function oq140Flush(){if(OQ140.busy||typeof sb==='undefined'||!sb||!sb.rpc)return;if(navigator.onLine===false)return;var a=oq140Read();if(!a.length)return;OQ140.busy=true;var left=[],n=0;
-  try{for(var i=0;i<a.length;i++){var x=a[i];try{var r=await sb.rpc('my_save_worklog',{p_date:x.d,p_text:x.t});if(r&&r.data&&r.data.ok){n++;try{localStorage.removeItem('dr127:'+x.d)}catch(e){}}else{left.push(x);if(r&&r.error&&oq140Net(r.error))break}}catch(e){left.push(x)}}
+  try{try{if(typeof loadAll==='function')await loadAll()}catch(e){}for(var i=0;i<a.length;i++){var x=a[i];if(x.c){left.push(x);continue}var se=(typeof entryOf==='function'?entryOf(x.d):null),sv=(se&&se.work_log)||'';if(x.b!=null&&sv!==x.b&&sv!==x.t){x.c=1;left.push(x);continue}try{var r=await sb.rpc('my_save_worklog',{p_date:x.d,p_text:x.t});if(r&&r.data&&r.data.ok){n++;try{localStorage.removeItem('dr127:'+x.d)}catch(e){}}else{left.push(x);if(r&&r.error&&oq140Net(r.error))break}}catch(e){left.push(x)}}
     for(var j=i+1;j<a.length;j++)if(left.indexOf(a[j])<0)left.push(a[j]);
     oq140Write(left);if(n){toast('연결 복구 — 보관 중이던 일지 '+n+'건을 서버에 저장했습니다','g');try{if(typeof loadAll==='function')await loadAll()}catch(e){}}}finally{OQ140.busy=false}}
 window.addEventListener('online',function(){setTimeout(oq140Flush,800)});
