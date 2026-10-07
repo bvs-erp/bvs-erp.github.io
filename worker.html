@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.36</title>
+<title>BVS 데일리 v1.37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3046,7 +3046,7 @@ function pr136Html(){var d=LOG.date||today(),e=(typeof entryOf==='function'?entr
   var tags=(raw.match(/\[[^\]]+\]/g)||[]).map(function(s){return s.slice(1,-1)}),body=raw.replace(/\s*\[[^\]]*\]\s*/g,'\n').replace(/\n{2,}/g,'\n').trim();
   var site=e?siteName(e.site_id):'',md=e?(+e.work_md||0):0,ot=e?(+e.ot_hours||0):0,me=(typeof ME!=='undefined'&&ME&&ME.name)||'';
   var esc_=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
-  var groups=[['안전점검',/확인완료|점검완료|5S 완료|음주측정|위험성평가|시건/],['위험작업',/^위험요소/],['현장 상황',/기온|폭염|내일 출근|자재|보호구/]];
+  var groups=[['안전점검',/확인완료|점검완료|5S 완료|음주측정|위험성평가|시건/],['위험작업',/^위험요소/],['현장 상황',/기온|폭염|내일 출근|자재|보호구|가스 측정/]];
   var rows=groups.map(function(g){var L=tags.filter(function(t){return g[1].test(t)});return '<tr><th>'+g[0]+'</th><td>'+(L.length?L.map(esc_).join(' · '):'<span class="dim">해당 없음</span>')+'</td></tr>'}).join('');
   var rest=tags.filter(function(t){return !groups.some(function(g){return g[1].test(t)})});
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>현장 일일보고 '+esc_(d)+'</title><style>body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#111;margin:16mm 14mm}h1{font-size:18px;margin:0 0 12px;text-align:center;letter-spacing:4px}table{border-collapse:collapse;width:100%;margin-bottom:10px}th,td{border:1px solid #333;padding:6px 8px;vertical-align:top;font-size:12px}th{background:#f2f2f2;width:110px;text-align:left}.dim{color:#777}pre{white-space:pre-wrap;font-family:inherit;margin:0;min-height:80px}.sig td{height:48px}.foot{font-size:10px;color:#666;margin-top:8px}@media print{button{display:none}}</style></head><body>'
@@ -3057,6 +3057,22 @@ function pr136Html(){var d=LOG.date||today(),e=(typeof entryOf==='function'?entr
 function pr136Open(){var h=pr136Html();var w=window.open('','_blank');if(!w){toast('팝업이 막혀 있습니다 — 브라우저 팝업 허용 후 다시','e');return}w.document.write(h);w.document.close();setTimeout(function(){try{w.print()}catch(e){}},400)}
 var _logOpen136=logOpen;
 logOpen=function(d){_logOpen136.apply(this,arguments);try{var b=el('dr123');if(!b||el('pr136'))return;var p=document.createElement('button');p.id='pr136';p.className='btn w';p.style.marginTop='8px';p.textContent='일일보고 인쇄 (A4 · 감리 제출용)';p.onclick=pr136Open;b.insertAdjacentElement('afterend',p)}catch(e){}};
+
+/* ═══ 1.37 (안티그래비티 R109 #2) 밀폐공간 안전점검(1.20)에 「가스 측정치」 입력 — 산소 18~23.5%, 황화수소 10ppm 미만, 일산화탄소 30ppm 미만(안전보건규칙 제618조 적정공기). 기준 밖이면 「작업 금지 — 환기 후 재측정」 경보, 저장 시 [가스 측정 O2 N% H2S Nppm CO Nppm] 꼬리표(A4 보고서 현장 상황에 인자) ═══ */
+var GS137={RE:/\[가스 측정[^\]]*\]/g};
+function gs137Val(){var g=function(id){var v=(el(id)||{}).value;return v===''||v==null?null:+v};return {o2:g('gs137_o2'),h2s:g('gs137_h2s'),co:g('gs137_co')}}
+function gs137Paint(){var v=gs137Val(),s=el('gsState'),bad=[];if(v.o2!=null&&(v.o2<18||v.o2>23.5))bad.push('산소 '+v.o2+'%');if(v.h2s!=null&&v.h2s>=10)bad.push('황화수소 '+v.h2s+'ppm');if(v.co!=null&&v.co>=30)bad.push('일산화탄소 '+v.co+'ppm');
+  var any=v.o2!=null||v.h2s!=null||v.co!=null;if(s)s.innerHTML=bad.length?'<b style="color:#dc2626">작업 금지 — '+bad.join('·')+' 기준 밖. 환기 후 재측정</b>':any?'<span style="color:#16a34a">적정공기 — 측정치 저장 시 일지에 기록</span>':'진입 전 측정치를 적으세요';var b=el('gsBox');if(b){b.style.borderColor=bad.length?'#dc2626':any?'#16a34a':''}}
+var _logOpen137=logOpen;
+logOpen=function(d){_logOpen137.apply(this,arguments);try{var cs=el('csBox');if(!cs)return;
+  if(!el('gsBox')){var b=document.createElement('div');b.id='gsBox';b.style.cssText='border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:8px 10px;margin:6px 0 0;font-size:12.5px';
+    b.innerHTML='<div style="font-weight:700;margin-bottom:4px">가스 측정치 <span id="gsState" style="font-weight:400;font-size:11.5px;color:#6b7280"></span></div><div style="display:flex;gap:10px;flex-wrap:wrap"><label>산소 <input type="number" id="gs137_o2" step="0.1" placeholder="20.9" style="width:64px;padding:3px 4px" oninput="gs137Paint()"> %</label><label>H2S <input type="number" id="gs137_h2s" step="1" placeholder="0" style="width:56px;padding:3px 4px" oninput="gs137Paint()"> ppm</label><label>CO <input type="number" id="gs137_co" step="1" placeholder="0" style="width:56px;padding:3px 4px" oninput="gs137Paint()"> ppm</label></div><div style="font-size:11px;color:#6b7280;margin-top:3px">적정공기: 산소 18~23.5%, 황화수소 10ppm 미만, 일산화탄소 30ppm 미만(안전보건규칙 제618조)</div>';cs.appendChild(b)}
+  var ta=el('logText'),m=ta&&ta.value.match(/\[가스 측정 O2 ([\d.]+)% H2S ([\d.]+)ppm CO ([\d.]+)ppm\]/);['o2','h2s','co'].forEach(function(k,i){var e=el('gs137_'+k);if(e)e.value=m?m[i+1]:''});gs137Paint()}catch(e){}};
+var _saveLog137=saveLog;
+saveLog=async function(){try{var ta=el('logText');if(ta&&el('gsBox')){var t=ta.value.replace(GS137.RE,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();var v=gs137Val(),on=el('hz_conf')&&el('hz_conf').classList.contains('on');
+    if(on&&(v.o2!=null||v.h2s!=null||v.co!=null))t=(t?t+'\n':'')+'[가스 측정 O2 '+(v.o2==null?'-':v.o2)+'% H2S '+(v.h2s==null?'-':v.h2s)+'ppm CO '+(v.co==null?'-':v.co)+'ppm]';ta.value=t}}catch(e){}return _saveLog137.apply(this,arguments)};
+var _dr123Text137=dr123Text;
+dr123Text=function(){var t=_dr123Text137.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[가스 측정[^\]]*\]/);if(m)t+='\n밀폐공간 '+m[0].slice(1,-1)}catch(e){}return t};
 
 </script>
 </body>
