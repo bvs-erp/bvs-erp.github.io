@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.44</title>
+<title>BVS 데일리 v1.45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3145,6 +3145,16 @@ async function lo144Go(){var b=el('lo144');if(b)b.disabled=true;try{await saveLo
 function lo144Paint(){var btn=document.querySelector('#p-log button[onclick="saveLog()"]');if(!btn)return;var b=el('lo144');var e=entryOf(today());var show=LOG.date===today()&&e&&hhmm(e.work_start)&&!hhmm(e.work_end);
   if(!b){b=document.createElement('button');b.id='lo144';b.className='btn w';b.style.cssText='margin-top:8px;background:#16a34a;color:#fff;border-color:#16a34a';b.textContent='저장하고 퇴근 확인';b.onclick=lo144Go;btn.insertAdjacentElement('afterend',b)}b.style.display=show?'':'none'}
 (function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{lo144Paint()}catch(e){}return r}})();
+/* ═══ 1.45 (안티그래비티 R144 #2·R133 #2) 일지 › 「날씨」 칩 4개(맑음·흐림·비·눈) — 누르면 일지에 [날씨: 맑음] 꼬리표, 다시 누르면 지움. 일일보고 복사(1.23)에 「날씨」 줄로 들어감 ═══ */
+var WE145={RE:/\[날씨: [^\]]*\]\s*/g,L:['맑음','흐림','비','눈']};
+function we145Cur(){var t=(el('logText')||{}).value||'',m=t.match(/\[날씨: ([^\]]*)\]/);return m?m[1]:''}
+function we145Set(w){var ta=el('logText');if(!ta)return;var t=ta.value.replace(WE145.RE,'').replace(/\n{3,}/g,'\n\n').trim();if(w&&we145Cur()!==w)t='[날씨: '+w+']'+(t?'\n'+t:'');ta.value=t;try{ta.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}we145Paint()}
+function we145Paint(){var b=el('we145');if(!b)return;var c=we145Cur();b.querySelectorAll('button').forEach(function(x){var on=x.getAttribute('data-w')===c;x.style.background=on?'#2563eb':'';x.style.color=on?'#fff':'';x.style.borderColor=on?'#2563eb':''})}
+(function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{var ta=el('logText');if(ta&&!el('we145')){var b=document.createElement('div');b.id='we145';b.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 8px;font-size:13px';
+  b.innerHTML='<span style="color:#6b7280;font-size:12px">날씨</span>'+WE145.L.map(function(w){return '<button type="button" class="btn" data-w="'+w+'" style="padding:6px 12px;min-height:36px" onclick="we145Set(\''+w+'\')">'+w+'</button>'}).join('');
+  var anchor=el('wxBox')||null;if(anchor)anchor.insertAdjacentElement('beforebegin',b);else ta.insertAdjacentElement('beforebegin',b)}we145Paint()}catch(e){}return r}})();
+(function(){try{var _d=dr123Text;dr123Text=function(){var t=_d.apply(this,arguments);try{var w=we145Cur();if(w&&t.indexOf('날씨:')<0)t=t.replace(/\n공수:/,'\n날씨: '+w+'\n공수:')}catch(e){}return t}}catch(e){}})();
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='logText')try{we145Paint()}catch(x){}},true);
 </script>
 </body>
 </html>
