@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.43</title>
+<title>BVS 데일리 v1.44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3139,6 +3139,12 @@ logOpen=function(d){var r=_logOpen140.apply(this,arguments);oq140Bar();return r}
   document.addEventListener('input',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true);
   document.addEventListener('focusin',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true)})();
 (function(){try{if(typeof logOpen!=='function')return;var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);setTimeout(function(){AX_FIT()},60);return r}}catch(e){}})();
+/* ═══ 1.44 (안티그래비티 R142 #2 조율) 오늘 일지 화면에 「저장하고 퇴근 확인」 — 오늘 출근만 하고 아직 퇴근 전일 때만 보임. 누르면 일지를 저장하고 바로 오늘 탭의 퇴근 확인 화면(반일·1공수·잔업 고르기)을 엶. 퇴근은 그 화면에서 본인이 「확인」해야 기록됨 ═══ */
+async function lo144Go(){var b=el('lo144');if(b)b.disabled=true;try{await saveLog();var m=el('logMsg');if(m&&!/저장됨/.test(m.textContent||'')){if(b)b.disabled=false;return}
+  go('in');var w=el('w_date');if(w&&w.value!==today()){w.value=today();try{w.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}setTimeout(function(){try{clockOut()}catch(e){}},50)}catch(e){toast('저장 실패','e')}if(b)b.disabled=false}
+function lo144Paint(){var btn=document.querySelector('#p-log button[onclick="saveLog()"]');if(!btn)return;var b=el('lo144');var e=entryOf(today());var show=LOG.date===today()&&e&&hhmm(e.work_start)&&!hhmm(e.work_end);
+  if(!b){b=document.createElement('button');b.id='lo144';b.className='btn w';b.style.cssText='margin-top:8px;background:#16a34a;color:#fff;border-color:#16a34a';b.textContent='저장하고 퇴근 확인';b.onclick=lo144Go;btn.insertAdjacentElement('afterend',b)}b.style.display=show?'':'none'}
+(function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{lo144Paint()}catch(e){}return r}})();
 </script>
 </body>
 </html>
