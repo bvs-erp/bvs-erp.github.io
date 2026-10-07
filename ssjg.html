@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.38">
+<meta name="app-version" content="1.39">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6445,6 +6445,14 @@ function ad137Mark(root){if(!root)return;try{root.querySelectorAll('td').forEach
 function bd138Paint(){var tb=document.getElementById('delivTableBody');if(!tb)return;var rows=rawDeliveryRows||[],cnt={},byNo={};rows.forEach(function(r){if(r._k){cnt[r._k]=(cnt[r._k]||0)+1;byNo[String(r.order_no)]=r._k}});
   Array.prototype.forEach.call(tb.rows,function(tr){var c=tr.cells[3],no=tr.cells[2]&&String(tr.cells[2].textContent||'').trim();if(!c||c.querySelector('.bd138'))return;var k=byNo[no];if(!k||cnt[k]<2)return;var b=document.createElement('span');b.className='bd138';b.textContent='묶음 '+cnt[k];b.title='같은 받는 사람 '+cnt[k]+'건 — 합포장 확인';b.style.cssText='display:inline-block;margin-left:5px;font-size:10px;font-weight:700;padding:0 5px;border-radius:4px;background:rgba(217,119,6,.15);color:#d97706;vertical-align:middle';c.appendChild(b)})}
 (function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{bd138Paint()}catch(e){}return r}})();
+/* ═══ 1.39 (안티그래비티 R145 #3) 출고 › 「묶음 N」 표시를 누르면 그 받는 사람 주문만 모아 보기, 다시 누르면 전체 ═══ */
+var BD139=null;
+function bd139Apply(){var tb=document.getElementById('delivTableBody');if(!tb)return;var rows=rawDeliveryRows||[],byNo={};rows.forEach(function(r){if(r._k)byNo[String(r.order_no)]=r._k});
+  Array.prototype.forEach.call(tb.rows,function(tr){var no=tr.cells[2]&&String(tr.cells[2].textContent||'').trim();if(BD139){if(byNo[no]!==BD139)tr.style.display='none';else tr.style.display=''}});
+  tb.querySelectorAll('.bd138').forEach(function(b){b.style.outline=BD139?'2px solid #d97706':'';b.style.cursor='pointer';b.title=BD139?'다시 누르면 전체 보기':'누르면 이 받는 사람 주문만 보기'})}
+document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#delivTableBody .bd138');if(!b)return;e.stopPropagation();e.preventDefault();var tr=b.closest('tr'),no=tr&&tr.cells[2]&&String(tr.cells[2].textContent||'').trim(),k=null;(rawDeliveryRows||[]).some(function(r){if(String(r.order_no)===no){k=r._k;return true}});
+  if(BD139){BD139=null;renderDeliveryTable()}else{BD139=k;bd139Apply()}},true);
+(function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{if(BD139&&!(rawDeliveryRows||[]).some(function(x){return x._k===BD139}))BD139=null;bd139Apply()}catch(e){}return r}})();
 </script>
 <nav id="mnav"></nav>
 </body>
