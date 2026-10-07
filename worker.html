@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.38</title>
+<title>BVS 데일리 v1.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3087,6 +3087,16 @@ saveLog=async function(){try{var ta=el('logText'),c=el('sv138');if(ta&&c){var t=
 var _dr123Text138=dr123Text;
 dr123Text=function(){var t=_dr123Text138.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[관리감독자 순회점검[^\]]*\]/);if(m)t+='\n'+m[0].slice(1,-1)}catch(e){}return t};
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[관리감독자 순회점검 완료(?: · 조치: ([^\]]*))?\]/);var row='<tr><th>관리감독자 순회점검</th><td>'+(m?'이행 완료'+(m[1]?' · 조치: '+String(m[1]).replace(/</g,'&lt;'):' · 조치사항 없음'):'<span class="dim">기록 없음</span>')+'</td></tr>';h=h.replace('<table class="sig">',row.replace('<tr>','<table><tr>')+'</table><table class="sig">')}catch(e){}return h}}catch(e){}})();
+
+
+/* ═══ 1.39 (대표 지시 10/07 18:2x) 「화기·밀폐 작업은 아직 하지 않는 업무」 — 일지 위험작업 고르기에서 「화기」「밀폐공간」 버튼을 숨김. 따라서 화기 점검(1.21)·밀폐 점검(1.20)·가스 측정(1.37) 칸도 나오지 않음. A4 일일보고 바닥 글의 밀폐공간 조항도 뺌. 예전 일지에 화기·밀폐가 저장돼 있으면 그 날은 버튼이 보여 끌 수 있음. 다시 쓰려면 HZ139.off를 빈 목록으로 ═══ */
+var HZ139={off:['fire','conf']};
+function hz139Apply(){try{HZ139.off.forEach(function(k){var b=el('hz_'+k);if(b)b.style.display=b.classList.contains('on')?'':'none'})}catch(e){}}
+var _logOpen139=logOpen;
+logOpen=function(d){_logOpen139.apply(this,arguments);hz139Apply()};
+var _hzTog139=hz117Tog;
+hz117Tog=function(k){_hzTog139.apply(this,arguments);hz139Apply()};
+(function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);if(HZ139.off.indexOf('conf')>=0)h=h.replace('안전보건규칙 제619조 밀폐공간, ','');return h}}catch(e){}})();
 
 </script>
 </body>
