@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.40</title>
+<title>BVS 데일리 v1.41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3125,6 +3125,10 @@ window.addEventListener('online',function(){setTimeout(oq140Flush,800)});
 setInterval(oq140Flush,60000);setTimeout(oq140Flush,5000);
 var _logOpen140=logOpen;
 logOpen=function(d){var r=_logOpen140.apply(this,arguments);oq140Bar();return r};
+
+
+/* ═══ 1.41 (안티그래비티 R116 #5 조율) 일일보고 A4 인쇄 — @page A4 세로·여백 12mm를 지정하고 본문 여백 이중 적용을 없앰, 표·서명란이 쪽 경계에서 잘리지 않게(break-inside:avoid). 브라우저 기본 여백 차이로 2쪽으로 밀리던 문제 차단 ═══ */
+(function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{h=h.replace('margin:16mm 14mm}','margin:0}').replace('</style>','@page{size:A4 portrait;margin:12mm 12mm 12mm 12mm}table,tr,.sig,pre{break-inside:avoid;page-break-inside:avoid}@media print{body{margin:0}}</style>')}catch(e){}return h}}catch(e){}})();
 
 </script>
 </body>
