@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.55</title>
+<title>BVS 데일리 v1.56</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3432,6 +3432,14 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
   try{fl151Pick(m.sid);var c=fl151Co(),ln=(c&&c.lines)||[],mm=String(m.memo||''),hit=ln.filter(function(l){return l&&mm.indexOf(l)>=0})[0]||'';if(hit)mm=mm.replace(hit,' ');FL151.line=hit||(ln.length===1?ln[0]:'');var o=fl151Parse(mm);FL151.equip=o.equip||'';if(o.maker)FL151.maker=o.maker;if(o.task)FL151.task=o.task;fl151Apply();fl151Paint()}catch(e){console.error(e)}
   try{if(typeof go==='function')go('in')}catch(e){}
   setTimeout(function(){var b=el('fl154go')||el('fl151');if(b)try{b.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}},150)}
+
+
+/* ═══ 1.56 (안티그래비티 R161 #4) 출근 고르기 「출근하기」 위에 오늘이 토·일·공휴일이면 빨간 「휴일 근무일」 안내 ═══ */
+(function(){var c=document.createElement('style');c.textContent='#fl151 .ho156{display:inline-block;margin:8px 0 2px;padding:3px 10px;border-radius:999px;background:rgba(220,38,38,.1);color:#dc2626;font-size:12px;font-weight:700}';document.head.appendChild(c)})();
+(function(){var _p=fl151Paint;fl151Paint=function(){var x=_p.apply(this,arguments);try{var b=el('fl151'),bt=el('fl154go');if(!b||!bt)return x;var d=(el('w_date')&&el('w_date').value)||(typeof today==='function'?today():'');if(!d)return x;
+  var w=new Date(d+'T00:00:00Z').getUTCDay(),hn=(((SC154||{}).data||{}).holidays||[]).filter(function(h){return String(h.d).slice(0,10)===d})[0];
+  var lab=hn?(hn.n||'공휴일'):(w===0?'일요일':(w===6?'토요일':''));if(!lab)return x;
+  var c=document.createElement('div');c.className='ho156';c.textContent='휴일 근무일 · '+lab;bt.parentNode.insertBefore(c,bt)}catch(e){console.error(e)}return x}})();
 
 </script>
 </body>
