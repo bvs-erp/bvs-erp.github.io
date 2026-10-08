@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.49">
+<meta name="app-version" content="1.50">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3034,7 +3034,7 @@ function renderArRecon(rows){
   }
   tbody.innerHTML = rows.map(r => `
     <tr>
-      <td><strong>${gEsc(r.partner)}</strong></td>
+      <td><strong class="ss150p" data-p="${gEsc(r.partner)}" title="거래처원장 열기">${gEsc(r.partner)}</strong></td>
       <td>${gEsc(r.kind)}</td>
       <td>${gEsc(r.issue_ym)}</td>
       <td class="amt-neutral">${fmt(r.total_amt)}</td>
@@ -6570,6 +6570,13 @@ function bk145(name){ var q = document.getElementById('bankSearch'); if(!q) retu
 function ss149Copy(v,b){var done=function(){if(b){b.textContent='복사됨';b.classList.add('ok');setTimeout(function(){b.textContent='복사';b.classList.remove('ok')},1500)}};
   try{if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(done,function(){ss149Fall(v);done()});return}}catch(e){}ss149Fall(v);done()}
 function ss149Fall(v){var t=document.createElement('textarea');t.value=v;t.style.cssText='position:fixed;left:-9999px';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove()}
+
+/* ═══ 1.50 (안티그래비티 R167 #4) 미수 대사 표 거래처 이름을 누르면 거래처원장으로 바로 — 그 거래처가 골라진 채로 열림 ═══ */
+(function(){var c=document.createElement('style');c.textContent='.ss150p{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.ss150p:hover{color:var(--accent,#2563eb)}';document.head.appendChild(c)})();
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('.ss150p');if(!t)return;e.preventDefault();ss150Go(t.getAttribute('data-p')||t.textContent)});
+function ss150Go(name){try{switchTab('gl-partner')}catch(e){return}var n=0;(function wait(){var s=document.getElementById('glpCp');
+  if(s&&s.options.length>1){var ok=[].some.call(s.options,function(o){return o.value===name});if(ok){glpPick(name)}else{var k=String(name).replace(/\s|\(주\)|주식회사/g,'');var o=[].filter.call(s.options,function(o){return o.value&&o.value.replace(/\s|\(주\)|주식회사/g,'')===k})[0];if(o)glpPick(o.value)}return}
+  if(++n<60)setTimeout(wait,200)})()}
 </script>
 <nav id="mnav"></nav>
 </body>
