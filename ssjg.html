@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.41">
+<meta name="app-version" content="1.42">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6465,6 +6465,38 @@ function dv140Paint(){var a=document.getElementById('dv136Btn');if(!a)return;var
 /* ═══ 1.41 (안티그래비티 R155 #3) 출고 › 로젠 접수 대상 표의 연락처 칸을 누르면 그 번호 복사(주소 1.37·메시지 1.34와 같은 방식) ═══ */
 function tl141Mark(){var tb=document.getElementById('delivTableBody');if(!tb)return;Array.prototype.forEach.call(tb.rows,function(tr){var td=tr.cells[4];if(!td||td.dataset.tl141||tr.cells.length<10)return;var v=String(td.textContent||'').trim();if(!v||v==='-')return;td.dataset.tl141='1';td.title=v+' (누르면 복사)';td.style.cursor='copy';td.addEventListener('click',function(e){e.stopPropagation();cp134(v,'연락처 복사')})})}
 (function(){var _r=renderDeliveryTable;renderDeliveryTable=function(){var r=_r.apply(this,arguments);try{tl141Mark()}catch(e){}return r}})();
+
+/* ═══ (대표 지시 10/08) 머리글 로고 옆 한 줄: 이천·청주 날씨 · 오늘 유가(오피넷 경유·휘발유) · 환율(USD/KRW) — 데일리 1.49와 같은 자료(날씨 Open-Meteo, 유가·환율 daily_market()) ═══ */
+(function(){
+  var K={wx:null,wxAt:0,mk:null,mkAt:0,busy:0,tries:0};
+  var C=[['이천',37.272,127.435],['청주',36.642,127.489]];
+  function wc(c){c=+c;if(c===0)return '맑음';if(c<=2)return '구름 조금';if(c===3)return '흐림';if(c===45||c===48)return '안개';if(c>=51&&c<=57)return '이슬비';if(c>=61&&c<=67)return '비';if(c>=71&&c<=77)return '눈';if(c>=80&&c<=82)return '소나기';if(c===85||c===86)return '눈';if(c>=95)return '뇌우';return '–'}
+  function n(v,d){return (+v).toLocaleString('ko-KR',{minimumFractionDigits:d||0,maximumFractionDigits:d||0})}
+  function e(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  var st=document.createElement('style');st.textContent='#mk280{display:flex;align-items:center;gap:6px;margin-left:14px;font-size:12px;line-height:1.2;white-space:nowrap;min-width:0;overflow:hidden;cursor:pointer}'
+   +'#mk280 span{display:inline-flex;gap:4px;align-items:baseline;padding:3px 8px;border:1px solid rgba(128,128,128,.28);border-radius:6px}#mk280 i{font-style:normal;opacity:.65;font-size:11px}#mk280 b{font-weight:700}'
+   +'#mk280 .up{color:#dc2626}#mk280 .dn{color:#2563eb}@media (max-width:1250px){#mk280 .w2{display:none}}@media (max-width:980px){#mk280{display:none}}@media print{#mk280{display:none}}';
+  document.head.appendChild(st);
+  function box(){var b=document.getElementById('mk280');if(b)return b;var br=document.querySelector('#top .brand')||document.querySelector('header .brand');if(!br)return null;
+    b=document.createElement('div');b.id='mk280';b.title='날씨·유가·환율 — 누르면 다시 불러옵니다';b.onclick=function(ev){ev.stopPropagation();load(true)};br.after(b);return b}
+  function paint(){var b=box();if(!b)return;var h='';
+    C.forEach(function(c,i){var w=K.wx&&K.wx[i];h+='<span'+(i?' class="w2"':'')+'><i>'+c[0]+'</i><b>'+(w?wc(w.code)+' '+Math.round(w.t)+'°':'…')+'</b>'+(w?'<i>'+Math.round(w.lo)+'/'+Math.round(w.hi)+'°'+(w.pp!=null?' 비'+w.pp+'%':'')+'</i>':'')+'</span>'});
+    var m=K.mk||{},f=m.fuel||{},d=f['경유'],g=f['휘발유'],x=m.fx;
+    h+='<span><i>경유</i><b>'+(d?n(d.price):'–')+'</b><i class="w2">휘발유 '+(g?n(g.price):'–')+'</i></span>';
+    var ch='';if(x&&x.prev!=null){var v=Math.round((x.rate-x.prev)*10)/10;ch=v?'<i class="'+(v>0?'up':'dn')+'">'+(v>0?'+':'−')+n(Math.abs(v),1)+'</i>':''}
+    h+='<span><i>환율</i><b>'+(x&&x.rate?n(x.rate,1):'–')+'</b>'+ch+'</span>';
+    b.innerHTML=h;b.title='이천·청주 날씨(Open-Meteo) · 유가 오피넷 전국 평균'+(d&&d.date?' '+d.date:'')+' · 환율 USD/KRW'+(x&&x.date?' '+x.date:'')+' — 누르면 다시 불러옵니다'}
+  function wx(){var u='https://api.open-meteo.com/v1/forecast?latitude='+C.map(function(c){return c[1]}).join(',')+'&longitude='+C.map(function(c){return c[2]}).join(',')+'&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=1';
+    return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){if(!Array.isArray(j))j=[j];return j.map(function(o){var c=o.current||{},y=o.daily||{};return {t:c.temperature_2m,code:c.weather_code,hi:(y.temperature_2m_max||[])[0],lo:(y.temperature_2m_min||[])[0],pp:(y.precipitation_probability_max||[])[0]}})})}
+  function load(force){if(K.busy)return;K.busy=1;var now=Date.now(),J=[];
+    try{if(!K.wx){var c=JSON.parse(localStorage.getItem('bvs_wx280')||'null');if(c&&now-c.at<30*60e3){K.wx=c.wx;K.wxAt=c.at}}}catch(x){}
+    if(force||!K.wx||now-K.wxAt>30*60e3)J.push(wx().then(function(w){K.wx=w;K.wxAt=Date.now();try{localStorage.setItem('bvs_wx280',JSON.stringify({at:K.wxAt,wx:w}))}catch(x){}}).catch(function(){}));
+    var s=(typeof sb!=='undefined'&&sb)?sb:(window.sb||null);
+    if(s&&s.rpc&&(force||!K.mk||now-K.mkAt>10*60e3))J.push(Promise.resolve(s.rpc('daily_market')).then(function(r){if(r&&!r.error&&r.data&&r.data.ok){K.mk=r.data;K.mkAt=Date.now()}}).catch(function(){}));
+    Promise.all(J).then(function(){K.busy=0;paint();if(!K.mk&&K.tries++<60)setTimeout(function(){load(false)},5000)})}
+  function start(){paint();load(false);setInterval(function(){load(false)},10*60e3)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else setTimeout(start,0);
+})();
 </script>
 <nav id="mnav"></nav>
 </body>
