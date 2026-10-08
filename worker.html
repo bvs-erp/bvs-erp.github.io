@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.52</title>
+<title>BVS 데일리 v1.53</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3333,6 +3333,15 @@ async function rg152Find(q){q=String(q||'').trim();if(q.length<2){rg152List(q);r
   var d=document.createElement('div');d.className='mob-nav-item rg152n';d.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg> 사규 보기 (취업규칙)';d.onclick=function(){try{closeMobNavModal()}catch(e){}rg152Open()};
   if(at)lst.insertBefore(d,at);else lst.appendChild(d)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add()})();
+/* ═══ 1.53 (안티그래비티 R157 #3·R158 #4) 맨 위 띠의 이천·청주 날씨를 누르면 앞으로 12시간 기온·강수확률·바람 — 야외 반입·셋업 판단용 ═══ */
+(function(){var c=document.createElement('style');c.textContent='#wx153{position:fixed;left:12px;right:12px;top:110px;z-index:9400;background:var(--sf);border:1px solid var(--ln);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px 12px}#wx153 table{width:100%;border-collapse:collapse;font-size:12.5px}#wx153 td,#wx153 th{padding:4px 3px;text-align:center;border-top:1px solid var(--ln2)}#wx153 th{font-size:11px;color:var(--tx3);font-weight:600}#wx153 .hd{display:flex;align-items:center;margin-bottom:6px}#wx153 .hd b{flex:1}';document.head.appendChild(c)})();
+async function wx153Open(i){var c=MK149_CITY[i];if(!c)return;var b=el('wx153');if(!b){b=document.createElement('div');b.id='wx153';document.body.appendChild(b)}b.style.display='';b.innerHTML='<div class="hd"><b>'+c[0]+' 앞으로 12시간</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><div class="tiny">불러오는 중…</div>';
+  try{var r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+c[1]+'&longitude='+c[2]+'&hourly=temperature_2m,precipitation_probability,wind_speed_10m,weather_code&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=2');if(!r.ok)throw new Error('날씨 '+r.status);var j=await r.json(),h=j.hourly||{},T=h.time||[];
+    var now=new Date(),k=T.findIndex(function(t){return new Date(t+':00+09:00')>=new Date(now.getTime()-3600e3)});if(k<0)k=0;var rows=[];for(var x=k;x<Math.min(k+12,T.length);x++)rows.push(x);
+    b.innerHTML='<div class="hd"><b>'+c[0]+' 앞으로 12시간</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><table><tr><th>시각</th><th>날씨</th><th>기온</th><th>비</th><th>바람</th></tr>'
+      +rows.map(function(x){var w=+h.wind_speed_10m[x];return '<tr><td>'+String(T[x]).slice(11,13)+'시</td><td>'+mk149Wc(h.weather_code[x])+'</td><td>'+Math.round(h.temperature_2m[x])+'°</td><td'+((+h.precipitation_probability[x])>=50?' style="color:var(--ac);font-weight:700"':'')+'>'+h.precipitation_probability[x]+'%</td><td'+(w>=8?' style="color:#dc2626;font-weight:700"':'')+'>'+w.toFixed(1)+'m/s</td></tr>'}).join('')+'</table><div class="tiny dim" style="margin-top:6px">바람 8m/s 이상은 빨간색 — 야외 반입·고소작업 주의</div>'}
+  catch(e){b.innerHTML='<div class="hd"><b>'+c[0]+'</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><div class="neg">'+esc(e.message||e)+'</div>'}}
+document.addEventListener('click',function(e){var bx=el('mk149');if(!bx||!bx.contains(e.target))return;var cells=[].slice.call(bx.children),i=cells.findIndex(function(c){return c.contains(e.target)});if(i===0||i===1){e.stopPropagation();e.preventDefault();wx153Open(i)}},true);
 </script>
 </body>
 </html>
