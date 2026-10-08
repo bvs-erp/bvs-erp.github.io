@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.58</title>
+<title>BVS 데일리 v1.60</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3466,6 +3466,83 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
       x.onclick=function(e){e.stopPropagation();try{sessionStorage.setItem(K,String(Date.now()+600000))}catch(_){}b.style.display='none'};b.appendChild(x)}
     if(!b.__w){b.__w=1;b.onclick=function(){if(busy()&&!confirm('작성 중인 내용이 있으면 사라집니다. 지금 새로고침할까요?'))return;location.reload()}}}
   setInterval(fix,1500);document.addEventListener('focusin',fix);document.addEventListener('focusout',function(){setTimeout(fix,60)});window.addEventListener('resize',fix)})();
+/* ═══ 1.59 (대표 지시 10/08) 급여명세서 — 대표가 발행한 본인 명세서만(근로기준법 제48조② 임금명세서 교부)
+   「급여」 화면 맨 위 「급여명세서」 목록 · 출퇴근 화면 위 「○월 급여명세서 도착」 알림(확인 전까지)
+   명세서: 지급 항목·공제 항목별 금액, 계산 방법, 지급액계·공제액계·차인지급액, 「확인했습니다」(열람·확인 시각 기록), 인쇄·PDF ═══ */
+(function(){var c=document.createElement('style');c.textContent=''
+ +'#ps159w{position:fixed;inset:0;z-index:9500;background:rgba(15,23,42,.55);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:12px}'
+ +'#ps159w .pp{background:#fff;color:#111;width:min(760px,100%);border-radius:10px;padding:18px 16px 14px;box-shadow:0 10px 40px rgba(0,0,0,.3)}'
+ +'#ps159w h3{text-align:center;margin:2px 0 12px;font-size:19px;letter-spacing:.5px}'
+ +'#ps159w .mt{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 10px;font-size:13px;background:#f1f5f9;border:1px solid #cbd5e1;padding:8px 10px;margin-bottom:8px}'
+ +'#ps159w .mt b{font-weight:600;color:#334155}'
+ +'#ps159w .gr{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #64748b}'
+ +'#ps159w .col{min-width:0}#ps159w .col+.col{border-left:1px solid #64748b}'
+ +'#ps159w .hd{display:flex;justify-content:space-between;background:#e2e8f0;font-weight:700;font-size:13px;padding:6px 8px;border-bottom:1px solid #64748b}'
+ +'#ps159w .it{display:flex;justify-content:space-between;font-size:13px;padding:4px 8px;border-bottom:1px dashed #e2e8f0}#ps159w .it span:last-child{font-variant-numeric:tabular-nums}'
+ +'#ps159w .sm{display:flex;justify-content:space-between;font-weight:700;font-size:14px;padding:7px 8px;background:#f1f5f9;border-top:1px solid #64748b}'
+ +'#ps159w .net{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:17px;padding:10px 10px;margin-top:8px;border:2px solid #1e3a8a;color:#1e3a8a;border-radius:6px}'
+ +'#ps159w .calc{font-size:12px;color:#334155;margin-top:10px;line-height:1.6}#ps159w .calc b{color:#111}'
+ +'#ps159w .ft{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:#475569;margin-top:10px;flex-wrap:wrap}'
+ +'#ps159w .bt{display:flex;gap:8px;margin-top:12px}#ps159w .bt .btn{flex:1;min-height:44px}'
+ +'@media(max-width:560px){#ps159w .gr{grid-template-columns:1fr}#ps159w .col+.col{border-left:0;border-top:1px solid #64748b}#ps159w .mt{grid-template-columns:auto 1fr}}'
+ +'#ps159bn{display:flex;align-items:center;gap:10px;padding:12px 14px;margin:0 0 10px;border-radius:10px;background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;font-weight:700;cursor:pointer}#ps159bn .go{margin-left:auto;font-size:13px}'
+ +'@media print{body>*:not(#ps159w){display:none!important}#ps159w{position:static;background:#fff;padding:0;display:block}#ps159w .pp{box-shadow:none;width:100%;padding:0}#ps159w .bt{display:none!important}@page{size:A4 portrait;margin:14mm}}';document.head.appendChild(c)})();
+var PS159={list:null};
+function ps159Ym(ym){var p=String(ym||'').split('-');return p[0]+'년 '+(+p[1])+'월분'}
+async function ps159Load(){try{var r=await sb.rpc('my_payslips');PS159.list=(r&&r.data)||[]}catch(e){PS159.list=[]}ps159Paint()}
+function ps159Paint(){var L=PS159.list||[];
+  /* 급여 화면 카드 */
+  var pg=el('p-pay');if(pg){var c=el('ps159c');if(!c){c=document.createElement('div');c.id='ps159c';c.className='card';pg.insertBefore(c,pg.firstChild)}
+    c.innerHTML='<h2>급여명세서</h2>'+(L.length?L.map(function(s){return '<div class="row" style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line,#e2e8f0);cursor:pointer" onclick="ps159Open('+(+s.id)+')"><b style="flex:1">'+esc(ps159Ym(s.ym))+'</b><span class="tiny dim">실지급 '+won(s.net)+'원</span>'+(s.acked?'<span class="tiny dim">확인함</span>':'<span class="tiny" style="color:#1d4ed8;font-weight:700">새 명세서</span>')+'</div>'}).join(''):'<p class="tiny dim" style="margin:6px 0">발행된 명세서가 없습니다. 매월 급여 마감 뒤 발행됩니다.</p>')}
+  /* 출퇴근 화면 알림 */
+  var nu=L.filter(function(s){return !s.acked})[0],pin=el('p-in'),bn=el('ps159bn');
+  if(nu&&pin){if(!bn){bn=document.createElement('div');bn.id='ps159bn';pin.insertBefore(bn,pin.firstChild)}bn.innerHTML='<span>'+esc(ps159Ym(nu.ym).replace('분',''))+' 급여명세서가 도착했습니다</span><span class="go">보기 ›</span>';bn.onclick=function(){ps159Open(+nu.id)}}
+  else if(bn)bn.remove()}
+async function ps159Open(id){var r=await sb.rpc('my_payslip',{p_id:id});var s=r&&r.data;if(!s||!s.ok){toast((s&&s.error)||(r&&r.error&&r.error.message)||'불러오지 못했습니다','e');return}
+  var w=el('ps159w');if(!w){w=document.createElement('div');w.id='ps159w';w.onclick=function(e){if(e.target===w)ps159Close()};document.body.appendChild(w)}
+  var row=function(x){return '<div class="it"><span>'+esc(x.n)+'</span><span>'+won(+x.a)+'</span></div>'};
+  var calcs=(s.earn||[]).filter(function(x){return x.calc&&x.calc!=='비과세'});var nt=(s.earn||[]).filter(function(x){return x.calc==='비과세'}).map(function(x){return x.n});
+  var d=function(v){return v?String(v).slice(0,10):''};
+  w.innerHTML='<div class="pp"><h3>'+esc(ps159Ym(s.ym))+' 급여명세서</h3>'
+    +'<div class="mt"><b>성명</b><span>'+esc(s.name||'')+'</span><b>사번</b><span>'+esc(s.eno||'')+'</span><b>입사일</b><span>'+esc(d(s.hired_on))+'</span><b>지급일</b><span>'+esc(d(s.pay_date))+'</span></div>'
+    +'<div class="gr"><div class="col"><div class="hd"><span>지급 내역</span><span>지급액</span></div>'+(s.earn||[]).map(row).join('')+'<div class="sm"><span>지급액 계</span><span>'+won(s.gross)+'</span></div></div>'
+    +'<div class="col"><div class="hd"><span>공제 내역</span><span>공제액</span></div>'+(s.ded||[]).map(row).join('')+'<div class="sm"><span>공제액 계</span><span>'+won(s.ded_total)+'</span></div></div></div>'
+    +'<div class="net"><span>차인지급액</span><span>'+won(s.net)+'원</span></div>'
+    +'<div class="calc">'+(calcs.length?'<b>계산 방법</b><br>'+calcs.map(function(x){return '· '+esc(x.n)+': '+esc(x.calc)}).join('<br>')+'<br>':'')+(nt.length?'· 비과세: '+esc(nt.join(', '))+'<br>':'')+'· 공제: 국민연금·건강·장기요양·고용보험은 법정 요율, 소득세는 간이세액표 기준</div>'
+    +'<div class="ft"><span>귀하의 노고에 감사드립니다.</span><span>주식회사 비브이에스 · 발행 '+esc(d(s.issued_at))+(s.v>1?' · '+s.v+'차 재발행':'')+' · 확인번호 '+esc(s.sha||'')+'</span></div>'
+    +'<div class="bt">'+(s.acked_at?'<button class="btn" disabled>확인함 '+esc(String(s.acked_at).slice(5,16).replace('T',' '))+'</button>':'<button class="btn p" onclick="ps159Ack('+(+s.id)+',this)">확인했습니다</button>')+'<button class="btn" onclick="window.print()">인쇄·PDF</button><button class="btn" onclick="ps159Close()">닫기</button></div></div>';
+  w.style.display='flex'}
+function ps159Close(){var w=el('ps159w');if(w)w.remove()}
+async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_payslip_ack',{p_id:id});if(r.error||!(r.data&&r.data.ok)){toast('저장 실패','e');if(b)b.disabled=false;return}
+  toast('확인했습니다','g');(PS159.list||[]).forEach(function(s){if(+s.id===+id)s.acked=true});ps159Paint();if(b){b.textContent='확인함';}}
+(function(){var _l=loadAll;loadAll=async function(){var r=await _l.apply(this,arguments);try{if(!PS159.t||Date.now()-PS159.t>60000){PS159.t=Date.now();ps159Load()}}catch(e){}return r}})();
+(function(){var mn=document.querySelector('.mob-nav-list');if(mn&&!el('ps159m')){var d=document.createElement('div');d.id='ps159m';d.className='mob-nav-item';d.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="12" y2="17"/></svg> 급여명세서';d.onclick=function(){go('pay');try{closeMobNavModal()}catch(e){}};var ref=[].filter.call(mn.querySelectorAll('.mob-nav-grp'),function(g){return /시스템/.test(g.textContent)})[0];mn.insertBefore(d,ref||null)}})();
+
+/* ═══ 1.60 (대표 지시 10/08 정정) 프로젝트 일정은 「어느 날 어떤 프로젝트가 돌아가는지」만 — 다른 사람 이름·출퇴근 시각·인원수는 안 보임(DB project_schedule이 대표 외에는 날짜·프로젝트만 내려줌)
+   본인이 그날 그 프로젝트에 출근·예정이면 「나」 표시만. 대표 아이디는 예전처럼 전체 ═══ */
+(function(){var c=document.createElement('style');c.textContent='#sc154 .cal .d span.me160{outline:2px solid #facc15;outline-offset:-2px}';document.head.appendChild(c)})();
+(function(){var _p=sc154Paint;sc154Paint=function(){var d=SC154.data;if(!d||d.err||d.full)return _p.apply(this,arguments);
+  var b=el('sc154');if(!b)return;var ym=sc154Ym(),p=ym.split('-');
+  var h='<div class="hd"><button class="btn sm" onclick="sc154Close()">닫기</button><button class="btn sm" onclick="sc154Shift(-1)">‹</button><b>'+p[0]+'년 '+(+p[1])+'월 프로젝트 일정</b><button class="btn sm" onclick="sc154Shift(1)">›</button></div><div class="bd">';
+  var ps=d.projects||[];
+  h+='<div class="lg">'+ps.map(function(x){return '<div><i style="background:'+esc(x.color)+'"></i><span><b>'+esc(x.name)+'</b><small>'+esc(x.place||'')+(x.hours?' · '+esc(x.hours):'')+'</small></span></div>'}).join('')+'</div>';
+  var by={};(d.days||[]).forEach(function(x){(by[x.d]=by[x.d]||{})[x.code]=x});
+  var first=new Date(Date.UTC(+p[0],+p[1]-1,1)).getUTCDay(),nd=new Date(Date.UTC(+p[0],+p[1],0)).getUTCDate();
+  h+='<div class="cal">'+['일','월','화','수','목','금','토'].map(function(w,i){return '<div class="w'+(i===0?' su':i===6?' sa':'')+'">'+w+'</div>'}).join('');
+  for(var i=0;i<first;i++)h+='<div class="d x"></div>';
+  for(var k=1;k<=nd;k++){var ds=ym+'-'+String(k).padStart(2,'0'),wd=(first+k-1)%7,g=by[ds]||{};
+    var bars=ps.filter(function(x){return g[x.code]}).map(function(x){var y=g[x.code];return '<span class="'+(y.kind==='plan'?'pl':'')+(y.me?' me160':'')+'" style="background:'+esc(x.color)+'">'+(y.me?'나':'')+'</span>'}).join('');
+    var band=bars?'':ps.filter(function(x){return (!x.start_on||x.start_on<=ds)&&(!x.end_on||x.end_on>=ds)}).slice(0,3).map(function(x){return '<span class="bnd" style="background:'+esc(x.color)+'"></span>'}).join('');
+    h+='<div class="d'+(wd===0?' su':wd===6?' sa':'')+(ds===d.today?' td':'')+(ds===SC154.sel?' on':'')+'" onclick="sc154Pick('+ERPC.jsq(ds)+')"><em>'+k+'</em>'+bars+band+'</div>'}
+  h+='</div>';
+  if(SC154.sel&&SC154.sel.slice(0,7)===ym){var g2=by[SC154.sel]||{},wd2='일월화수목금토'[new Date(SC154.sel+'T00:00:00Z').getUTCDay()];
+    h+='<div class="day" id="sc154day"><h4>'+(+SC154.sel.slice(5,7))+'월 '+(+SC154.sel.slice(8))+'일('+wd2+') 프로젝트 일정</h4>'
+     +(Object.keys(g2).length?ps.filter(function(x){return g2[x.code]}).map(function(x){var y=g2[x.code];
+        return '<div class="it"><b style="color:'+esc(x.color)+'">'+esc(x.name)+(y.kind==='plan'?' <small>(예정)</small>':'')+(y.me?' <span class="me">나</span>':'')+'</b><small>'+esc(x.place||'')+(x.hours?' · 기준 '+esc(x.hours):'')+'</small></div>'}).join('')
+      :'<div class="tiny">이날 진행하는 프로젝트가 없습니다.</div>')+'</div>'}
+  h+='<div class="tiny dim" style="margin-top:10px">진한 칸은 진행, 흐린 칸은 예정입니다. 내가 들어간 날은 「나」로 표시됩니다.</div></div>';
+  b.innerHTML=h}})();
+
 </script>
 </body>
 </html>
