@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.43">
+<meta name="app-version" content="1.44">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6506,6 +6506,21 @@ function bx143Paint(){
   var freight = Number((document.getElementById('cfgFreight') || {}).value) || SSJG_FREIGHT_DEFAULT, box = 0; rows.forEach(function(r){ box += Number(r.qty) || 0; });
   b.style.display = ''; b.textContent = '총 ' + box.toLocaleString('ko-KR') + '박스 · 운임 ' + fmt(freight * box) + '원';
 }
+/* ═══ 1.44 (안티그래비티 R159 #3) 「총 N박스 · 운임」이 칩·필터로 걸러진 줄과 같이 움직이도록 — 걸러져 있으면 「보이는 N건 · B박스 · 운임 / 전체 T박스」 ═══ */
+function bx144Paint(){
+  var b = document.getElementById('bx143'), tb = document.getElementById('delivTableBody'); if(!b || !tb || b.style.display === 'none') return;
+  var all = rawDeliveryRows || [], freight = Number((document.getElementById('cfgFreight') || {}).value) || SSJG_FREIGHT_DEFAULT, tot = 0; all.forEach(function(r){ tot += Number(r.qty) || 0; });
+  var vis = Array.prototype.filter.call(tb.rows, function(tr){ return tr.cells.length > 8 && tr.style.display !== 'none' && getComputedStyle(tr).display !== 'none'; });
+  if(!vis.length || vis.length === all.length){ b.textContent = '총 ' + tot.toLocaleString('ko-KR') + '박스 · 운임 ' + fmt(freight * tot) + '원'; return; }
+  var box = 0; vis.forEach(function(tr){ box += Number(String(tr.cells[7].innerText).replace(/[^0-9.-]/g, '')) || 0; });
+  b.textContent = '보이는 ' + vis.length + '건 · ' + box.toLocaleString('ko-KR') + '박스 · 운임 ' + fmt(freight * box) + '원 / 전체 ' + tot.toLocaleString('ko-KR') + '박스';
+}
+(function(){ var _p = bx143Paint; bx143Paint = function(){ var r = _p.apply(this, arguments); try { bx144Paint(); } catch(e){} return r; };
+  var t = null; function obs(){ var tb = document.getElementById('delivTableBody'); if(!tb || tb._bx144) return; tb._bx144 = 1;
+    new MutationObserver(function(){ clearTimeout(t); t = setTimeout(function(){ try { bx144Paint(); } catch(e){} }, 60); }).observe(tb, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'hidden'] }); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', obs); else obs();
+  document.addEventListener('click', function(){ setTimeout(function(){ try { obs(); bx144Paint(); } catch(e){} }, 80); }, true); })();
+
 </script>
 <nav id="mnav"></nav>
 </body>
