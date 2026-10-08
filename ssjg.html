@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.45">
+<meta name="app-version" content="1.46">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6530,6 +6530,14 @@ function bx144Paint(){
   } catch(e){ console.error(e); } return x; }; })();
 function bk145(name){ var q = document.getElementById('bankSearch'); if(!q) return; q.value = (q.value === name) ? '' : name; try { filterBankRows(); } catch(e){}
   try { q.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){} }
+
+
+/* ═══ 1.46 (안티그래비티 R161 #2) 통장 거래 목록 적요 칸도 누르면 그 적요로 걸러 보기(거래처가 빈 정산·운임 건) ═══ */
+(function(){ var _r = renderBankTable; renderBankTable = function(rows){ var x = _r.apply(this, arguments); try {
+    var tb = document.getElementById('bankTableRows'); if(!tb || !rows || !rows.length) return x;
+    Array.prototype.forEach.call(tb.rows, function(tr, i){ var r = rows[i], td = tr.cells[1]; if(!r || !td || !r.description) return;
+      td.style.cursor = 'pointer'; td.title = '이 적요 거래만 보기'; td.onclick = function(){ bk145(r.description); }; });
+  } catch(e){ console.error(e); } return x; }; })();
 
 </script>
 <nav id="mnav"></nav>
