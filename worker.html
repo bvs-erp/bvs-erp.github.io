@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.49</title>
+<title>BVS 데일리 v1.50</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3224,6 +3224,10 @@ var PL149={};
   if(d&&!PL149[d]&&!entryOf(d)&&(D.sites||[]).length){var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];
     if(p){PL149[d]=1;if(SEL.site!==p.site_id&&(D.sites||[]).some(function(s){return s.site_id===p.site_id})){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}}}catch(e){}
   return _rs.apply(this,arguments)}})();
+/* ═══ 1.50 (안티그래비티 R156 #1) 기록 달력에서 날짜를 누르면 나오는 그날 카드(kday)에 「이 날 일지 보기·입력」 — 그날 근무 기록이 있을 때만, 일지가 있으면 「(작성됨)」 ═══ */
+(function(){var _r=renderList;renderList=function(){var r=_r.apply(this,arguments);try{var d=LIST.day,k=document.querySelector('.kday');if(!d||!k||k.querySelector('.lg150'))return r;var e=null;try{e=entryOf(d)}catch(x){}if(!e)return r;
+  var has=!!String(e.work_log||'').trim(),h=k.firstElementChild,b=document.createElement('button');b.type='button';b.className='btn sm lg150';b.style.cssText='float:right;margin-top:-2px';b.innerHTML=has?'일지 보기·수정 <small style="opacity:.75">(작성됨)</small>':'이 날 일지 입력';
+  b.onclick=function(ev){ev.stopPropagation();LOG.date=d;go('log')};if(h)h.appendChild(b);else k.insertBefore(b,k.firstChild)}catch(x){}return r}})();
 </script>
 </body>
 </html>
