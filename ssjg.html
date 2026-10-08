@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.44">
+<meta name="app-version" content="1.45">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6520,6 +6520,16 @@ function bx144Paint(){
     new MutationObserver(function(){ clearTimeout(t); t = setTimeout(function(){ try { bx144Paint(); } catch(e){} }, 60); }).observe(tb, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'hidden'] }); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', obs); else obs();
   document.addEventListener('click', function(){ setTimeout(function(){ try { obs(); bx144Paint(); } catch(e){} }, 80); }, true); })();
+
+/* ═══ 1.45 (안티그래비티 R160 #3) 통장 거래처 칸을 누르면 검색창에 그 거래처를 넣고 바로 걸러 보기 ═══ */
+(function(){ var _r = renderBankTable; renderBankTable = function(rows){ var x = _r.apply(this, arguments); try {
+    var tb = document.getElementById('bankTableRows'); if(!tb || !rows || !rows.length) return x;
+    Array.prototype.forEach.call(tb.rows, function(tr, i){ var r = rows[i], td = tr.cells[2]; if(!r || !td || !r.counterparty) return;
+      td.style.cursor = 'pointer'; td.style.textDecoration = 'underline dotted'; td.style.textUnderlineOffset = '3px'; td.title = '이 거래처 거래만 보기';
+      td.onclick = function(){ bk145(r.counterparty); }; });
+  } catch(e){ console.error(e); } return x; }; })();
+function bk145(name){ var q = document.getElementById('bankSearch'); if(!q) return; q.value = (q.value === name) ? '' : name; try { filterBankRows(); } catch(e){}
+  try { q.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){} }
 
 </script>
 <nav id="mnav"></nav>
