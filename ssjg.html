@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.42">
+<meta name="app-version" content="1.43">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6497,6 +6497,15 @@ function tl141Mark(){var tb=document.getElementById('delivTableBody');if(!tb)ret
   function start(){paint();load(false);setInterval(function(){load(false)},10*60e3)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else setTimeout(start,0);
 })();
+/* ═══ 1.43 (안티그래비티 R157 #2·R158 #3) 출고 › 로젠 접수 대상 표 위 「총 N박스 · 운임 M원」 — 택배 기사 인계 때 바로 대조 ═══ */
+(function(){ var _r = renderDeliveryTable; renderDeliveryTable = function(){ var r = _r.apply(this, arguments); try { bx143Paint(); } catch(e){} return r; }; })();
+function bx143Paint(){
+  var t = document.getElementById('delivTableCount'); if(!t) return; var hd = t.parentNode.nextElementSibling; if(!hd) return;
+  var b = document.getElementById('bx143'); if(!b){ b = document.createElement('span'); b.id = 'bx143'; b.style.cssText = 'display:inline-block;padding:4px 10px;font-size:11.5px;font-weight:700;border:1px solid var(--border);border-radius:6px;margin-right:6px;white-space:nowrap'; hd.insertBefore(b, hd.firstChild); }
+  var rows = rawDeliveryRows || []; if(!rows.length){ b.style.display = 'none'; return; }
+  var freight = Number((document.getElementById('cfgFreight') || {}).value) || SSJG_FREIGHT_DEFAULT, box = 0; rows.forEach(function(r){ box += Number(r.qty) || 0; });
+  b.style.display = ''; b.textContent = '총 ' + box.toLocaleString('ko-KR') + '박스 · 운임 ' + fmt(freight * box) + '원';
+}
 </script>
 <nav id="mnav"></nav>
 </body>
