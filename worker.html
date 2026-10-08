@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.50</title>
+<title>BVS 데일리 v1.52</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3228,6 +3228,111 @@ var PL149={};
 (function(){var _r=renderList;renderList=function(){var r=_r.apply(this,arguments);try{var d=LIST.day,k=document.querySelector('.kday');if(!d||!k||k.querySelector('.lg150'))return r;var e=null;try{e=entryOf(d)}catch(x){}if(!e)return r;
   var has=!!String(e.work_log||'').trim(),h=k.firstElementChild,b=document.createElement('button');b.type='button';b.className='btn sm lg150';b.style.cssText='float:right;margin-top:-2px';b.innerHTML=has?'일지 보기·수정 <small style="opacity:.75">(작성됨)</small>':'이 날 일지 입력';
   b.onclick=function(ev){ev.stopPropagation();LOG.date=d;go('log')};if(h)h.appendChild(b);else k.insertBefore(b,k.firstChild)}catch(x){}return r}})();
+
+/* ═══ 1.51 (대표 지시 10/08 · 직원 의견) 출근 고르기 단순화 — 「최근 출근」 한 번 누르면 끝 · 아니면 지역 → 현장 → 라인(업무) → 장비사·작업·장비번호.
+   청구처·프로젝트는 고르지 않는다: 현장(사업장)으로 DB가 자동 기록(op_submit_labor). 라인은 line_memo, 「장비사 장비번호 작업」은 work_desc 로 저장 → 콕핏 「업무」 칸·장비번호 누적에 그대로 쓰임.
+   옛 장소 표는 「다른 장소 · 전체 목록」 안에 그대로 둠 ═══ */
+var FL151={reg:null,co:null,site:null,line:'',work:null,maker:'',task:'장비셋업',equip:'',init:false};
+var FL151_REG=[
+  {k:'IC',n:'이천',ll:[37.27,127.44],cos:[{n:'SK하이닉스',site:'IC-IC',lines:['M14','M16'],eq:1},{n:'BVS 본사',works:[['트레이 제작','WJ-BVS-TRAY'],['본사업무','BV-IC'],['기구조립','STS-BVS-ASM']]}]},
+  {k:'CJ',n:'청주',ll:[36.64,127.49],cos:[{n:'SK하이닉스',site:'CJ-CJ',lines:['M15'],eq:1}]},
+  {k:'PT',n:'평택',ll:[36.99,127.09],cos:[{n:'삼성전자',site:'PT-PT',eq:1}]},
+  {k:'HS',n:'화성',ll:[37.20,126.83],cos:[{n:'삼성전자',site:'HS-HS',eq:1}]},
+  {k:'YI',n:'용인',ll:[37.24,127.18],cos:[{n:'TES 제조동',site:'TE-MFG',eqno:1}]}];
+var FL151_MK=['VM','원익','램','에이스트','TES'],FL151_TK=['장비셋업','포설','트레이설치'];
+(function(){var c=document.createElement('style');c.textContent=
+ '#fl151{margin-top:10px}#fl151 .h{font-size:12px;font-weight:700;color:var(--tx2);margin:10px 0 6px}#fl151 .row{display:flex;gap:6px;flex-wrap:wrap}'
++'#fl151 .rg{display:flex;gap:10px;align-items:center}#fl151 .rg .row{flex:1}#fl151 svg.map{width:58px;height:auto;flex:0 0 58px}'
++'#fl151 .c{min-height:44px;padding:8px 14px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);font-size:15px;font-weight:700;color:var(--tx);cursor:pointer;flex:1 1 0;min-width:64px}'
++'#fl151 .c.sm{min-height:36px;font-size:13.5px;padding:6px 10px;flex:0 1 auto}#fl151 .c.on{border-color:var(--ac);background:var(--ac2);color:var(--acx);box-shadow:inset 0 0 0 1px var(--ac)}'
++'#fl151 .card{min-height:56px;font-size:15.5px}#fl151 .rec{display:block;width:100%;text-align:left;border:1px solid var(--ac);background:var(--ac2);color:var(--acx);border-radius:12px;padding:10px 14px;cursor:pointer}'
++'#fl151 .rec small{display:block;font-size:11.5px;font-weight:600;opacity:.8}#fl151 .rec b{font-size:15px}#fl151 .eq{display:flex;gap:6px;margin-top:8px}#fl151 .eq input{flex:1}'
++'#fl151old>summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--tx3);margin-top:10px}#fl151 .off{opacity:.85}';document.head.appendChild(c)})();
+function fl151Has(id){return (D.sites||[]).some(function(s){return s.site_id===id})}
+function fl151Cos(r){return r.cos.map(function(c){var o=Object.assign({},c);if(o.works)o.works=o.works.filter(function(w){return fl151Has(w[1])});return o}).filter(function(c){return c.works?c.works.length:fl151Has(c.site)})}
+function fl151Regs(){return FL151_REG.filter(function(r){return fl151Cos(r).length})}
+function fl151Co(){var r=FL151_REG.filter(function(x){return x.k===FL151.reg})[0];if(!r)return null;return fl151Cos(r).filter(function(c){return c.n===FL151.co})[0]||null}
+function fl151Where(sid){var out=null;FL151_REG.forEach(function(r){r.cos.forEach(function(c){if(c.site===sid)out={reg:r.k,co:c.n};(c.works||[]).forEach(function(w){if(w[1]===sid)out={reg:r.k,co:c.n,work:w[1]}})})});return out}
+function fl151Parse(desc){var t=String(desc||'').trim().split(/\s+/).filter(Boolean),o={maker:'',task:'',equip:''};
+  if(t.length&&FL151_MK.indexOf(t[0])>=0)o.maker=t.shift();if(t.length&&FL151_TK.concat(['펌프실']).indexOf(t[t.length-1])>=0)o.task=t.pop();o.equip=t.join(' ');return o}
+function fl151Last(){var L=(D.labor||[]).filter(function(r){return r.status!=='void'&&r.site_id&&!/^OFF-|^ED-/.test(r.site_id)});return L[0]||null}
+function fl151Map(){var p=function(ll){return [((ll[1]-125.9)*20).toFixed(1),((38.7-ll[0])*25).toFixed(1)]};
+  var O=[[37.75,126.6],[38.0,127.0],[38.3,127.6],[38.6,128.3],[38.2,128.6],[37.7,129.0],[37.0,129.4],[36.4,129.45],[35.9,129.6],[35.5,129.4],[35.1,129.1],[34.9,128.6],[34.9,128.0],[34.7,127.6],[34.6,127.2],[34.4,126.6],[34.6,126.3],[35.0,126.4],[35.5,126.5],[35.9,126.7],[36.3,126.5],[36.8,126.2],[37.0,126.6],[37.4,126.7]];
+  var d='M'+O.map(function(x){return p(x).join(',')}).join(' L')+' Z',j=p([33.38,126.55]);
+  var dots=FL151_REG.map(function(r){var q=p(r.ll),on=r.k===FL151.reg;return on?'':'<circle cx="'+q[0]+'" cy="'+q[1]+'" r="2" fill="var(--tx3)" opacity=".55"/>'}).join('');
+  var s=FL151_REG.filter(function(r){return r.k===FL151.reg})[0],sd='';if(s){var q=p(s.ll);sd='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="7" fill="#dc2626" opacity=".18"/><circle cx="'+q[0]+'" cy="'+q[1]+'" r="3.6" fill="#dc2626"/>'}
+  return '<svg class="map" viewBox="0 0 80 142" aria-label="지역 위치"><path d="'+d+'" fill="var(--sf2)" stroke="var(--ln)" stroke-width="1.2" stroke-linejoin="round"/><ellipse cx="'+j[0]+'" cy="'+j[1]+'" rx="6" ry="3" fill="var(--sf2)" stroke="var(--ln)" stroke-width="1"/>'+dots+sd+'</svg>'}
+function fl151Apply(){var c=fl151Co(),sid=null;
+  if(c){sid=c.works?FL151.work:c.site}
+  FL151.site=sid;if(!sid)return;
+  SEL.site=sid;SEL.place=placeOf(sid);
+  var eq=c&&c.eq,lm=el('w_lm'),wd=el('w_desc'),pm=el('w_pump');
+  if(lm)lm.value=c&&c.lines?FL151.line:'';
+  if(wd&&(eq||(c&&c.eqno))){var t=eq?[FL151.maker,FL151.equip.trim(),FL151.task==='펌프실'?'':FL151.task]:[FL151.equip.trim()];wd.value=t.filter(Boolean).join(' ')}
+  if(pm)pm.checked=(FL151.task==='펌프실');
+  try{renderPlaces()}catch(e){}}
+function fl151Set(k,v){FL151[k]=v;
+  if(k==='reg'){var cs=fl151Cos(FL151_REG.filter(function(r){return r.k===v})[0]);FL151.co=cs.length===1?cs[0].n:null;FL151.work=null;FL151.line='';FL151.equip=''}
+  if(k==='reg'||k==='co'){var c=fl151Co();if(c){if(c.lines)FL151.line=c.lines.indexOf(FL151.line)>=0?FL151.line:(c.lines.length===1?c.lines[0]:'');if(c.works&&c.works.length===1)FL151.work=c.works[0][1]}}
+  fl151Apply();fl151Paint()}
+function fl151Pick(sid){var w=fl151Where(sid);if(!w)return;FL151.reg=w.reg;FL151.co=w.co;FL151.work=w.work||null}
+function fl151Recent(){var r=fl151Last();if(!r)return;fl151Pick(r.site_id);FL151.line=r.line_memo||'';var o=fl151Parse(r.work_desc);FL151.maker=o.maker;FL151.task=o.task||'장비셋업';FL151.equip=o.equip;
+  fl151Apply();fl151Paint();
+  var e=entryOf(el('w_date').value);if(e&&hhmm(e.work_start))return;clockIn()}
+function fl151Paint(){var b=el('fl151');if(!b)return;var h='',r=fl151Last(),d=el('w_date')&&el('w_date').value,e=d?entryOf(d):null,done=!!(e&&hhmm(e.work_start));
+  if(r&&!done&&fl151Where(r.site_id)){var w=fl151Where(r.site_id),rg=FL151_REG.filter(function(x){return x.k===w.reg})[0];
+    var lab=[rg.n+' '+w.co+(w.work?' '+(((fl151Cos(rg).filter(function(c){return c.n===w.co})[0]||{}).works||[]).filter(function(x){return x[1]===w.work})[0]||[''])[0]:''),r.line_memo,r.work_desc].filter(function(x){return x&&String(x).trim()}).join(' · ');
+    h+='<button type="button" class="rec" onclick="fl151Recent()"><small>최근 출근과 같으면 이것만 누르세요 — 바로 출근</small><b>'+esc(lab)+'</b></button>'}
+  h+='<div class="h">1. 지역</div><div class="rg"><div class="row">'+fl151Regs().map(function(x){return '<button type="button" class="c'+(x.k===FL151.reg?' on':'')+'" onclick="fl151Set(\'reg\','+ERPC.jsq(x.k)+')">'+esc(x.n)+'</button>'}).join('')+'</div>'+fl151Map()+'</div>';
+  var rg=FL151_REG.filter(function(x){return x.k===FL151.reg})[0];
+  if(rg){var cs=fl151Cos(rg);h+='<div class="h">2. 현장</div><div class="row">'+cs.map(function(c){return '<button type="button" class="c card'+(c.n===FL151.co?' on':'')+'" onclick="fl151Set(\'co\','+ERPC.jsq(c.n)+')">'+esc(c.n)+'</button>'}).join('')+'</div>';
+    var c=fl151Co();
+    if(c&&c.lines){h+='<div class="h">3. 라인</div><div class="row">'+c.lines.map(function(l){return '<button type="button" class="c'+(l===FL151.line?' on':'')+'" onclick="fl151Set(\'line\','+ERPC.jsq(l)+')">'+esc(l)+'</button>'}).join('')+'</div>'}
+    if(c&&c.works){h+='<div class="h">3. 업무</div><div class="row">'+c.works.map(function(w){return '<button type="button" class="c'+(w[1]===FL151.work?' on':'')+'" onclick="fl151Set(\'work\','+ERPC.jsq(w[1])+')">'+esc(w[0])+'</button>'}).join('')+'</div>'}
+    if(c&&c.eq){var pump=!!placeRow(placeOf(c.site)).pump_ok,tk=FL151_TK.concat(pump?['펌프실']:[]);
+      h+='<div class="h">4. 장비사 · 작업</div><div class="row">'+FL151_MK.map(function(m){return '<button type="button" class="c sm'+(m===FL151.maker?' on':'')+'" onclick="fl151Set(\'maker\','+ERPC.jsq(m===FL151.maker?'':m)+')">'+esc(m)+'</button>'}).join('')+'</div>'
+        +'<div class="row" style="margin-top:6px">'+tk.map(function(t){return '<button type="button" class="c sm'+(t===FL151.task?' on':'')+'" onclick="fl151Set(\'task\','+ERPC.jsq(t)+')">'+esc(t)+'</button>'}).join('')+'</div>'}
+    if(c&&(c.eq||c.eqno)){var sug={};(D.labor||[]).forEach(function(x){String(x.work_desc||'').split(/\s+/).forEach(function(t){if(/^(?=.*\d)(?=.*[A-Za-z])[A-Za-z0-9-]{6,}$/.test(t))sug[t.toUpperCase()]=1})});
+      h+='<div class="eq"><input class="in" id="fl151e" list="fl151el" placeholder="장비번호 (선택) 예: 4EAN701" autocomplete="off" maxlength="30" value="'+esc(FL151.equip)+'" oninput="FL151.equip=this.value.toUpperCase();fl151Apply()"><datalist id="fl151el">'+Object.keys(sug).slice(0,30).map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></div>'}}
+  var offs=(D.sites||[]).filter(function(s){return /^ED-EDU$|^OFF-/.test(s.site_id)});
+  if(offs.length)h+='<div class="h">비근무</div><div class="row off">'+offs.map(function(s){return '<button type="button" class="c sm'+(SEL.site===s.site_id?' on':'')+'" onclick="FL151.reg=null;FL151.co=null;SEL.site='+ERPC.jsq(s.site_id)+';SEL.place=placeOf(SEL.site);renderPlaces();fl151Paint()">'+esc(lineLabel(s)||s.site_name)+'</button>'}).join('')+'</div>';
+  b.innerHTML=h;
+  var ae=document.activeElement;if(ae&&ae.id==='fl151e'){}}
+function fl151Mount(){if(el('fl151'))return;var wp=el('w_place');if(!wp)return;var hd=wp.previousElementSibling;
+  var box=document.createElement('div');box.id='fl151';
+  var det=document.createElement('details');det.id='fl151old';det.innerHTML='<summary>다른 장소 · 전체 목록에서 고르기</summary>';
+  var lm=el('w_lm'),lmf=lm&&lm.closest('.f'),nodes=[hd,wp,el('lineBox'),lmf,el('pumpBox')].filter(Boolean);
+  wp.parentNode.insertBefore(box,hd||wp);box.after(det);nodes.forEach(function(n){det.appendChild(n)});
+  var ds=el('w_desc');if(ds)ds.placeholder='추가 메모 (선택) — 장비번호·작업은 위에서 고르면 자동으로 들어갑니다'}
+(function(){var _la=loadAll;loadAll=async function(){var r=await _la.apply(this,arguments);try{fl151Mount();if(!FL151.init){FL151.init=true;var s=SEL.site||((fl151Last()||{}).site_id);var lr=fl151Last();if(s){fl151Pick(s)}if(lr&&lr.site_id===s){FL151.line=lr.line_memo||'';var o=fl151Parse(lr.work_desc);FL151.maker=o.maker;FL151.task=o.task||'장비셋업';FL151.equip=o.equip}}fl151Paint()}catch(e){console.error(e)}return r}})();
+(function(){var _o=onDate;onDate=function(){var r=_o.apply(this,arguments);try{fl151Paint()}catch(e){}return r}})();
+(function(){var _s=submitLabor;submitLabor=async function(){var r=await _s.apply(this,arguments);try{fl151Paint()}catch(e){}return r}})();
+
+/* ═══ 1.52 (대표 지시 10/08) 전체 메뉴 「사규 보기」 — 취업규칙·별표·근로계약서 안내를 읽기 전용으로(근로기준법 제14조 게시, 취업규칙 제76조). 자료는 reg_list/reg_body ═══ */
+var RG152={list:null,body:{}};
+(function(){var c=document.createElement('style');c.textContent='#rg152{position:fixed;inset:0;z-index:9500;background:var(--bg);display:flex;flex-direction:column}#rg152.hide{display:none}#rg152 .hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ln);background:var(--sf)}#rg152 .hd b{flex:1;font-size:15px}'
++'#rg152 .bd{flex:1;overflow:auto;padding:12px 14px}#rg152 .it{padding:12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);margin-bottom:8px;cursor:pointer}#rg152 .it small{display:block;color:var(--tx3);font-size:11.5px;margin-top:2px}'
++'#rg152 .doc{font-size:14px;line-height:1.75}#rg152 .doc h3{font-size:15px;margin:16px 0 4px}#rg152 .doc h4{font-size:14px;margin:12px 0 2px}#rg152 .doc table{border-collapse:collapse;width:100%;font-size:12.5px;display:block;overflow-x:auto}#rg152 .doc td,#rg152 .doc th{border:1px solid var(--ln);padding:4px 6px;vertical-align:top;text-align:left}'
++'#rg152 input{width:100%;margin-bottom:10px}#rg152 mark{background:#fef08a;color:inherit}';document.head.appendChild(c)})();
+function rg152Box(){var b=el('rg152');if(b)return b;b=document.createElement('div');b.id='rg152';b.className='hide';document.body.appendChild(b);return b}
+async function rg152Open(){var b=rg152Box();b.classList.remove('hide');b.innerHTML='<div class="hd"><button class="btn sm" onclick="el(\'rg152\').classList.add(\'hide\')">닫기</button><b>사규</b></div><div class="bd" id="rg152b"><div class="tiny">불러오는 중…</div></div>';
+  try{if(!RG152.list){var r=await sb.rpc('reg_list');if(r.error)throw new Error(r.error.message);RG152.list=(r.data||[]).filter(function(x){return x.status!=='폐지'})}
+    rg152List()}catch(e){el('rg152b').innerHTML='<div class="neg">'+esc(e.message||e)+'</div>'}}
+function rg152List(q){var L=RG152.list||[];el('rg152b').innerHTML='<input class="in" placeholder="찾기 (예: 연차, 출장, 지급일)" value="'+esc(q||'')+'" onchange="rg152Find(this.value)">'
+  +L.map(function(x){return '<div class="it" onclick="rg152Doc('+x.id+')"><b>'+esc(x.title)+'</b><small>'+esc([x.ver,x.status!=='정본'?x.status:'',x.len?'':'원본은 회사 보관(요청 시 사본 교부)'].filter(Boolean).join(' · '))+'</small></div>'}).join('')}
+async function rg152Get(id){if(RG152.body[id])return RG152.body[id];var r=await sb.rpc('reg_body',{p_id:id});if(r.error||!r.data)throw new Error((r.error&&r.error.message)||'열 수 없음');RG152.body[id]=r.data;return r.data}
+async function rg152Doc(id,q){var bd=el('rg152b');bd.innerHTML='<div class="tiny">여는 중…</div>';
+  try{var d=await rg152Get(id);var h=String(d.html||'<p>본문은 회사에 보관되어 있습니다. 사본이 필요하면 대표에게 요청하십시오(취업규칙 제76조 제3항).</p>');
+    if(q){var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','g');h=h.replace(/>([^<]+)</g,function(m,t){return '>'+t.replace(re,'<mark>$1</mark>')+'<'})}
+    bd.innerHTML='<button class="btn sm" onclick="rg152List()">← 목록</button><h3 style="margin:10px 0 2px">'+esc(d.title)+'</h3><div class="tiny dim">'+esc([d.ver,d.from?String(d.from).slice(0,10)+' 시행':''].filter(Boolean).join(' · '))+'</div><div class="doc">'+h+'</div>';
+    if(q){var m=bd.querySelector('mark');if(m)m.scrollIntoView({block:'center'})}}catch(e){bd.innerHTML='<div class="neg">'+esc(e.message||e)+'</div>'}}
+async function rg152Find(q){q=String(q||'').trim();if(q.length<2){rg152List(q);return}var L=(RG152.list||[]).filter(function(x){return x.len}),hits=[];
+  for(var i=0;i<L.length;i++){try{var d=await rg152Get(L[i].id);var t=String(d.html||'').replace(/<[^>]+>/g,' ');var k=t.indexOf(q);if(k>=0)hits.push({id:L[i].id,title:L[i].title,s:t.slice(Math.max(0,k-30),k+60)})}catch(e){}}
+  el('rg152b').innerHTML='<input class="in" value="'+esc(q)+'" onchange="rg152Find(this.value)"><div class="tiny" style="margin-bottom:8px">「'+esc(q)+'」 '+hits.length+'개 문서</div>'+hits.map(function(h){return '<div class="it" onclick="rg152Doc('+h.id+','+ERPC.jsq(q)+')"><b>'+esc(h.title)+'</b><small>…'+esc(h.s)+'…</small></div>'}).join('')}
+(function(){function add(){var lst=document.querySelector('#mobNavModal .mob-nav-list');if(!lst||lst.querySelector('.rg152n'))return;var grp=[].slice.call(lst.querySelectorAll('.mob-nav-grp'));var at=grp[1]||null;
+  var d=document.createElement('div');d.className='mob-nav-item rg152n';d.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg> 사규 보기 (취업규칙)';d.onclick=function(){try{closeMobNavModal()}catch(e){}rg152Open()};
+  if(at)lst.insertBefore(d,at);else lst.appendChild(d)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add()})();
 </script>
 </body>
 </html>
