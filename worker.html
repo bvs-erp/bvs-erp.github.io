@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.57</title>
+<title>BVS 데일리 v1.58</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3451,6 +3451,21 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
   document.addEventListener('visibilitychange',function(){if(document.hidden){if(nv&&!busy())location.reload()}else chk()});
   setInterval(chk,180000);setTimeout(chk,15000)})();
 
+/* ═══ 새 버전 알림 보완 (안티그래비티 R162 #2·#3, R164 #2·#5) — 입력 중이거나 창·서랍이 열려 있거나 휴대폰 화면이면 알림을 위쪽으로 올려
+   아래 저장·출근·퇴근 버튼을 가리지 않게 · 작성 중에 알림을 누르면 한 번 묻고 새로고침 · 「✕」 누르면 10분 숨김 ═══ */
+(function(){var K='updHideUntil';
+  function hid(){try{return +(sessionStorage.getItem(K)||0)>Date.now()}catch(e){return false}}
+  function busy(){var d=document.getElementById('dr');if(d&&d.classList.contains('on'))return true;
+    if(document.querySelector('.modal.on,.ed-modal.on,#edModal.on,.sheet.on,#md.on,.md.on,.ov.on,.overlay.on'))return true;
+    var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))}
+  function fix(){var b=document.getElementById('updBar');if(!b)return;
+    if(hid()){b.style.display='none';return}b.style.display='';
+    var top=busy()||window.innerWidth<=640;b.style.top=top?'12px':'';b.style.bottom=top?'auto':'18px';
+    if(!b.querySelector('.upd-x')){var x=document.createElement('span');x.className='upd-x';x.textContent='✕';x.title='10분 숨김';
+      x.style.cssText='margin-left:12px;padding:0 4px;opacity:.85;font-weight:700';
+      x.onclick=function(e){e.stopPropagation();try{sessionStorage.setItem(K,String(Date.now()+600000))}catch(_){}b.style.display='none'};b.appendChild(x)}
+    if(!b.__w){b.__w=1;b.onclick=function(){if(busy()&&!confirm('작성 중인 내용이 있으면 사라집니다. 지금 새로고침할까요?'))return;location.reload()}}}
+  setInterval(fix,1500);document.addEventListener('focusin',fix);document.addEventListener('focusout',function(){setTimeout(fix,60)});window.addEventListener('resize',fix)})();
 </script>
 </body>
 </html>
