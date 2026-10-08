@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.53</title>
+<title>BVS 데일리 v1.54</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3342,6 +3342,78 @@ async function wx153Open(i){var c=MK149_CITY[i];if(!c)return;var b=el('wx153');i
       +rows.map(function(x){var w=+h.wind_speed_10m[x];return '<tr><td>'+String(T[x]).slice(11,13)+'시</td><td>'+mk149Wc(h.weather_code[x])+'</td><td>'+Math.round(h.temperature_2m[x])+'°</td><td'+((+h.precipitation_probability[x])>=50?' style="color:var(--ac);font-weight:700"':'')+'>'+h.precipitation_probability[x]+'%</td><td'+(w>=8?' style="color:#dc2626;font-weight:700"':'')+'>'+w.toFixed(1)+'m/s</td></tr>'}).join('')+'</table><div class="tiny dim" style="margin-top:6px">바람 8m/s 이상은 빨간색 — 야외 반입·고소작업 주의</div>'}
   catch(e){b.innerHTML='<div class="hd"><b>'+c[0]+'</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><div class="neg">'+esc(e.message||e)+'</div>'}}
 document.addEventListener('click',function(e){var bx=el('mk149');if(!bx||!bx.contains(e.target))return;var cells=[].slice.call(bx.children),i=cells.findIndex(function(c){return c.contains(e.target)});if(i===0||i===1){e.stopPropagation();e.preventDefault();wx153Open(i)}},true);
+
+/* ═══ 1.54 (대표 지시 10/08) 「프로젝트 일정」 — 회사가 지금 무슨 프로젝트를 하는지, 누가 어디로 가는지 달력으로.
+   프로젝트별 고유 색 띠 · 날짜를 누르면 「10월 12일(월) BVS 전사 프로젝트 일정」 명단(현장·사람·시간). 금액은 없음. 자료 project_schedule.
+   + R159 #2 지역→현장→라인을 다 고르면 바로 누르는 「출근하기」 큰 단추 ═══ */
+var SC154={ym:null,data:null,sel:null,busy:0};
+(function(){var c=document.createElement('style');c.textContent=
+ '#sc154b{display:flex;align-items:center;gap:8px;margin:0;padding:8px 12px;background:var(--sf);border-bottom:1px solid var(--ln2);cursor:pointer;font-size:13px}'
++'#sc154b b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#sc154b i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:2px}#sc154b span.go{color:var(--ac);font-weight:700;white-space:nowrap}'
++'#sc154{position:fixed;inset:0;z-index:9500;background:var(--bg);display:flex;flex-direction:column}#sc154.hide{display:none}'
++'#sc154 .hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ln);background:var(--sf)}#sc154 .hd b{flex:1;font-size:15px;text-align:center}'
++'#sc154 .bd{flex:1;overflow:auto;padding:10px 12px 24px}#sc154 .lg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}'
++'#sc154 .lg div{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.35}#sc154 .lg i{flex:0 0 12px;height:12px;border-radius:3px;margin-top:2px}#sc154 .lg small{display:block;color:var(--tx3)}'
++'#sc154 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}#sc154 .cal .w{text-align:center;font-size:11px;color:var(--tx3);padding:2px 0}#sc154 .cal .w.su{color:#dc2626}#sc154 .cal .w.sa{color:var(--ac)}'
++'#sc154 .cal .d{min-height:62px;border:1px solid var(--ln2);border-radius:6px;padding:2px 3px;background:var(--sf);cursor:pointer;display:flex;flex-direction:column;gap:2px}'
++'#sc154 .cal .d.x{visibility:hidden}#sc154 .cal .d.td{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}#sc154 .cal .d.on{background:var(--ac2,#e8eefc)}'
++'#sc154 .cal .d em{font-style:normal;font-size:11.5px;font-weight:700}#sc154 .cal .d.su em{color:#dc2626}#sc154 .cal .d.sa em{color:var(--ac)}'
++'#sc154 .cal .d span{display:block;height:13px;line-height:13px;border-radius:3px;color:#fff;font-size:10px;font-weight:700;padding:0 3px;white-space:nowrap;overflow:hidden}#sc154 .cal .d span.pl{opacity:.5}'
++'#sc154 .cal .d .bnd{height:3px;border-radius:2px;opacity:.35;padding:0}'
++'#sc154 .day{margin-top:12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);padding:10px 12px}#sc154 .day h4{margin:0 0 6px;font-size:14.5px}'
++'#sc154 .day .it{padding:7px 0;border-top:1px dashed var(--ln2);font-size:13.5px;line-height:1.45}#sc154 .day .it b{display:block}#sc154 .day .it small{color:var(--tx3)}'
++'#sc154 .me{background:#fef08a;color:#000;border-radius:3px;padding:0 3px}'
++'#fl154go{display:block;width:100%;margin:12px 0 4px;padding:14px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-size:16px;font-weight:800}#fl154go small{display:block;font-size:12px;font-weight:500;opacity:.9;margin-top:2px}';
+ document.head.appendChild(c)})();
+function sc154Ym(){if(!SC154.ym){SC154.ym=new Date(Date.now()+9*3600e3).toISOString().slice(0,7)}return SC154.ym}
+function sc154Me(){try{return (ME&&(ME.name||ME.person_name))||''}catch(e){return ''}}
+async function sc154Load(){if(SC154.busy)return;SC154.busy=1;var ym=sc154Ym(),p=ym.split('-'),to=new Date(Date.UTC(+p[0],+p[1],0)).toISOString().slice(0,10);
+  try{var r=await sb.rpc('project_schedule',{p_from:ym+'-01',p_to:to});if(r.error)throw new Error(r.error.message);SC154.data=r.data}catch(e){SC154.data={err:e.message||String(e)}}
+  SC154.busy=0;sc154Bar();if(el('sc154')&&!el('sc154').classList.contains('hide'))sc154Paint()}
+function sc154Bar(){var b=el('sc154b');if(!b){var at=el('mk149')||el('top');if(!at)return;b=document.createElement('div');b.id='sc154b';b.onclick=sc154Open;at.after(b)}
+  var d=SC154.data||{},ps=d.projects||[],td=d.today,wk=(d.days||[]).filter(function(x){return x.d>=td}).map(function(x){return x.code});
+  b.innerHTML=ps.length?'<span>'+ps.map(function(p){return '<i style="background:'+esc(p.color)+'"></i>'}).join('')+'</span><b>프로젝트 일정 · 진행 '+ps.length+'건</b><span class="go">달력 보기 ›</span>':'<b>프로젝트 일정</b><span class="go">달력 보기 ›</span>'}
+function sc154Open(){var b=el('sc154');if(!b){b=document.createElement('div');b.id='sc154';document.body.appendChild(b)}b.classList.remove('hide');
+  if(!SC154.sel)SC154.sel=(SC154.data&&SC154.data.today)||new Date(Date.now()+9*3600e3).toISOString().slice(0,10);sc154Paint();if(!SC154.data)sc154Load()}
+function sc154Close(){var b=el('sc154');if(b)b.classList.add('hide')}
+function sc154Shift(n){var p=sc154Ym().split('-'),d=new Date(Date.UTC(+p[0],+p[1]-1+n,1));SC154.ym=d.toISOString().slice(0,7);SC154.data=null;SC154.sel=SC154.ym+'-01';sc154Paint();sc154Load()}
+function sc154Pick(ds){SC154.sel=ds;sc154Paint();var x=el('sc154day');if(x)try{x.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}}
+function sc154Paint(){var b=el('sc154');if(!b)return;var ym=sc154Ym(),p=ym.split('-'),d=SC154.data;
+  var h='<div class="hd"><button class="btn sm" onclick="sc154Close()">닫기</button><button class="btn sm" onclick="sc154Shift(-1)">‹</button><b>'+p[0]+'년 '+(+p[1])+'월 프로젝트 일정</b><button class="btn sm" onclick="sc154Shift(1)">›</button></div><div class="bd">';
+  if(!d){b.innerHTML=h+'<div class="tiny">불러오는 중…</div></div>';return}
+  if(d.err){b.innerHTML=h+'<div class="neg">'+esc(d.err)+'</div></div>';return}
+  var ps=d.projects||[],pm={};ps.forEach(function(x){pm[x.code]=x});
+  h+='<div class="lg">'+ps.map(function(x){return '<div><i style="background:'+esc(x.color)+'"></i><span><b>'+esc(x.name)+'</b><small>'+esc(x.place||'')+(x.hours?' · '+esc(x.hours):'')+'</small></span></div>'}).join('')+'</div>';
+  var by={};(d.days||[]).forEach(function(x){(by[x.d]=by[x.d]||{});(by[x.d][x.code]=by[x.d][x.code]||[]).push(x)});
+  var first=new Date(Date.UTC(+p[0],+p[1]-1,1)).getUTCDay(),nd=new Date(Date.UTC(+p[0],+p[1],0)).getUTCDate();
+  h+='<div class="cal">'+['일','월','화','수','목','금','토'].map(function(w,i){return '<div class="w'+(i===0?' su':i===6?' sa':'')+'">'+w+'</div>'}).join('');
+  for(var i=0;i<first;i++)h+='<div class="d x"></div>';
+  for(var k=1;k<=nd;k++){var ds=ym+'-'+String(k).padStart(2,'0'),wd=(first+k-1)%7,g=by[ds]||{};
+    var bars=ps.filter(function(x){return g[x.code]}).map(function(x){var L=g[x.code],pl=L.every(function(y){return y.kind==='plan'});return '<span class="'+(pl?'pl':'')+'" style="background:'+esc(x.color)+'">'+L.length+'명</span>'}).join('');
+    var band=bars?'':ps.filter(function(x){return (!x.start_on||x.start_on<=ds)&&(!x.end_on||x.end_on>=ds)}).slice(0,3).map(function(x){return '<span class="bnd" style="background:'+esc(x.color)+'"></span>'}).join('');
+    h+='<div class="d'+(wd===0?' su':wd===6?' sa':'')+(ds===d.today?' td':'')+(ds===SC154.sel?' on':'')+'" onclick="sc154Pick('+ERPC.jsq(ds)+')"><em>'+k+'</em>'+bars+band+'</div>'}
+  h+='</div>';
+  if(SC154.sel&&SC154.sel.slice(0,7)===ym){var g2=by[SC154.sel]||{},me=sc154Me(),wd2='일월화수목금토'[new Date(SC154.sel+'T00:00:00Z').getUTCDay()];
+    h+='<div class="day" id="sc154day"><h4>'+(+SC154.sel.slice(5,7))+'월 '+(+SC154.sel.slice(8))+'일('+wd2+') BVS 전사 프로젝트 일정</h4>'
+     +(Object.keys(g2).length?ps.filter(function(x){return g2[x.code]}).map(function(x){var L=g2[x.code];
+        return '<div class="it"><b style="color:'+esc(x.color)+'">'+esc(x.name)+'</b>'+L.map(function(y){var nm=esc(y.person);if(me&&y.person===me)nm='<span class="me">'+nm+'</span>';
+          return nm+(y.kind==='plan'?' (예정)':'')+(y.st?' '+esc(y.st)+'~'+esc(y.et||''):'')+(y.site?' <small>'+esc(y.site)+'</small>':'')}).join(', ')
+         +'<br><small>'+esc(x.place||'')+(x.hours?' · 기준 '+esc(x.hours):'')+'</small></div>'}).join('')
+      :'<div class="tiny">이날 등록된 출근·배치 예정이 없습니다.</div>')+'</div>'}
+  h+='<div class="tiny dim" style="margin-top:10px">진한 칸은 실제 출근, 흐린 칸은 대표가 미리 올린 배치 예정입니다. 내 이름은 노란색으로 표시됩니다.</div></div>';
+  b.innerHTML=h}
+/* 메뉴에 「프로젝트 일정」 */
+(function(){function add(){var lst=document.querySelector('#mobNavModal .mob-nav-list');if(!lst||lst.querySelector('.sc154n'))return;
+  var d=document.createElement('div');d.className='mob-nav-item sc154n';d.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h8"/></svg> 프로젝트 일정 (달력)';
+  d.onclick=function(){try{closeMobNavModal()}catch(e){}sc154Open()};var f=lst.firstChild;if(f)lst.insertBefore(d,f.nextSibling);else lst.appendChild(d)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add()})();
+(function(){var _la=loadAll;loadAll=async function(){var r=await _la.apply(this,arguments);try{if(!SC154.data)sc154Load();else sc154Bar()}catch(e){}return r}})();
+/* R159 #2 — 고르기가 끝나면 바로 누르는 「출근하기」 */
+(function(){var _p=fl151Paint;fl151Paint=function(){var x=_p.apply(this,arguments);try{var b=el('fl151');if(!b)return x;var d=el('w_date')&&el('w_date').value,e=d?entryOf(d):null,done=!!(e&&hhmm(e.work_start));
+  var ok=!done&&SEL&&SEL.site&&(FL151.co||/^ED-EDU$|^OFF-/.test(SEL.site));if(!ok)return x;
+  var lab=[FL151.co,FL151.line,FL151.maker,FL151.equip,FL151.task].filter(function(v){return v&&String(v).trim()}).join(' · ');
+  var bt=document.createElement('button');bt.type='button';bt.id='fl154go';bt.innerHTML='출근하기<small>'+esc(lab||'고른 장소로 출근')+'</small>';bt.onclick=function(){var e2=entryOf(el('w_date').value);if(e2&&hhmm(e2.work_start))return;clockIn()};b.appendChild(bt)}catch(err){console.error(err)}return x}})();
+
 </script>
 </body>
 </html>
