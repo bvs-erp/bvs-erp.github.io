@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.46">
+<meta name="app-version" content="1.47">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6538,6 +6538,16 @@ function bk145(name){ var q = document.getElementById('bankSearch'); if(!q) retu
     Array.prototype.forEach.call(tb.rows, function(tr, i){ var r = rows[i], td = tr.cells[1]; if(!r || !td || !r.description) return;
       td.style.cursor = 'pointer'; td.title = '이 적요 거래만 보기'; td.onclick = function(){ bk145(r.description); }; });
   } catch(e){ console.error(e); } return x; }; })();
+
+/* ═══ 새 버전 알림 (대표 지적 10/08 — 열어 둔 창이 예전 프로그램으로 계속 돌아 고친 것이 안 보이던 문제) ═══
+   3분마다·창으로 돌아올 때 서버의 최신 버전을 확인 → 다르면 아래에 「새 버전 — 눌러서 새로고침」. 창이 뒤에 있고 입력 창이 닫혀 있으면 저절로 새로고침 */
+(function(){var cur=(document.querySelector('meta[name=app-version]')||{}).content||((document.title.match(/v([\d.]+)/)||[])[1]);if(!cur)return;var nv=null;
+  function busy(){var d=document.getElementById('dr');if(d&&d.classList.contains('on'))return true;var m=document.querySelector('.modal.on,.ed-modal.on,#edModal.on,.sheet.on');return !!m}
+  function show(v){nv=v;var b=document.getElementById('updBar');if(!b){b=document.createElement('div');b.id='updBar';b.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#1d4ed8;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap';b.onclick=function(){location.reload()};document.body.appendChild(b)}
+    b.textContent='새 버전 '+v+' 게시됨 (지금 '+cur+') — 눌러서 새로고침';if(document.hidden&&!busy())location.reload()}
+  function chk(){try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){var m=t.match(/name="app-version" content="([\d.]+)"/)||t.match(/<title>[^<]*?v([\d.]+)<\/title>/);if(m&&m[1]!==cur)show(m[1])}).catch(function(){})}catch(e){}}
+  document.addEventListener('visibilitychange',function(){if(document.hidden){if(nv&&!busy())location.reload()}else chk()});
+  setInterval(chk,180000);setTimeout(chk,15000)})();
 
 </script>
 <nav id="mnav"></nav>
