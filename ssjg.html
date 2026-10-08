@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SSJG ERP</title>
-<meta name="app-version" content="1.48">
+<meta name="app-version" content="1.49">
 <link rel="icon" type="image/png" href="ssjg-logo.png">
 <link rel="apple-touch-icon" href="ssjg-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3007,7 +3007,7 @@ function renderTaxInvoices(rows){
       <td class="amt-neutral">${fmt(r.vat_amt)}</td>
       <td style="font-weight:700;text-align:right">${fmt(r.total_amt)}</td>
       <td><span class="tag" style="${String(r.settle_status || '').includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.settle_status))}</span></td>
-      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}</td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}${r.approval_no?` <button type="button" class="ss149cp" title="승인번호 복사" onclick="ss149Copy('${gEsc(r.approval_no)}',this)">복사</button>`:''}</td>
     </tr>
   `).join('');
 }
@@ -3041,7 +3041,7 @@ function renderArRecon(rows){
       <td class="amt-plus">${fmt(r.collect_amt)}</td>
       <td class="${Number(r.ar_balance) > 0 ? 'amt-minus' : 'amt-neutral'}">${fmt(r.ar_balance)}</td>
       <td><span class="tag" style="${String(r.status || '').includes('완료') ? 'background:rgba(16,185,129,0.15);color:var(--green)' : 'background:rgba(239,68,68,0.15);color:var(--red)'}">${gEsc(noEmo(r.status))}</span></td>
-      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}</td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${gEsc(r.approval_no || '-')}${r.approval_no?` <button type="button" class="ss149cp" title="승인번호 복사" onclick="ss149Copy('${gEsc(r.approval_no)}',this)">복사</button>`:''}</td>
     </tr>
   `).join('');
 }
@@ -6564,6 +6564,12 @@ function bk145(name){ var q = document.getElementById('bankSearch'); if(!q) retu
       x.onclick=function(e){e.stopPropagation();try{sessionStorage.setItem(K,String(Date.now()+600000))}catch(_){}b.style.display='none'};b.appendChild(x)}
     if(!b.__w){b.__w=1;b.onclick=function(){if(busy()&&!confirm('작성 중인 내용이 있으면 사라집니다. 지금 새로고침할까요?'))return;location.reload()}}}
   setInterval(fix,1500);document.addEventListener('focusin',fix);document.addEventListener('focusout',function(){setTimeout(fix,60)});window.addEventListener('resize',fix)})();
+
+/* ═══ 1.49 (안티그래비티 R166 #4) 세금계산서·미수 대사 표의 승인번호 옆 「복사」 — 누르면 승인번호를 클립보드에 넣음(거래처·세무사 문의 응대) ═══ */
+(function(){var c=document.createElement('style');c.textContent='.ss149cp{font-size:10px;padding:1px 6px;margin-left:4px;border:1px solid var(--border,#cbd5e1);border-radius:6px;background:transparent;color:inherit;cursor:pointer}.ss149cp.ok{border-color:#16a34a;color:#16a34a}';document.head.appendChild(c)})();
+function ss149Copy(v,b){var done=function(){if(b){b.textContent='복사됨';b.classList.add('ok');setTimeout(function(){b.textContent='복사';b.classList.remove('ok')},1500)}};
+  try{if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(done,function(){ss149Fall(v);done()});return}}catch(e){}ss149Fall(v);done()}
+function ss149Fall(v){var t=document.createElement('textarea');t.value=v;t.style.cssText='position:fixed;left:-9999px';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove()}
 </script>
 <nav id="mnav"></nav>
 </body>
