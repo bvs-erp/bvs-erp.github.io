@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.48</title>
+<title>BVS 데일리 v1.49</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3186,6 +3186,44 @@ async function ql148More(){if(QL148.dirty){var ok=await ql148Save();if(!ok)retur
   try{var _r=renderState;renderState=function(){var r=_r.apply(this,arguments);try{ql148Paint()}catch(e){}return r}}catch(e){}
   try{var _p=lg146Paint;lg146Paint=function(){var r=_p.apply(this,arguments);var o=el('lg146');if(o)o.style.display='none';return r}}catch(e){}
   var w=el('w_date');if(w)w.addEventListener('change',function(){QL148.dirty=false;try{ql148Paint(true)}catch(e){}});try{ql148Paint(true)}catch(e){}})();
+
+/* ═══ v1.49 맨 위 띠: 이천·청주 날씨 · 오늘 유가(오피넷 휘발유·경유) · 환율(USD/KRW) — 유가·환율은 파이로 수집분 daily_market() ═══
+   + 그날 출근 예정(배치 계획)이 있고 아직 출근 전이면 예정 현장을 자동으로 골라 둠 */
+(function(){var c=document.createElement('style');c.textContent=
+ '#mk149{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 12px;background:var(--sf);border-bottom:1px solid var(--ln2);font-size:12px;line-height:1.3;cursor:pointer}'
++'#mk149>div{min-width:0;border:1px solid var(--ln2);border-radius:6px;padding:4px 7px;background:var(--sf2)}#mk149 i{display:block;font-style:normal;font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'#mk149 b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mk149 small{display:block;font-size:10.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'#mk149 .up{color:var(--crit,#dc2626)}#mk149 .dn{color:var(--ac)}@media (max-width:420px){#mk149{grid-template-columns:repeat(2,minmax(0,1fr))}}';document.head.appendChild(c)})();
+var MK149={wx:null,wxAt:0,mk:null,mkAt:0,busy:0};
+var MK149_CITY=[['이천',37.272,127.435],['청주',36.642,127.489]];
+function mk149Wc(c){c=+c;if(c===0)return '맑음';if(c<=2)return '구름 조금';if(c===3)return '흐림';if(c===45||c===48)return '안개';if(c>=51&&c<=57)return '이슬비';if(c>=61&&c<=67)return '비';if(c>=71&&c<=77)return '눈';if(c>=80&&c<=82)return '소나기';if(c===85||c===86)return '눈';if(c>=95)return '뇌우';return '–'}
+function mk149N(v,n){return (+v).toLocaleString('ko-KR',{minimumFractionDigits:n||0,maximumFractionDigits:n||0})}
+function mk149Chg(v,p,n){if(p==null||v==null)return '';var d=Math.round(((+v)-(+p))*Math.pow(10,n||0))/Math.pow(10,n||0);if(!d)return '<small>전일과 같음</small>';return '<small class="'+(d>0?'up':'dn')+'">전일 '+(d>0?'+':'−')+mk149N(Math.abs(d),n)+'</small>'}
+function mk149Box(){var b=el('mk149');if(b)return b;var top=el('top');if(!top)return null;b=document.createElement('div');b.id='mk149';b.title='누르면 다시 불러옵니다';b.onclick=function(){mk149Load(true)};top.after(b);return b}
+function mk149Paint(){var b=mk149Box();if(!b)return;var h='';
+  MK149_CITY.forEach(function(c,i){var w=MK149.wx&&MK149.wx[i];
+    h+='<div><i>'+c[0]+' 날씨</i>'+(w?'<b>'+mk149Wc(w.code)+' '+Math.round(w.t)+'°</b><small>'+Math.round(w.lo)+'° / '+Math.round(w.hi)+'°'+(w.pp!=null?' · 비 '+w.pp+'%':'')+'</small>':'<b>…</b><small>불러오는 중</small>')+'</div>'});
+  var m=MK149.mk||{},f=m.fuel||{},g=f['휘발유'],d=f['경유'],x=m.fx;
+  h+='<div><i>유가 (오피넷 전국 평균)</i>'+(g||d?'<b>경유 '+(d?mk149N(d.price):'–')+'</b><small>휘발유 '+(g?mk149N(g.price):'–')+(function(){if(!d||d.prev==null)return '';var c=Math.round((+d.price)-(+d.prev));return c?' · 경유 전일 '+(c>0?'+':'−')+mk149N(Math.abs(c)):''})()+'</small>':'<b>–</b><small>'+(MK149.mkAt?'자료 없음':'불러오는 중')+'</small>')+'</div>';
+  h+='<div><i>환율 (USD/KRW)</i>'+(x&&x.rate?'<b>'+mk149N(x.rate,1)+'</b>'+mk149Chg(x.rate,x.prev,1):'<b>–</b><small>'+(MK149.mkAt?'자료 없음':'불러오는 중')+'</small>')+'</div>';
+  b.innerHTML=h}
+async function mk149Wx(){var la=MK149_CITY.map(function(c){return c[1]}).join(','),lo=MK149_CITY.map(function(c){return c[2]}).join(',');
+  var u='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=1';
+  var r=await fetch(u);if(!r.ok)throw new Error('날씨 '+r.status);var j=await r.json();if(!Array.isArray(j))j=[j];
+  return j.map(function(o){var cu=o.current||{},dy=o.daily||{};return {t:cu.temperature_2m,code:cu.weather_code,hi:(dy.temperature_2m_max||[])[0],lo:(dy.temperature_2m_min||[])[0],pp:(dy.precipitation_probability_max||[])[0]}})}
+async function mk149Load(force){if(MK149.busy)return;MK149.busy=1;var now=Date.now();mk149Paint();
+  try{if(!MK149.wx){var c=JSON.parse(localStorage.getItem('bvs_wx149')||'null');if(c&&now-c.at<30*60e3){MK149.wx=c.wx;MK149.wxAt=c.at}}}catch(e){}
+  var jobs=[];
+  if(force||!MK149.wx||now-MK149.wxAt>30*60e3)jobs.push(mk149Wx().then(function(w){MK149.wx=w;MK149.wxAt=Date.now();try{localStorage.setItem('bvs_wx149',JSON.stringify({at:MK149.wxAt,wx:w}))}catch(e){}}).catch(function(){}));
+  if((force||!MK149.mk||now-MK149.mkAt>10*60e3)&&typeof sb!=='undefined'&&sb)jobs.push(Promise.resolve(sb.rpc('daily_market')).then(function(r){if(r&&!r.error&&r.data&&r.data.ok)MK149.mk=r.data;MK149.mkAt=Date.now()}).catch(function(){MK149.mkAt=Date.now()}));
+  try{await Promise.all(jobs)}finally{MK149.busy=0;mk149Paint()}}
+(function(){var _la=loadAll;loadAll=function(){var r=_la.apply(this,arguments);try{mk149Load(false)}catch(e){}return r}})();
+/* 출근 예정 현장 자동 선택 (그날 처음 한 번, 출근 전일 때만) */
+var PL149={};
+(function(){var _rs=renderState;renderState=function(){try{var d=el('w_date')&&el('w_date').value;
+  if(d&&!PL149[d]&&!entryOf(d)&&(D.sites||[]).length){var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];
+    if(p){PL149[d]=1;if(SEL.site!==p.site_id&&(D.sites||[]).some(function(s){return s.site_id===p.site_id})){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}}}catch(e){}
+  return _rs.apply(this,arguments)}})();
 </script>
 </body>
 </html>
