@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.60</title>
+<title>BVS 데일리 v1.61</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -649,6 +649,10 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <button type="button" role="radio" data-ot="2" onclick="cfPick(2)">2시간</button>
           <button type="button" role="radio" data-ot="3" onclick="cfPick(3)">3시간</button>
           <button type="button" role="radio" data-ot="4" onclick="cfPick(4)">4시간</button>
+          <button type="button" role="radio" data-ot="5" onclick="cfPick(5)">5시간</button>
+          <button type="button" role="radio" data-ot="6" onclick="cfPick(6)">6시간</button>
+          <button type="button" role="radio" data-ot="7" onclick="cfPick(7)">7시간</button>
+          <button type="button" role="radio" data-ot="8" onclick="cfPick(8)">8시간</button>
         </div>
         <button type="button" class="cf-half" id="cfHalf" onclick="cfPick(-4)">일찍 끝났어요 · 반일(4시간)</button>
         <div class="v" style="text-align:center;margin-top:10px;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums"><span id="cfHours">8</span><small class="dim" style="font-size:13px"> 시간</small></div>
@@ -668,6 +672,11 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <button type="button" class="btn-fix" onclick="fixSubmit(10,'연장 2시간')"><b>연장 2h</b><small>10시간</small></button>
           <button type="button" class="btn-fix" onclick="fixSubmit(11,'연장 3시간')"><b>연장 3h</b><small>11시간</small></button>
           <button type="button" class="btn-fix" onclick="fixSubmit(4,'반일')"><b>반일</b><small>4시간</small></button>
+          <button type="button" class="btn-fix" onclick="fixSubmit(12,'연장 4시간')"><b>연장 4h</b><small>12시간</small></button>
+          <button type="button" class="btn-fix" onclick="fixSubmit(13,'연장 5시간')"><b>연장 5h</b><small>13시간</small></button>
+          <button type="button" class="btn-fix" onclick="fixSubmit(14,'연장 6시간')"><b>연장 6h</b><small>14시간</small></button>
+          <button type="button" class="btn-fix" onclick="fixSubmit(15,'연장 7시간')"><b>연장 7h</b><small>15시간</small></button>
+          <button type="button" class="btn-fix" onclick="fixSubmit(16,'연장 8시간')"><b>연장 8h</b><small>16시간</small></button>
         </div>
       </div>
       <div class="note tiny">같은 날 같은 현장에 다시 등록하면 덮어씁니다.</div>
@@ -3543,6 +3552,10 @@ async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_paysli
   h+='<div class="tiny dim" style="margin-top:10px">진한 칸은 진행, 흐린 칸은 예정입니다. 내가 들어간 날은 「나」로 표시됩니다.</div></div>';
   b.innerHTML=h}})();
 
+
+/* ═══ 1.61 (대표 지시 10/09) 연장근무 6시간 같은 긴 잔업도 앱에서 바로 — 퇴근 「근무시간 확인」 잔업 칸 없음·1~8시간, 「출퇴근을 못 눌렀을 때」에 연장 4h~8h(12~16시간)
+   잔업이 4시간을 넘으면 「대표 승인 후 반영」 안내. 서버(op_submit_labor)는 원래 하루 16시간까지 받음 — 값 계산은 그대로 ═══ */
+(function(){var _r=cfRender;cfRender=function(){var x=_r.apply(this,arguments);try{if(!CF.half&&CF.ot>4){var n=el('cfNote');if(n)n.insertAdjacentHTML('beforeend','<br><span class="tiny dim">잔업 '+CF.ot+'시간은 대표 승인 후 반영됩니다. 오전·오후 나눠 했으면 합쳐서 고르고 일지에 적어 주세요</span>')}}catch(e){}return x}})();
 </script>
 </body>
 </html>
