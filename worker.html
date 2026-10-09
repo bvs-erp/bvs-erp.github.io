@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.61</title>
+<title>BVS 데일리 v1.62</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3554,8 +3554,8 @@ async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_paysli
 
 
 /* ═══ 1.61 (대표 지시 10/09) 연장근무 6시간 같은 긴 잔업도 앱에서 바로 — 퇴근 「근무시간 확인」 잔업 칸 없음·1~8시간, 「출퇴근을 못 눌렀을 때」에 연장 4h~8h(12~16시간)
-   잔업이 4시간을 넘으면 「대표 승인 후 반영」 안내. 서버(op_submit_labor)는 원래 하루 16시간까지 받음 — 값 계산은 그대로 ═══ */
-(function(){var _r=cfRender;cfRender=function(){var x=_r.apply(this,arguments);try{if(!CF.half&&CF.ot>4){var n=el('cfNote');if(n)n.insertAdjacentHTML('beforeend','<br><span class="tiny dim">잔업 '+CF.ot+'시간은 대표 승인 후 반영됩니다. 오전·오후 나눠 했으면 합쳐서 고르고 일지에 적어 주세요</span>')}}catch(e){}return x}})();
+   잔업이 4시간을 넘으면 「합쳐서 고르고 일지에 기록」 안내(1.62 문구 정정 — 승인 절차는 자동 확정제). 서버(op_submit_labor)는 원래 하루 16시간까지 받음 — 값 계산은 그대로 ═══ */
+(function(){var _r=cfRender;cfRender=function(){var x=_r.apply(this,arguments);try{if(!CF.half&&CF.ot>4){var n=el('cfNote');if(n)n.insertAdjacentHTML('beforeend','<br><span class="tiny dim">잔업 '+CF.ot+'시간으로 기록됩니다. 오전·오후 나눠 했으면 합쳐서 고르고 일지에 적어 주세요</span>')}}catch(e){}return x}})();
 </script>
 </body>
 </html>
