@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.62</title>
+<title>BVS 데일리 v1.63</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3556,6 +3556,40 @@ async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_paysli
 /* ═══ 1.61 (대표 지시 10/09) 연장근무 6시간 같은 긴 잔업도 앱에서 바로 — 퇴근 「근무시간 확인」 잔업 칸 없음·1~8시간, 「출퇴근을 못 눌렀을 때」에 연장 4h~8h(12~16시간)
    잔업이 4시간을 넘으면 「합쳐서 고르고 일지에 기록」 안내(1.62 문구 정정 — 승인 절차는 자동 확정제). 서버(op_submit_labor)는 원래 하루 16시간까지 받음 — 값 계산은 그대로 ═══ */
 (function(){var _r=cfRender;cfRender=function(){var x=_r.apply(this,arguments);try{if(!CF.half&&CF.ot>4){var n=el('cfNote');if(n)n.insertAdjacentHTML('beforeend','<br><span class="tiny dim">잔업 '+CF.ot+'시간으로 기록됩니다. 오전·오후 나눠 했으면 합쳐서 고르고 일지에 적어 주세요</span>')}}catch(e){}return x}})();
+
+/* ═══ 1.63 (대표 지시 10/09) 퇴근 = 「오늘 근무를 고르는 순간」. 출근·퇴근 시각은 기록용일 뿐(점심·휴게 없이 일하고 3시쯤 끝나는 날이 많음)
+   퇴근을 누르면 반일 / 하루 / 하루+연장 1~8시간 중 하나를 꼭 눌러야 「퇴근 완료」가 눌림(미리 골라 둔 값 없음). 이 값이 고객사 청구·급여로 이어짐
+   체류시간으로 잔업을 따지던 경고 삭제 · 출근을 못 눌렀어도 퇴근에서 바로 고름 · 지난 날짜도 같은 창 · 「출퇴근을 못 눌렀을 때 시간보정」 칸 없앰 ═══ */
+(function(){var c=document.createElement('style');c.textContent=''
+ +'#confirmCard .c163{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 10px}#confirmCard .o163{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}'
+ +'#confirmCard .c163 button,#confirmCard .o163 button{min-height:52px;border:1px solid var(--ln);border-radius:6px;background:var(--sf);color:var(--tx);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}'
+ +'#confirmCard .o163 button{min-height:46px;font-size:14px}#confirmCard button small{font-size:11px;font-weight:500;color:var(--tx3)}'
+ +'#confirmCard button.on163{border:2px solid var(--ac);background:var(--ac);color:#fff}#confirmCard button.on163 small{color:#fff;opacity:.9}'
+ +'#confirmCard .s163{text-align:center;margin:12px 0 10px;font-size:15px}#confirmCard .s163 b{font-size:20px}#confirmCard .need163{color:#dc2626;font-weight:700}'
+ +'#confirmCard .go163{width:100%;height:50px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:16px;font-weight:800;font-family:inherit}#confirmCard .go163:disabled{background:var(--ln);color:var(--tx3)}';document.head.appendChild(c)})();
+var CF163={h:null};
+function cf163Lab(h){return h===4?'반일':h===8?'하루':h>8?'하루 + 연장 '+(h-8)+'시간':''}
+function cf163Paint(){var b=el('confirmCard');if(!b)return;var h=CF163.h,e=CF.entry,tm=termMap(),d=el('w_date').value,past=d!==today();
+  var bt=function(v,t,s,cls){return '<button type="button" class="'+(h===v?'on163':'')+'" onclick="cf163Pick('+v+')">'+t+(s?'<small>'+s+'</small>':'')+'</button>'};
+  var o='';for(var k=1;k<=8;k++)o+=bt(8+k,'연장 '+k+'h',(8+k)+'시간');
+  b.innerHTML='<h2>오늘 근무 고르기 <small class="dim tiny">'+esc(d)+(past?' (지난 날짜)':'')+'</small></h2>'
+   +'<p class="tiny dim" style="margin:0 0 8px">출근·퇴근 시각은 기록용입니다. 고객사 청구와 급여는 여기서 고른 근무로 계산됩니다. 하나를 꼭 눌러 주세요.</p>'
+   +'<div class="c163">'+bt(4,'반일','4시간')+bt(8,'하루','8시간')+'</div>'
+   +'<div class="tiny" style="font-weight:700;color:var(--tx2);margin-bottom:6px">연장했으면 (하루 + 연장)</div><div class="o163">'+o+'</div>'
+   +'<div class="s163">'+(h?'<b>'+esc(cf163Lab(h))+'</b> · '+h+'시간':'<span class="need163">근무를 골라야 '+esc(tm.outLabel)+' 완료가 됩니다</span>')+'</div>'
+   +(h>12?'<div class="tiny dim" style="text-align:center;margin:-4px 0 10px">오전·오후 나눠 했으면 합쳐서 골랐는지 확인하고, 일지에 적어 주세요</div>':'')
+   +'<div class="row2"><button class="btn" onclick="cfCancel()">취소</button><button class="go163"'+(h?'':' disabled')+' onclick="cfOk()">'+esc(tm.outLabel)+' 완료</button></div>'}
+function cf163Pick(v){CF163.h=v;CF.hours=v;cf163Paint()}
+cfRender=function(){cf163Paint()};cfPick=function(v){cf163Pick(v<0?4:8+v)};
+clockOut=async function(){var d=el('w_date').value,e=entryOf(d),tm=termMap(),isT=d===today();
+  if(!e&&!SEL.site){el('w_msg').innerHTML='<span class="neg">장소와 라인을 먼저 골라 주세요</span>';return}
+  var prev=e&&hhmm(e.work_end)?Math.round(((+e.work_md||0)*8+(+e.ot_hours||0))*2)/2:null;
+  CF={entry:e||null,start:e?hhmm(e.work_start)||null:null,end:isT?nowHM():(e?hhmm(e.work_end)||null:null),hours:prev};CF163.h=prev;
+  cf163Paint();el('todayCard').classList.add('hide');el('confirmCard').classList.remove('hide');window.scrollTo(0,0)};
+cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e');return}cfCancel();var e=CF.entry,tm=termMap();
+  var r=await submitLabor({hours:h,work_start:CF.start,work_end:CF.end,site_id:e?e.site_id:null,project_code:e?e.project_code:null},(CF.end?CF.end+' ':'')+tm.outLabel+' 완료 · '+cf163Lab(h));
+  CF163.h=null;return r};
+(function(){function rm(){var g=document.querySelector('.fix-grid');var c=g&&g.closest('.card');if(c)c.remove()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rm);else rm()})();
 </script>
 </body>
 </html>
