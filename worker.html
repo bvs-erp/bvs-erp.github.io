@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.63</title>
+<title>BVS 데일리 v1.64</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3590,6 +3590,66 @@ cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e
   var r=await submitLabor({hours:h,work_start:CF.start,work_end:CF.end,site_id:e?e.site_id:null,project_code:e?e.project_code:null},(CF.end?CF.end+' ':'')+tm.outLabel+' 완료 · '+cf163Lab(h));
   CF163.h=null;return r};
 (function(){function rm(){var g=document.querySelector('.fix-grid');var c=g&&g.closest('.card');if(c)c.remove()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rm);else rm()})();
+
+/* ═══ 1.64 (대표 지시 10/13) BVS 창립기념일(10/13) 및 사내 기념일·생일 축하 배너 & 작업일자 힌트 표시 ═══ */
+(function(){
+  var c=document.createElement('style');
+  c.textContent='#annivBanner{background:linear-gradient(135deg,rgba(29,78,216,0.08),rgba(245,158,11,0.15));border:1.5px solid rgba(245,158,11,0.5);border-radius:8px;padding:10px 13px;margin:0 0 12px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:var(--tx);box-shadow:0 2px 8px rgba(245,158,11,0.12)}'
+    +'#annivBanner .a-icon{font-size:22px;flex:none;line-height:1}'
+    +'#annivBanner .a-txt{flex:1;line-height:1.4}'
+    +'#annivBanner .a-sub{font-size:11.5px;font-weight:500;color:var(--tx2);margin-top:2px}';
+  document.head.appendChild(c);
+
+  var ANNIV_MAP={
+    '10-13':{name:'주식회사 비브이에스 창립기념일',icon:'🎉',msg:'오늘은 주식회사 비브이에스 창립기념일입니다!',sub:'비브이에스의 모든 임직원 여러분과 함께 축하합니다 🏢✨'},
+    '12-11':{name:'황병승 대표 생일',icon:'🎂',msg:'오늘은 황병승 대표님의 생일입니다!',sub:'뜻깊고 행복한 하루 보내시길 진심으로 축하드립니다 🎉'},
+    '02-26':{name:'이세영 생일',icon:'🎂',msg:'오늘은 이세영 님의 생일입니다!',sub:'생일을 진심으로 축하드립니다! 행복한 하루 되세요 🎉'},
+    '05-29':{name:'원동진 생일',icon:'🎂',msg:'오늘은 원동진 님의 생일입니다!',sub:'생일을 진심으로 축하드립니다! 행복한 하루 되세요 🎉'},
+    '06-05':{name:'박준서 생일',icon:'🎂',msg:'오늘은 박준서 님의 생일입니다!',sub:'생일을 진심으로 축하드립니다! 행복한 하루 되세요 🎉'},
+    '07-13':{name:'최원 생일',icon:'🎂',msg:'오늘은 최원 님의 생일입니다!',sub:'생일을 진심으로 축하드립니다! 행복한 하루 되세요 🎉'},
+    '09-28':{name:'최민영 생일',icon:'🎂',msg:'오늘은 최민영 님의 생일입니다!',sub:'생일을 진심으로 축하드립니다! 행복한 하루 되세요 🎉'}
+  };
+
+  function paintAnniv(){
+    var tc=el('todayCard');if(!tc)return;
+    var d=el('w_date')?el('w_date').value:(typeof today==='function'?today():'');
+    var md=d?d.slice(5):'';
+    var info=ANNIV_MAP[md];
+
+    if(!info&&window.SC154&&SC154.data&&SC154.data.holidays){
+      var match=(SC154.data.holidays||[]).filter(function(h){return String(h.d).slice(0,10)===d})[0];
+      if(match&&match.n){info={name:match.n,icon:'🎉',msg:'오늘은 '+match.n+'입니다!',sub:'뜻깊은 기념일을 축하합니다 ✨'}}
+    }
+
+    var bn=el('annivBanner');
+    if(info){
+      if(!bn){
+        bn=document.createElement('div');
+        bn.id='annivBanner';
+        tc.insertBefore(bn,tc.firstChild);
+      }
+      bn.innerHTML='<span class="a-icon">'+info.icon+'</span><div class="a-txt"><div>'+esc(info.msg)+'</div><div class="a-sub">'+esc(info.sub)+'</div></div>';
+      bn.classList.remove('hide');
+      var dh=el('dateHint');
+      if(dh){
+        var isT=(d===(typeof today==='function'?today():''));
+        dh.innerHTML=(isT?'오늘':'')+' · <span style="color:#d97706;font-weight:700">'+info.icon+' '+esc(info.name)+'</span>';
+      }
+    }else{
+      if(bn)bn.remove();
+    }
+  }
+
+  var _rs=window.renderState||function(){};
+  window.renderState=function(){
+    var r=_rs.apply(this,arguments);
+    try{paintAnniv()}catch(e){}
+    return r;
+  };
+
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',paintAnniv)}
+  else{setTimeout(paintAnniv,50)}
+})();
 </script>
 </body>
 </html>
