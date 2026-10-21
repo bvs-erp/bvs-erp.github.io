@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.64</title>
+<title>BVS 데일리 v1.65</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3450,6 +3450,10 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
   var lab=hn?(hn.n||'공휴일'):(w===0?'일요일':(w===6?'토요일':''));if(!lab)return x;
   var c=document.createElement('div');c.className='ho156';c.textContent='휴일 근무일 · '+lab;bt.parentNode.insertBefore(c,bt)}catch(e){console.error(e)}return x}})();
 
+/* ═══ v1.65 (대표 확정 10/21 — ERP와 같은 「장소 → 작업」): BVS본사 작업 칩에 청구처 표시
+   트레이 제작 · 우주 청구 / 세미티에스 조립 · 세미티에스 청구 / 범영 비철작업 · 범영 청구 / 본사업무 (새 범영 칸은 DB에 추가돼 자동으로 보임) ═══ */
+(function(){try{var _l=lineLabel,NM={'PJ-ASM':'세미티에스 조립','PJ-SCRAP':'범영 비철작업'},BL={WJ:'우주',STS:'세미티에스',BY:'범영'};
+  lineLabel=function(s){var t=_l.apply(this,arguments);try{if(s&&s.place_code==='BV'&&!s.line_name){if(NM[s.work_code])t=NM[s.work_code];var b=BL[s.billing_short];if(b)t+=' · '+b+' 청구'}}catch(e){}return t}}catch(e){}})();
 /* ═══ 새 버전 알림 (대표 지적 10/08 — 열어 둔 창이 예전 프로그램으로 계속 돌아 고친 것이 안 보이던 문제) ═══
    3분마다·창으로 돌아올 때 서버의 최신 버전을 확인 → 다르면 아래에 「새 버전 — 눌러서 새로고침」. 창이 뒤에 있고 입력 창이 닫혀 있으면 저절로 새로고침 */
 (function(){var cur=(document.querySelector('meta[name=app-version]')||{}).content||((document.title.match(/v([\d.]+)/)||[])[1]);if(!cur)return;var nv=null;
