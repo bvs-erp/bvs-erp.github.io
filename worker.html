@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.67</title>
+<title>BVS 데일리 v1.68</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3796,30 +3796,40 @@ function trFindCut(id){var f=null;((TR.data||{}).jobs||[]).forEach(function(j){(
 function trEdit(id){var j=id?trFindJob(id):null;
   TR.edit=j?{job_id:j.job_id,site_code:j.site_code||'',floor:j.floor||'',install_on:j.install_on||'',memo:j.memo||'',cuts:(j.cuts||[]).map(function(c){return {cut_id:c.cut_id,width:c.width,pieces:(c.pieces||[]).slice(),mult:c.mult,kind:c.kind,colors:c.colors||'',done_on:c.done_on}})}
     :{job_id:null,site_code:'',floor:'',install_on:'',memo:'',cuts:[]};
-  TR.form={width:300,len:'',mult:1,kind:'수평',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
+  TR.form={width:300,len:'',mult:1,kind:'수평',kx:'',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
 function trEf(k,v){TR.edit[k]=v}
 function trFf(k,v){TR.form[k]=v;trPaintForm()}
 function trColor(c){var a=TR.form.colors,i=a.indexOf(c);if(i<0)a.push(c);else a.splice(i,1);trPaintForm()}
 function trLenAdd(l){var s=String(TR.form.len||'').trim();TR.form.len=s?s+'+'+l:String(l);trPaintForm()}
+var TR_KINDS=['수평','수직','입상'];
+function trKind(f){return [f.kind||'',String(f.kx||'').trim()].filter(Boolean).join(' · ')}
+function trKindSplit(k){k=String(k||'').trim();for(var i=0;i<TR_KINDS.length;i++){var w=TR_KINDS[i];if(k===w)return [w,''];if(k.indexOf(w+' · ')===0)return [w,k.slice(w.length+3)]}return ['',k==='기타'?'':k]}
+function trKindPick(k){TR.form.kind=TR.form.kind===k?'':k;trPaintForm()}
+function trKxPick(k){TR.form.kx=String(TR.form.kx||'').trim()===k?'':k;trPaintForm()}
+function trKindRecent(){var seen={},out=[];((TR.data||{}).jobs||[]).slice().reverse().forEach(function(j){(j.cuts||[]).slice().reverse().forEach(function(c){var x=trKindSplit(c.kind)[1];if(x&&!seen[x]){seen[x]=1;out.push(x)}})});
+  ((TR.edit||{}).cuts||[]).forEach(function(c){var x=trKindSplit(c.kind)[1];if(x&&!seen[x]){seen[x]=1;out.push(x)}});return out.slice(0,10)}
 function trFormHtml(){var f=TR.form,ch=function(on,label,js){return '<span class="chip'+(on?' on':'')+'" onclick="'+js+'">'+label+'</span>'};
   var pv='';var ps=TRC.parsePieces(f.len);
-  if(ps.length){var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:f.kind,colors:f.colors.join(',')},TR.data);pv='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
+  if(ps.length){var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:trKind(f),colors:f.colors.join(',')},TR.data);pv='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
   return '<div class="f"><label>폭</label><div class="chips">'+[200,300,400,500].map(function(w){return ch(f.width===w,'W'+w,'trFf(\'width\','+w+')')}).join('')+'</div></div>'
     +'<div class="f"><label>길이 (mm, 이어지면 3000+1000)</label><input class="in" id="tr_len" inputmode="numeric" value="'+esc(f.len)+'" oninput="TR.form.len=this.value;trPaintPv()" style="padding:8px 10px;min-height:0">'
     +'<div class="chips" style="margin-top:6px">'+[3000,2500,2000,1500,1000,500].map(function(l){return ch(false,'+'+l,'trLenAdd('+l+')')}).join('')+ch(false,'지우기','TR.form.len=\'\';trPaintForm()')+'</div></div>'
     +'<div class="f" style="display:flex;align-items:center;gap:8px"><label style="margin:0">수량 ×</label><input class="in" type="number" min="1" value="'+(f.mult||1)+'" oninput="TR.form.mult=this.value;trPaintPv()" style="width:80px;padding:8px 10px;min-height:0"></div>'
-    +'<div class="f"><label>종류</label><div class="chips">'+['수평','수직','입상','기타'].map(function(k){return ch(f.kind===k,k,'trFf(\'kind\',\''+k+'\')')}).join('')+'</div></div>'
+    +'<div class="f"><label>종류</label><div class="chips">'+TR_KINDS.map(function(k){return ch(f.kind===k,k,'trKindPick(\''+k+'\')')}).join('')+'</div>'
+    +'<input class="in" id="tr_kx" value="'+esc(f.kx||'')+'" oninput="TR.form.kx=this.value;trPaintPv()" placeholder="직접 입력 (예: RPDB, 시그널, 브릿지 AC)" style="padding:8px 10px;min-height:0;margin-top:6px">'
+    +(function(){var R=trKindRecent();return R.length?'<div class="chips" style="margin-top:6px">'+R.map(function(k){return ch(String(f.kx||'').trim()===k,esc(k),'trKxPick('+JSON.stringify(k).replace(/"/g,'&quot;')+')')}).join('')+'</div>':''})()+'</div>'
     +'<div class="f"><label>색 (여러 개 고르면 격벽이 들어갑니다)</label><div class="chips">'+['R','B','K'].map(function(c){return ch(f.colors.indexOf(c)>=0,TRC.COLOR_NAME[c],'trColor(\''+c+'\')')}).join('')+'</div></div>'
     +'<div id="trPv">'+pv+'</div><button class="btn sm p" onclick="trAddCut()" style="margin-top:6px">줄 넣기</button>'}
 function trPaintForm(){var x=el('trForm');if(x)x.innerHTML=trFormHtml()}
 function trPaintPv(){var x=el('trPv');if(!x)return;var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){x.innerHTML='';return}
-  var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:f.kind,colors:f.colors.join(',')},TR.data);
+  var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:trKind(f),colors:f.colors.join(',')},TR.data);
   x.innerHTML='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
 function trAddCut(){var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){toast('길이를 넣어 주세요','e');return}
   if(ps.some(function(x){return x>3000})){toast('한 조각은 3000mm까지입니다. 3000+… 로 나눠 주세요','e');return}
-  TR.edit.cuts.push({width:f.width,pieces:ps,mult:Math.max(1,parseInt(f.mult,10)||1),kind:f.kind,colors:f.colors.join(',')});
-  TR.form={width:f.width,len:'',mult:1,kind:f.kind,colors:f.colors.slice()};trPaint()}
-function trCutPick(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;TR.form={width:c.width,len:c.pieces.join('+'),mult:c.mult,kind:c.kind,colors:TRC.cols(c.colors)};TR.edit.cuts.splice(i,1);trPaint()}
+  if(!trKind(f)){toast('종류를 고르거나 직접 적어 주세요','e');return}
+  TR.edit.cuts.push({width:f.width,pieces:ps,mult:Math.max(1,parseInt(f.mult,10)||1),kind:trKind(f),colors:f.colors.join(',')});
+  TR.form={width:f.width,len:'',mult:1,kind:f.kind,kx:f.kx||'',colors:f.colors.slice()};trPaint()}
+function trCutPick(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;var kk=trKindSplit(c.kind);TR.form={width:c.width,len:c.pieces.join('+'),mult:c.mult,kind:kk[0],kx:kk[1],colors:TRC.cols(c.colors)};TR.edit.cuts.splice(i,1);trPaint()}
 function trCutDel(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;TR.edit.cuts.splice(i,1);trPaint()}
 function trEditHtml(){var e=TR.edit;
   var h='<div class="card"><h2>'+(e.job_id?'재단표 고치기':'새 재단표')+'</h2>'
