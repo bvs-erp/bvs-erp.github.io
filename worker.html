@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.72</title>
+<title>BVS 데일리 v1.73</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3692,7 +3692,7 @@ var TRC=(function(){
   function cutCalc(cut,st,rules,im){
     rules=rules||{};im=im||{};var R={use:{},bars:{},used:[],newOff:[],scrap:[],warn:[],plan:[],cut_id:cut.cut_id};
     var minOff=num(rules.min_offcut_mm,300),kerf=num(rules.kerf_mm,0),runs=num(cut.mult,1);
-    var cs=cols(cut.colors);var nsep=Math.max(0,cs.length-1);
+    var cs=cols(cut.colors);/* 대표 지시(10-22): 격벽도 트레이처럼 한 장에 같은 길이 — 색이 둘 이상이면 트레이 한 본에 격벽 한 장(색 수와 무관) */var nsep=cs.length>1?Math.max(1,Math.round(num(rules.sep_per_tray,1))):0;
     var tcode=trayCode(cut.width),tbar=num((im[tcode]||{}).len,3000)||3000;
     var RL=realOf(cut,rules.bend_angle);R.real=RL.real;R.vert=RL.vert;R.side=RL.side;var CH=chainsOf(cut,tbar,minOff,/[LR∠]/.test(String(cut.joins||''))?RL.real:null);R.chains=CH.chains;R.dirs=CH.dirs;R.splits=CH.st.split;R.cutW=bendCut(cut.width,rules.bend_angle);R.angle=num(rules.bend_angle,45);
     if(CH.st.over.length)R.warn.push('W'+cut.width+' '+runText(cut.pieces,cut.joins)+': 꺾임으로 이어진 길이가 한 본('+tbar+')을 넘어 '+CH.st.over.length+'곳은 끊고 조절 커넥터');
@@ -3815,6 +3815,7 @@ function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d)
       +'<span class="pill '+(j.status==='done'?'g':j.status==='making'?'y':'b')+'">'+trStatus(j.status)+'</span></div>';
     var G=trGroupByFloor(j.cuts,j);
     h+=trPickHtml(j,G,p);
+    if(TR.batch&&TR.batch.job_id===j.job_id)h+=trBatchHtml(j,G);
     G.forEach(function(Gf){h+='<div class="tr-fl">'+esc(trFlLabel(Gf.fl))+' <span class="tiny dim">'+Gf.rows.length+'줄</span></div>';Gf.rows.forEach(function(R){var c=R.c,r=p.per[c.cut_id],op=!!TR.open[c.cut_id];
       h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div style="flex:1;cursor:pointer" onclick="TR.open['+c.cut_id+']=!TR.open['+c.cut_id+'];trPaint()"><div>'+(op?'▾ ':'▸ ')+trCutText(c)+'</div>'
         +(c.done_on?'<div class="tiny dim">완료 '+esc(String(c.done_on).slice(5))+(c.done_by?' · '+esc(c.done_by):'')+' — '+trUseText((c.usage||[]).reduce(function(o,x){o[x.item_code]=x.qty;return o},{}))+'</div>'
@@ -3822,6 +3823,8 @@ function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d)
         +(IS_LEAD?(c.done_on?'<button class="btn sm" style="flex:none" onclick="trUndo('+c.cut_id+')">완료 취소</button>':'<button class="btn sm p" style="flex:none" onclick="trDoneOpen('+c.cut_id+')">완료</button>'):'')+'</div>';
       if(op)h+=trCutDetail(c,r||TRC.forDone(c,d));
       if(TR.done&&TR.done.cut_id===c.cut_id)h+=trDoneHtml()})});
+    var nOpen=(j.cuts||[]).filter(function(c){return !c.done_on}).length;
+    if(IS_LEAD&&nOpen&&!(TR.batch&&TR.batch.job_id===j.job_id))h+='<button class="btn p" style="width:100%;margin-top:8px" onclick="trBatchOpen('+j.job_id+')">한번에 완료 · 남은 자재 적기 ('+nOpen+'줄)</button>';
     if(IS_LEAD&&j.status!=='done')h+='<div class="row2" style="margin-top:8px"><button class="btn sm" onclick="trEdit('+j.job_id+')">고치기</button><button class="btn sm" onclick="trCancelJob('+j.job_id+')">지우기</button></div>';
     h+='</div>'});
   return h}
@@ -4050,13 +4053,70 @@ function trRulesHtml(){var ru=TR.data.rules||{};
 async function trRulesSave(){var p={};for(var i=0;i<TR_RULES.length;i++){var k=TR_RULES[i][0],v=el('trRu_'+k).value.trim();if(v==='')continue;var n=Number(v);if(!isFinite(n)||n<0){toast(TR_RULES[i][1]+' 숫자를 확인해 주세요','e');return}p[k]=n}
   var r=await sb.rpc('tray_rules_save',{p:p});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('규칙 저장','g');trOpen('rules')}
 
+/* ── 한번에 완료 (대표 지시 10-22): 재단표의 안 끝난 줄을 골라 한 번에 완료 + 자재별 실제 쓴 양·남은 길이를 한 화면에서.
+   계산은 고른 줄을 화면 순서대로 이어서(앞 줄 남은 끝을 뒷줄이 씀) 한 번 — 저장은 줄마다 tray_cut_done(쓴 양은 줄별 계산 비율대로, 고친 차이는 마지막 줄에) ── */
+function trBatchJob(){var B=TR.batch;return B?((TR.data.jobs||[]).filter(function(j){return j.job_id===B.job_id})[0]||null):null}
+function trBatchCuts(j){var out=[];trGroupByFloor(j.cuts,j).forEach(function(G){G.rows.forEach(function(R){if(!R.c.done_on)out.push({c:R.c,fl:G.fl})})});return out}
+function trBatchOpen(id){TR.batch={job_id:id,sel:{},on:trTodayKst(),use:{},off:{},noOff:{},add:[]};var j=trBatchJob();if(!j)return;trBatchCuts(j).forEach(function(x){TR.batch.sel[x.c.cut_id]=true});TR.done=null;trPaint()}
+function trBatchCalc(j){var B=TR.batch,d=TR.data,im=trIm(),st=(function(){var s={pool:{},seq:0};(d.offcuts||[]).forEach(function(o){(s.pool[o.item_code]=s.pool[o.item_code]||[]).push({off_id:o.off_id,len:Number(o.len_mm),cut:null})});return s})();
+  var rows=trBatchCuts(j).filter(function(x){return B.sel[x.c.cut_id]}),per=[],tot={},used=[],scrap=[];
+  rows.forEach(function(x){var R=TRC.cutCalc(x.c,st,d.rules,im);
+    Object.keys(st.pool).forEach(function(k){st.pool[k].forEach(function(o){if(o.off_id==null&&o._from==null)o._from=x.c.cut_id})});
+    per.push({cut_id:x.c.cut_id,c:x.c,use:R.use,used:R.used});Object.keys(R.use).forEach(function(k){tot[k]=Math.round(((tot[k]||0)+R.use[k])*100)/100});
+    R.used.forEach(function(oid){used.push({off_id:oid,cut_id:x.c.cut_id})});scrap=scrap.concat(R.scrap)});
+  var left={};Object.keys(st.pool).forEach(function(k){st.pool[k].forEach(function(o){if(o.off_id==null)(left[k]=left[k]||[]).push({len:Math.round(o.len*10)/10,from:o._from})})});
+  return {rows:rows,per:per,tot:tot,used:used,left:left,scrap:scrap}}
+function trBatchHtml(j,G){var B=TR.batch,im=trIm(),C=trBatchCalc(j),offAll=(TR.data.offcuts||[]).reduce(function(o,x){o[x.off_id]=x;return o},{});
+  var h='<div class="tr-done"><div style="font-weight:700;margin-bottom:4px">한번에 완료</div><div class="tiny dim" style="margin-bottom:6px">완료할 줄을 고르세요. 아래 숫자는 고른 줄을 이어서 자른 계산입니다 — 실제와 다르면 고치세요.</div>';
+  var fl=null;trBatchCuts(j).forEach(function(x){if(x.fl!==fl){fl=x.fl;h+='<div class="tiny" style="font-weight:700;margin:6px 0 2px">'+esc(trFlLabel(fl))+'</div>'}
+    h+='<label class="tr-bc"><input type="checkbox"'+(B.sel[x.c.cut_id]?' checked':'')+' onchange="TR.batch.sel['+x.c.cut_id+']=this.checked;trPaint()"> '+trCutText(x.c)+'</label>'});
+  if(!C.rows.length)return h+'<div class="dim tiny" style="margin:8px 0">고른 줄이 없습니다</div><div class="row2"><button class="btn sm" onclick="TR.batch=null;trPaint()">닫기</button></div></div>';
+  var codes=Object.keys(C.tot).filter(function(k){return C.tot[k]}).concat(B.add.filter(function(k){return !C.tot[k]}));
+  Object.keys(C.left).forEach(function(k){if(codes.indexOf(k)<0)codes.push(k)});
+  codes.sort(function(a,b){return trGroup(a)-trGroup(b)||a.localeCompare(b)});
+  h+='<div class="tiny" style="font-weight:700;margin:10px 0 2px">자재별 — 쓴 양 · 남은 길이</div>';
+  codes.forEach(function(k){var lin=trLinear(im[k]),q=B.use[k]!=null?B.use[k]:trQty(C.tot[k]||0);
+    h+='<div class="tr-kv"><span><b>'+esc(trLabel(im[k]||{item_code:k}))+'</b></span><input class="in" inputmode="decimal" value="'+esc(q)+'" oninput="TR.batch.use[\''+k+'\']=this.value"><small>'+esc(trUnit(k))+'</small></div>';
+    if(lin){var tv=B.off[k]!=null?B.off[k]:(C.left[k]||[]).map(function(o){return o.len}).join(', ');
+      h+='<div class="tr-kv tr-left"><span class="tiny dim">남은 길이 (mm, 쉼표) — 다시 쓸 자투리</span><input class="in" style="text-align:left" data-boff="'+esc(k)+'" value="'+esc(tv)+'" placeholder="없음" oninput="TR.batch.off[\''+k+'\']=this.value"><small>mm</small></div>'}});
+  h+='<div class="chips" style="margin:6px 0"><select class="in" id="trBAdd" style="padding:6px;min-height:0;max-width:200px"><option value="">+ 자재 더하기</option>'
+    +(TR.data.items||[]).filter(function(i){return codes.indexOf(i.item_code)<0}).map(function(i){return '<option value="'+esc(i.item_code)+'">'+esc(trLabel(i))+'</option>'}).join('')+'</select>'
+    +'<button class="btn sm" style="flex:none" onclick="var v=el(\'trBAdd\').value;if(v){TR.batch.add.push(v);TR.batch.use[v]=TR.batch.use[v]||\'0\';trPaint()}">더하기</button></div>';
+  if(C.used.length)h+='<div class="tiny" style="font-weight:700;margin:8px 0 4px">쓴 자투리 (안 썼으면 눌러서 끄기)</div><div class="chips">'+C.used.map(function(u){var o=offAll[u.off_id]||{},on=!B.noOff[u.off_id];return '<span class="chip'+(on?' on':'')+'" onclick="TR.batch.noOff['+u.off_id+']=!TR.batch.noOff['+u.off_id+'];trPaint()">'+esc(trLabel(im[o.item_code]||{item_code:o.item_code}))+' '+esc(o.len_mm)+'</span>'}).join('')+'</div>';
+  if(C.scrap.length)h+='<div class="tiny dim" style="margin-top:4px">버림(짧음): '+C.scrap.map(function(s){return s.len_mm}).join(', ')+'mm</div>';
+  h+='<div class="f" style="display:flex;align-items:center;gap:8px;margin-top:8px"><label style="margin:0">완료일</label><input class="in" type="date" value="'+B.on+'" oninput="TR.batch.on=this.value" style="padding:6px 8px;min-height:0;max-width:160px"></div>'
+    +'<div class="row2"><button class="btn sm" onclick="TR.batch=null;trPaint()">닫기</button><button class="btn sm p" id="trBGo" onclick="trBatchSave()">'+C.rows.length+'줄 완료 처리</button></div></div>';
+  return h}
+/* 줄별로 나누기: 계산값은 줄별 그대로, 고친 차이는 그 자재를 쓴 마지막 줄(없으면 마지막 줄)에. 줄어든 차이는 뒤에서부터 0까지 */
+function trBatchSplit(C){var B=TR.batch,n=C.per.length,U=C.per.map(function(p){var o={};Object.keys(p.use).forEach(function(k){if(p.use[k])o[k]=p.use[k]});return o}),bad=false;
+  var codes={};Object.keys(C.tot).forEach(function(k){codes[k]=1});Object.keys(B.use).forEach(function(k){codes[k]=1});
+  Object.keys(codes).forEach(function(k){var e=B.use[k]!=null&&String(B.use[k]).trim()!==''?Number(B.use[k]):(C.tot[k]||0);if(!isFinite(e)||e<0){bad=true;return}
+    var diff=Math.round((e-(C.tot[k]||0))*100)/100;if(!diff)return;
+    var last=-1;for(var i=n-1;i>=0;i--)if(U[i][k]){last=i;break}if(last<0)last=n-1;
+    if(diff>0){U[last][k]=Math.round(((U[last][k]||0)+diff)*100)/100;return}
+    for(var t=n-1;t>=0&&diff<0;t--){var v=U[t][k]||0;if(!v)continue;var take=Math.min(v,-diff);U[t][k]=Math.round((v-take)*100)/100;diff=Math.round((diff+take)*100)/100}});
+  var offs=C.per.map(function(){return []}),idx={};C.per.forEach(function(p,i){idx[p.cut_id]=i});
+  document.querySelectorAll('#trBody input[data-boff]').forEach(function(inp){var k=inp.getAttribute('data-boff'),pool=(C.left[k]||[]).slice();
+    var lastK=-1;for(var i=n-1;i>=0;i--)if(U[i][k]){lastK=i;break}if(lastK<0)lastK=n-1;
+    TRC.parsePieces(inp.value).forEach(function(l){var m=-1;for(var q=0;q<pool.length;q++)if(Math.round(pool[q].len)===l){m=q;break}
+      var at=m>=0&&idx[pool[m].from]!=null?idx[pool[m].from]:lastK;if(m>=0)pool.splice(m,1);offs[at].push({item_code:k,len_mm:l})})});
+  return {bad:bad,payload:C.per.map(function(p,i){return {cut_id:p.cut_id,usage:Object.keys(U[i]).filter(function(k){return U[i][k]>0}).map(function(k){return {item_code:k,qty:U[i][k]}}),
+    offcuts_used:p.used.filter(function(oid){return !B.noOff[oid]}),offcuts_new:offs[i]}})}}
+async function trBatchSave(){var B=TR.batch,j=trBatchJob();if(!B||!j)return;var C=trBatchCalc(j);if(!C.rows.length){toast('고른 줄이 없습니다','e');return}
+  var S=trBatchSplit(C);if(S.bad){toast('쓴 양 숫자를 확인해 주세요','e');return}
+  if(!(await ERPC.ask('확인',C.rows.length+'줄을 '+B.on+' 완료로 처리하고 쓴 자재를 재고에서 뺄까요?',{ok:'완료 처리'})))return;
+  var b=el('trBGo');if(b)b.disabled=true;var ok=0,err=null;
+  for(var i=0;i<S.payload.length;i++){var P=S.payload[i];P.done_on=B.on;var r;try{r=await sb.rpc('tray_cut_done',{p:P})}catch(e){r={error:e}}
+    if(r.error||!r.data||!r.data.ok){err=(r.error&&r.error.message)||(r.data&&r.data.error)||'실패';break}ok++}
+  TR.batch=null;if(err)toast(ok+'줄 완료 · 나머지 '+(S.payload.length-ok)+'줄 실패 ('+err+')','e');else toast(ok+'줄 완료 — 재고에서 뺐습니다','g');trOpen('jobs')}
+
 /* ── 탭·화면 붙이기 (기존 go는 감싸기만) ── */
 (function(){
   var css=document.createElement('style');css.textContent='.tr-note{font-size:12px;background:var(--sf2);border-left:3px solid #d97706;padding:6px 8px;margin:6px 0;border-radius:4px}'
     +'.tr-tbl{font-size:13px}.tr-r{display:grid;grid-template-columns:1fr 64px 52px 70px;gap:6px;padding:7px 0;border-bottom:1px solid var(--ln);align-items:center}.tr-r>span:not(:first-child){text-align:right}'
     +'.tr-h{font-size:11.5px;color:var(--tx2);font-weight:600}.tr-g{font-size:12px;font-weight:700;color:var(--tx2);padding:10px 0 2px}.tr-short{background:rgba(220,38,38,.06)}'
     +'.tr-cut{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}.tr-cut.done{opacity:.6}.tr-pick{background:var(--sf2);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}.tr-pk{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--ln)}.tr-pk span:last-child{text-align:right}.tr-det{background:var(--sf2);border-radius:8px;padding:8px 10px;margin:2px 0 8px;font-size:12.5px}.tr-pl{padding:3px 0;line-height:1.5}.tr-dim{margin:8px 0 4px;padding:6px 8px;border:1px solid var(--ln);border-radius:6px;line-height:1.6}.tr-fl{font-size:13px;font-weight:700;margin:12px 0 2px;padding:4px 8px;background:var(--sf2);border-radius:4px}'
-    +'.tr-done{background:var(--sf2);border-radius:8px;padding:10px;margin:6px 0}'
+    +'.tr-done{background:var(--sf2);border-radius:8px;padding:10px;margin:6px 0}.tr-bc{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13px;border-bottom:1px dashed var(--ln)}.tr-bc input{margin-top:3px;flex:none}.tr-left{padding-top:0;grid-template-columns:1fr 34px}.tr-left span{font-size:11.5px;grid-column:1/-1}.tr-left input{font-size:12.5px}'
     +'.tr-kv{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center;padding:5px 0;font-size:13.5px}.tr-kv input{padding:6px 8px;min-height:0;text-align:right}.tr-kv small{color:var(--tx2)}'
     +'.tr-off{padding:0 0 8px;border-bottom:1px dashed var(--ln);margin-bottom:4px}.tr-save{position:sticky;bottom:70px;display:flex;gap:8px;padding:8px 0;background:var(--bg)}.tr-save .btn{flex:1}';
   document.head.appendChild(css);
@@ -4071,6 +4131,71 @@ async function trRulesSave(){var p={};for(var i=0;i<TR_RULES.length;i++){var k=T
     ref.parentNode.insertBefore(s,ref)}
   var _goTr=typeof go==='function'?go:null;
   if(_goTr){go=function(p){var r=_goTr.apply(this,arguments);if(p==='tray')trOpen();return r}}
+})();
+
+/* ═══ 데일리 1.73 (대표 지시 10-22) 리드 › 내일 배치에 「카톡 예상일정 붙여넣기」
+   직원방에 올린 「N일(요일) 예상일정」 글을 그대로 붙여 넣으면 날짜·업무 줄·이름 줄을 읽어 업무별로 묶고, 현장을 골라 출근 예정으로 저장.
+   업무 줄은 출근 예정 메모로 남아 다음 날 직원이 출근을 누르면 그날 업무로 이어짐(ERP 콕핏 「카톡 붙여넣기」와 같은 방식).
+   명단에 없는 이름(고객사 인원 등)은 빠짐. 저장은 붙여 넣은 사람만 덮어씀(다른 사람 배치는 그대로). 금액·청구처 없음 ═══ */
+var PP={open:false,txt:'',P:null,sel:[],date:''};
+function ppKst(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,10)}
+function ppDate(day){var t=new Date(ppKst()+'T00:00:00Z');for(var k=1;k<=45;k++){var x=new Date(t.getTime()+k*86400000);if(x.getUTCDate()===day)return x.toISOString().slice(0,10)}return ''}
+function ppSiteGuess(w){var R=[[/P\s*&\s*T|PT3|피앤티/i,'CJ-CJ'],[/청주|M15|M11|M12/i,'CJ-CJ'],[/평택|\bP[1-4]\b/i,'PT-PT'],[/화성/,'HS-HS'],[/TES|제조동/i,'TE-MFG'],[/트레이/,'WJ-BVS-TRAY'],[/세미티에스|SEMI|STS/i,'STS-BVS-ASM'],[/비철/,'BY-BVS-SCRAP'],[/예비군/,'ED-RSV'],[/교육/,'ED-EDU'],[/우주\s*이천|우주\s*사무/,'UO-OFC'],[/본사|BVS\s*이천/i,'BV-IC'],[/M1[046]|이천|SK/i,'IC-IC']];
+  for(var i=0;i<R.length;i++)if(R[i][0].test(w)&&ppSites().some(function(s){return s.site_id===R[i][1]}))return R[i][1];return ''}
+function ppSites(){return (D.sites||[]).filter(function(s){return !/^OFF-/.test(s.site_id)})}
+function ppSiteLabel(s){return (s.site_name||s.site_id)+(s.work_name&&!/장비\s*셋업/.test(s.work_name)?' · '+s.work_name:'')}
+function ppParse(t){var by={};(PL.staff||[]).forEach(function(x){by[x.name]=x});var date='',blocks=[],cur=null;
+  String(t||'').split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean).forEach(function(l){
+    var m=l.match(/(\d{1,2})\s*일\s*(\(\s*[월화수목금토일]\s*\))?/);if(!date&&m&&/일정|계획|배치|예상|출근/.test(l)){date=ppDate(+m[1]);return}
+    if(/고생|수고|감사합|안녕|부탁/.test(l)&&l.length<25)return;
+    var tk=l.split(/[\s,·\/]+/).filter(Boolean),hg=tk.every(function(x){return /^[가-힣]{2,4}$/.test(x)}),mt=tk.filter(function(x){return by[x]}).length;
+    if(tk.length&&hg&&(mt>0||(cur&&!cur.names.length))){if(!cur){cur={work:'',names:[]};blocks.push(cur)}cur.names=cur.names.concat(tk);return}
+    cur={work:l,names:[]};blocks.push(cur)});
+  var seen={};blocks=blocks.filter(function(b){return b.names.length});
+  blocks.forEach(function(b){b.site=ppSiteGuess(b.work);b.emps=[];b.miss=[];b.dup=[];b.names.forEach(function(n){var x=by[n];if(!x){b.miss.push(n);return}if(seen[x.employment_no])b.dup.push(n);seen[x.employment_no]=1;b.emps.push({emp:x.employment_no,name:n})})});
+  return {date:date,blocks:blocks}}
+function ppToggle(){PP.open=!PP.open;ppPaint();if(PP.open)setTimeout(function(){var t=el('ppT');if(t)t.focus()},50)}
+async function ppRead(){if(!(PL.staff||[]).length){try{var r0=await sb.rpc('lead_active_staff');PL.staff=(r0&&r0.data)||[]}catch(e){}}var t=el('ppT');PP.txt=t?t.value:PP.txt;PP.P=ppParse(PP.txt);PP.sel=PP.P.blocks.map(function(b){return b.site});PP.date=PP.P.date||PP.date||(typeof tomorrow==='function'?tomorrow():'');ppPaint()}
+function ppPaint(){var box=el('ppBox');if(!box)return;if(!PP.open){box.innerHTML='';return}
+  var S=ppSites(),P=PP.P,h='<div style="background:var(--sf2);border-radius:12px;padding:10px;margin:8px 0">'
+    +'<div class="tiny dim" style="margin-bottom:6px">직원방에 올린 예상일정 글을 그대로 붙여 넣으세요. 「23일(금) 예상일정」 같은 날짜, 업무 줄, 그 아래 이름 줄을 읽습니다.</div>'
+    +'<textarea id="ppT" class="in" style="width:100%;height:150px;font-size:13px" placeholder="23일(금) 예상일정입니다.&#10;&#10;VM M16 6EAN0701 나르도 셋업&#10;이세영 최원&#10;&#10;트레이 5EKGA612 제작&#10;최민영" onpaste="setTimeout(ppRead,0)">'+esc(PP.txt||'')+'</textarea>'
+    +'<div class="row2" style="margin-top:6px"><button class="btn sm" onclick="ppRead()">읽기</button><button class="btn sm" onclick="PP.txt=\'\';PP.P=null;ppPaint()">비우기</button></div>';
+  if(P){var n=0,dup=0;
+    h+='<div class="f" style="display:flex;align-items:center;gap:8px;margin-top:10px"><label style="margin:0;flex:none">날짜</label><input class="in" type="date" value="'+esc(PP.date)+'" oninput="PP.date=this.value" style="padding:6px 8px;min-height:0;max-width:170px">'+(P.date?'':'<span class="tiny neg">날짜를 못 읽음 — 골라 주세요</span>')+'</div>';
+    P.blocks.forEach(function(b,i){n+=b.emps.length;dup+=b.dup.length;
+      h+='<div style="border:1px solid var(--ln);border-radius:10px;padding:8px 10px;margin-top:8px;background:var(--bg)"><div style="font-weight:700;font-size:13.5px">'+esc(b.work||'(업무 줄 없음)')+'</div>'
+        +'<select class="in" style="margin:6px 0;padding:6px 8px;min-height:0" onchange="PP.sel['+i+']=this.value"><option value="">현장 고르기</option>'+S.map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===PP.sel[i]?' selected':'')+'>'+esc(ppSiteLabel(s))+'</option>'}).join('')+'</select><div>'
+        +b.emps.map(function(x){return '<span class="pill g" style="margin:2px">'+esc(x.name)+(b.dup.indexOf(x.name)>=0?' (두 번째 업무)':'')+'</span>'}).join('')
+        +b.miss.map(function(x){return '<span class="pill" style="margin:2px;opacity:.55" title="직원 명단에 없음 — 저장에서 빠짐">'+esc(x)+'</span>'}).join('')+'</div></div>'});
+    if(!P.blocks.length)h+='<div class="dim tiny" style="margin-top:8px">업무·이름 줄을 못 찾았습니다</div>';
+    if(dup)h+='<div class="tiny neg" style="margin-top:6px">같은 사람이 두 업무에 들어 있습니다 — 뒤쪽 업무로 저장됩니다</div>';
+    h+='<div class="tiny dim" style="margin-top:6px">회색 이름은 우리 직원 명단에 없어 빠집니다(고객사 인원 등). 붙여 넣은 사람만 저장되고 다른 사람 배치는 그대로입니다.</div>'
+      +'<button class="btn p" style="width:100%;margin-top:8px" id="ppGo" onclick="ppSave()"'+(n?'':' disabled')+'>출근 예정 저장 ('+n+'명)</button>'}
+  box.innerHTML=h+'</div>'}
+async function ppSave(){var P=PP.P;if(!P)return;var d=PP.date;if(!d){toast('날짜를 고르세요','e');return}if(d<ppKst()){toast('지난 날짜에는 넣을 수 없습니다','e');return}
+  for(var i=0;i<P.blocks.length;i++){if(P.blocks[i].emps.length&&!PP.sel[i]){toast('현장을 고르지 않은 업무가 있습니다','e');return}}
+  var S={};ppSites().forEach(function(s){S[s.site_id]=s});var rows={};
+  P.blocks.forEach(function(b,i){b.emps.forEach(function(x){rows[x.emp]={employment_no:x.emp,site_id:PP.sel[i],project_code:(S[PP.sel[i]]||{}).work_code||'',memo:b.work||''}})});
+  var list=Object.keys(rows).map(function(k){return rows[k]});var g=el('ppGo');if(g)g.disabled=true;
+  var r;try{r=await sb.rpc('lead_set_plan',{p:{plan_date:d,rows:list}})}catch(e){r={error:e}}
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');if(g)g.disabled=false;return}
+  toast(kdate(d)+' 출근 예정 '+r.data.rows+'명 저장','g');PP.open=false;PP.P=null;PP.txt='';ppPaint();plOpen(d)}
+/* 화면 붙이기 + 배치 줄에 업무(메모) 보이기·현장 바꿔도 업무 유지 + 저장 때 대표 등 명단 밖 배치·프로젝트 지키기 (기존 함수는 감싸기만) */
+(function(){var inp=el('pl_date'),card=inp&&inp.closest('.card');
+  if(card&&!el('ppBox')){var row=inp.parentNode,b=document.createElement('button');b.className='btn';b.style.cssText='width:100%;margin-top:8px';b.textContent='카톡 예상일정 붙여넣기';b.onclick=ppToggle;
+    row.insertAdjacentElement('afterend',b);var box=document.createElement('div');box.id='ppBox';b.insertAdjacentElement('afterend',box)}
+  if(typeof plRender==='function'){var _r=plRender;plRender=function(){var o=_r.apply(this,arguments);try{var kids=[].slice.call(el('plRows').children);
+    (PL.staff||[]).forEach(function(w,i){var row=kids[i];if(!row)return;var c=PL.rows[w.employment_no]||{},sel=row.querySelector('select');
+      if(sel)sel.onchange=function(){var o2=PL.rows[w.employment_no]||{};PL.rows[w.employment_no]={site_id:this.value,memo:this.value?(o2.memo||''):''};plText();var m=row.nextElementSibling;if(m&&m.classList.contains('pp-memo')&&!this.value)m.remove()};
+      if(c.memo&&c.site_id){var m=document.createElement('div');m.className='pp-memo tiny dim';m.style.cssText='margin:-4px 0 6px 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';m.textContent='업무: '+c.memo;row.insertAdjacentElement('afterend',m)}})}catch(e){console.error(e)}return o}}
+  if(typeof plSave==='function'){var _s=plSave;plSave=async function(){var d=PL.date,keep=[];try{var r0=await sb.rpc('lead_plan',{p_date:d});var mine={};(PL.staff||[]).forEach(function(w){mine[w.employment_no]=1});
+      ((r0&&r0.data&&r0.data.rows)||[]).forEach(function(x){if(!mine[x.employment_no])keep.push({employment_no:x.employment_no,site_id:x.site_id,project_code:x.project_code||'',memo:x.memo||''})})}catch(e){}
+    var o=await _s.apply(this,arguments);
+    try{var S={};ppSites().forEach(function(s){S[s.site_id]=s});var fix=keep.slice();
+      (PL.staff||[]).forEach(function(w){var c=PL.rows[w.employment_no]||{};if(c.site_id)fix.push({employment_no:w.employment_no,site_id:c.site_id,project_code:(S[c.site_id]||{}).work_code||'',memo:c.memo||''})});
+      if(fix.length&&/배치 저장/.test((el('plMsg')||{}).textContent||''))await sb.rpc('lead_set_plan',{p:{plan_date:d,rows:fix}})}catch(e){console.error(e)}
+    return o}}
 })();
 
 </script>
