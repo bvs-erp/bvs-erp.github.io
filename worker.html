@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.66</title>
+<title>BVS 데일리 v1.67</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3654,6 +3654,299 @@ cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',paintAnniv)}
   else{setTimeout(paintAnniv,50)}
 })();
+</script>
+<script>
+/* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
+var TRC=(function(){
+  var COLOR_NAME={R:'빨강',B:'파랑',K:'검정'};
+  function num(v,d){v=Number(v);return isFinite(v)?v:(d||0)}
+  function r2(v){return Math.round(v*100)/100}
+  function itemMap(items){var m={};(items||[]).forEach(function(i){m[i.item_code]=i});return m}
+  function cols(c){return String(c||'').split(',').map(function(x){return x.trim()}).filter(Boolean)}
+  function colorLabel(c){var a=cols(c);if(!a.length)return '색 없음';return a.map(function(x){return COLOR_NAME[x]||x}).join('·')}
+  function piecesOf(cut){var p=(cut.pieces||[]).map(function(x){return num(x)}).filter(function(x){return x>0});var out=[];for(var k=0;k<num(cut.mult,1);k++)out=out.concat(p);return out}
+  function trayCode(w){return 'TRY-TRAY-'+w}
+  /* 상태: pool[item] = [{off_id|null, len, mine}] — 자투리(실물·계산상) */
+  function newState(offcuts){var s={pool:{},seq:0};(offcuts||[]).forEach(function(o){(s.pool[o.item_code]=s.pool[o.item_code]||[]).push({off_id:o.off_id,len:num(o.len_mm),cut:null})});return s}
+  function addTo(o,k,v){if(!v)return;o[k]=r2((o[k]||0)+v)}
+  /* 한 줄 계산. st를 바꾼다. 결과: use{code:qty}, bars{code:n}, used[off_id], newOff[{item_code,len_mm}], scrap[...], warn[] */
+  function cutCalc(cut,st,rules,im){
+    rules=rules||{};im=im||{};var R={use:{},bars:{},used:[],newOff:[],scrap:[],warn:[],cut_id:cut.cut_id};
+    var minOff=num(rules.min_offcut_mm,300),kerf=num(rules.kerf_mm,0);
+    var ps=piecesOf(cut);var cs=cols(cut.colors);var nsep=Math.max(0,cs.length-1);
+    var linear=[{code:trayCode(cut.width),lens:ps.slice()}];
+    if(nsep&&rules.sep_item){var sl=[];for(var k=0;k<nsep;k++)sl=sl.concat(ps);linear.push({code:rules.sep_item,lens:sl})}
+    var tag='c'+(cut.cut_id||('x'+(++st.seq)));
+    linear.forEach(function(L){
+      var code=L.code,bar=num((im[code]||{}).len,3000)||3000,pool=st.pool[code]=st.pool[code]||[];
+      L.lens.sort(function(a,b){return b-a}).forEach(function(len){
+        if(len>bar){R.warn.push(code+' '+len+'mm는 한 본('+bar+'mm)보다 깁니다');return}
+        var best=-1;for(var i=0;i<pool.length;i++){if(pool[i].len>=len&&(best<0||pool[i].len<pool[best].len))best=i}
+        var src;if(best>=0){src=pool.splice(best,1)[0];if(src.off_id!=null)R.used.push(src.off_id)}
+        else{src={off_id:null,len:bar,cut:tag};addTo(R.bars,code,1);addTo(R.use,code,1)}
+        var rest=src.len-len-(src.len>len?kerf:0);
+        if(rest>0)pool.push({off_id:null,len:rest,cut:tag});
+      });
+      /* 이 줄에서 생긴 끝: 짧으면 버림, 길면 자투리 */
+      for(var j=pool.length-1;j>=0;j--){var p=pool[j];if(p.cut!==tag||p.off_id!=null)continue;
+        if(p.len<minOff){R.scrap.push({item_code:code,len_mm:p.len});pool.splice(j,1)}
+        else{R.newOff.push({item_code:code,len_mm:p.len});p.cut='done'}}
+    });
+    var joints=Math.max(0,(cut.pieces||[]).length-1)*num(cut.mult,1),runs=num(cut.mult,1);
+    var conn=joints*num(rules.conn_per_joint,0);if(rules.conn_item)addTo(R.use,rules.conn_item,conn);
+    var riser=(/입상|수직/.test(cut.kind||'')?runs*num(rules.riser_per_run,0):0);if(rules.riser_item)addTo(R.use,rules.riser_item,riser);
+    addTo(R.use,'TRY-ENDCAP-'+cut.width,runs*num(rules.endcap_per_run,0));
+    var bolts=(conn+riser)*num(rules.bolt_per_conn,0);if(rules.bolt_item)addTo(R.use,rules.bolt_item,bolts);if(rules.nut_item)addTo(R.use,rules.nut_item,bolts);
+    function meters(code,m){if(!code||!m)return;var it=im[code]||{};var u=String(it.unit||'');var len=num(it.len,0);addTo(R.use,code,(u==='M'||!len)?m:m*1000/len)}
+    var npc=ps.length,ci=rules.color_items||{};
+    cs.forEach(function(c){meters(ci[c],npc*num(rules.color_m_per_piece,0))});
+    meters(rules.band_item,npc*num(rules.band_m_per_piece,0));
+    return R;
+  }
+  /* 아직 안 끝난 줄 전체 → 필요량·부족 */
+  function plan(data){
+    var im=itemMap(data.items),st=newState(data.offcuts),need={},bars={},per={},warn=[];
+    (data.jobs||[]).filter(function(j){return j.status!=='done'&&j.status!=='cancel'}).forEach(function(j){
+      (j.cuts||[]).filter(function(c){return !c.done_on}).forEach(function(c){
+        var r=cutCalc(c,st,data.rules,im);per[c.cut_id]=r;warn=warn.concat(r.warn);
+        Object.keys(r.use).forEach(function(k){addTo(need,k,r.use[k])});Object.keys(r.bars).forEach(function(k){addTo(bars,k,r.bars[k])});
+      })});
+    var rows=(data.items||[]).map(function(i){var n=need[i.item_code]||0,h=num(i.on_hand,0);
+      var offs=(data.offcuts||[]).filter(function(o){return o.item_code===i.item_code}).map(function(o){return num(o.len_mm)});
+      return {item_code:i.item_code,name:i.name,spec:i.spec,unit:i.unit,on_hand:h,need:n,short:r2(Math.max(0,n-h)),after:r2(h-n),offcuts:offs,count_on:i.count_on,safety:i.safety}});
+    return {rows:rows,need:need,per:per,warn:warn,leftover:st.pool};
+  }
+  /* 완료 화면용: 다른 줄은 무시하고 지금 있는 자투리로만 계산 */
+  function forDone(cut,data){return cutCalc(cut,newState(data.offcuts),data.rules,itemMap(data.items))}
+  function offSummary(lens){if(!lens||!lens.length)return '';var m={};lens.forEach(function(l){m[l]=(m[l]||0)+1});
+    return Object.keys(m).map(Number).sort(function(a,b){return b-a}).map(function(l){return l+(m[l]>1?'×'+m[l]:'')}).join(' · ')}
+  function parsePieces(s){return String(s||'').split(/[+,\s]+/).map(function(x){return Math.round(Number(x))}).filter(function(x){return x>0})}
+  return {cutCalc:cutCalc,plan:plan,forDone:forDone,offSummary:offSummary,parsePieces:parsePieces,colorLabel:colorLabel,cols:cols,itemMap:itemMap,piecesOf:piecesOf,COLOR_NAME:COLOR_NAME};
+})();
+
+/* 트레이 — 리드 전용. 재고·재단표·전수조사·규칙. 수량만, 금액·청구처 없음 (대표 지시 10-21) */
+var TR={seg:'stock',data:null,edit:null,form:null,done:null,cnt:null,all:false,err:null};
+function trLabel(i){if(!i)return '';var c=i.item_code||'';var m=c.match(/^TRY-TRAY-(\d+)$/);if(m)return '트레이 W'+m[1];m=c.match(/^TRY-ENDCAP-(\d+)$/);if(m)return '엔드캡 W'+m[1];
+  m=c.match(/^TRY-COVER-(\d+)(-HD20)?$/);if(m)return '커버 W'+m[1]+(m[2]?' 용융 2.0T':'');return (i.name||c)+(i.spec?' '+i.spec:'')}
+function trGroup(c){if(/^TRY-TRAY-/.test(c))return 0;if(/^TRY-(SEP|COVER)/.test(c))return 1;if(/^TRY-(CONN|SHANK|ENDCAP|WASHER)/.test(c))return 2;if(/^TRY-(SPIRAL|ALBAND)/.test(c))return 3;return 4}
+var TR_GROUPS=['트레이','격벽·커버','이음·볼트·엔드캡','색 표시(뱀띠·알밴드)','설치 자재·기타'];
+function trLinear(i){return !!(i&&Number(i.len)>0&&String(i.unit)==='본')}
+function trQty(v){v=Math.round(Number(v||0)*100)/100;return (v%1?v.toFixed(2).replace(/0$/,''):String(v))}
+function trIm(){return TRC.itemMap((TR.data||{}).items)}
+function trUnit(code){var i=trIm()[code];return i?(i.unit||''):''}
+function trTodayKst(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,10)}
+function trLsGet(){try{return JSON.parse(localStorage.getItem('bvs_tray_count')||'null')}catch(e){return null}}
+function trLsSet(v){try{if(v)localStorage.setItem('bvs_tray_count',JSON.stringify(v));else localStorage.removeItem('bvs_tray_count')}catch(e){}}
+
+async function trOpen(seg){if(seg)TR.seg=seg;var b=el('trBody');if(!b)return;
+  ['stock','jobs','count','rules'].forEach(function(s){var x=el('trSeg_'+s);if(x)x.classList.toggle('on',s===TR.seg)});
+  if(!IS_LEAD){b.innerHTML='<div class="card"><p class="dim">리드·대표만 볼 수 있습니다.</p></div>';return}
+  b.innerHTML='<div class="card"><p class="dim">불러오는 중…</p></div>';
+  var r;try{r=await sb.rpc('tray_load')}catch(e){r={error:e}}
+  if(r.error||!r.data||!r.data.ok){var msg=(r.error&&r.error.message)||(r.data&&r.data.error)||'불러오지 못했습니다';
+    if(/tray_load|function|schema cache/i.test(msg))msg='트레이 자재 DB가 아직 준비되지 않았습니다. 게시가 끝나면 열립니다.';
+    b.innerHTML='<div class="card"><p class="neg">'+esc(msg)+'</p></div>';return}
+  TR.data=r.data;trPaint()}
+function trPaint(){var b=el('trBody');if(!b||!TR.data)return;
+  b.innerHTML=TR.seg==='jobs'?trJobsHtml():TR.seg==='count'?trCountHtml():TR.seg==='rules'?trRulesHtml():trStockHtml()}
+function trDraftNote(){var ru=(TR.data||{}).rules||{};return ru.draft?'<div class="tr-note">계산 규칙은 초안입니다(대표 확인 전). 완료할 때 실제 쓴 양으로 고치면 그 숫자로 남습니다.</div>':''}
+
+/* ── 재고 ── */
+function trStockHtml(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
+  var head=lc.count_on?'마지막 전수조사 '+esc(String(lc.count_on).slice(5))+' · '+lc.n+'품목':'아직 전수조사 전 — 지금 숫자는 매입 합계입니다';
+  var rows=p.rows.filter(function(x){return TR.all||x.on_hand||x.need||x.offcuts.length});
+  rows.sort(function(a,b){return trGroup(a.item_code)-trGroup(b.item_code)||a.item_code.localeCompare(b.item_code)});
+  var h='<div class="card"><h2>트레이 자재 재고</h2><div class="tiny dim" style="margin-bottom:8px">'+head+'</div>'+trDraftNote()
+    +(p.warn.length?'<div class="tr-note neg">'+p.warn.map(esc).join('<br>')+'</div>':'')
+    +'<div class="tr-tbl"><div class="tr-r tr-h"><span>자재</span><span>지금</span><span>필요</span><span>남음</span></div>';
+  var g=-1;rows.forEach(function(x){var gg=trGroup(x.item_code);if(gg!==g){g=gg;h+='<div class="tr-g">'+TR_GROUPS[g]+'</div>'}
+    var i=trIm()[x.item_code];
+    h+='<div class="tr-r'+(x.short?' tr-short':'')+'"><span><b>'+esc(trLabel(i))+'</b>'
+      +(x.offcuts.length?'<div class="tiny dim">자투리 '+esc(TRC.offSummary(x.offcuts))+'</div>':'')+'</span>'
+      +'<span>'+trQty(x.on_hand)+'<small> '+esc(x.unit||'')+'</small></span><span>'+(x.need?trQty(x.need):'-')+'</span>'
+      +'<span class="'+(x.short?'neg':'')+'">'+(x.short?trQty(x.short)+' 부족':trQty(x.after))+'</span></div>'});
+  if(!rows.length)h+='<div class="dim tiny" style="padding:10px 0">표시할 자재가 없습니다</div>';
+  h+='</div><div class="row2" style="margin-top:10px"><button class="btn sm" onclick="TR.all=!TR.all;trPaint()">'+(TR.all?'쓰는 것만':'전체 보기')+'</button>'
+    +'<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button></div>'
+    +'<div class="tiny dim" style="margin-top:8px">필요 = 아직 완료 안 된 재단표 전체. 자투리를 먼저 쓰고 모자라면 새 본으로 계산합니다.</div></div>';
+  return h}
+
+/* ── 재단표 ── */
+function trStatus(s){return {plan:'준비',making:'제작 중',done:'완료',cancel:'취소'}[s]||s}
+function trCutText(c){return 'W'+c.width+' · '+(c.pieces||[]).join('+')+(Number(c.mult)>1?' ×'+c.mult:'')+' · '+esc(c.kind||'')+' · '+esc(TRC.colorLabel(c.colors))}
+function trUseText(u){var im=trIm();return Object.keys(u||{}).filter(function(k){return u[k]}).map(function(k){return esc(trLabel(im[k]||{item_code:k}))+' '+trQty(u[k])}).join(' · ')}
+function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d);
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2><button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button></div>'+trDraftNote()+'</div>';
+  if(!(d.jobs||[]).length)h+='<div class="card"><p class="dim">아직 재단표가 없습니다. 화이트보드 대신 여기에 적어 주세요.</p></div>';
+  (d.jobs||[]).forEach(function(j){
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(j.site_code)+'</b>'+(j.floor?' · '+esc(j.floor):'')
+      +'<div class="tiny dim">'+(j.install_on?'설치 '+esc(String(j.install_on).slice(5)):'설치일 미정')+(j.memo?' · '+esc(j.memo):'')+'</div></div>'
+      +'<span class="pill '+(j.status==='done'?'g':j.status==='making'?'y':'b')+'">'+trStatus(j.status)+'</span></div>';
+    (j.cuts||[]).forEach(function(c){var r=p.per[c.cut_id];
+      h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div><div>'+trCutText(c)+'</div>'
+        +(c.done_on?'<div class="tiny dim">완료 '+esc(String(c.done_on).slice(5))+(c.done_by?' · '+esc(c.done_by):'')+' — '+trUseText((c.usage||[]).reduce(function(o,x){o[x.item_code]=x.qty;return o},{}))+'</div>'
+          :(r?'<div class="tiny dim">예상 '+trUseText(r.use)+'</div>':''))+'</div>'
+        +(c.done_on?'<button class="btn sm" style="flex:none" onclick="trUndo('+c.cut_id+')">완료 취소</button>':'<button class="btn sm p" style="flex:none" onclick="trDoneOpen('+c.cut_id+')">완료</button>')+'</div>';
+      if(TR.done&&TR.done.cut_id===c.cut_id)h+=trDoneHtml()});
+    if(j.status!=='done')h+='<div class="row2" style="margin-top:8px"><button class="btn sm" onclick="trEdit('+j.job_id+')">고치기</button><button class="btn sm" onclick="trCancelJob('+j.job_id+')">지우기</button></div>';
+    h+='</div>'});
+  return h}
+function trFindJob(id){return ((TR.data||{}).jobs||[]).filter(function(j){return j.job_id===id})[0]}
+function trFindCut(id){var f=null;((TR.data||{}).jobs||[]).forEach(function(j){(j.cuts||[]).forEach(function(c){if(c.cut_id===id)f=c})});return f}
+function trEdit(id){var j=id?trFindJob(id):null;
+  TR.edit=j?{job_id:j.job_id,site_code:j.site_code||'',floor:j.floor||'',install_on:j.install_on||'',memo:j.memo||'',cuts:(j.cuts||[]).map(function(c){return {cut_id:c.cut_id,width:c.width,pieces:(c.pieces||[]).slice(),mult:c.mult,kind:c.kind,colors:c.colors||'',done_on:c.done_on}})}
+    :{job_id:null,site_code:'',floor:'',install_on:'',memo:'',cuts:[]};
+  TR.form={width:300,len:'',mult:1,kind:'수평',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
+function trEf(k,v){TR.edit[k]=v}
+function trFf(k,v){TR.form[k]=v;trPaintForm()}
+function trColor(c){var a=TR.form.colors,i=a.indexOf(c);if(i<0)a.push(c);else a.splice(i,1);trPaintForm()}
+function trLenAdd(l){var s=String(TR.form.len||'').trim();TR.form.len=s?s+'+'+l:String(l);trPaintForm()}
+function trFormHtml(){var f=TR.form,ch=function(on,label,js){return '<span class="chip'+(on?' on':'')+'" onclick="'+js+'">'+label+'</span>'};
+  var pv='';var ps=TRC.parsePieces(f.len);
+  if(ps.length){var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:f.kind,colors:f.colors.join(',')},TR.data);pv='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
+  return '<div class="f"><label>폭</label><div class="chips">'+[200,300,400,500].map(function(w){return ch(f.width===w,'W'+w,'trFf(\'width\','+w+')')}).join('')+'</div></div>'
+    +'<div class="f"><label>길이 (mm, 이어지면 3000+1000)</label><input class="in" id="tr_len" inputmode="numeric" value="'+esc(f.len)+'" oninput="TR.form.len=this.value;trPaintPv()" style="padding:8px 10px;min-height:0">'
+    +'<div class="chips" style="margin-top:6px">'+[3000,2500,2000,1500,1000,500].map(function(l){return ch(false,'+'+l,'trLenAdd('+l+')')}).join('')+ch(false,'지우기','TR.form.len=\'\';trPaintForm()')+'</div></div>'
+    +'<div class="f" style="display:flex;align-items:center;gap:8px"><label style="margin:0">수량 ×</label><input class="in" type="number" min="1" value="'+(f.mult||1)+'" oninput="TR.form.mult=this.value;trPaintPv()" style="width:80px;padding:8px 10px;min-height:0"></div>'
+    +'<div class="f"><label>종류</label><div class="chips">'+['수평','수직','입상','기타'].map(function(k){return ch(f.kind===k,k,'trFf(\'kind\',\''+k+'\')')}).join('')+'</div></div>'
+    +'<div class="f"><label>색 (여러 개 고르면 격벽이 들어갑니다)</label><div class="chips">'+['R','B','K'].map(function(c){return ch(f.colors.indexOf(c)>=0,TRC.COLOR_NAME[c],'trColor(\''+c+'\')')}).join('')+'</div></div>'
+    +'<div id="trPv">'+pv+'</div><button class="btn sm p" onclick="trAddCut()" style="margin-top:6px">줄 넣기</button>'}
+function trPaintForm(){var x=el('trForm');if(x)x.innerHTML=trFormHtml()}
+function trPaintPv(){var x=el('trPv');if(!x)return;var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){x.innerHTML='';return}
+  var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:f.kind,colors:f.colors.join(',')},TR.data);
+  x.innerHTML='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
+function trAddCut(){var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){toast('길이를 넣어 주세요','e');return}
+  if(ps.some(function(x){return x>3000})){toast('한 조각은 3000mm까지입니다. 3000+… 로 나눠 주세요','e');return}
+  TR.edit.cuts.push({width:f.width,pieces:ps,mult:Math.max(1,parseInt(f.mult,10)||1),kind:f.kind,colors:f.colors.join(',')});
+  TR.form={width:f.width,len:'',mult:1,kind:f.kind,colors:f.colors.slice()};trPaint()}
+function trCutPick(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;TR.form={width:c.width,len:c.pieces.join('+'),mult:c.mult,kind:c.kind,colors:TRC.cols(c.colors)};TR.edit.cuts.splice(i,1);trPaint()}
+function trCutDel(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;TR.edit.cuts.splice(i,1);trPaint()}
+function trEditHtml(){var e=TR.edit;
+  var h='<div class="card"><h2>'+(e.job_id?'재단표 고치기':'새 재단표')+'</h2>'
+    +'<div class="f"><label>현장·위치</label><input class="in" value="'+esc(e.site_code)+'" oninput="trEf(\'site_code\',this.value)" placeholder="예: 5EKF H021" style="padding:8px 10px;min-height:0"></div>'
+    +'<div class="f" style="display:flex;gap:8px"><div style="flex:1"><label>층</label><input class="in" value="'+esc(e.floor)+'" oninput="trEf(\'floor\',this.value)" style="padding:8px 10px;min-height:0"></div>'
+    +'<div style="flex:1"><label>설치일</label><input class="in" type="date" value="'+esc(e.install_on||'')+'" oninput="trEf(\'install_on\',this.value)" style="padding:8px 10px;min-height:0"></div></div>'
+    +'<div class="f"><label>메모</label><input class="in" value="'+esc(e.memo)+'" oninput="trEf(\'memo\',this.value)" style="padding:8px 10px;min-height:0"></div></div>'
+    +'<div class="card"><h2>줄 '+e.cuts.length+'개</h2>';
+  e.cuts.forEach(function(c,i){h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div onclick="trCutPick('+i+')" style="flex:1;cursor:pointer">'+trCutText(c)+(c.done_on?' <span class="tiny dim">완료</span>':'')+'</div>'
+    +(c.done_on?'':'<button class="btn sm" style="flex:none" onclick="trCutDel('+i+')">✕</button>')+'</div>'});
+  if(!e.cuts.length)h+='<div class="tiny dim">아래에서 줄을 넣어 주세요</div>';
+  h+='<div id="trForm" style="margin-top:10px;border-top:1px solid var(--ln);padding-top:10px">'+trFormHtml()+'</div></div>'
+    +'<div class="row2"><button class="btn" onclick="TR.edit=null;trPaint()">닫기</button><button class="btn p" onclick="trSaveJob()">저장</button></div>';
+  return h}
+async function trSaveJob(){var e=TR.edit;if(!String(e.site_code||'').trim()){toast('현장·위치를 적어 주세요','e');return}
+  if(TRC.parsePieces(TR.form&&TR.form.len).length&&!(await ERPC.ask('확인','아래 칸에 넣지 않은 줄이 있습니다. 버리고 저장할까요?')))return;
+  var r=await sb.rpc('tray_job_save',{p:{job_id:e.job_id,site_code:e.site_code,floor:e.floor,install_on:e.install_on||null,memo:e.memo,cuts:e.cuts}});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');return}
+  toast('재단표 저장','g');TR.edit=null;trOpen('jobs')}
+async function trCancelJob(id){if(!(await ERPC.ask('확인','이 재단표를 지울까요?',{danger:true})))return;
+  var r=await sb.rpc('tray_job_cancel',{p_job:id});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('지웠습니다','g');trOpen('jobs')}
+
+/* ── 완료: 자동 계산 → 실제와 다르면 고치기 ── */
+function trDoneOpen(id){var c=trFindCut(id);if(!c)return;var r=TRC.forDone(c,TR.data);var im=trIm();
+  var offAll=(TR.data.offcuts||[]).reduce(function(o,x){o[x.off_id]=x;return o},{});
+  TR.done={cut_id:id,on:trTodayKst(),use:Object.keys(r.use).map(function(k){return {item_code:k,qty:r.use[k]}}),
+    used:r.used.map(function(oid){return {off_id:oid,on:true,item_code:(offAll[oid]||{}).item_code,len:(offAll[oid]||{}).len_mm}}),
+    newOff:r.newOff.map(function(o){return {item_code:o.item_code,len:o.len_mm}}),scrap:r.scrap};trPaint()}
+function trDoneHtml(){var D=TR.done,im=trIm();
+  var h='<div class="tr-done"><div class="tiny" style="font-weight:700;margin-bottom:6px">실제 쓴 양 — 다르면 고치세요</div>';
+  D.use.forEach(function(u,i){h+='<div class="tr-kv"><span>'+esc(trLabel(im[u.item_code]||{item_code:u.item_code}))+'</span><input class="in" inputmode="decimal" value="'+trQty(u.qty)+'" oninput="TR.done.use['+i+'].qty=this.value"><small>'+esc(trUnit(u.item_code))+'</small></div>'});
+  h+='<div class="chips" style="margin:6px 0"><select class="in" id="trAddItem" style="padding:6px;min-height:0;max-width:200px"><option value="">+ 자재 더하기</option>'
+    +(TR.data.items||[]).map(function(i){return '<option value="'+esc(i.item_code)+'">'+esc(trLabel(i))+'</option>'}).join('')+'</select>'
+    +'<button class="btn sm" style="flex:none" onclick="var v=el(\'trAddItem\').value;if(v){TR.done.use.push({item_code:v,qty:0});trPaint()}">더하기</button></div>';
+  if(D.used.length){h+='<div class="tiny" style="font-weight:700;margin:8px 0 4px">쓴 자투리</div><div class="chips">'+D.used.map(function(o,i){return '<span class="chip'+(o.on?' on':'')+'" onclick="TR.done.used['+i+'].on=!TR.done.used['+i+'].on;trPaint()">'+esc(trLabel(im[o.item_code]||{}))+' '+o.len+'</span>'}).join('')+'</div>'}
+  h+='<div class="tiny" style="font-weight:700;margin:8px 0 4px">남은 자투리 (길이 mm, 쉼표)</div>';
+  var codes={};D.newOff.forEach(function(o){(codes[o.item_code]=codes[o.item_code]||[]).push(o.len)});
+  var lin=Object.keys(codes);D.use.forEach(function(u){if(trLinear(im[u.item_code])&&lin.indexOf(u.item_code)<0)lin.push(u.item_code)});
+  lin.forEach(function(k){var tv=(D.offTxt&&D.offTxt[k]!=null)?D.offTxt[k]:(codes[k]||[]).join(', ');h+='<div class="tr-kv"><span>'+esc(trLabel(im[k]||{item_code:k}))+'</span><input class="in" data-off="'+esc(k)+'" value="'+esc(tv)+'" placeholder="없음" oninput="(TR.done.offTxt=TR.done.offTxt||{})[\''+k+'\']=this.value"></div>'});
+  if(D.scrap.length)h+='<div class="tiny dim">버림(짧음): '+D.scrap.map(function(s){return s.len_mm}).join(', ')+'mm</div>';
+  h+='<div class="f" style="display:flex;align-items:center;gap:8px;margin-top:8px"><label style="margin:0">완료일</label><input class="in" type="date" value="'+D.on+'" oninput="TR.done.on=this.value" style="padding:6px 8px;min-height:0;max-width:160px"></div>'
+    +'<div class="row2"><button class="btn sm" onclick="TR.done=null;trPaint()">닫기</button><button class="btn sm p" onclick="trDoneSave()">완료 처리</button></div></div>';
+  return h}
+async function trDoneSave(){var D=TR.done;if(!D)return;var offs=[];
+  document.querySelectorAll('#trBody input[data-off]').forEach(function(inp){TRC.parsePieces(inp.value).forEach(function(l){offs.push({item_code:inp.getAttribute('data-off'),len_mm:l})})});
+  var use=D.use.map(function(u){return {item_code:u.item_code,qty:Math.round(Number(u.qty||0)*100)/100}}).filter(function(u){return u.qty>0});
+  if(use.some(function(u){return !isFinite(u.qty)})){toast('숫자를 확인해 주세요','e');return}
+  var r=await sb.rpc('tray_cut_done',{p:{cut_id:D.cut_id,done_on:D.on,usage:use,offcuts_used:D.used.filter(function(o){return o.on}).map(function(o){return o.off_id}),offcuts_new:offs}});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+  toast('완료 — 재고에서 뺐습니다','g');TR.done=null;trOpen('jobs')}
+async function trUndo(id){if(!(await ERPC.ask('확인','완료를 취소하고 쓴 자재를 재고로 돌릴까요?')))return;
+  var r=await sb.rpc('tray_cut_undo',{p_cut:id});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('완료 취소','g');trOpen('jobs')}
+
+/* ── 전수조사 ── */
+function trCntInit(){var s=trLsGet();if(s&&s.v===1){TR.cnt=s;return}
+  var offs={};(TR.data.offcuts||[]).forEach(function(o){(offs[o.item_code]=offs[o.item_code]||[]).push(Number(o.len_mm))});
+  TR.cnt={v:1,on:trTodayKst(),qty:{},offs:offs,dirty:{},add:[]}}
+function trCntSave(){trLsSet(TR.cnt)}
+function trCntQty(code,v){TR.cnt.qty[code]=v;trCntSave();var x=el('trCntN');if(x)x.textContent=trCntN()}
+function trCntN(){var q=TR.cnt.qty;return Object.keys(q).filter(function(k){return String(q[k]).trim()!==''}).length+TR.cnt.add.length}
+function trOffAdd(code){var l=el('trOl_'+code),n=el('trOn_'+code);var len=Math.round(Number(l&&l.value)),k=Math.max(1,parseInt(n&&n.value,10)||1);
+  if(!(len>0)){toast('길이를 넣어 주세요','e');return}var a=TR.cnt.offs[code]=TR.cnt.offs[code]||[];for(var i=0;i<k;i++)a.push(len);TR.cnt.dirty[code]=1;trCntSave();trPaint()}
+function trOffDel(code,len){var a=TR.cnt.offs[code]||[];var i=a.indexOf(len);if(i>=0)a.splice(i,1);TR.cnt.dirty[code]=1;trCntSave();trPaint()}
+function trOffNone(code){TR.cnt.offs[code]=[];TR.cnt.dirty[code]=1;trCntSave();trPaint()}
+function trNewAdd(){var n=el('trNw_n').value.trim();if(!n){toast('이름을 넣어 주세요','e');return}
+  TR.cnt.add.push({name:n,spec:el('trNw_s').value.trim(),unit:el('trNw_u').value.trim()||'EA',qty:el('trNw_q').value.trim()||null});trCntSave();trPaint()}
+function trCountHtml(){if(!TR.cnt)trCntInit();var C=TR.cnt,items=(TR.data.items||[]).slice();
+  items.sort(function(a,b){return trGroup(a.item_code)-trGroup(b.item_code)||a.item_code.localeCompare(b.item_code)});
+  var h='<div class="card"><h2>전수조사</h2><div class="f" style="display:flex;align-items:center;gap:8px"><label style="margin:0">조사일</label><input class="in" type="date" value="'+esc(C.on)+'" oninput="TR.cnt.on=this.value;trCntSave()" style="padding:6px 8px;min-height:0;max-width:160px"></div>'
+    +'<div class="tiny dim">센 수량을 넣으세요. 비워 둔 칸은 세지 않은 것으로 두고 지금 숫자를 유지합니다. 트레이·격벽은 <b>온전한 3M 본</b>만 세고, 자른 것은 아래 자투리에 길이로 넣습니다. 입력은 이 폰에 임시 저장됩니다.</div></div>';
+  var g=-1;items.forEach(function(i){var gg=trGroup(i.item_code);if(gg!==g){if(g>=0)h+='</div>';g=gg;h+='<div class="card"><h2 style="font-size:15px">'+TR_GROUPS[g]+'</h2>'}
+    var c=i.item_code,v=C.qty[c]==null?'':C.qty[c];
+    h+='<div class="tr-kv"><span>'+esc(trLabel(i))+'<div class="tiny dim">지금 '+trQty(i.on_hand)+' '+esc(i.unit||'')+'</div></span><input class="in" inputmode="decimal" value="'+esc(v)+'" placeholder="수량" oninput="trCntQty(\''+c+'\',this.value)"><small>'+esc(i.unit||'')+'</small></div>';
+    if(trLinear(i)){var a=(C.offs[c]||[]).slice().sort(function(x,y){return y-x});
+      h+='<div class="tr-off"><div class="chips">'+(a.length?a.map(function(l){return '<span class="chip" onclick="trOffDel(\''+c+'\','+l+')">'+l+' ✕</span>'}).join(''):'<span class="tiny dim">자투리 없음</span>')
+        +(C.dirty[c]?' <span class="tiny" style="color:var(--ac)">고침</span>':'')+'</div>'
+        +'<div style="display:flex;gap:6px;margin-top:4px"><input class="in" id="trOl_'+c+'" inputmode="numeric" placeholder="자투리 길이 mm" style="flex:1;padding:6px 8px;min-height:0"><input class="in" id="trOn_'+c+'" inputmode="numeric" placeholder="개수" value="1" style="width:56px;padding:6px 8px;min-height:0">'
+        +'<button class="btn sm" style="flex:none" onclick="trOffAdd(\''+c+'\')">추가</button>'+(a.length?'<button class="btn sm" style="flex:none" onclick="trOffNone(\''+c+'\')">없음</button>':'')+'</div></div>'}});
+  if(g>=0)h+='</div>';
+  h+='<div class="card"><h2 style="font-size:15px">목록에 없는 자재</h2>'+C.add.map(function(a,i){return '<div class="tr-cut"><div>'+esc(a.name)+(a.spec?' '+esc(a.spec):'')+' · '+esc(a.qty||'-')+' '+esc(a.unit)+'</div><button class="btn sm" style="flex:none" onclick="TR.cnt.add.splice('+i+',1);trCntSave();trPaint()">✕</button></div>'}).join('')
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap"><input class="in" id="trNw_n" placeholder="이름" style="flex:2;min-width:120px;padding:6px 8px;min-height:0"><input class="in" id="trNw_s" placeholder="규격" style="flex:1;min-width:70px;padding:6px 8px;min-height:0">'
+    +'<input class="in" id="trNw_u" placeholder="단위" style="width:56px;padding:6px 8px;min-height:0"><input class="in" id="trNw_q" inputmode="decimal" placeholder="수량" style="width:64px;padding:6px 8px;min-height:0"><button class="btn sm" style="flex:none" onclick="trNewAdd()">추가</button></div></div>'
+    +'<div class="tr-save"><button class="btn" onclick="trCntReset()">처음부터</button><button class="btn p" onclick="trCntSubmit()">저장 (<span id="trCntN">'+trCntN()+'</span>품목)</button></div>';
+  return h}
+async function trCntReset(){if(!(await ERPC.ask('확인','이 폰에 적어 둔 전수조사 입력을 지울까요?',{danger:true})))return;TR.cnt=null;trLsSet(null);trPaint()}
+async function trCntSubmit(){var C=TR.cnt,q=C.qty;var items=Object.keys(q).filter(function(k){return String(q[k]).trim()!==''}).map(function(k){return {item_code:k,qty:Number(String(q[k]).replace(/,/g,''))}});
+  if(items.some(function(x){return !isFinite(x.qty)||x.qty<0})){toast('수량에 숫자가 아닌 값이 있습니다','e');return}
+  var dirty=Object.keys(C.dirty),offs=[];dirty.forEach(function(k){(C.offs[k]||[]).forEach(function(l){offs.push({item_code:k,len_mm:l,qty:1})})});
+  if(!items.length&&!dirty.length&&!C.add.length){toast('넣은 수량이 없습니다','e');return}
+  if(!(await ERPC.ask('전수조사 저장',C.on+' 기준 '+items.length+'품목'+(dirty.length?', 자투리 '+dirty.length+'품목 교체':'')+(C.add.length?', 새 자재 '+C.add.length+'개':'')+'를 저장할까요? 이 숫자가 그날의 시작 재고가 됩니다.')))return;
+  var r=await sb.rpc('tray_count_save',{p:{count_on:C.on,items:items,offcut_items:dirty,offcuts:offs,new_items:C.add}});
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');return}
+  toast('전수조사 저장 — '+r.data.items+'품목','g');TR.cnt=null;trLsSet(null);trOpen('stock')}
+
+/* ── 규칙 ── */
+var TR_RULES=[['min_offcut_mm','이보다 짧은 끝은 버림','mm'],['kerf_mm','절단 손실','mm'],['conn_per_joint','이음 하나당 커넥터','개'],['riser_per_run','입상·수직 한 줄당 라이저 커넥터','개'],
+  ['endcap_per_run','한 줄당 엔드캡','개'],['bolt_per_conn','커넥터 하나당 볼트·너트','개'],['color_m_per_piece','조각·색 하나당 뱀띠','M'],['band_m_per_piece','조각 하나당 알밴드','M']];
+function trRulesHtml(){var ru=TR.data.rules||{};
+  return '<div class="card"><h2>계산 규칙</h2>'+trDraftNote()+TR_RULES.map(function(x){return '<div class="tr-kv"><span>'+x[1]+'</span><input class="in" inputmode="decimal" id="trRu_'+x[0]+'" value="'+esc(ru[x[0]]==null?'':ru[x[0]])+'"><small>'+x[2]+'</small></div>'}).join('')
+    +'<div class="tiny dim" style="margin:6px 0">색이 2가지 이상이면 (색 수 - 1)줄 격벽을 트레이와 같은 길이로 넣습니다. 이음 = 한 줄의 조각 수 - 1.</div>'
+    +'<button class="btn p" onclick="trRulesSave()">규칙 저장</button></div>'}
+async function trRulesSave(){var p={};for(var i=0;i<TR_RULES.length;i++){var k=TR_RULES[i][0],v=el('trRu_'+k).value.trim();if(v==='')continue;var n=Number(v);if(!isFinite(n)||n<0){toast(TR_RULES[i][1]+' 숫자를 확인해 주세요','e');return}p[k]=n}
+  var r=await sb.rpc('tray_rules_save',{p:p});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('규칙 저장','g');trOpen('rules')}
+
+/* ── 탭·화면 붙이기 (기존 go는 감싸기만) ── */
+(function(){
+  var css=document.createElement('style');css.textContent='.tr-note{font-size:12px;background:var(--sf2);border-left:3px solid #d97706;padding:6px 8px;margin:6px 0;border-radius:4px}'
+    +'.tr-tbl{font-size:13px}.tr-r{display:grid;grid-template-columns:1fr 64px 52px 70px;gap:6px;padding:7px 0;border-bottom:1px solid var(--ln);align-items:center}.tr-r>span:not(:first-child){text-align:right}'
+    +'.tr-h{font-size:11.5px;color:var(--tx2);font-weight:600}.tr-g{font-size:12px;font-weight:700;color:var(--tx2);padding:10px 0 2px}.tr-short{background:rgba(220,38,38,.06)}'
+    +'.tr-cut{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}.tr-cut.done{opacity:.6}'
+    +'.tr-done{background:var(--sf2);border-radius:8px;padding:10px;margin:6px 0}'
+    +'.tr-kv{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center;padding:5px 0;font-size:13.5px}.tr-kv input{padding:6px 8px;min-height:0;text-align:right}.tr-kv small{color:var(--tx2)}'
+    +'.tr-off{padding:0 0 8px;border-bottom:1px dashed var(--ln);margin-bottom:4px}.tr-save{position:sticky;bottom:70px;display:flex;gap:8px;padding:8px 0;background:var(--bg)}.tr-save .btn{flex:1}';
+  document.head.appendChild(css);
+  var pump=document.querySelector('.tabs div[data-p="pump"]');var tabs=el('tabs');
+  if(tabs&&!document.querySelector('.tabs div[data-p="tray"]')){var t=document.createElement('div');t.setAttribute('data-p','tray');t.className='lead'+(typeof IS_LEAD!=='undefined'&&IS_LEAD?'':' hide');t.setAttribute('onclick',"go('tray')");
+    t.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 8h18v8H3z"/><path d="M7 8v8M12 8v8M17 8v8"/></svg>트레이';
+    var lead=document.querySelector('.tabs div[data-p="lead"]');if(lead&&lead.nextSibling)tabs.insertBefore(t,lead.nextSibling);else tabs.appendChild(t)}
+  var ref=el('p-pump')||document.querySelector('section.page');
+  if(ref&&!el('p-tray')){var s=document.createElement('section');s.className='page';s.id='p-tray';
+    s.innerHTML='<div class="lead-segment-nav"><button type="button" class="lead-seg-btn on" id="trSeg_stock" onclick="trOpen(\'stock\')">재고</button><button type="button" class="lead-seg-btn" id="trSeg_jobs" onclick="TR.edit=null;trOpen(\'jobs\')">재단표</button>'
+      +'<button type="button" class="lead-seg-btn" id="trSeg_count" onclick="trOpen(\'count\')">전수조사</button><button type="button" class="lead-seg-btn" id="trSeg_rules" onclick="trOpen(\'rules\')">규칙</button></div><div id="trBody"></div>';
+    ref.parentNode.insertBefore(s,ref)}
+  var _goTr=typeof go==='function'?go:null;
+  if(_goTr){go=function(p){var r=_goTr.apply(this,arguments);if(p==='tray')trOpen();return r}}
+})();
+
 </script>
 </body>
 </html>
