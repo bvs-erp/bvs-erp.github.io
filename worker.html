@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.73</title>
+<title>BVS 데일리 v1.74</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3803,16 +3803,23 @@ function trStockHtml(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
   return h}
 
 /* ── 재단표 ── */
+function trDow(d){try{return '('+'일월화수목금토'.charAt(new Date(String(d).slice(0,10)+'T00:00:00Z').getUTCDay())+')'}catch(e){return ''}}
 function trStatus(s){return {plan:'준비',making:'제작 중',done:'완료',cancel:'취소'}[s]||s}
 function trCutText(c){return 'W'+c.width+' · '+TRC.runText(c.pieces,c.joins)+(Number(c.mult)>1?' ×'+c.mult:'')+' · '+esc(c.kind||'')+' · '+esc(TRC.colorLabel(c.colors))}
 function trUseText(u){var im=trIm();return Object.keys(u||{}).filter(function(k){return u[k]}).map(function(k){return esc(trLabel(im[k]||{item_code:k}))+' '+trQty(u[k])}).join(' · ')}
 function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d);TR.open=TR.open||{};
   var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2>'+(IS_LEAD?'<button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button>':'')+'</div>'+(IS_LEAD?trDraftNote()+(function(){var g=trDraftGet();return g?'<div class="tr-note">작성 중이던 재단표 '+esc(g.e.site_code||'(현장 미정)')+' · '+g.e.cuts.length+'줄 <button class="btn sm p" onclick="trDraftResume()">이어서 쓰기</button> <button class="btn sm" onclick="trDraftDrop()">버리기</button></div>':''})():'<div class="tiny dim" style="margin-top:4px">줄을 누르면 재단·꺾기 방법이 나옵니다.</div>')+'</div>';
   if(!(d.jobs||[]).length)h+='<div class="card"><p class="dim">아직 재단표가 없습니다.'+(IS_LEAD?' 화이트보드 대신 여기에 적어 주세요.':'')+'</p></div>';
-  (d.jobs||[]).forEach(function(j){
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(j.site_code)+'</b>'
-      +'<div class="tiny dim">'+(j.install_on?'설치 '+esc(String(j.install_on).slice(5)):'설치일 미정')+(j.memo?' · '+esc(j.memo):'')+'</div></div>'
+  /* 대표 지시(10-22): 재단표는 호기명 한 줄로 접어 두고 설치 일자순(빠른 날 먼저, 미정은 맨 뒤). 누르면 펼침 */
+  TR.jopen=TR.jopen||{};
+  var jobs=(d.jobs||[]).slice().sort(function(a,b){var x=a.install_on?String(a.install_on):'9999',y=b.install_on?String(b.install_on):'9999';return x<y?-1:x>y?1:(a.job_id-b.job_id)});
+  jobs.forEach(function(j){
+    var cs=j.cuts||[],nd=cs.filter(function(c){return c.done_on}).length,fls=trGroupByFloor(cs,j).map(function(g){return trFlLabel(g.fl)});
+    var jo=!!TR.jopen[j.job_id]||!!(TR.batch&&TR.batch.job_id===j.job_id)||!!(TR.done&&cs.some(function(c){return c.cut_id===TR.done.cut_id}));
+    h+='<div class="card tr-job'+(jo?' open':'')+'"><div class="tr-jh" onclick="TR.jopen['+j.job_id+']='+(jo?'false':'true')+';if(!TR.jopen['+j.job_id+']){if(TR.batch&&TR.batch.job_id==='+j.job_id+')TR.batch=null;TR.done=null}trPaint()"><div style="min-width:0"><b>'+(jo?'▾ ':'▸ ')+esc(j.site_code)+'</b>'
+      +'<div class="tiny dim">'+(j.install_on?'설치 '+esc(String(j.install_on).slice(5))+' '+trDow(j.install_on):'설치일 미정')+' · '+cs.length+'줄'+(nd?' (완료 '+nd+')':'')+(fls.length>1||(fls[0]&&fls[0]!=='층 미정')?' · '+esc(fls.join('·')):'')+(j.memo?' · '+esc(j.memo):'')+'</div></div>'
       +'<span class="pill '+(j.status==='done'?'g':j.status==='making'?'y':'b')+'">'+trStatus(j.status)+'</span></div>';
+    if(!jo){h+='</div>';return}
     var G=trGroupByFloor(j.cuts,j);
     h+=trPickHtml(j,G,p);
     if(TR.batch&&TR.batch.job_id===j.job_id)h+=trBatchHtml(j,G);
@@ -4116,6 +4123,7 @@ async function trBatchSave(){var B=TR.batch,j=trBatchJob();if(!B||!j)return;var 
     +'.tr-tbl{font-size:13px}.tr-r{display:grid;grid-template-columns:1fr 64px 52px 70px;gap:6px;padding:7px 0;border-bottom:1px solid var(--ln);align-items:center}.tr-r>span:not(:first-child){text-align:right}'
     +'.tr-h{font-size:11.5px;color:var(--tx2);font-weight:600}.tr-g{font-size:12px;font-weight:700;color:var(--tx2);padding:10px 0 2px}.tr-short{background:rgba(220,38,38,.06)}'
     +'.tr-cut{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}.tr-cut.done{opacity:.6}.tr-pick{background:var(--sf2);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}.tr-pk{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--ln)}.tr-pk span:last-child{text-align:right}.tr-det{background:var(--sf2);border-radius:8px;padding:8px 10px;margin:2px 0 8px;font-size:12.5px}.tr-pl{padding:3px 0;line-height:1.5}.tr-dim{margin:8px 0 4px;padding:6px 8px;border:1px solid var(--ln);border-radius:6px;line-height:1.6}.tr-fl{font-size:13px;font-weight:700;margin:12px 0 2px;padding:4px 8px;background:var(--sf2);border-radius:4px}'
+    +'.tr-jh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;cursor:pointer}.tr-job:not(.open){padding-top:12px;padding-bottom:12px}.tr-job.open .tr-jh{margin-bottom:6px}'
     +'.tr-done{background:var(--sf2);border-radius:8px;padding:10px;margin:6px 0}.tr-bc{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13px;border-bottom:1px dashed var(--ln)}.tr-bc input{margin-top:3px;flex:none}.tr-left{padding-top:0;grid-template-columns:1fr 34px}.tr-left span{font-size:11.5px;grid-column:1/-1}.tr-left input{font-size:12.5px}'
     +'.tr-kv{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center;padding:5px 0;font-size:13.5px}.tr-kv input{padding:6px 8px;min-height:0;text-align:right}.tr-kv small{color:var(--tx2)}'
     +'.tr-off{padding:0 0 8px;border-bottom:1px dashed var(--ln);margin-bottom:4px}.tr-save{position:sticky;bottom:70px;display:flex;gap:8px;padding:8px 0;background:var(--bg)}.tr-save .btn{flex:1}';
