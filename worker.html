@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.68</title>
+<title>BVS 데일리 v1.69</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3747,7 +3747,7 @@ async function trOpen(seg){if(seg)TR.seg=seg;var b=el('trBody');if(!b)return;
     if(/tray_load|function|schema cache/i.test(msg))msg='트레이 자재 DB가 아직 준비되지 않았습니다. 게시가 끝나면 열립니다.';
     b.innerHTML='<div class="card"><p class="neg">'+esc(msg)+'</p></div>';return}
   TR.data=r.data;trPaint()}
-function trPaint(){var b=el('trBody');if(!b||!TR.data)return;
+function trPaint(){var b=el('trBody');if(!b||!TR.data)return;if(TR.edit)trDraftSave();
   b.innerHTML=TR.seg==='jobs'?trJobsHtml():TR.seg==='count'?trCountHtml():TR.seg==='rules'?trRulesHtml():trStockHtml()}
 function trDraftNote(){var ru=(TR.data||{}).rules||{};return ru.draft?'<div class="tr-note">계산 규칙은 초안입니다(대표 확인 전). 완료할 때 실제 쓴 양으로 고치면 그 숫자로 남습니다.</div>':''}
 
@@ -3776,33 +3776,45 @@ function trStatus(s){return {plan:'준비',making:'제작 중',done:'완료',can
 function trCutText(c){return 'W'+c.width+' · '+(c.pieces||[]).join('+')+(Number(c.mult)>1?' ×'+c.mult:'')+' · '+esc(c.kind||'')+' · '+esc(TRC.colorLabel(c.colors))}
 function trUseText(u){var im=trIm();return Object.keys(u||{}).filter(function(k){return u[k]}).map(function(k){return esc(trLabel(im[k]||{item_code:k}))+' '+trQty(u[k])}).join(' · ')}
 function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d);
-  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2><button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button></div>'+trDraftNote()+'</div>';
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2><button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button></div>'+trDraftNote()+(function(){var g=trDraftGet();return g?'<div class="tr-note">작성 중이던 재단표 '+esc(g.e.site_code||'(현장 미정)')+' · '+g.e.cuts.length+'줄 <button class="btn sm p" onclick="trDraftResume()">이어서 쓰기</button> <button class="btn sm" onclick="trDraftDrop()">버리기</button></div>':''})()+'</div>';
   if(!(d.jobs||[]).length)h+='<div class="card"><p class="dim">아직 재단표가 없습니다. 화이트보드 대신 여기에 적어 주세요.</p></div>';
   (d.jobs||[]).forEach(function(j){
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(j.site_code)+'</b>'+(j.floor?' · '+esc(j.floor):'')
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(j.site_code)+'</b>'
       +'<div class="tiny dim">'+(j.install_on?'설치 '+esc(String(j.install_on).slice(5)):'설치일 미정')+(j.memo?' · '+esc(j.memo):'')+'</div></div>'
       +'<span class="pill '+(j.status==='done'?'g':j.status==='making'?'y':'b')+'">'+trStatus(j.status)+'</span></div>';
-    (j.cuts||[]).forEach(function(c){var r=p.per[c.cut_id];
+    trGroupByFloor(j.cuts,j).forEach(function(G){h+='<div class="tr-fl">'+esc(trFlLabel(G.fl))+' <span class="tiny dim">'+G.rows.length+'줄</span></div>';G.rows.forEach(function(R){var c=R.c,r=p.per[c.cut_id];
       h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div><div>'+trCutText(c)+'</div>'
         +(c.done_on?'<div class="tiny dim">완료 '+esc(String(c.done_on).slice(5))+(c.done_by?' · '+esc(c.done_by):'')+' — '+trUseText((c.usage||[]).reduce(function(o,x){o[x.item_code]=x.qty;return o},{}))+'</div>'
           :(r?'<div class="tiny dim">예상 '+trUseText(r.use)+'</div>':''))+'</div>'
         +(c.done_on?'<button class="btn sm" style="flex:none" onclick="trUndo('+c.cut_id+')">완료 취소</button>':'<button class="btn sm p" style="flex:none" onclick="trDoneOpen('+c.cut_id+')">완료</button>')+'</div>';
-      if(TR.done&&TR.done.cut_id===c.cut_id)h+=trDoneHtml()});
+      if(TR.done&&TR.done.cut_id===c.cut_id)h+=trDoneHtml()})});
     if(j.status!=='done')h+='<div class="row2" style="margin-top:8px"><button class="btn sm" onclick="trEdit('+j.job_id+')">고치기</button><button class="btn sm" onclick="trCancelJob('+j.job_id+')">지우기</button></div>';
     h+='</div>'});
   return h}
 function trFindJob(id){return ((TR.data||{}).jobs||[]).filter(function(j){return j.job_id===id})[0]}
 function trFindCut(id){var f=null;((TR.data||{}).jobs||[]).forEach(function(j){(j.cuts||[]).forEach(function(c){if(c.cut_id===id)f=c})});return f}
 function trEdit(id){var j=id?trFindJob(id):null;
-  TR.edit=j?{job_id:j.job_id,site_code:j.site_code||'',floor:j.floor||'',install_on:j.install_on||'',memo:j.memo||'',cuts:(j.cuts||[]).map(function(c){return {cut_id:c.cut_id,width:c.width,pieces:(c.pieces||[]).slice(),mult:c.mult,kind:c.kind,colors:c.colors||'',done_on:c.done_on}})}
+  TR.edit=j?{job_id:j.job_id,site_code:j.site_code||'',floor:j.floor||'',install_on:j.install_on||'',memo:j.memo||'',cuts:(j.cuts||[]).map(function(c){return {cut_id:c.cut_id,width:c.width,pieces:(c.pieces||[]).slice(),mult:c.mult,kind:c.kind,colors:c.colors||'',floor:c.floor||'',done_on:c.done_on}})}
     :{job_id:null,site_code:'',floor:'',install_on:'',memo:'',cuts:[]};
-  TR.form={width:300,len:'',mult:1,kind:'수평',kx:'',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
-function trEf(k,v){TR.edit[k]=v}
+  TR.form={width:300,len:'',mult:1,kind:'수평',kx:'',fl:'',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
+function trEf(k,v){TR.edit[k]=v;trDraftSave()}
 function trFf(k,v){TR.form[k]=v;trPaintForm()}
 function trColor(c){var a=TR.form.colors,i=a.indexOf(c);if(i<0)a.push(c);else a.splice(i,1);trPaintForm()}
 function trLenAdd(l){var s=String(TR.form.len||'').trim();TR.form.len=s?s+'+'+l:String(l);trPaintForm()}
 var TR_KINDS=['수평','수직','입상'];
-function trKind(f){return [f.kind||'',String(f.kx||'').trim()].filter(Boolean).join(' · ')}
+function trFlLabel(f){f=String(f||'').trim();return !f?'층 미정':/^\d+$/.test(f)?f+'층':f}
+function trFlOf(c,j){return String((c&&c.floor)||(j&&j.floor)||'').trim()}
+function trFlSort(a,b){var na=parseFloat(a),nb=parseFloat(b);if(isFinite(na)&&isFinite(nb)&&na!==nb)return nb-na;return String(a).localeCompare(String(b),'ko')}
+function trFlList(){var e=TR.edit||{},seen={},out=[];[e.floor].concat((e.cuts||[]).map(function(c){return c.floor})).forEach(function(f){f=String(f||'').trim();if(f&&!seen[f]){seen[f]=1;out.push(f)}});return out.sort(trFlSort)}
+function trGroupByFloor(cuts,j){var G={},order=[];(cuts||[]).forEach(function(c,i){var f=trFlOf(c,j);if(!G[f]){G[f]=[];order.push(f)}G[f].push({c:c,i:i})});order.sort(trFlSort);return order.map(function(f){return {fl:f,rows:G[f]}})}
+function trFlPick(f){TR.form.fl=String(TR.form.fl||'')===f?'':f;trPaintForm()}
+function trDraftKey(){return 'bvs_tray_edit'}
+function trDraftSave(){try{if(TR.edit)localStorage.setItem(trDraftKey(),JSON.stringify({e:TR.edit,f:TR.form,at:Date.now()}))}catch(e){}}
+function trDraftGet(){try{var d=JSON.parse(localStorage.getItem(trDraftKey())||'null');return d&&d.e?d:null}catch(e){return null}}
+function trDraftClear(){try{localStorage.removeItem(trDraftKey())}catch(e){}}
+function trDraftResume(){var d=trDraftGet();if(!d)return;TR.edit=d.e;TR.form=d.f||{width:300,len:'',mult:1,kind:'수평',kx:'',colors:[]};TR.done=null;TR.seg='jobs';trPaint()}
+async function trDraftDrop(){if(!(await ERPC.ask('확인','작성 중이던 재단표를 버릴까요?',{danger:true})))return;trDraftClear();trPaint()}
+function trKind(f){var a=f.kind||'',b=String(f.kx||'').trim();if(b===a)b='';return [a,b].filter(Boolean).join(' · ')}
 function trKindSplit(k){k=String(k||'').trim();for(var i=0;i<TR_KINDS.length;i++){var w=TR_KINDS[i];if(k===w)return [w,''];if(k.indexOf(w+' · ')===0)return [w,k.slice(w.length+3)]}return ['',k==='기타'?'':k]}
 function trKindPick(k){TR.form.kind=TR.form.kind===k?'':k;trPaintForm()}
 function trKxPick(k){TR.form.kx=String(TR.form.kx||'').trim()===k?'':k;trPaintForm()}
@@ -3811,7 +3823,10 @@ function trKindRecent(){var seen={},out=[];((TR.data||{}).jobs||[]).slice().reve
 function trFormHtml(){var f=TR.form,ch=function(on,label,js){return '<span class="chip'+(on?' on':'')+'" onclick="'+js+'">'+label+'</span>'};
   var pv='';var ps=TRC.parsePieces(f.len);
   if(ps.length){var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:trKind(f),colors:f.colors.join(',')},TR.data);pv='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
-  return '<div class="f"><label>폭</label><div class="chips">'+[200,300,400,500].map(function(w){return ch(f.width===w,'W'+w,'trFf(\'width\','+w+')')}).join('')+'</div></div>'
+  var FL=trFlList();
+  return '<div class="f"><label>층 (이 줄)</label><div class="chips" style="align-items:center">'+FL.map(function(x){return ch(String(f.fl||'')===x,esc(trFlLabel(x)),'trFlPick('+JSON.stringify(x).replace(/"/g,'&quot;')+')')}).join('')
+    +'<input class="in" id="tr_fl" value="'+esc(f.fl||'')+'" oninput="TR.form.fl=this.value" placeholder="'+(TR.edit&&TR.edit.floor?'비우면 '+esc(trFlLabel(TR.edit.floor)):'예: 5')+'" style="width:110px;padding:6px 8px;min-height:0"></div></div>'
+    +'<div class="f"><label>폭</label><div class="chips">'+[200,300,400,500].map(function(w){return ch(f.width===w,'W'+w,'trFf(\'width\','+w+')')}).join('')+'</div></div>'
     +'<div class="f"><label>길이 (mm, 이어지면 3000+1000)</label><input class="in" id="tr_len" inputmode="numeric" value="'+esc(f.len)+'" oninput="TR.form.len=this.value;trPaintPv()" style="padding:8px 10px;min-height:0">'
     +'<div class="chips" style="margin-top:6px">'+[3000,2500,2000,1500,1000,500].map(function(l){return ch(false,'+'+l,'trLenAdd('+l+')')}).join('')+ch(false,'지우기','TR.form.len=\'\';trPaintForm()')+'</div></div>'
     +'<div class="f" style="display:flex;align-items:center;gap:8px"><label style="margin:0">수량 ×</label><input class="in" type="number" min="1" value="'+(f.mult||1)+'" oninput="TR.form.mult=this.value;trPaintPv()" style="width:80px;padding:8px 10px;min-height:0"></div>'
@@ -3824,31 +3839,33 @@ function trPaintForm(){var x=el('trForm');if(x)x.innerHTML=trFormHtml()}
 function trPaintPv(){var x=el('trPv');if(!x)return;var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){x.innerHTML='';return}
   var r=TRC.forDone({cut_id:null,width:f.width,pieces:ps,mult:Number(f.mult)||1,kind:trKind(f),colors:f.colors.join(',')},TR.data);
   x.innerHTML='<div class="tiny dim">예상 '+trUseText(r.use)+(r.warn.length?' <span class="neg">'+r.warn.map(esc).join(' ')+'</span>':'')+'</div>'}
-function trAddCut(){var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){toast('길이를 넣어 주세요','e');return}
+function trAddCut(){setTimeout(trDraftSave,0);var f=TR.form,ps=TRC.parsePieces(f.len);if(!ps.length){toast('길이를 넣어 주세요','e');return}
   if(ps.some(function(x){return x>3000})){toast('한 조각은 3000mm까지입니다. 3000+… 로 나눠 주세요','e');return}
   if(!trKind(f)){toast('종류를 고르거나 직접 적어 주세요','e');return}
-  TR.edit.cuts.push({width:f.width,pieces:ps,mult:Math.max(1,parseInt(f.mult,10)||1),kind:trKind(f),colors:f.colors.join(',')});
-  TR.form={width:f.width,len:'',mult:1,kind:f.kind,kx:f.kx||'',colors:f.colors.slice()};trPaint()}
-function trCutPick(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;var kk=trKindSplit(c.kind);TR.form={width:c.width,len:c.pieces.join('+'),mult:c.mult,kind:kk[0],kx:kk[1],colors:TRC.cols(c.colors)};TR.edit.cuts.splice(i,1);trPaint()}
+  TR.edit.cuts.push({width:f.width,pieces:ps,mult:Math.max(1,parseInt(f.mult,10)||1),kind:trKind(f),colors:f.colors.join(','),floor:String(f.fl||'').trim()||String(TR.edit.floor||'').trim()});
+  TR.form={width:f.width,len:'',mult:1,kind:f.kind,kx:f.kx||'',fl:f.fl||'',colors:f.colors.slice()};trPaint()}
+function trCutPick(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;var kk=trKindSplit(c.kind);TR.form={width:c.width,len:c.pieces.join('+'),mult:c.mult,kind:kk[0],kx:kk[1],fl:c.floor||'',colors:TRC.cols(c.colors)};TR.edit.cuts.splice(i,1);trPaint()}
 function trCutDel(i){var c=TR.edit.cuts[i];if(!c||c.done_on)return;TR.edit.cuts.splice(i,1);trPaint()}
 function trEditHtml(){var e=TR.edit;
   var h='<div class="card"><h2>'+(e.job_id?'재단표 고치기':'새 재단표')+'</h2>'
     +'<div class="f"><label>현장·위치</label><input class="in" value="'+esc(e.site_code)+'" oninput="trEf(\'site_code\',this.value)" placeholder="예: 5EKF H021" style="padding:8px 10px;min-height:0"></div>'
-    +'<div class="f" style="display:flex;gap:8px"><div style="flex:1"><label>층</label><input class="in" value="'+esc(e.floor)+'" oninput="trEf(\'floor\',this.value)" style="padding:8px 10px;min-height:0"></div>'
+    +'<div class="f" style="display:flex;gap:8px"><div style="flex:1"><label>기본 층</label><input class="in" value="'+esc(e.floor)+'" oninput="trEf(\'floor\',this.value);trPaintForm()" style="padding:8px 10px;min-height:0"></div>'
     +'<div style="flex:1"><label>설치일</label><input class="in" type="date" value="'+esc(e.install_on||'')+'" oninput="trEf(\'install_on\',this.value)" style="padding:8px 10px;min-height:0"></div></div>'
     +'<div class="f"><label>메모</label><input class="in" value="'+esc(e.memo)+'" oninput="trEf(\'memo\',this.value)" style="padding:8px 10px;min-height:0"></div></div>'
     +'<div class="card"><h2>줄 '+e.cuts.length+'개</h2>';
-  e.cuts.forEach(function(c,i){h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div onclick="trCutPick('+i+')" style="flex:1;cursor:pointer">'+trCutText(c)+(c.done_on?' <span class="tiny dim">완료</span>':'')+'</div>'
-    +(c.done_on?'':'<button class="btn sm" style="flex:none" onclick="trCutDel('+i+')">✕</button>')+'</div>'});
+  trGroupByFloor(e.cuts,e).forEach(function(G){h+='<div class="tr-fl">'+esc(trFlLabel(G.fl))+' <span class="tiny dim">'+G.rows.length+'줄</span></div>';
+    G.rows.forEach(function(R){var c=R.c,i=R.i;h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><div onclick="trCutPick('+i+')" style="flex:1;cursor:pointer">'+trCutText(c)+(c.done_on?' <span class="tiny dim">완료</span>':'')+'</div>'
+    +(c.done_on?'':'<button class="btn sm" style="flex:none" onclick="trCutDel('+i+')">✕</button>')+'</div>'})});
   if(!e.cuts.length)h+='<div class="tiny dim">아래에서 줄을 넣어 주세요</div>';
   h+='<div id="trForm" style="margin-top:10px;border-top:1px solid var(--ln);padding-top:10px">'+trFormHtml()+'</div></div>'
-    +'<div class="row2"><button class="btn" onclick="TR.edit=null;trPaint()">닫기</button><button class="btn p" onclick="trSaveJob()">저장</button></div>';
+    +'<div class="row2"><button class="btn" onclick="trEditClose()">닫기</button><button class="btn p" onclick="trSaveJob()">저장</button></div>';
   return h}
+async function trEditClose(){if(TR.edit&&TR.edit.cuts.length&&!(await ERPC.ask('확인','저장하지 않고 닫을까요? 넣은 줄은 이 폰에 남아 「이어서 쓰기」로 다시 열 수 있습니다.')))return;TR.edit=null;trPaint()}
 async function trSaveJob(){var e=TR.edit;if(!String(e.site_code||'').trim()){toast('현장·위치를 적어 주세요','e');return}
   if(TRC.parsePieces(TR.form&&TR.form.len).length&&!(await ERPC.ask('확인','아래 칸에 넣지 않은 줄이 있습니다. 버리고 저장할까요?')))return;
   var r=await sb.rpc('tray_job_save',{p:{job_id:e.job_id,site_code:e.site_code,floor:e.floor,install_on:e.install_on||null,memo:e.memo,cuts:e.cuts}});
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');return}
-  toast('재단표 저장','g');TR.edit=null;trOpen('jobs')}
+  toast('재단표 저장','g');trDraftClear();TR.edit=null;trOpen('jobs')}
 async function trCancelJob(id){if(!(await ERPC.ask('확인','이 재단표를 지울까요?',{danger:true})))return;
   var r=await sb.rpc('tray_job_cancel',{p_job:id});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('지웠습니다','g');trOpen('jobs')}
 
@@ -3939,7 +3956,7 @@ async function trRulesSave(){var p={};for(var i=0;i<TR_RULES.length;i++){var k=T
   var css=document.createElement('style');css.textContent='.tr-note{font-size:12px;background:var(--sf2);border-left:3px solid #d97706;padding:6px 8px;margin:6px 0;border-radius:4px}'
     +'.tr-tbl{font-size:13px}.tr-r{display:grid;grid-template-columns:1fr 64px 52px 70px;gap:6px;padding:7px 0;border-bottom:1px solid var(--ln);align-items:center}.tr-r>span:not(:first-child){text-align:right}'
     +'.tr-h{font-size:11.5px;color:var(--tx2);font-weight:600}.tr-g{font-size:12px;font-weight:700;color:var(--tx2);padding:10px 0 2px}.tr-short{background:rgba(220,38,38,.06)}'
-    +'.tr-cut{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}.tr-cut.done{opacity:.6}'
+    +'.tr-cut{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}.tr-cut.done{opacity:.6}.tr-fl{font-size:13px;font-weight:700;margin:12px 0 2px;padding:4px 8px;background:var(--sf2);border-radius:4px}'
     +'.tr-done{background:var(--sf2);border-radius:8px;padding:10px;margin:6px 0}'
     +'.tr-kv{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center;padding:5px 0;font-size:13.5px}.tr-kv input{padding:6px 8px;min-height:0;text-align:right}.tr-kv small{color:var(--tx2)}'
     +'.tr-off{padding:0 0 8px;border-bottom:1px dashed var(--ln);margin-bottom:4px}.tr-save{position:sticky;bottom:70px;display:flex;gap:8px;padding:8px 0;background:var(--bg)}.tr-save .btn{flex:1}';
