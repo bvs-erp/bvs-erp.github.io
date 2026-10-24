@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.79</title>
+<title>BVS 데일리 v1.80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3654,6 +3654,19 @@ cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',paintAnniv)}
   else{setTimeout(paintAnniv,50)}
 })();
+
+/* v1.80 (안티그래비티 R999 ③ 10-24): 리드 「내일 배치」 위 전체 / 미배치 / 배치됨 + 이름 찾기(✕·Esc) */
+var PLF980={f:'all',q:''};
+function plF980Apply(){var R=el('plRows');if(!R)return;var q=String(PLF980.q||'').trim().toLowerCase(),t=0,m=0,n=0;
+  [].forEach.call(R.querySelectorAll('.pmrow'),function(r){var s=r.querySelector('select'),on=!!(s&&s.value),nm=(r.firstElementChild&&r.firstElementChild.textContent||'').toLowerCase();t++;if(on)n++;else m++;
+    var ok=(PLF980.f==='all'||(PLF980.f==='no'&&!on)||(PLF980.f==='yes'&&on))&&(!q||nm.indexOf(q)>=0);r.style.display=ok?'':'none'});
+  var B=el('plF980');if(B){var c=B.querySelectorAll('.chip');if(c[0])c[0].textContent='전체 ('+t+')';if(c[1])c[1].textContent='미배치 ('+m+')';if(c[2])c[2].textContent='배치됨 ('+n+')';[].forEach.call(c,function(x){x.classList.toggle('on',x.getAttribute('data-f')===PLF980.f)});var x=el('plFx980');if(x)x.style.display=PLF980.q?'':'none'}}
+function plF980Clr(){PLF980.q='';var i=el('plFq980');if(i)i.value='';plF980Apply()}
+(function(){if(typeof plRender!=='function')return;var _r=plRender;plRender=function(){var r=_r.apply(this,arguments);try{var R=el('plRows');if(!R)return r;if(!el('plF980')){var d=document.createElement('div');d.id='plF980';d.className='tr-jf';d.style.margin='6px 0';
+      d.innerHTML='<span class="chip" data-f="all" onclick="PLF980.f=\'all\';plF980Apply()"></span><span class="chip" data-f="no" onclick="PLF980.f=\'no\';plF980Apply()"></span><span class="chip" data-f="yes" onclick="PLF980.f=\'yes\';plF980Apply()"></span>'
+        +'<input id="plFq980" placeholder="이름 찾기" value="'+esc(PLF980.q||'')+'" oninput="PLF980.q=this.value;plF980Apply()" onkeydown="if(event.key===\'Escape\')plF980Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="plFx980" style="flex:none;display:none" onclick="plF980Clr()">✕</button>';
+      R.parentNode.insertBefore(d,R)}
+    if(!R.__f980){R.__f980=1;R.addEventListener('change',function(){setTimeout(plF980Apply,0)})}plF980Apply()}catch(e){console.error(e)}return r}})();
 </script>
 <script>
 /* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
