@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.75</title>
+<title>BVS 데일리 v1.76</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4245,6 +4245,23 @@ async function ppSave(){var P=PP.P;if(!P)return;var d=PP.date;if(!d){toast('날�
     return o}}
 })();
 
+
+/* v1.76 (안티그래비티 R993 ② 10-24): 재단표 탭 위 「진행 중 / 완료 포함」 · 호기·위치 찾기 · 모두 펼치기/접기 */
+(function(){var c=document.createElement('style');c.textContent='.tr-jf{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.tr-jf .chip{padding:4px 10px;border:1px solid var(--ln,#cbd5e1);border-radius:14px;font-size:12.5px;background:var(--sf,#fff);cursor:pointer}.tr-jf .chip.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}.tr-jf input{flex:1;min-width:120px;padding:6px 8px;border:1px solid var(--ln,#cbd5e1);border-radius:8px;font-size:13px}.tr-jf a{font-size:12.5px;color:#1d4ed8;cursor:pointer}';document.head.appendChild(c)})();
+var TRJF={all:false,q:''};
+function trJfMatch(j){if(!TRJF.all&&j.status==='done')return false;var q=String(TRJF.q||'').trim().toLowerCase().replace(/\s+/g,'');if(!q)return true;
+  var s=[j.site_code,j.memo,j.install_on].concat((j.cuts||[]).map(function(c){return c.floor||c.fl||''})).join(' ').toLowerCase().replace(/\s+/g,'');return s.indexOf(q)>=0}
+function trJfAll(open){var L=((TR.data&&TR.data.jobs)||[]).filter(trJfMatch);TR.jopen=TR.jopen||{};L.forEach(function(j){TR.jopen[j.job_id]=!!open});trPaint()}
+function trJfQ(v){TRJF.q=v;trPaint();setTimeout(function(){var x=el('trJq');if(x){x.focus();try{x.setSelectionRange(x.value.length,x.value.length)}catch(e){}}},0)}
+function trJfSorted(){return ((TR.data&&TR.data.jobs)||[]).slice().sort(function(a,b){var x=a.install_on?String(a.install_on):'9999',y=b.install_on?String(b.install_on):'9999';return x<y?-1:x>y?1:(a.job_id-b.job_id)})}
+(function(){if(typeof trJobsHtml!=='function')return;var _h=trJobsHtml;trJobsHtml=function(){var h=_h.apply(this,arguments);if(TR.edit||!TR.data)return h;
+  var all=TR.data.jobs||[];if(!all.length)return h;var nOpen=all.filter(function(j){return j.status!=='done'}).length;
+  var bar='<div class="card tr-jf"><span class="chip'+(TRJF.all?'':' on')+'" onclick="TRJF.all=false;trPaint()">진행 중 ('+nOpen+')</span><span class="chip'+(TRJF.all?' on':'')+'" onclick="TRJF.all=true;trPaint()">완료 포함 ('+all.length+')</span>'
+    +'<input id="trJq" placeholder="호기·위치 찾기 (예: 5EKF, 6층)" value="'+esc(TRJF.q||'')+'" onchange="trJfQ(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();trJfQ(this.value)}">'
+    +'<a onclick="trJfAll(true)">모두 펼치기</a><a onclick="trJfAll(false)">모두 접기</a><span class="tiny dim" id="trJn"></span></div>';
+  var i=h.indexOf('<div class="card tr-job');return i>0?h.slice(0,i)+bar+h.slice(i):h+bar}})();
+(function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(TR.edit||!TR.data)return r;var J=trJfSorted(),C=document.querySelectorAll('#trBody .card.tr-job'),n=0;
+    if(C.length!==J.length)return r;J.forEach(function(j,i){var ok=trJfMatch(j)||(TR.batch&&TR.batch.job_id===j.job_id);C[i].style.display=ok?'':'none';if(ok)n++});var t=el('trJn');if(t)t.textContent=n<J.length?n+'개 보임':''}catch(e){console.error(e)}return r}})();
 </script>
 </body>
 </html>
