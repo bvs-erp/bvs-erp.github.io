@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.84</title>
+<title>BVS 데일리 v1.85</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3716,6 +3716,22 @@ function l984Clr(){L984.q='';var i=el('l984q');if(i)i.value='';l984Apply()}
 (function(){if(typeof renderList!=='function')return;var _r=renderList;renderList=function(){var r=_r.apply(this,arguments);try{var L=el('list');if(!L)return r;if(!el('l984')){var d=document.createElement('div');d.id='l984';d.className='l984';
       d.innerHTML='<input id="l984q" placeholder="현장·업무 찾기 (예: 5EKF, 셋업)" value="'+esc(L984.q||'')+'" oninput="L984.q=this.value;l984Apply()" onkeydown="if(event.key===\'Escape\')l984Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="l984x" style="flex:none;display:none" onclick="l984Clr()">✕</button><span class="tiny dim" id="l984n"></span>';
       L.parentNode.insertBefore(d,L)}l984Apply()}catch(e){console.error(e)}return r}})();
+
+/* v1.85 (안티그래비티 R1005 ③·R1006 ③ 10-24): 리드 출역 확인 위 이름·현장 찾기(대기·출역·당월 집계 함께 거름, ✕·Esc) · 트레이 재단표 길이·종류 칸 Enter = 줄 넣기(길이 칸에 계속), 전수조사 자투리 칸 Enter = 넣기, 목록 외 자재 수량 Enter = 추가 */
+var LD985={q:''};
+function ld985Apply(){var q=String(LD985.q||'').trim().toLowerCase().replace(/\s+/g,''),n=0,t=0;
+  ['leadPendingRows','leadWorkersRows'].forEach(function(id){var B=el(id);if(!B)return;[].forEach.call(B.querySelectorAll(':scope > .item'),function(it){var ok=!q||String(it.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;it.style.display=ok?'':'none';if(id==='leadWorkersRows'){t++;if(ok)n++}})});
+  var M=el('leadMonthRollup');if(M)[].forEach.call(M.querySelectorAll('tbody tr'),function(tr){tr.style.display=!q||String(tr.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0?'':'none'});
+  var s=el('ld985n');if(s)s.textContent=q?n+'명 보임 / '+t+'명':'';var x=el('ld985x');if(x)x.style.display=q?'':'none'}
+function ld985Clr(){LD985.q='';var i=el('ld985q');if(i)i.value='';ld985Apply()}
+(function(){var P=el('leadPendingRows');if(!P)return;var d=document.createElement('div');d.id='ld985';d.className='tr-jf';d.style.margin='0 0 8px';
+  d.innerHTML='<input id="ld985q" placeholder="이름·현장 찾기" oninput="LD985.q=this.value;ld985Apply()" onkeydown="if(event.key===\'Escape\')ld985Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="ld985x" style="flex:none;display:none" onclick="ld985Clr()">✕</button><span class="tiny dim" id="ld985n"></span>';
+  var card=P.closest('.card')||P.parentNode;card.parentNode.insertBefore(d,card);
+  if(window.MutationObserver){var mo=new MutationObserver(function(){if(LD985.q)ld985Apply()});['leadPendingRows','leadWorkersRows','leadMonthRollup'].forEach(function(id){var x=el(id);if(x)mo.observe(x,{childList:true})})}})();
+document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target,id=t&&t.id||'';
+  if(id==='tr_len'||id==='tr_kx'){e.preventDefault();try{if(id==='tr_len')TR.form.len=t.value;else TR.form.kx=t.value}catch(x){}trAddCut();setTimeout(function(){var l=el('tr_len');if(l){l.focus();try{l.setSelectionRange(l.value.length,l.value.length)}catch(x){}}},60);return}
+  var m=/^tr(Ol|On)_(.+)$/.exec(id);if(m){e.preventDefault();trOffAdd(m[2]);return}
+  if(id==='trNw_q'){e.preventDefault();trNewAdd()}},true);
 </script>
 <script>
 /* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
