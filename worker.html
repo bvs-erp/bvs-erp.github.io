@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.91</title>
+<title>BVS 데일리 v1.92</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4466,6 +4466,13 @@ function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC9
     if(!T.__k991){T.__k991=1;T.addEventListener('click',function(e){var c=e.target.closest('td');if(!c||c.closest('tfoot'))return;var nm=c.parentNode.querySelector('td.col-name');LC991.name=nm?String(nm.textContent).trim():null},true)}}catch(e){console.error(e)}return r}})();
 (function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){var nm=LC991.name;LC991.name=null;var r=await _o.apply(this,arguments);if(nm){try{var it=[].filter.call(document.querySelectorAll('#leadWorkersRows .item, #leadPendingRows .item'),function(x){return x.offsetParent&&String(x.textContent).indexOf(nm)>=0})[0];
     if(it){it.scrollIntoView({block:'center',behavior:'smooth'});it.classList.remove('f991');void it.offsetWidth;it.classList.add('f991');setTimeout(function(){it.classList.remove('f991')},2600)}}catch(e){}}return r}})();
+
+/* v1.92 (안티그래비티 R1015 ③ 10-25): 당일 관제 — 최근 7일 밖 날짜로 오면 날짜 칩 맨 앞에 그 날짜 · 월 달력에서 사람 칸으로 왔는데 이름·현장 찾기에 가려지면 찾기를 풀고 그 줄로 · 찾기로 거르는 중 「전체 확인」은 보이는 대기 건만 */
+(function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){try{if(LC991.name&&LD985.q&&String(LC991.name).toLowerCase().indexOf(String(LD985.q).trim().toLowerCase())<0)ld985Clr()}catch(e){}
+  var r=await _o.apply(this,arguments);try{var L=lastDays(7);if(LEAD.date&&L.indexOf(LEAD.date)<0)dateChips('leadDates',[LEAD.date].concat(L),LEAD.date,'leadOpen')}catch(e){}return r}})();
+(function(){if(typeof leadApproveAll!=='function')return;var _a=leadApproveAll;leadApproveAll=function(){if(!String(LD985.q||'').trim())return _a.apply(this,arguments);var B=el('leadPendingRows'),keep=LEAD.PEND||[];if(!B)return _a.apply(this,arguments);
+  var its=[].filter.call(B.children,function(x){return x.classList.contains('item')}),vis=keep.filter(function(x,i){return its[i]&&its[i].style.display!=='none'});if(!vis.length){toast('보이는 대기 건이 없습니다');return}
+  LEAD.PEND=vis;try{return _a.apply(this,arguments)}finally{LEAD.PEND=keep}}})();
 </script>
 </body>
 </html>
