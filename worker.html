@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.77</title>
+<title>BVS 데일리 v1.78</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4268,6 +4268,27 @@ function trJfFilter(){try{var J=trJfSorted(),C=document.querySelectorAll('#trBod
 function trJfClr(){TRJF.q='';var x=el('trJq');if(x)x.value='';trJfFilter()}
 (function(){if(typeof trJobsHtml!=='function')return;var _h=trJobsHtml;trJobsHtml=function(){var h=_h.apply(this,arguments);try{
   h=h.replace(' onchange="trJfQ(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();trJfQ(this.value)}">',' oninput="TRJF.q=this.value;trJfFilter()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}else if(event.key===\'Escape\'){trJfClr()}"><button class="btn sm" id="trJx" style="flex:none;'+(TRJF.q?'':'display:none')+'" onclick="trJfClr()">✕</button>')}catch(e){}return h}})();
+
+/* v1.78 (안티그래비티 R996·R997 10-24): 트레이 재고 「부족한 것만 (N)」, 전수조사 품목 찾기(✕)·「적은 것만 (N)」 */
+var TRS978={short:false},TRC978={q:'',mine:false};
+function trSt978Apply(){var b=el('trBody');if(!b)return;var rs=b.querySelectorAll('.tr-tbl .tr-r:not(.tr-h)');if(!rs.length)return;
+  [].forEach.call(rs,function(r){r.style.display=TRS978.short&&!r.classList.contains('tr-short')?'none':''});
+  [].forEach.call(b.querySelectorAll('.tr-tbl .tr-g'),function(g){var n=g.nextElementSibling,vis=false;while(n&&!n.classList.contains('tr-g')){if(n.classList.contains('tr-r')&&n.style.display!=='none')vis=true;n=n.nextElementSibling}g.style.display=vis?'':'none'})}
+function trCn978Code(kv){var i=kv.querySelector('input[oninput*="trCntQty"]');var m=i&&/trCntQty\('([^']+)'/.exec(i.getAttribute('oninput')||'');return m?m[1]:''}
+function trCn978Apply(){var b=el('trBody');if(!b||!TR.cnt)return;var q=String(TRC978.q||'').trim().toLowerCase().replace(/\s+/g,''),C=TR.cnt;
+  [].forEach.call(b.querySelectorAll('.tr-kv'),function(kv){var c=trCn978Code(kv);if(!c)return;var t=(c+' '+(kv.textContent||'')).toLowerCase().replace(/\s+/g,''),ok=(!q||t.indexOf(q)>=0)&&(!TRC978.mine||(C.qty[c]!=null&&String(C.qty[c]).trim()!=='')||!!C.dirty[c]);
+    kv.style.display=ok?'':'none';var o=kv.nextElementSibling;if(o&&o.classList.contains('tr-off'))o.style.display=ok?'':'none'});
+  [].forEach.call(b.querySelectorAll('.card'),function(cd){var kvs=cd.querySelectorAll('.tr-kv');if(!kvs.length)return;cd.style.display=[].some.call(kvs,function(k){return k.style.display!=='none'})?'':'none'});
+  var x=el('trCqx');if(x)x.style.display=TRC978.q?'':'none'}
+function trCn978N(){var C=TR.cnt||{qty:{},dirty:{}},s={};Object.keys(C.qty||{}).forEach(function(k){if(String(C.qty[k]).trim()!=='')s[k]=1});Object.keys(C.dirty||{}).forEach(function(k){if(C.dirty[k])s[k]=1});return Object.keys(s).length}
+function trCn978Clr(){TRC978.q='';var i=el('trCq');if(i)i.value='';trCn978Apply()}
+(function(){if(typeof trStockHtml!=='function')return;var _h=trStockHtml;trStockHtml=function(){var h=_h.apply(this,arguments);try{var ns=TRC.plan(TR.data).rows.filter(function(x){return x.short}).length;if(!ns&&!TRS978.short)return h;
+  h=h.replace('<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>','<button class="btn sm'+(TRS978.short?' p':'')+'" onclick="TRS978.short=!TRS978.short;trPaint()">'+(TRS978.short?'모두 보기':'부족한 것만 ('+ns+')')+'</button><button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>')}catch(e){}return h}})();
+(function(){if(typeof trCountHtml!=='function')return;var _h=trCountHtml;trCountHtml=function(){var h=_h.apply(this,arguments);try{var n=trCn978N();
+  var bar='<div class="card tr-jf"><input id="trCq" placeholder="품목 찾기 (예: W300, 격벽)" value="'+esc(TRC978.q||'')+'" oninput="TRC978.q=this.value;trCn978Apply()" onkeydown="if(event.key===\'Escape\')trCn978Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="trCqx" style="flex:none;'+(TRC978.q?'':'display:none')+'" onclick="trCn978Clr()">✕</button>'
+    +'<span class="chip'+(TRC978.mine?'':' on')+'" onclick="TRC978.mine=false;trPaint()">전체</span><span class="chip'+(TRC978.mine?' on':'')+'" onclick="TRC978.mine=true;trPaint()">적은 것만 ('+n+')</span></div>';
+  var k=h.indexOf('</div></div>');return k>0?h.slice(0,k+12)+bar+h.slice(k+12):bar+h}catch(e){return h}}})();
+(function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(el('trCq'))trCn978Apply();if(document.querySelector('#trBody .tr-tbl'))trSt978Apply()}catch(e){console.error(e)}return r}})();
 </script>
 </body>
 </html>
