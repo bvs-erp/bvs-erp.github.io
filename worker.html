@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.87</title>
+<title>BVS 데일리 v1.88</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4385,6 +4385,27 @@ function pp987Mark(){var box=el('ppBox');if(!box)return 0;var n=0;[].forEach.cal
 (function(){if(typeof ppPaint!=='function')return;var _p=ppPaint;ppPaint=function(){var r=_p.apply(this,arguments);try{var box=el('ppBox');if(box&&!box.__k987){box.__k987=1;box.addEventListener('change',function(e){if(e.target&&e.target.tagName==='SELECT')pp987Mark()});
       box.addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&!e.isComposing){var g=el('ppGo');if(g&&!g.disabled){e.preventDefault();ppSave()}}})}pp987Mark()}catch(e){console.error(e)}return r}})();
 (function(){if(typeof ppRead!=='function')return;var _r=ppRead;ppRead=async function(){var r=await _r.apply(this,arguments);try{var box=el('ppBox'),s=box&&[].filter.call(box.querySelectorAll('select'),function(x){return !x.value})[0];if(s){s.scrollIntoView({block:'center',behavior:'smooth'});s.focus()}}catch(e){}return r}})();
+
+/* v1.88 (안티그래비티 R1009 ③·R1010 ③ 10-24): 펌프실 — 줄 더하면 새 줄 Bay 칸으로, 수량 칸 Enter = 다음 줄(마지막 줄이면 새 줄), Ctrl+Enter = 등록, 「포설 X대 · 후크밴드 Y대」 합계 · 내일 배치 — 배치된 사람의 「업무: …」를 누르면 그 자리에서 고침(없으면 「+ 업무 메모」) */
+function pm988Sum(){var c=0,h=0;(PM.rows||[]).forEach(function(r){var q=+r.qty||0;if(r.item_code==='HOOK')h+=q;else c+=q});var x=el('pm988n');
+  if(!x){var b=[].filter.call(document.querySelectorAll('button'),function(z){return /pmAddRow/.test(z.getAttribute('onclick')||'')})[0];if(!b)return;x=document.createElement('span');x.id='pm988n';x.className='tiny dim';x.style.marginLeft='8px';b.parentNode.insertBefore(x,b.nextSibling)}
+  x.textContent=(c||h)?'포설 '+c+'대 · 후크밴드 '+h+'대 (총 '+(c+h)+'대)':''}
+function pm988Bay(i){var R=document.querySelectorAll('#pmItems .pmrow'),r=R[i==null?R.length-1:i],b=r&&r.querySelector('input');if(b)b.focus()}
+(function(){if(typeof pmAddRow!=='function')return;var _a=pmAddRow;pmAddRow=function(){var r=_a.apply(this,arguments);setTimeout(function(){pm988Bay()},0);return r}})();
+(function(){if(typeof pmRenderRows!=='function')return;var _r=pmRenderRows;pmRenderRows=function(){var r=_r.apply(this,arguments);try{pm988Sum()}catch(e){}return r}})();
+document.addEventListener('input',function(e){if(e.target&&e.target.closest&&e.target.closest('#pmItems'))setTimeout(pm988Sum,0)});
+document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target,row=t&&t.closest&&t.closest('#pmItems .pmrow');if(!row||t.tagName!=='INPUT')return;
+  var R=[].slice.call(document.querySelectorAll('#pmItems .pmrow')),i=R.indexOf(row),ins=row.querySelectorAll('input');
+  if(e.ctrlKey||e.metaKey){e.preventDefault();e.stopPropagation();t.blur();pmSubmit();return}
+  if(t===ins[1]){e.preventDefault();e.stopPropagation();if(i<R.length-1)pm988Bay(i+1);else pmAddRow()}},true);
+function pl988Edit(emp,box){var c=PL.rows[emp]||{};if(!c.site_id)return;var inp=document.createElement('input');inp.className='in';inp.value=c.memo||'';inp.placeholder='업무 (예: 장비번호, 작업)';inp.style.cssText='margin:-2px 0 6px 84px;width:calc(100% - 84px);padding:4px 8px;min-height:0;font-size:12.5px';
+  var done=false,fin=function(){if(done)return;done=true;var o=PL.rows[emp]||{};PL.rows[emp]={site_id:o.site_id,memo:String(inp.value||'').trim()};try{plText()}catch(e){}plRender()};
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();fin()}else if(e.key==='Escape'){done=true;plRender()}});inp.addEventListener('blur',fin);box.replaceWith(inp);inp.focus()}
+(function(){if(typeof plRender!=='function')return;var _r=plRender;plRender=function(){var r=_r.apply(this,arguments);try{var R=el('plRows');if(!R)return r;var rows=R.querySelectorAll('.pmrow');
+    (PL.staff||[]).forEach(function(w,i){var row=rows[i];if(!row)return;var c=PL.rows[w.employment_no]||{};if(!c.site_id)return;var m=row.nextElementSibling;
+      if(!m||!m.classList.contains('pp-memo')){m=document.createElement('div');m.className='pp-memo tiny';m.style.cssText='margin:-4px 0 6px 84px;color:#1d4ed8;cursor:pointer';m.textContent='+ 업무 메모';row.insertAdjacentElement('afterend',m)}
+      else{m.style.cursor='pointer';m.title='누르면 고치기'}
+      m.onclick=function(){pl988Edit(w.employment_no,m)}});setTimeout(function(){try{plF980Apply()}catch(e){}},0)}catch(e){console.error(e)}return r}})();
 </script>
 </body>
 </html>
