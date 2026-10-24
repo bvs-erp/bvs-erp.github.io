@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.80</title>
+<title>BVS 데일리 v1.81</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3667,6 +3667,10 @@ function plF980Clr(){PLF980.q='';var i=el('plFq980');if(i)i.value='';plF980Apply
         +'<input id="plFq980" placeholder="이름 찾기" value="'+esc(PLF980.q||'')+'" oninput="PLF980.q=this.value;plF980Apply()" onkeydown="if(event.key===\'Escape\')plF980Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="plFx980" style="flex:none;display:none" onclick="plF980Clr()">✕</button>';
       R.parentNode.insertBefore(d,R)}
     if(!R.__f980){R.__f980=1;R.addEventListener('change',function(){setTimeout(plF980Apply,0)})}plF980Apply()}catch(e){console.error(e)}return r}})();
+
+/* v1.81 (안티그래비티 R1000 ① 10-24): 내일 배치 거를 때 숨긴 사람의 「업무: …」 줄도 함께 숨김(줄이 붙은 뒤에 다시 거름) */
+(function(){if(typeof plF980Apply!=='function')return;var _a=plF980Apply;plF980Apply=function(){var r=_a.apply(this,arguments);try{var R=el('plRows');if(R)[].forEach.call(R.querySelectorAll('.pmrow'),function(row){var m=row.nextElementSibling;if(m&&m.classList.contains('pp-memo'))m.style.display=row.style.display})}catch(e){}return r}})();
+(function(){if(typeof plRender!=='function')return;var _r=plRender;plRender=function(){var r=_r.apply(this,arguments);setTimeout(function(){try{plF980Apply()}catch(e){}},0);return r}})();
 </script>
 <script>
 /* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
