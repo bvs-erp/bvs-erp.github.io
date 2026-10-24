@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.88</title>
+<title>BVS 데일리 v1.89</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4406,6 +4406,25 @@ function pl988Edit(emp,box){var c=PL.rows[emp]||{};if(!c.site_id)return;var inp=
       if(!m||!m.classList.contains('pp-memo')){m=document.createElement('div');m.className='pp-memo tiny';m.style.cssText='margin:-4px 0 6px 84px;color:#1d4ed8;cursor:pointer';m.textContent='+ 업무 메모';row.insertAdjacentElement('afterend',m)}
       else{m.style.cursor='pointer';m.title='누르면 고치기'}
       m.onclick=function(){pl988Edit(w.employment_no,m)}});setTimeout(function(){try{plF980Apply()}catch(e){}},0)}catch(e){console.error(e)}return r}})();
+
+/* v1.89 (안티그래비티 R1011 ③ 10-24): 리드 월 달력 — 이름·현장 찾기(✕·Esc), 아래 날짜별 출근 인원·전체 출근일·M/D·OT 합계 줄(거른 사람 기준), 날짜·칸 누르면 그날 당일 관제 · 펌프실 종류 바꿔도 합계 바로 */
+var LC989={q:''};
+function lc989Apply(){var T=el('leadCalTable'),tb=el('leadCalTbody');if(!T||!tb)return;var q=String(LC989.q||'').trim().toLowerCase().replace(/\s+/g,''),rows=[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')});
+  var nd=(el('leadCalThead')&&el('leadCalThead').querySelectorAll('tr:first-child th').length||4)-4,cnt=[],sd=0,smd=0,sot=0,vis=0;for(var i=0;i<nd;i++)cnt.push(0);
+  rows.forEach(function(tr){var s=(tr.textContent+' '+[].map.call(tr.querySelectorAll('td[title]'),function(td){return td.title}).join(' ')).toLowerCase().replace(/\s+/g,''),ok=!q||s.indexOf(q)>=0;tr.style.display=ok?'':'none';if(!ok)return;vis++;
+    var td=tr.children;for(var i=0;i<nd;i++){var c=td[i+1];if(c&&(c.classList.contains('work')||c.classList.contains('ot')))cnt[i]++}
+    var su=tr.querySelectorAll('td.col-sum');if(su.length>=3){sd+=parseFloat(su[0].textContent)||0;smd+=parseFloat(su[1].textContent)||0;sot+=parseFloat(String(su[2].textContent).replace('+',''))||0}});
+  var tf=T.querySelector('tfoot.lc989');if(!rows.length){if(tf)tf.remove();return}if(!tf){tf=document.createElement('tfoot');tf.className='lc989';T.appendChild(tf)}
+  tf.innerHTML='<tr style="font-weight:700;background:var(--sf2)"><td class="col-name">합계'+(q?' ('+vis+'명)':'')+'</td>'+cnt.map(function(n){return '<td>'+(n||'')+'</td>'}).join('')+'<td class="col-sum">'+sd+'일</td><td class="col-sum">'+smd.toFixed(1)+'</td><td class="col-sum">'+(sot?'+'+sot+'h':'0')+'</td></tr>';
+  var x=el('lc989x');if(x)x.style.display=LC989.q?'':'none'}
+function lc989Clr(){LC989.q='';var i=el('lc989q');if(i)i.value='';lc989Apply()}
+function lc989Go(day){var ym=(LEAD_CAL&&LEAD_CAL.yearMonth)||today().slice(0,7),ds=ym+'-'+String(day).padStart(2,'0');try{switchLeadSeg('day')}catch(e){}leadOpen(ds)}
+(function(){if(typeof leadMonthCalendarOpen!=='function')return;var _o=leadMonthCalendarOpen;leadMonthCalendarOpen=async function(){var r=await _o.apply(this,arguments);try{var T=el('leadCalTable');if(!T)return r;
+    if(!el('lc989')){var w=T.closest('.cal-table-wrap')||T,d=document.createElement('div');d.id='lc989';d.className='tr-jf';d.style.margin='0 0 8px';
+      d.innerHTML='<input id="lc989q" placeholder="이름·현장 찾기" value="'+esc(LC989.q||'')+'" oninput="LC989.q=this.value;lc989Apply()" onkeydown="if(event.key===\'Escape\')lc989Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="lc989x" style="flex:none;display:none" onclick="lc989Clr()">✕</button>';w.parentNode.insertBefore(d,w)}
+    if(!T.__k989){T.__k989=1;T.addEventListener('click',function(e){var c=e.target.closest('th,td');if(!c||c.classList.contains('col-name')||c.classList.contains('col-sum'))return;if(c.closest('tfoot'))return;var row=c.parentNode,i=[].indexOf.call(row.children,c);var th=el('leadCalThead')&&el('leadCalThead').querySelector('tr:first-child').children[i];var day=th&&parseInt(th.textContent,10);if(day>0)lc989Go(day)})}
+    [].forEach.call((el('leadCalThead')||T).querySelectorAll('th'),function(h){if(/^\d+$/.test(h.textContent.trim())){h.style.cursor='pointer';h.title='누르면 그날 당일 관제'}});lc989Apply()}catch(e){console.error(e)}return r}})();
+document.addEventListener('change',function(e){if(e.target&&e.target.closest&&e.target.closest('#pmItems'))setTimeout(function(){try{pm988Sum()}catch(x){}},0)});
 </script>
 </body>
 </html>
