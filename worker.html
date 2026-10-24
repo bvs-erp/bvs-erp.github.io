@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.76</title>
+<title>BVS 데일리 v1.77</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4262,6 +4262,12 @@ function trJfSorted(){return ((TR.data&&TR.data.jobs)||[]).slice().sort(function
   var i=h.indexOf('<div class="card tr-job');return i>0?h.slice(0,i)+bar+h.slice(i):h+bar}})();
 (function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(TR.edit||!TR.data)return r;var J=trJfSorted(),C=document.querySelectorAll('#trBody .card.tr-job'),n=0;
     if(C.length!==J.length)return r;J.forEach(function(j,i){var ok=trJfMatch(j)||(TR.batch&&TR.batch.job_id===j.job_id);C[i].style.display=ok?'':'none';if(ok)n++});var t=el('trJn');if(t)t.textContent=n<J.length?n+'개 보임':''}catch(e){console.error(e)}return r}})();
+
+/* v1.77 (안티그래비티 R994 ③ 10-24): 재단표 호기·위치 찾기 — 치는 즉시 걸러짐(다시 그리지 않아 한글 입력 안 끊김), 「✕」 지우기 */
+function trJfFilter(){try{var J=trJfSorted(),C=document.querySelectorAll('#trBody .card.tr-job'),n=0;if(C.length!==J.length)return;J.forEach(function(j,i){var ok=trJfMatch(j)||(TR.batch&&TR.batch.job_id===j.job_id);C[i].style.display=ok?'':'none';if(ok)n++});var t=el('trJn');if(t)t.textContent=n<J.length?n+'개 보임':'';var x=el('trJx');if(x)x.style.display=TRJF.q?'':'none'}catch(e){console.error(e)}}
+function trJfClr(){TRJF.q='';var x=el('trJq');if(x)x.value='';trJfFilter()}
+(function(){if(typeof trJobsHtml!=='function')return;var _h=trJobsHtml;trJobsHtml=function(){var h=_h.apply(this,arguments);try{
+  h=h.replace(' onchange="trJfQ(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();trJfQ(this.value)}">',' oninput="TRJF.q=this.value;trJfFilter()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}else if(event.key===\'Escape\'){trJfClr()}"><button class="btn sm" id="trJx" style="flex:none;'+(TRJF.q?'':'display:none')+'" onclick="trJfClr()">✕</button>')}catch(e){}return h}})();
 </script>
 </body>
 </html>
