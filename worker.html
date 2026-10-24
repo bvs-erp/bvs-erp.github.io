@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.78</title>
+<title>BVS 데일리 v1.79</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4289,6 +4289,10 @@ function trCn978Clr(){TRC978.q='';var i=el('trCq');if(i)i.value='';trCn978Apply(
     +'<span class="chip'+(TRC978.mine?'':' on')+'" onclick="TRC978.mine=false;trPaint()">전체</span><span class="chip'+(TRC978.mine?' on':'')+'" onclick="TRC978.mine=true;trPaint()">적은 것만 ('+n+')</span></div>';
   var k=h.indexOf('</div></div>');return k>0?h.slice(0,k+12)+bar+h.slice(k+12):bar+h}catch(e){return h}}})();
 (function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(el('trCq'))trCn978Apply();if(document.querySelector('#trBody .tr-tbl'))trSt978Apply()}catch(e){console.error(e)}return r}})();
+
+/* v1.79 (안티그래비티 R998 ③ 10-24): 전수조사 수량을 적으면 위 「적은 것만 (N)」 숫자도 바로 바뀜 */
+(function(){if(typeof trCountHtml!=='function')return;var _h=trCountHtml;trCountHtml=function(){var h=_h.apply(this,arguments);try{h=h.replace(/적은 것만 \((\d+)\)/,'적은 것만 (<b id="trCnN978" style="font-weight:inherit">$1</b>)')}catch(e){}return h}})();
+(function(){if(typeof trCntQty!=='function')return;var _q=trCntQty;trCntQty=function(){var r=_q.apply(this,arguments);try{var x=el('trCnN978');if(x)x.textContent=trCn978N()}catch(e){}return r}})();
 </script>
 </body>
 </html>
