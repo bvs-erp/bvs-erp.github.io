@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.82</title>
+<title>BVS 데일리 v1.83</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3697,6 +3697,13 @@ function dp982Clr(){DP982.q='';var i=el('dpQ982');if(i)i.value='';dp982Apply()}
       b.innerHTML='<input id="dpQ982" placeholder="이름·현장 찾기" value="'+esc(DP982.q||'')+'" oninput="DP982.q=this.value;dp982Apply()" onkeydown="if(event.key===\'Escape\')dp982Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="dpQx982" style="flex:none;display:none" onclick="dp982Clr()">✕</button>';
       R2.parentNode.insertBefore(b,R2)}
     dp982Apply()}catch(e){console.error(e)}}})();
+
+/* v1.83 (안티그래비티 R1003 ③ 10-24): 펌프실 입력 — 마지막 한 줄의 ✕는 줄을 지우지 않고 값만 비움 · Bay에서 Enter → 수량 칸, 수량에서 Enter → 등록 */
+(function(){if(typeof pmRenderRows!=='function')return;var _r=pmRenderRows;pmRenderRows=function(){var r=_r.apply(this,arguments);try{var B=el('pmItems');if(!B)return r;var R=B.querySelectorAll('.pmrow');
+    [].forEach.call(R,function(row,i){var ins=row.querySelectorAll('input'),bay=ins[0],qty=ins[1],x=row.querySelector('span.x');
+      if(x&&PM.rows.length<=1){x.removeAttribute('onclick');x.title='값 비우기';x.onclick=function(){PM.rows[0]={bay:'',item_code:'CABLE',qty:''};pmRenderRows();var f=el('pmItems').querySelector('input');if(f)f.focus()}}
+      if(bay)bay.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();if(qty)qty.focus()}});
+      if(qty)qty.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();qty.blur();pmSubmit()}})})}catch(e){console.error(e)}return r}})();
 </script>
 <script>
 /* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
