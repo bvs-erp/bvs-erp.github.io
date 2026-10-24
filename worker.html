@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.90</title>
+<title>BVS 데일리 v1.91</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4439,6 +4439,33 @@ function lc990Ot(td){var m=/OT\s*([\d.]+)h/.exec(td.title||'');return m?+m[1]:0}
         var hit=work&&String((c.title||'')+c.textContent).toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;if(work&&!hit)c.classList.add('d990');if(hit){cnt[i]++;dd++;md+=lc990Md(c);ot+=lc990Ot(c)}}
       var su=tr.querySelectorAll('td.col-sum');if(su.length>=3){su[0].textContent=dd+'일';su[1].textContent=md.toFixed(1);su[2].textContent=ot>0?'+'+ot+'h':'0'}sd+=dd;smd+=md;sot+=ot});
     if(tf){tf.children[0].textContent='합계 ('+vis+'명 · 이 현장만)';for(var j=0;j<nd;j++)tf.children[j+1].textContent=cnt[j]||'';var k=tf.children;k[nd+1].textContent=sd+'일';k[nd+2].textContent=smd.toFixed(1);k[nd+3].textContent=sot?'+'+sot+'h':'0'}}catch(e){console.error(e)}return r}})();
+
+/* v1.91 (안티그래비티 R1013 ③·R1014 ③ 10-25): 전수조사 — 「지금 N」 누르면 수량 칸에 채움, 수량 Enter = 다음 품목, 목록 외 자재 칸 Enter = 추가, 아래 「저장 (N품목)」에 자투리만 고친 품목도 셈 · 월 달력 — 휴가·병가·교육·휴무로 찾아도 그 칸을 세고 강조, 팀원·출근·M/D·OT 머리글 정렬, 사람 칸 누르면 당일 관제에서 그 사람 줄로 */
+(function(){var c=document.createElement('style');c.textContent='.tr-kv .tiny.dim.k991{cursor:pointer;text-decoration:underline dotted}#leadCalTbody td.m991{outline:2px solid #2563eb;outline-offset:-2px}#leadCalThead th.s991{cursor:pointer}@keyframes k991{0%,100%{background:transparent}30%,70%{background:#fde68a}}.item.f991{animation:k991 1.2s 2}';document.head.appendChild(c)})();
+(function(){if(typeof trCntN!=='function')return;var _n=trCntN;trCntN=function(){try{return trCn978N()+((TR.cnt&&TR.cnt.add)||[]).length}catch(e){return _n.apply(this,arguments)}}})();
+(function(){if(typeof trCountHtml!=='function')return;var _h=trCountHtml;trCountHtml=function(){var h=_h.apply(this,arguments);return typeof h==='string'?h.split('<div class="tiny dim">지금 ').join('<div class="tiny dim k991" title="누르면 이 숫자를 수량 칸에">지금 '):h}})();
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('.tr-kv .tiny.dim.k991');if(!t)return;var kv=t.closest('.tr-kv'),inp=kv&&kv.querySelector('input');if(!inp)return;var v=parseFloat(String(t.textContent).replace(/^지금\s*/,'').replace(/,/g,''));if(isNaN(v))return;inp.value=String(v);inp.dispatchEvent(new Event('input',{bubbles:true}))});
+document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target,id=t&&t.id||'';
+  if(/^trNw_/.test(id)&&id!=='trNw_q'){e.preventDefault();trNewAdd();return}
+  if(t&&t.tagName==='INPUT'&&t.placeholder==='수량'&&t.closest('.tr-kv')&&!t.closest('.tr-done')){e.preventDefault();var L=[].filter.call(document.querySelectorAll('.tr-kv input[placeholder="수량"]'),function(x){return x.offsetParent}),i=L.indexOf(t);if(L[i+1]){L[i+1].focus();L[i+1].scrollIntoView({block:'center',behavior:'smooth'})}else t.blur()}},true);
+/* 월 달력 */
+(function(){if(typeof lc989Apply!=='function')return;var _a=lc989Apply;lc989Apply=function(){var r=_a.apply(this,arguments);try{var tb=el('leadCalTbody');if(!tb)return r;[].forEach.call(tb.querySelectorAll('td.m991'),function(c){c.classList.remove('m991')});
+    var q=String(LC989.q||'').trim().toLowerCase().replace(/\s+/g,'');if(!q)return r;var rows=[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')});
+    if(rows.some(function(tr){return String(tr.querySelector('td.col-name').textContent).toLowerCase().replace(/\s+/g,'').indexOf(q)>=0}))return r;
+    var T=el('leadCalTable'),tf=T&&T.querySelector('tfoot.lc989 tr'),nd=tf?tf.children.length-4:0,add=0;
+    rows.forEach(function(tr){if(tr.style.display==='none')return;var dd=0;for(var i=0;i<nd;i++){var c=tr.children[i+1];if(!c||c.classList.contains('work')||c.classList.contains('ot')||c.classList.contains('empty-day'))continue;
+        if(String((c.title||'')+c.textContent).toLowerCase().replace(/\s+/g,'').indexOf(q)>=0){c.classList.add('m991');dd++;if(tf){var f=tf.children[i+1];f.textContent=(parseInt(f.textContent,10)||0)+1}}}
+      if(dd){var su=tr.querySelectorAll('td.col-sum');if(su[0])su[0].textContent=((parseInt(su[0].textContent,10)||0)+dd)+'일';add+=dd}});
+    if(tf&&add){var k=tf.children[nd+1];k.textContent=((parseInt(k.textContent,10)||0)+add)+'일'}}catch(e){console.error(e)}return r}})();
+var LC991={k:-1,dir:1,name:null};
+function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC991.dir=-LC991.dir;else{LC991.k=i;LC991.dir=i===0?1:-1}var rows=[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')});
+  rows.sort(function(a,b){var x=a.children[i],y=b.children[i];if(i===0)return String(x.textContent).localeCompare(String(y.textContent),'ko')*LC991.dir;return ((parseFloat(String(x.textContent).replace('+',''))||0)-(parseFloat(String(y.textContent).replace('+',''))||0))*LC991.dir});rows.forEach(function(tr){tb.appendChild(tr)});
+  [].forEach.call(el('leadCalThead').querySelectorAll('th.s991'),function(h){h.textContent=h.getAttribute('data-t991')+(+h.getAttribute('data-i991')===LC991.k?(LC991.dir>0?' ▲':' ▼'):'')})}
+(function(){if(typeof leadMonthCalendarOpen!=='function')return;var _o=leadMonthCalendarOpen;leadMonthCalendarOpen=async function(){LC991.k=-1;var r=await _o.apply(this,arguments);try{var hd=el('leadCalThead'),T=el('leadCalTable');if(!hd||!T)return r;var tr=hd.querySelector('tr');if(!tr)return r;
+    [].forEach.call(tr.children,function(h,i){if(!(h.classList.contains('col-name')||h.classList.contains('col-sum')))return;h.classList.add('s991');h.setAttribute('data-t991',h.textContent);h.setAttribute('data-i991',i);h.title='누르면 정렬';h.onclick=function(e){e.stopPropagation();lc991Sort(i)}});
+    if(!T.__k991){T.__k991=1;T.addEventListener('click',function(e){var c=e.target.closest('td');if(!c||c.closest('tfoot'))return;var nm=c.parentNode.querySelector('td.col-name');LC991.name=nm?String(nm.textContent).trim():null},true)}}catch(e){console.error(e)}return r}})();
+(function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){var nm=LC991.name;LC991.name=null;var r=await _o.apply(this,arguments);if(nm){try{var it=[].filter.call(document.querySelectorAll('#leadWorkersRows .item, #leadPendingRows .item'),function(x){return x.offsetParent&&String(x.textContent).indexOf(nm)>=0})[0];
+    if(it){it.scrollIntoView({block:'center',behavior:'smooth'});it.classList.remove('f991');void it.offsetWidth;it.classList.add('f991');setTimeout(function(){it.classList.remove('f991')},2600)}}catch(e){}}return r}})();
 </script>
 </body>
 </html>
