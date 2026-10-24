@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.83</title>
+<title>BVS 데일리 v1.84</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -3704,6 +3704,18 @@ function dp982Clr(){DP982.q='';var i=el('dpQ982');if(i)i.value='';dp982Apply()}
       if(x&&PM.rows.length<=1){x.removeAttribute('onclick');x.title='값 비우기';x.onclick=function(){PM.rows[0]={bay:'',item_code:'CABLE',qty:''};pmRenderRows();var f=el('pmItems').querySelector('input');if(f)f.focus()}}
       if(bay)bay.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();if(qty)qty.focus()}});
       if(qty)qty.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();qty.blur();pmSubmit()}})})}catch(e){console.error(e)}return r}})();
+
+/* v1.84 (안티그래비티 R1004 ③ 10-24): 내 기록 달력 위 「현장·업무 찾기」 — 맞는 날만 진하게, 나머지 흐리게 · 맞는 날 수(정규직)·공수(용역) 합계 · ✕·Esc */
+(function(){var c=document.createElement('style');c.textContent='#list .dy.d984{opacity:.25}#list .dy.m984{outline:2px solid #1d4ed8;outline-offset:-2px}.l984{display:flex;gap:6px;align-items:center;margin:0 0 8px}.l984 input{flex:1;min-width:120px;padding:6px 8px;border:1px solid var(--ln,#cbd5e1);border-radius:8px;font-size:13px}';document.head.appendChild(c)})();
+var L984={q:''};
+function l984Apply(){var L=el('list');if(!L)return;var q=String(L984.q||'').trim().toLowerCase().replace(/\s+/g,''),ym=LIST.ym||today().slice(0,7),reg=isRegularWorker(),hit={},md=0,n=0;
+  if(q)(D.labor||[]).forEach(function(r){if(r.status==='void'||String(r.work_date).slice(0,7)!==ym)return;var s=(String(r.site_name||'')+' '+String(listDesc(r.work_desc)||'')).toLowerCase().replace(/\s+/g,'');if(s.indexOf(q)<0)return;var d=String(r.work_date).slice(0,10);if(!hit[d]){hit[d]=1;n++}md+=+r.work_md||0});
+  [].forEach.call(L.querySelectorAll('.kcal .dy:not(.pad)'),function(x){var k=x.querySelector('.n'),d=k?ym+'-'+String(+k.textContent).padStart(2,'0'):'';x.classList.toggle('d984',!!q&&!hit[d]);x.classList.toggle('m984',!!q&&!!hit[d])});
+  var s=el('l984n');if(s)s.textContent=q?(n+'일'+(reg?'':' · '+md.toFixed(1)+'공수')):'';var x=el('l984x');if(x)x.style.display=q?'':'none'}
+function l984Clr(){L984.q='';var i=el('l984q');if(i)i.value='';l984Apply()}
+(function(){if(typeof renderList!=='function')return;var _r=renderList;renderList=function(){var r=_r.apply(this,arguments);try{var L=el('list');if(!L)return r;if(!el('l984')){var d=document.createElement('div');d.id='l984';d.className='l984';
+      d.innerHTML='<input id="l984q" placeholder="현장·업무 찾기 (예: 5EKF, 셋업)" value="'+esc(L984.q||'')+'" oninput="L984.q=this.value;l984Apply()" onkeydown="if(event.key===\'Escape\')l984Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="l984x" style="flex:none;display:none" onclick="l984Clr()">✕</button><span class="tiny dim" id="l984n"></span>';
+      L.parentNode.insertBefore(d,L)}l984Apply()}catch(e){console.error(e)}return r}})();
 </script>
 <script>
 /* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
