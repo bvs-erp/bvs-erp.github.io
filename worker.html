@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.89</title>
+<title>BVS 데일리 v1.90</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4425,6 +4425,20 @@ function lc989Go(day){var ym=(LEAD_CAL&&LEAD_CAL.yearMonth)||today().slice(0,7),
     if(!T.__k989){T.__k989=1;T.addEventListener('click',function(e){var c=e.target.closest('th,td');if(!c||c.classList.contains('col-name')||c.classList.contains('col-sum'))return;if(c.closest('tfoot'))return;var row=c.parentNode,i=[].indexOf.call(row.children,c);var th=el('leadCalThead')&&el('leadCalThead').querySelector('tr:first-child').children[i];var day=th&&parseInt(th.textContent,10);if(day>0)lc989Go(day)})}
     [].forEach.call((el('leadCalThead')||T).querySelectorAll('th'),function(h){if(/^\d+$/.test(h.textContent.trim())){h.style.cursor='pointer';h.title='누르면 그날 당일 관제'}});lc989Apply()}catch(e){console.error(e)}return r}})();
 document.addEventListener('change',function(e){if(e.target&&e.target.closest&&e.target.closest('#pmItems'))setTimeout(function(){try{pm988Sum()}catch(x){}},0)});
+
+/* v1.90 (안티그래비티 R1012 ③ 10-25): 리드 월 달력 — 현장·업무로 찾으면(이름이 아니면) 그 현장 칸만 또렷하게, 날짜별 인원·사람별 출근·M/D·OT·합계도 그 현장 칸만 셈(지우면 원래대로) */
+(function(){var c=document.createElement('style');c.textContent='#leadCalTbody td.d990{opacity:.25}';document.head.appendChild(c)})();
+function lc990Md(td){var t=String(td.textContent||'').trim();return t==='½'?0.5:(parseFloat(t)||0)}
+function lc990Ot(td){var m=/OT\s*([\d.]+)h/.exec(td.title||'');return m?+m[1]:0}
+(function(){if(typeof lc989Apply!=='function')return;var _a=lc989Apply;lc989Apply=function(){var tb=el('leadCalTbody');var rows=tb?[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')}):[];
+  rows.forEach(function(tr){[].forEach.call(tr.querySelectorAll('td.col-sum'),function(c){if(c.hasAttribute('data-o990'))c.textContent=c.getAttribute('data-o990');else c.setAttribute('data-o990',c.textContent)});[].forEach.call(tr.querySelectorAll('td.d990'),function(c){c.classList.remove('d990')})});
+  var r=_a.apply(this,arguments);try{var q=String(LC989.q||'').trim().toLowerCase().replace(/\s+/g,'');if(!q||!rows.length)return r;
+    var byName=rows.some(function(tr){return String(tr.querySelector('td.col-name').textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0});if(byName)return r;
+    var T=el('leadCalTable'),tf=T&&T.querySelector('tfoot.lc989 tr'),nd=tf?tf.children.length-4:0,cnt=[],sd=0,smd=0,sot=0,vis=0;for(var i=0;i<nd;i++)cnt.push(0);
+    rows.forEach(function(tr){if(tr.style.display==='none')return;vis++;var td=tr.children,dd=0,md=0,ot=0;for(var i=0;i<nd;i++){var c=td[i+1];if(!c)continue;var work=c.classList.contains('work')||c.classList.contains('ot');
+        var hit=work&&String((c.title||'')+c.textContent).toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;if(work&&!hit)c.classList.add('d990');if(hit){cnt[i]++;dd++;md+=lc990Md(c);ot+=lc990Ot(c)}}
+      var su=tr.querySelectorAll('td.col-sum');if(su.length>=3){su[0].textContent=dd+'일';su[1].textContent=md.toFixed(1);su[2].textContent=ot>0?'+'+ot+'h':'0'}sd+=dd;smd+=md;sot+=ot});
+    if(tf){tf.children[0].textContent='합계 ('+vis+'명 · 이 현장만)';for(var j=0;j<nd;j++)tf.children[j+1].textContent=cnt[j]||'';var k=tf.children;k[nd+1].textContent=sd+'일';k[nd+2].textContent=smd.toFixed(1);k[nd+3].textContent=sot?'+'+sot+'h':'0'}}catch(e){console.error(e)}return r}})();
 </script>
 </body>
 </html>
