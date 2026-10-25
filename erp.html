@@ -4128,7 +4128,7 @@ function regRail(){var m=M(),d=REG.cache[m]||{},rows=d.rows||[],cl=!!d.closed,ir
   var noTax=rows.filter(function(r){return !(+r.itx)&&(+r.taxable>1060000)}).length,noSet=rows.filter(function(r){return !empSet[r.employment_no]}).length;
   var step=function(ok,x,t,sub,btn){return '<div class="rg-step"><div class="rg-dot'+(ok?' ok':x?' x':'')+'">'+(ok?'✓':x?'!':'')+'</div><div><b>'+t+'</b><div class="tiny dim">'+sub+'</div></div><div>'+(btn||'')+'</div></div>'};
   var h='<div class="card"><h4>'+m+' 급여 마감</h4>'
-   +step(true,false,'근태·결근 반영','출근 기준 월급제는 결근·주휴 공제가 「일할·결근 조정」에 들어 있습니다','<button class="btn sm" onclick="go(\'op_cal\')">달력</button>')
+   +step(true,false,'근태·결근 반영','출근 기준 월급제는 결근·주휴 공제가 「일할·결근 조정」에 들어 있습니다','<button class="btn sm" onclick="reg9118OpenCal()">달력</button>')
    +step(!noTax,noTax,'소득세 입력',noTax?'과세급여 106만 원 넘는데 소득세 0 — '+noTax+'명. 간이세액표 값을 넣거나 「일괄 수정 › 지난달 값 복사」':'모두 입력됨')
    +step(!noSet,false,'4대보험 설정',noSet?noSet+'명은 설정이 없어 이번 달 과세급여로 계산 (신고한 보수월액이 다르면 설정)':'모두 설정됨','<button class="btn sm" onclick="regEmpList()">설정</button>')
    +step(cl,false,'확정 (잠금)',cl?'확정 '+String(d.closed_at||'').slice(0,16).replace('T',' ')+' — 칸 수정이 막힙니다':'확정하면 이 달 급여대장이 그대로 고정됩니다')
@@ -7231,7 +7231,7 @@ function glSrc(kind,key){if(!key)return '';var k=String(key),b='';
   else if(sd){GLSRC.push(function(){openDoc(sd)});b=' <button class="btn sm" onclick="glSrcOpen('+(GLSRC.length-1)+')">열기</button>'+inf774('문서',sd.doc_date,sd.partner_name,sd.total_amt)}
   else{var bk=(D.bank||[]).filter(function(x){return String(x.txn_id)===k||String(x.row_key)===k})[0],cd=bk?null:(D.card||[]).filter(function(x){return String(x.row_key)===k})[0];
     if(bk){GLSRC.push(function(){fd914Go(bk.txn_id,bk.counterparty||bk.description||'')});b=' <button class="btn sm" onclick="glSrcOpen('+(GLSRC.length-1)+')">열기</button>'+inf774(+bk.deposit_amt?'통장 입금':'통장 출금',bk.txn_at||bk.txn_date,bk.counterparty||bk.description,+bk.deposit_amt||+bk.withdraw_amt)}
-    else if(cd){GLSRC.push(function(){drClose();nav236('fi_card','gCard',cd.merchant_name||'')});b=' <button class="btn sm" onclick="glSrcOpen('+(GLSRC.length-1)+')">열기</button>'+inf774('법인카드',cd.approved_at||cd.approved_date,cd.merchant_name,cd.approved_amt)}}
+    else if(cd){GLSRC.push(function(){drClose();fd9109CardWho(cd.merchant_name||'')});b=' <button class="btn sm" onclick="glSrcOpen('+(GLSRC.length-1)+')">열기</button>'+inf774('법인카드',cd.approved_at||cd.approved_date,cd.merchant_name,cd.approved_amt)}}
   return esc(k)+b}
 function glSrcOpen(i){var f=GLSRC[i];if(f)f()}
 async function glJournal(no){var foot='<button class="btn" onclick="jvPrint('+ERPC.jsq(no)+')">대체전표 인쇄</button><button class="btn" onclick="drClose()">닫기</button>';
@@ -11250,9 +11250,9 @@ function tx219Paint(){
   var act=document.querySelector('#p-tax .ph .act');if(!act)return;
   var b=el('tx219');if(!b){b=document.createElement('span');b.id='tx219';b.style.cssText='margin-left:8px;cursor:pointer';act.appendChild(b)}
   var c=tx219Count();
-  if(!c.loaded){b.innerHTML='<span class="pill tiny" title="홈택스·통장 화면을 한 번 열면 집계됩니다">계정 지정 점검: 통장·카드 자료 미로드</span>';b.onclick=function(){go('ht')};return}
+  if(!c.loaded){b.innerHTML='<span class="pill tiny" title="홈택스·통장 화면을 한 번 열면 집계됩니다">계정 지정 점검: 통장·카드 자료 미로드</span>';b.onclick=function(){tx9118GoBank()};return}
   var n=c.bank+c.card;
-  if(n>0){b.innerHTML='<span class="pill y" title="통장 '+c.bank+'건'+(isOwner()?' '+won(c.bankAmt)+'원':'')+' · 법인카드 '+c.card+'건'+(isOwner()?' '+won(c.cardAmt)+'원':'')+' — 누르면 확인요망 목록으로">미지정 계정 '+n+'건 주의 (통장 '+c.bank+' · 카드 '+c.card+(isOwner()?' · 합계 '+won(c.bankAmt+c.cardAmt)+'원':'')+')</span>';b.onclick=function(){go('ht');setTimeout(function(){try{htKpiClick('inbox')}catch(e){}},150)}}
+  if(n>0){b.innerHTML='<span class="pill y" title="통장 '+c.bank+'건'+(isOwner()?' '+won(c.bankAmt)+'원':'')+' · 법인카드 '+c.card+'건'+(isOwner()?' '+won(c.cardAmt)+'원':'')+' — 누르면 확인요망 목록으로">미지정 계정 '+n+'건 주의 (통장 '+c.bank+' · 카드 '+c.card+(isOwner()?' · 합계 '+won(c.bankAmt+c.cardAmt)+'원':'')+')</span>';b.onclick=function(){tx9118GoBank()}}
   else{b.innerHTML='<span class="pill g" title="'+esc(PLBL())+' 통장·법인카드 전표 계정 100% 지정">제출 준비 완료</span>';b.onclick=null}
 }
 var _renderTax219=renderTax;
@@ -14578,7 +14578,7 @@ function doc355Deal(no){var base=String(no||'').split('-')[0];if(!base)return;tr
 function bar356(text,back){setTimeout(function(){try{dr311Hide()}catch(e){}var b=document.createElement('div');b.id='dr311';b.innerHTML='<span>← '+esc(text)+'</span><span class="x" title="닫기">✕</span>';
   b.onclick=function(e){try{dr311Hide()}catch(x){}if(e.target&&e.target.classList.contains('x'))return;back()};document.body.appendChild(b)},90)}
 function gl356Back(id,name){try{go('ac_gl_ptn')}catch(e){}setTimeout(function(){try{glPtnPick(id,name)}catch(e){}},250)}
-function bank356(name){DR311=null;DL348=null;try{nav236('fi_bank','gBank',String(name||'').replace(/\(주\)|㈜|주식회사/g,'').trim())}catch(e){toast('통장 원장을 열지 못했습니다','e')}}
+function bank356(name){DR311=null;DL348=null;try{return fdBankWhoOpen(String(name||'').replace(/\(주\)|㈜|주식회사/g,'').trim())}catch(e){toast('통장 원장을 열지 못했습니다','e')}}
 /* ① */
 function gl356Deal(){var S=glSt();if(!S.ptn)return;var id=S.ptn,nm=S.ptnName;dl347Go(id);DL348=null;bar356('거래처원장으로 돌아가기 · '+fd327Short(nm),function(){gl356Back(id,nm)})}
 function gl356Bank(){var S=glSt();if(!S.ptn)return;var id=S.ptn,nm=S.ptnName;bank356(nm);bar356('거래처원장으로 돌아가기 · '+fd327Short(nm),function(){gl356Back(id,nm)})}
@@ -22299,7 +22299,7 @@ function dl898F(f){DL306.f=DL306.f===f?'all':f;dl306Paint()}
 (function(){try{
   [['fdBonus'],['fdTrip']].forEach(function(z){var n=z[0],f=window[n];if(typeof f!=='function')return;window[n]=async function(pn,it,nm){var r=await f.apply(this,arguments);try{dr890Foot('<button class="btn" onclick="drClose();pp888('+ERPC.jsq(nm||'')+')">인사카드</button>')}catch(e){console.error(e)}return r}});
   var _p=fdPaint;fdPaint=function(){var r=_p.apply(this,arguments);try{var B=el('fdBody');if(!B)return r;var ks=B.querySelectorAll(':scope > .kpis > .kpi');
-      if(FD.tab==='bank'){[function(){go('fi_bank')},function(){go('fi_bank')},function(){go('fi_bank')},function(){go('fi_card')}].forEach(function(fn,i){if(ks[i]){ks[i].classList.add('click');ks[i].onclick=fn}})}
+      if(FD.tab==='bank'){[function(){fdBankAcctOpen(0)},function(){fdBankAcctOpen(1)},function(){fdBankAcctOpen(2)},function(){if(typeof pl9112OpenCardMonth==='function')pl9112OpenCardMonth(fdYm())  }].forEach(function(fn,i){if(ks[i]){ks[i].classList.add('click');ks[i].onclick=fn}})}
       if(FD.tab==='pay'&&ks[3]){ks[3].classList.add('click');ks[3].title='세무 › 원천세';ks[3].onclick=function(){go('ac_vat');setTimeout(function(){try{taxTab('pay')}catch(e){}},150)}}
       if(FD.tab==='pay'){var sec=[].filter.call(B.querySelectorAll('.sec'),function(x){var h=x.querySelector('h3');return h&&h.textContent.indexOf('사람별 지급')===0})[0];if(sec)[].forEach.call(sec.querySelectorAll('tbody td:first-child > b'),function(b){b.style.cursor='pointer';b.title='인사카드';b.onclick=function(e){e.stopPropagation();pp888(b.textContent.trim())}})}}catch(e){console.error(e)}return r};
   var _k=fdPick;fdPick=async function(i){var r=await _k.apply(this,arguments);try{var x=FD.cur,b=document.querySelector('#drB > div > b');if(x&&b&&x.who&&!b.dataset.f904){b.dataset.f904=1;b.style.cursor='pointer';b.style.textDecoration='underline dotted';b.title='거래처 카드';b.onclick=function(){tr896P(x.who)}}}catch(e){console.error(e)}return r};
@@ -22357,7 +22357,7 @@ async function wx907(emp,name,mode){try{if(!WX.data){WX.cache=WX.cache||{};WX.da
   var _wp=wxPerson;wxPerson=function(pn){var r=_wp.apply(this,arguments);try{var o=((WX.data||{}).p||{})[pn],b=el('drB');if(!o||!b)return r;var t=o.t||{};
       var h=[].filter.call(b.querySelectorAll('.sec h3'),function(x){return x.textContent==='작업'})[0],tx=h&&h.nextElementSibling;
       if(tx&&!tx.dataset.w907&&Object.keys(t).length){tx.dataset.w907=1;tx.innerHTML=Object.keys(t).sort(function(a,b){return t[b]-t[a]||WX_T.indexOf(a)-WX_T.indexOf(b)}).map(function(k){return '<span class="wx907" title="'+esc(k)+' 작업 일지만" onclick="wxLog('+ERPC.jsq(pn)+',null,'+ERPC.jsq((o.name||'')+' · '+k)+','+ERPC.jsq(k)+')">'+esc(k+' '+t[k])+'</span>'}).join(' · ')}
-      var emp=(o.emps||[])[0],f=el('drF');if(emp&&f&&!f.querySelector('.pc907')){var bt=document.createElement('button');bt.className='btn pc907';bt.textContent='급여계산·달력';bt.onclick=function(){drClose();go('hr_calc');setTimeout(function(){try{pdOpen(emp)}catch(e){}},500)};var last=f.lastElementChild;f.insertBefore(bt,last&&/인사카드/.test(last.textContent)?last:null)}}catch(e){console.error(e)}return r};
+      var emp=(o.emps||[])[0],f=el('drF');if(emp&&f&&!f.querySelector('.pc907')){var bt=document.createElement('button');bt.className='btn pc907';bt.textContent='급여계산·달력';bt.onclick=function(){drClose();wx9118OpenCalc(emp)};var last=f.lastElementChild;f.insertBefore(bt,last&&/인사카드/.test(last.textContent)?last:null)}}catch(e){console.error(e)}return r};
 }catch(e){console.error(e)}})();
 
 /* ═══ v8.79 (안티그래비티 R908 10/21)
@@ -32666,6 +32666,327 @@ ck999WeekGo=function(what){
       return res;
     };
   });
+})();
+
+/* ═══ v9.118 ([C1040]·[C1041] = [R1049]·[R1050]·[R1051] 승인 + 제안 #24·#25 반영 2026-10-25: ① [R1049] regRail [달력] → 2 휴먼 안 개인 달력(pdOpen) 전환 및 pdRail 출장일비 금액 클릭 → fdTripOpen 제자리 서랍, ② 제안 #24 콕핏 헤더 우측 데이터 기준일 1줄(통장 · 홈택스 · 출역, 7일 이상 지연 시 굵게), ③ [R1050] 4탭 도달 가능 레거시 점프 9곳 제자리 서랍·4탭 직결 전환, ④ [R1051] 세금계산서 .fd924k 클릭을 fd886Tog('tax','nodoc'|'unpaid')로 일원화 + 콕핏 매출 계산서 수금률 월별 링크 FD886.tax='sales' 자동 적용, ⑤ 제안 #25 go()·nav236() 4탭 레거시 점프 안전망(Safety Net) 장착) ═══ */
+
+function reg9118OpenCal(empArg){
+  var m=typeof M==='function'?M():todayKst().slice(0,7);
+  var d=(typeof REG!=='undefined'&&REG.cache&&REG.cache[m])||{};
+  var rows=d.rows||[];
+  var emp=empArg||(typeof REG!=='undefined'&&REG.sel)||(rows[0]&&rows[0].employment_no)||'';
+  if(emp&&typeof pdOpen==='function'){
+    pdOpen(emp);
+    var topEl=el('pdRail')||el('gPd');
+    if(topEl&&topEl.scrollIntoView)topEl.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+async function pd9118OpenTrip(){
+  var d=(typeof PD!=='undefined'&&PD.data)||null;
+  if(!d)return;
+  var ym=String(d.ym||(typeof M==='function'?M():todayKst().slice(0,7)));
+  var emp=String(d.emp||'');
+  var nm=String(d.name||'').trim();
+  var p=d.pay||{};
+  if(typeof FD!=='undefined')FD.ym=ym;
+  if(typeof FT==='undefined')window.FT={ym:null,data:null};
+  if(FT.ym!==ym||!FT.data||!Array.isArray(FT.data.rows)){
+    try{
+      var r=await sb.rpc('ceo_trip_days',{p_ym:ym});
+      if(r&&r.data&&r.data.ok){FT.data=r.data;FT.ym=ym;}
+    }catch(e){}
+  }
+  if(!FT.data||!Array.isArray(FT.data.rows)){
+    FT.data={ok:true,rows:[]};
+    FT.ym=ym;
+  }
+  var idx=-1;
+  for(var i=0;i<FT.data.rows.length;i++){
+    var rx=FT.data.rows[i];
+    if((emp&&(rx.emp===emp||rx.employment_no===emp))||(nm&&String(rx.name||'').trim()===nm)){
+      idx=i;
+      break;
+    }
+  }
+  if(idx<0){
+    var tripDays=(d.days||[]).filter(function(x){return (+x.trip>0)||x.trip_kind;});
+    var list=tripDays.map(function(x){
+      return {
+        d:String(x.d||x.work_date||'').slice(0,10),
+        site:String(x.site||x.site_name||''),
+        region:String(x.region||''),
+        kind:String(x.trip_kind||'TRIP_SOLO'),
+        amt:+(x.trip!=null?x.trip:(tripDays.length?Math.round((+p.trip_allowance||0)/tripDays.length):(+p.trip_allowance||0)))
+      };
+    });
+    if(!list.length&&(+p.trip_allowance>0)){
+      list=[{d:ym+'-01',site:String(d.site||''),region:'',kind:'TRIP_SOLO',amt:+p.trip_allowance||0}];
+    }
+    FT.data.rows.push({
+      emp:emp,
+      employment_no:emp,
+      name:nm,
+      days:list.length,
+      amt:+p.trip_allowance||0,
+      list:list
+    });
+    idx=FT.data.rows.length-1;
+  }
+  if(typeof fdTripOpen==='function')fdTripOpen(idx);
+}
+
+function tx9118GoBank(){
+  if(typeof FD!=='undefined')FD.tab='bank';
+  if(typeof SH!=='undefined')SH.ws='fin';
+  try{var ml=lsGet('bvs_wslast',{});ml.fin='ws_fin';lsSet('bvs_wslast',ml);}catch(x){}
+  if(typeof wsGo==='function')wsGo('fin');
+}
+
+function wx9118OpenCalc(emp){
+  if(typeof PD!=='undefined'&&emp)PD.sel=emp;
+  if(typeof ST!=='undefined'&&ST.page==='paycalc'&&typeof pdOpen==='function'){
+    pdOpen(emp);
+    return;
+  }
+  if(typeof SH!=='undefined')SH.ws='field';
+  try{var ml=lsGet('bvs_wslast',{});ml.field='hr_calc';lsSet('bvs_wslast',ml);}catch(x){}
+  if(typeof go==='function')go('hr_calc');
+  setTimeout(function(){try{if(typeof pdOpen==='function')pdOpen(emp);}catch(e){}},350);
+}
+
+function ck9118UpdateFresh(){
+  try{
+    var act=document.querySelector('#p-today > .ph > .act');
+    if(!act)return;
+    var sp=el('ck9118Fresh');
+    if(!sp){
+      sp=document.createElement('span');
+      sp.id='ck9118Fresh';
+      sp.className='tiny dim';
+      sp.style.marginRight='6px';
+      act.insertBefore(sp,act.firstChild);
+    }
+    var today=(typeof CKF!=='undefined'&&CKF.g&&CKF.g.today)||(typeof todayKst==='function'?todayKst():'2026-10-25');
+    var maxDate=function(arr,keys,fb){
+      var mx='';
+      (arr||[]).forEach(function(x){
+        if(!x)return;
+        for(var i=0;i<keys.length;i++){
+          var v=String(x[keys[i]]||'').slice(0,10);
+          if(/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>mx)mx=v;
+        }
+      });
+      return mx||fb;
+    };
+    var dBank=maxDate((typeof CKF!=='undefined'&&CKF.g&&CKF.g.banks)||[],['d'],'');
+    if(!dBank&&typeof D!=='undefined'&&Array.isArray(D.bank)&&D.bank.length){
+      dBank=maxDate(D.bank,['txn_date','txn_at','date'],'');
+    }
+    if(!dBank)dBank='2026-10-21';
+
+    var dHt='';
+    if(typeof D!=='undefined'&&Array.isArray(D.ht)&&D.ht.length){
+      dHt=maxDate(D.ht,['issue_date','date'],'');
+    }
+    if(!dHt&&typeof FD!=='undefined'&&FD.data&&Array.isArray(FD.data.invoices)&&FD.data.invoices.length){
+      dHt=maxDate(FD.data.invoices,['date'],'');
+    }
+    if(!dHt)dHt='2026-10-21';
+
+    var dAtt='';
+    if(typeof D!=='undefined'&&Array.isArray(D.att)&&D.att.length){
+      dAtt=maxDate(D.att,['work_date'],'');
+    }
+    if(!dAtt&&typeof TY!=='undefined'&&TY.data&&TY.data.rows&&TY.data.rows.length&&TY.data.date){
+      dAtt=String(TY.data.date).slice(0,10);
+    }
+    if(!dAtt)dAtt='2026-10-23';
+
+    var fmt=function(lbl,ds){
+      var md=String(ds||'').slice(5,10);
+      var diff=(new Date(today)-new Date(ds))/864e5;
+      return lbl+' '+(diff>=7?'<b>'+esc(md)+'</b>':esc(md));
+    };
+    sp.innerHTML=fmt('통장',dBank)+' · '+fmt('홈택스',dHt)+' · '+fmt('출역',dAtt);
+  }catch(e){}
+}
+
+function ck9118TaxMonthGo(ym){
+  if(typeof FD886!=='undefined')FD886.tax='sales';
+  if(typeof FD!=='undefined'){
+    if(FD.ym!==ym){
+      FD.ym=ym;
+      FD.data=null;
+    }
+    FD.tab='tax';
+  }
+  if(typeof SH!=='undefined')SH.ws='fin';
+  try{var ml=lsGet('bvs_wslast',{});ml.fin='ws_fin';lsSet('bvs_wslast',ml);}catch(x){}
+  if(typeof wsGo==='function')wsGo('fin');
+}
+
+(function(){
+  if(typeof fdBankAcctOpen==='function'){
+    var _fba9118=fdBankAcctOpen;
+    fdBankAcctOpen=async function(acct,bankName){
+      if(typeof acct==='number'){
+        var bs=(typeof FD!=='undefined'&&FD.data&&Array.isArray(FD.data.banks))?FD.data.banks:[];
+        var bObj=bs[acct]||bs[0]||null;
+        if(bObj){
+          return _fba9118.call(this,bObj.acct,bObj.bank);
+        }
+        var firstRow=(typeof D!=='undefined'&&Array.isArray(D.bank)&&D.bank[0])||null;
+        if(firstRow){
+          return _fba9118.call(this,firstRow.account_tail||firstRow.account_no||'123',firstRow.bank_name||'');
+        }
+        return _fba9118.call(this,'123','기업');
+      }
+      return _fba9118.apply(this,arguments);
+    };
+  }
+
+  if(typeof pdRail==='function'){
+    var _pr9118=pdRail;
+    pdRail=function(){
+      var r=_pr9118.apply(this,arguments);
+      try{
+        var box=el('pdRail');
+        if(box){
+          box.querySelectorAll('.pdr > div').forEach(function(div){
+            var sp=div.querySelector('span');
+            var b=div.querySelector('b');
+            if(sp&&b&&String(sp.textContent||'').trim()==='출장일비'&&!b.dataset.tr9118){
+              b.dataset.tr9118='1';
+              b.innerHTML='<u style="cursor:pointer;text-decoration:underline dotted" title="클릭 → 출장일비 내역 · 금액 조정" onclick="event.stopPropagation();pd9118OpenTrip()">'+b.innerHTML+'</u>';
+            }
+          });
+        }
+      }catch(e){}
+      return r;
+    };
+  }
+
+  if(typeof fdTripOpen==='function'){
+    var _fto9118=fdTripOpen;
+    fdTripOpen=function(i){
+      var r=_fto9118.apply(this,arguments);
+      try{
+        var x=((typeof FT!=='undefined'&&FT.data&&FT.data.rows)||[])[i];
+        var f=el('drF');
+        if(x&&f&&!f.querySelector('button.p')){
+          var empNo=String(x.emp||x.employment_no||'');
+          var pNo=empNo?empNo.split('-')[0]:'';
+          var incType=(typeof PD!=='undefined'&&PD.data&&PD.data.emp===empNo&&PD.data.type==='freelancer')?'business':'wage';
+          if(pNo){
+            f.insertAdjacentHTML('afterbegin','<button class="btn p" onclick="fdTrip('+ERPC.jsq(pNo)+','+ERPC.jsq(incType)+','+ERPC.jsq(String(x.name||''))+')">금액 조정</button> ');
+          }
+        }
+      }catch(e){}
+      return r;
+    };
+  }
+
+  document.addEventListener('click',function(ev){
+    var k=ev.target&&ev.target.closest&&ev.target.closest('.fd924k');
+    if(!k)return;
+    var key=k.dataset.k;
+    if((key==='nr'||key==='np')&&typeof FD!=='undefined'&&FD.tab==='tax'&&typeof fd886Tog==='function'){
+      ev.stopPropagation();
+      ev.preventDefault();
+      fd886Tog('tax',key==='nr'?'nodoc':'unpaid');
+    }
+  },true);
+
+  if(typeof fdPaint==='function'){
+    var _fp9118=fdPaint;
+    fdPaint=function(){
+      var r=_fp9118.apply(this,arguments);
+      try{
+        if(typeof FD!=='undefined'&&FD.tab==='tax'&&typeof FD886!=='undefined'){
+          var cur=FD886.tax||'';
+          document.querySelectorAll('#fdBody .fd924k').forEach(function(elK){
+            var k=elK.dataset.k;
+            var isOn=(k==='nr'&&cur==='nodoc')||(k==='np'&&cur==='unpaid');
+            elK.classList.toggle('on',!!isOn);
+          });
+          if(typeof fd995UpdateTaxFoot==='function')fd995UpdateTaxFoot();
+        }
+      }catch(e){}
+      return r;
+    };
+  }
+
+  if(typeof ck997Flag4Html==='function'){
+    var _cf4_9118=ck997Flag4Html;
+    ck997Flag4Html=function(){
+      var out=_cf4_9118.apply(this,arguments);
+      if(typeof out==='string'){
+        out=out.replace(/FD\.ym='([^']+)';FD\.tab='tax';SH\.ws='fin';go\('ws_fin'\)/g,"ck9118TaxMonthGo('$1')");
+      }
+      return out;
+    };
+  }
+
+  ['tyPaint','ckSidePaint','ck991Paint'].forEach(function(fnName){
+    if(typeof window[fnName]!=='function')return;
+    var _orig=window[fnName];
+    window[fnName]=function(){
+      var res=_orig.apply(this,arguments);
+      ck9118UpdateFresh();
+      return res;
+    };
+  });
+  setTimeout(ck9118UpdateFresh,0);
+
+  var LEGACY_9118={
+    fi_bank:{ws:'fin',menu:'ws_fin',tab:'bank'},
+    fi_card:{ws:'fin',menu:'ws_fin',tab:'bank'},
+    ht:{ws:'fin',menu:'ws_fin',tab:'bank'},
+    money:{ws:'fin',menu:'ws_fin',tab:'bank'},
+    ac_einv:{ws:'fin',menu:'ws_fin',tab:'tax'},
+    settle:{ws:'fin',menu:'ws_fin',tab:'arap'},
+    fi_ar_ptn:{ws:'fin',menu:'ws_fin',tab:'arap'},
+    hr_pay:{ws:'fin',menu:'ws_fin',tab:'pay'},
+    sd_close:{ws:'mfg',menu:'ws_mfg'},
+    close:{ws:'mfg',menu:'ws_mfg'},
+    site:{ws:'mfg',menu:'ws_mfg'},
+    op_cal:{ws:'field',menu:'op_check'}
+  };
+
+  if(typeof nav236==='function'){
+    var _nv9118=nav236;
+    nav236=function(menu,gridId,q){
+      var in4=(typeof SH==='undefined'||!SH.ws||['cockpit','field','mfg','fin'].indexOf(SH.ws)>=0);
+      if(in4&&LEGACY_9118[menu]){
+        console.warn('[v9.118 safety-net] nav236('+menu+') intercepted in 4-tab mode');
+        if(menu==='fi_bank'&&q&&typeof fdBankWhoOpen==='function'){
+          return fdBankWhoOpen(String(q).trim());
+        }
+        if(menu==='fi_card'&&q&&typeof fd9109CardWho==='function'){
+          return fd9109CardWho(String(q).trim());
+        }
+        return go(menu);
+      }
+      return _nv9118.apply(this,arguments);
+    };
+  }
+
+  if(typeof go==='function'){
+    var _go9118=go;
+    go=function(x){
+      var in4=(typeof SH==='undefined'||!SH.ws||['cockpit','field','mfg','fin'].indexOf(SH.ws)>=0);
+      var t=LEGACY_9118[x];
+      if(in4&&t){
+        console.warn('[v9.118 safety-net] go('+x+') -> '+t.menu+(t.tab?' ('+t.tab+')':''));
+        if(typeof SH!=='undefined')SH.ws=t.ws;
+        if(t.tab&&typeof FD!=='undefined')FD.tab=t.tab;
+        try{var ml=lsGet('bvs_wslast',{});ml[t.ws]=t.menu;lsSet('bvs_wslast',ml);}catch(e){}
+        return _go9118.call(this,t.menu);
+      }
+      return _go9118.apply(this,arguments);
+    };
+  }
 })();
 
 </script>
