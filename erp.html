@@ -3405,7 +3405,7 @@ var NOOUTT='퇴근 미등록 (데일리)',PENDT='투입 기록 승인 대기',SF
 function attOpen(r){var f=(D.att||[]).filter(function(x){return x.entry_id===r.entry_id})[0];if(f)calForm(f);else toast('기록을 찾지 못했습니다','e')}
 function trRows(){return (D.tr||[]).filter(function(r){return !r.is_cancelled})}
 function trNet(k){var t=0;trRows().forEach(function(r){t+=(+r[k]||0)});return t}
-var TRTITLE='Tax-Risk 엔티티 간 거래 (전 기간)';
+var TRTITLE='Tax_Check 엔티티 간 거래 (전 기간)';
 function realGapRows(){return (D.gap||[]).filter(function(r){return (r.sd_status!==r.fi_status)||((+r.supply_gap||0)!==0)})}
 function hotCount(){ /* v1.31 메인 빨간 숫자 = 대표가 ERP에서 조치할 항목만 (시스템·근로자·참고는 뺀다) */
   var n=0;try{alAll().forEach(function(r){if(r.cnt>0&&!r.acked&&r.who==='대표')n++})}catch(e){}return n}
@@ -3795,7 +3795,7 @@ function renderHome(){
   barChart('chHome','최근 12개월 매출 · 영업이익',last.map(function(r){return String(r.period_ym).slice(2)}),
     [{name:'매출',color:'var(--s1)',values:last.map(function(r){return r.revenue_amt})},{name:'영업이익',color:'var(--s3)',values:last.map(function(r){return r.operating_profit})}]);
   var intgClean = (D.intg||[]).filter(function(r){
-    return !/업무문서|Tax-Risk/.test(r.check_name) && +r.cnt>0;
+    return !/업무문서|Tax_Check/.test(r.check_name) && +r.cnt>0;
   });
   var als=D.al.filter(function(r){
     if(/지급의제/.test(r.title)) return pastOverdue > 0;
@@ -5747,7 +5747,7 @@ function gplPaint(){var box=el('homePulseSec');if(!box)return;var L=D.gpl;
       +(al.length?'<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px">'+al.map(function(a){var ap=/승인함/.test(a),ic=/3사 간 계산서/.test(a);return '<div class="tiny" style="color:#B91C1C'+(ap||ic?';cursor:pointer;text-decoration:underline':'')+'"'+(ap?' onclick="gplToApv()"':ic?' onclick="gplIc()"':'')+'>· '+esc(a)+'</div>'}).join('')+'</div>':'')
       +'</div>'}).join('')+'</div></div>'}
 function gplToApv(){var b=el('homeApvSec');if(b&&b.scrollIntoView)b.scrollIntoView({behavior:'smooth',block:'start'})}
-/* v1.10: 3사 간 세금계산서 양쪽 장부 대사(ceo_ic_recon) — 한쪽 장부에만 있으면 누락. Tax-Risk: 금액·명목·상환계획 확인, 근거 없으면 세무사 확인 */
+/* v1.10: 3사 간 세금계산서 양쪽 장부 대사(ceo_ic_recon) — 한쪽 장부에만 있으면 누락. Tax_Check: 금액·명목·상환계획 확인, 근거 없으면 세무사 확인 */
 async function gplIc(){var box=el('gplIcBox');if(!box){box=document.createElement('div');box.id='gplIcBox';box.style.marginTop='10px';var s=el('homePulseSec');if(!s)return;(s.querySelector('.sec')||s).appendChild(box)}
   if(box.dataset.on==='1'){box.dataset.on='';box.innerHTML='';return}
   box.dataset.on='1';box.innerHTML='<div class="tiny dim">불러오는 중</div>';
@@ -6125,7 +6125,7 @@ function renderPl(){
        +expCell('팀 관리비',won(r.leader_amt))+expCell('현장매출',won(r.site_revenue_amt))
        +expCell('영업이익률',r._rate==null?'–':'<span class="'+(r._rate<0?'neg':'pos')+'">'+r._rate.toFixed(1)+'%</span>')}});
   var diRows = (D.di||[]).slice().sort(function(a,b){return String(b.yr||'').localeCompare(String(a.yr||''))});
-  grid('gDi',[{k:'yr',t:'연도',l:1},{k:'advance_amt',t:'가지급(대표→)',f:'won'},{k:'deposit_amt',t:'가수금(→대표)',f:'won'},{k:'net_amt',t:'순액',f:function(v){return sgn(-(+v||0))}},{k:'deemed_interest',t:'인정이자',f:function(v){return (+v||0)>0?'<span class="wn">'+won(v)+'</span>':'<span class="dim">–</span>'}},{k:'basis',t:'근거',l:1,cls:'tiny dim'}],{rows:diRows,csv:false});
+  grid('gDi',[{k:'yr',t:'연도',l:1},{k:'advance_amt',t:'임시지급(대표→)',f:'won'},{k:'deposit_amt',t:'임시수령금(→대표)',f:'won'},{k:'net_amt',t:'순액',f:function(v){return sgn(-(+v||0))}},{k:'deemed_interest',t:'약정이자',f:function(v){return (+v||0)>0?'<span class="wn">'+won(v)+'</span>':'<span class="dim">–</span>'}},{k:'basis',t:'근거',l:1,cls:'tiny dim'}],{rows:diRows,csv:false});
 }
 
 /* ═══════════ 구매·자재 ═══════════ */
@@ -7488,7 +7488,7 @@ function settlePrint(emp){var me=(D.staff||[]).filter(function(x){return x.emplo
     +'<table>'+body+'</table>'
     +'<div class="sg">'+d.slice(0,4)+'년 '+d.slice(5,7)+'월 '+d.slice(8,10)+'일<br>성명 '+esc(me.name||'')+' (서명)</div></body></html>');
   w.document.close();setTimeout(function(){w.print()},300)}
-/* ══════ B4 특수관계 거래 소명 ══════ */
+/* ══════ B4 관계사 거래 소명 ══════ */
 var RPK={voucher:'전표',bank:'통장',labor_cost_bearer:'공수 부담',pay_rate:'단가 부담'};
 function renderRp(){if(!el('gRpOpen'))return;var sec=el('sec-rp');if(!isOwner()){sec.style.display='none';return}sec.style.display='';
   var op=D.tro||[],rg=D.trg||[];el('rpN').textContent=op.length?op.length+'건 미소명':'';el('rpgN').textContent=rg.length?rg.length+'건':'';
@@ -7507,7 +7507,7 @@ function rpOpen(r){var reg=!!r.register_id;window._RP=r;
   var body=kv([['원천',esc(RPK[r.risk_kind]||r.risk_kind)],['대상',(r.risk_kind==='voucher'&&r.risk_key)?'<a href="#" class="pl233" title="전표 열기" onclick="event.preventDefault();drClose();glJournal('+ERPC.jsq(r.risk_key)+')">'+esc(r.risk_key)+'</a>':(r.risk_kind==='bank'?'<a href="#" class="pl233" title="통장원장" onclick="event.preventDefault();drClose();go(\'fi_bank\')">'+esc(r.risk_key)+'</a>':esc(r.risk_key))],['일자',esc(r.risk_date||'')],['엔티티',esc((r.from_entity||'–')+' → '+(r.to_entity||'–'))],['금액',won(r.amount)],['내용',esc(r.detail||'')],['근거 조문',esc(r.legal_basis||'')]])
     +'<h4 style="margin:14px 0 6px">소명</h4>'+rpForm(r)
     +'<button class="btn sm p" onclick="rpSave()">'+(reg?'저장':'소명 등록')+'</button>'+(reg?' <button class="btn sm" onclick="rpUndo('+r.register_id+')">소명 취소</button>':'');
-  drOpen('특수관계 거래 소명',body,'<button class="btn" onclick="drClose()">닫기</button>')}
+  drOpen('관계사 거래 소명',body,'<button class="btn" onclick="drClose()">닫기</button>')}
 async function rpSave(){var r=window._RP||{};var p={reason:(el('rp_reason').value||'').trim(),confirmed_on:el('rp_on').value,evidence_url:(el('rp_url').value||'').trim(),repay_plan:(el('rp_plan').value||'').trim(),expires_on:el('rp_exp').value,memo:(el('rp_memo').value||'').trim()};
   if(!p.reason){toast('명목을 넣으세요','e');return}
   if(r.register_id)p.register_id=r.register_id;else{p.risk_kind=r.risk_kind;p.risk_key=r.risk_key;p.from_entity=r.from_entity||'';p.to_entity=r.to_entity||'';p.amount=r.amount}
@@ -7628,8 +7628,8 @@ async function mjSave(){var s=mjSum();
   if(el('mj_save'))el('mj_save').disabled=false;rpcDone(x,'전표 저장')}
 async function mjVoid(no){var ok=await ask('전표 취소',no+' 전표를 취소합니다.'+mj748V(no),{ok:'취소하기',danger:true});if(!ok)return;var x=await sb.rpc('ceo_journal_void',{p_journal_no:no});rpcDone(x,'전표를 취소했습니다')}
 
-/* ══════ B6 대표 가지급·가수 약정·상계 ══════ */
-var LND={advance:'가지급 (회사→대표)',deposit:'가수·대여 (대표→회사)'};
+/* ══════ B6 대표 임시지급·가수 약정·상계 ══════ */
+var LND={advance:'임시지급 (회사→대표)',deposit:'가수·대여 (대표→회사)'};
 function renderLn(){if(!el('gLnc'))return;var sec=el('sec-gLn');if(!isOwner()){sec.style.display='none';return}sec.style.display='';
   var lc=(D.lnc||[]).map(function(r){r._d=LND[r.direction]||r.direction;r._r=r.rate==null?'':(Math.round(+r.rate*100000)/1000)+'%';return r});
   grid('gLnc',[{k:'start_on',t:'시작',l:1},{k:'end_on',t:'종료',l:1},{k:'_d',t:'구분',l:1},{k:'principal',t:'원금',f:'won'},{k:'_r',t:'이율',l:1},{k:'repay_plan',t:'상환계획',l:1,cls:'tiny'},{k:'signed_on',t:'서명일',l:1},{k:'doc_ref',t:'서류',l:1,cls:'tiny dim'}],{rows:lc,page:30,onRow:lnOpen,csv:false,empty:'약정 없음'});
@@ -7649,7 +7649,7 @@ async function lnSave(){var r=window._LN;var rv=el('ln_r').value;var p={principa
 function loNew(){var lc=D.lnc||[];drOpen('상계 등록','<div class="fr"><div class="f"><label>상계일</label><input id="lo_on" class="in" type="date" value="'+today()+'"></div><div class="f"><label>금액</label><input id="lo_amt" class="in" type="number" step="1"></div></div>'
   +'<div class="f"><label>약정</label><select id="lo_ct" class="sel" style="width:100%"><option value=""></option>'+lc.map(function(c){return '<option value="'+c.contract_id+'">'+esc(c.start_on)+' '+esc(LND[c.direction]||c.direction)+(c.principal!=null?' '+Number(c.principal).toLocaleString():'')+'</option>'}).join('')+'</select></div>'
   +'<div class="fr"><div class="f"><label>서류</label><input id="lo_doc" class="in"></div><div class="f"><label>메모</label><input id="lo_memo" class="in"></div></div>'
-  +'<div class="tiny dim" style="margin:4px 0 8px">전표: (차) Z910 가수금 / (대) Z900 가지급금</div>'
+  +'<div class="tiny dim" style="margin:4px 0 8px">전표: (차) Z910 임시수령금 / (대) Z900 임시지급금</div>'
   +'<button class="btn sm p" onclick="loSave()">상계 등록</button>','<button class="btn" onclick="drClose()">닫기</button>')}
 async function loSave(){var p={offset_on:el('lo_on').value,amount:Math.round(+el('lo_amt').value||0),contract_id:el('lo_ct').value,doc_ref:(el('lo_doc').value||'').trim(),memo:(el('lo_memo').value||'').trim()};
   if(!p.offset_on||!(p.amount>0)){toast('상계일과 금액을 넣으세요','e');return}
@@ -7781,7 +7781,7 @@ function alAckHtml(r){var a=r.ack;return '<div style="display:flex;gap:6px;align
 async function alAck(t,c){var x=await sb.rpc('sys_alert_ack_save',{p_title:t,p_cnt:c,p_memo:(el('ak_memo').value||'').trim()});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인함: '+t+' ('+(+c||0).toLocaleString('ko-KR')+'건)','g');loadAll()}
 async function alUnack(t){var x=await sb.rpc('sys_alert_ack_cancel',{p_title:t});if(x.error||!(x.data&&x.data.ok)){toast((x.error&&x.error.message)||'실패','e');return}toast('확인 해제: '+t,'g');loadAll()}
 
-/* ══════ B13 견적 결과 · 거래처 특수관계 ══════ */
+/* ══════ B13 견적 결과 · 거래처 관계사 ══════ */
 function qOutHtml(d){var x=(D.pipe||[]).filter(function(z){return z.doc_no===d.doc_no})[0]||{};var cur=x.outcome||'';
   return qo752H(d)+'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><select id="qo_o" class="sel"><option value=""'+(cur===''?' selected':'')+'>자동 판정</option><option value="won"'+(cur==='won'?' selected':'')+'>수주</option><option value="lost"'+(cur==='lost'?' selected':'')+'>실주</option></select>'
    +'<input id="qo_on" class="in" type="date" value="'+esc(x.outcome_on||today())+'" style="width:140px"><input id="qo_r" class="in" placeholder="실주 사유" value="'+esc(x.lost_reason||'')+'" style="flex:1;min-width:120px">'
@@ -9331,7 +9331,7 @@ async function reopenMonth(pm){var why=await ask('마감 해제',pm+' 마감을 
 /* ═══════════ 경보 · 무결성 관제 (5대 기능축 & 긴급도 2차원 관제) ═══════════ */
 var ALT={1:{n:'긴급',d:'세무 · 법적 · 회계 정합 (즉시 조치 / 결재·마감 차단)'},2:{n:'주의',d:'노무 · 수당 · 현장 (법정 의무 / 월마감 요주의)'},3:{n:'일반',d:'연결 · 미등록 · 기한 (상시 운영 / 마스터 정비)'}};
 var DOMAINS={
-  TAX:{code:'TAX',name:'TAX 세무·거버넌스',icon:'',desc:'국세청 세무조사·특수관계인 부당행위·가지급금 인정이자 리스크',color:'dom-tax'},
+  TAX:{code:'TAX',name:'TAX 세무·거버넌스',icon:'',desc:'국세청 세무조사·관계사 부당행위·임시지급금 약정이자 리스크',color:'dom-tax'},
   HR: {code:'HR', name:'HR 인사·노무',      icon:'',desc:'근로계약·개인정보동의·법정 가산임금(연장/야간/휴일) 리스크',  color:'dom-hr'},
   OP: {code:'OP', name:'OP 생산·현장',      icon:'',desc:'현장 실적 승인·출퇴근 미등록·산업안전점검·의무교육 서명',      color:'dom-op'},
   SD: {code:'SD', name:'SD 영업·계약',      icon:'',desc:'매출 계산서 청구기준 불일치·발주서 미도착(60일)·거래처 미등록', color:'dom-sd'},
@@ -9339,12 +9339,12 @@ var DOMAINS={
 };
 
 function alTier(t){t=String(t||'');
-  if(/Tax-Risk|엔티티 간 거래|가지급금|부당행위|개인정보|계약서교부|계약·동의|계약.동의|퇴사 후|차대|헤더|전표|업무문서.*회계전표|라인합|RLS/.test(t))return 1;
+  if(/Tax_Check|엔티티 간 거래|임시지급금|부당행위|개인정보|계약서교부|계약·동의|계약.동의|퇴사 후|차대|헤더|전표|업무문서.*회계전표|라인합|RLS/.test(t))return 1;
   if(/승인 대기|퇴근 미등록|연장수당|소급|안전점검|교육 서명|이의 신청|청구기준|지급의제|비과세/.test(t))return 2;
   return 3}
 
 function alDomain(t){t=String(t||'');
-  if(/Tax-Risk|엔티티 간 거래|가지급금|가수금|인정이자|부당행위/.test(t))return 'TAX';
+  if(/Tax_Check|엔티티 간 거래|임시지급금|임시수령금|약정이자|부당행위/.test(t))return 'TAX';
   if(/개인정보|계약·동의|계약서교부|계약.동의|서약|동의서|연장수당|소급|휴일|기본 지역|주민번호|계좌|비과세|퇴사 후|근로계약/.test(t))return 'HR';
   if(/퇴근 미등록|승인 대기|안전점검|작업 전|교육 서명|이의 신청|공수|펌프실/.test(t))return 'OP';
   if(/청구기준|발주서|미도착|SD 문서|거래처 미등록|수주|견적/.test(t))return 'SD';
@@ -9352,9 +9352,9 @@ function alDomain(t){t=String(t||'');
   return 'FI'}
 
 function alActionNote(t){t=String(t||'');
-  if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return '법인세법 제52조 부당행위계산부인·대표 상여처분 위험 — 금액·명목·시가 증빙 확보 및 세무사 확인';
-  if(/Tax-Risk/.test(t))return '4개 엔티티 간 자금 거래 감지 — 이체 사유 및 세무 위험 점검';
-  if(/가지급금/.test(t))return '법인세법상 인정이자 계산 및 익금산입 대상 — 세무 대리인 결산 시 확인 필수';
+  if(/엔티티 간 거래|Tax_Check 엔티티/.test(t))return '법인세법 제52조 부당행위계산부인·대표 소득처분 위험 — 금액·명목·시가 증빙 확보 및 세무사 확인';
+  if(/Tax_Check/.test(t))return '4개 엔티티 간 자금 거래 감지 — 이체 사유 및 세무 위험 점검';
+  if(/임시지급금/.test(t))return '법인세법상 약정이자 계산 및 익금산입 대상 — 세무 대리인 결산 시 확인 필수';
   if(/투입 기록 승인 대기|승인 대기/.test(t))return '데일리 제출 건 — 대표 승인 대기 (미승인 시 월마감 차단 및 노무비 지급 불가)';
   if(/퇴근 미등록/.test(t))return '출근 후 퇴근 미등록 — 당일 실제 퇴근 시각 확인 후 출퇴근 시간 보정';
   if(/개인정보|계약·동의|계약서교부|계약.동의 미비/.test(t))return '근로기준법 제17조 및 개인정보보호법 위반(과태료·벌금) — 인력 마스터에서 서약서/동의서 교부 및 서명일 등록';
@@ -9385,7 +9385,7 @@ function alDetail(t){t=String(t||'');
    cons:[{k:'person_name',t:'이름',l:1},{k:'employment_no',t:'사번',l:1,cls:'dim'},{k:'work_site_id',t:'현장',l:1},{k:'has_third_party',t:'3자제공',f:'yn'},{k:'has_sensitive',t:'민감정보',f:'yn'},{k:'contract_delivered',t:'계약교부',f:function(v){return yn((+v||0)>0)}}],
    retro:[{k:'period_ym',t:'월',l:1},{k:'person_name',t:'이름',l:1},{k:'ordinary_hourly',t:'통상시급',f:'won'},{k:'legal_ot_hourly_min',t:'법정 최소',f:'won'},{k:'current_ot_hourly',t:'현행',f:'won'},{k:'ot_hours_sum',t:'잔업h',f:'num'},{k:'ot_shortfall_amt',t:'부족액',f:'won',sum:1}],
    disp:[{k:'work_date',t:'근무일',l:1},{k:'person_name',t:'이름',l:1},{k:'site_name',t:'현장',l:1},{k:'work_md',t:'공수',f:'num'},{k:'ot_hours',t:'연장h',f:'num'},{k:'message',t:'내용',l:1}],
-   di:[{k:'yr',t:'연도',l:1},{k:'advance_amt',t:'가지급',f:'won'},{k:'deposit_amt',t:'가수금',f:'won'},{k:'deemed_interest',t:'인정이자',f:'won'},{k:'basis',t:'근거',l:1,cls:'tiny dim'}],
+   di:[{k:'yr',t:'연도',l:1},{k:'advance_amt',t:'임시지급',f:'won'},{k:'deposit_amt',t:'임시수령금',f:'won'},{k:'deemed_interest',t:'약정이자',f:'won'},{k:'basis',t:'근거',l:1,cls:'tiny dim'}],
    inbox:[{k:'kind',t:'구분',l:1},{k:'on_date',t:'일자',l:1},{k:'who',t:'상대',l:1},{k:'what',t:'내용',l:1},{k:'amt',t:'금액',f:'sgn',sum:1}],
    mrev:[{k:'period_ym',t:'월',l:1},{k:'partner_name',t:'거래처',l:1},{k:'billing_amt',t:'청구기준',f:'won',sum:1},{k:'sd_supply',t:'계산서',f:'won',sum:1},{k:'diff_amt',t:'차이',f:'sgn',sum:1}],
    po:[{k:'doc_date',t:'발주일',l:1},{k:'po_no',t:'발주서',l:1,cls:'tiny'},{k:'partner_name',t:'공급사',l:1},{k:'title',t:'건명',l:1},{k:'total_amt',t:'합계',f:'won',sum:1},{k:'age_days',t:'경과일',f:'int'}],
@@ -9443,7 +9443,7 @@ function alDetail(t){t=String(t||'');
   if(/개인정보|계약·동의|계약서교부|계약.동의 미비/.test(t))return d('cons',C.cons,null,'인력 마스터에서 이름을 눌러 「서류·동의」에 서명일과 동의 여부를 기록하면 사라집니다.','hr');
   if(/연장수당 소급/.test(t))return d('retro',C.retro,null,'통상시급 대비 법정 최소에 못 미친 달입니다. 차액을 소급 지급해야 합니다.','hr');
   if(/이의 신청/.test(t))return d('disp',C.disp,function(r){return r.status==='open'},'현장 화면에서 처리합니다.','site');
-  if(/가지급금/.test(t))return d('di',C.di,function(r){return (+r.deemed_interest||0)>0},'법인세법상 인정이자 대상입니다. 세무사 확인이 필요합니다.','pl');
+  if(/임시지급금/.test(t))return d('di',C.di,function(r){return (+r.deemed_interest||0)>0},'법인세법상 약정이자 대상입니다. 세무사 확인이 필요합니다.','pl');
   if(/인박스|계정 미분류/.test(t))return d('inbox',C.inbox,function(r){return String(r.on_date||'')>='2026-01-01'},'행을 누르면 계정을 지정할 수 있습니다.','ht');
   if(/청구기준/.test(t))return d('mrev',C.mrev,function(r){return Math.abs(+r.diff_amt||0)>=1},'청구 기준 금액과 발행한 계산서 금액이 다릅니다.','close');
   if(/미도착 60일|발주서 · 계산서/.test(t))return d('po',C.po,function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)},'발주는 나갔는데 '+setgNum('po_overdue_days',60)+'일 이상 계산서가 오지 않은 건입니다. 납품 완료 확인 또는 취소(void) 처리가 필요합니다.','settle');
@@ -9452,9 +9452,9 @@ function alDetail(t){t=String(t||'');
   if(/안전점검 미제출/.test(t))return {rows:sfMiss(),cols:C.sfk,note:'투입 기록은 있는데 그날 작업 전 안전점검 제출이 없는 사람입니다. 데일리 「안전」 탭에서 본인이 제출합니다 — 대표가 대신 넣지 않는 편이 증빙으로서 낫습니다.',go:'safety'};
   if(/교육 서명 미완료/.test(t))return {rows:edUnsigned(),cols:C.edg,note:'진행 중인 교육의 대상자 가운데 아직 서명하지 않은 사람입니다. 교육을 마감하면 더는 서명할 수 없습니다.',go:'safety'};
   if(/승인 대기/.test(t))return {rows:pendRows(),cols:C.pend,note:'데일리에서 제출됐지만 아직 승인 전입니다. 현장 화면에서 날짜별로 일괄 승인하거나, 줄을 눌러 내용을 고친 뒤 승인하십시오.',go:'site',onRow:attOpen};
-  if(/Tax-Risk 미확인/.test(t))return {rows:(D.tro||[]).map(function(r){r._k=RPK[r.risk_kind]||r.risk_kind;return r}),cols:[{k:'risk_date',t:'일자',l:1},{k:'_k',t:'원천',l:1},{k:'from_entity',t:'보낸 쪽',l:1},{k:'to_entity',t:'받은 쪽',l:1},{k:'amount',t:'금액',f:'won',sum:1},{k:'detail',t:'내용',l:1,cls:'tiny'},{k:'legal_basis',t:'근거 조문',l:1,cls:'tiny dim'}],note:'행을 눌러 소명을 입력합니다.',go:'alerts',onRow:rpOpen};
-  if(/엔티티 간 거래|Tax-Risk 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 특수관계인 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 상여처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
-  if(/Tax-Risk/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
+  if(/Tax_Check 미확인/.test(t))return {rows:(D.tro||[]).map(function(r){r._k=RPK[r.risk_kind]||r.risk_kind;return r}),cols:[{k:'risk_date',t:'일자',l:1},{k:'_k',t:'원천',l:1},{k:'from_entity',t:'보낸 쪽',l:1},{k:'to_entity',t:'받은 쪽',l:1},{k:'amount',t:'금액',f:'won',sum:1},{k:'detail',t:'내용',l:1,cls:'tiny'},{k:'legal_basis',t:'근거 조문',l:1,cls:'tiny dim'}],note:'행을 눌러 소명을 입력합니다.',go:'alerts',onRow:rpOpen};
+  if(/엔티티 간 거래|Tax_Check 엔티티/.test(t))return d('tr',C.tr,function(r){return !r.is_cancelled},'4개 엔티티(HBS·PYRO·BVS·SSJG) 사이의 거래 전 기간입니다. 관계사 거래이므로 금액·방향·명목·상환계획과 시가 근거를 갖추지 못하면 법인세법 제52조 부당행위계산부인과 대표 소득처분으로 이어집니다. 세무사 확인 대상입니다.','ht');
+  if(/Tax_Check/.test(t))return d('ht',C.ht,function(r){return !!r.related_entity},'4개 엔티티 사이의 거래입니다. 금액·방향·명목·상환계획을 확인하고 근거가 없으면 세무사 확인이 필요합니다.','ht');
   if(/홈택스 수집/.test(t))return d('htr',C.htr,null,'대표 PC의 수집기가 돌지 않았습니다.','ht');
   if(/업무문서.*회계전표|헤더|차대|라인합/.test(t))return d('gap',C.gap,function(r){return (r.sd_status!==r.fi_status)||((+r.supply_gap||0)!==0)},'SD 업무 문서 상태·금액과 FI 회계 전표가 일치하지 않는 전표 내역입니다.','money');
   if(/지급의제/.test(t)){
@@ -9551,7 +9551,7 @@ var AL_WHO=[
   [/홈택스 수집/,'시스템','수집기(대표 PC) 점검 — Claude·Antigravity 담당','sy_sync'],
   [/안전점검 미제출/,'근로자','근로자 본인이 데일리 「안전」 탭에서 제출 — 대표가 대신 넣지 않음','op_safety'],
   [/교육 서명/,'근로자','대상자 본인이 데일리에서 서명 — 인사/급여관리 › 교육관리에서 진행 상황만 봄','hr_edu'],
-  [/가지급금 인정이자/,'참고','연 1회 결산 때 세무사가 반영 — 회계관리 › 자금 › 가지급금·가수금','fi_loan'],
+  [/임시지급금 약정이자/,'참고','연 1회 결산 때 세무사가 반영 — 회계관리 › 자금 › 임시지급금·임시수령금','fi_loan'],
   [/휴일·토요일|휴일 근무/,'참고','휴일 투입 확인용 — 가산임금 적용 여부는 인사/급여관리 › 급여계산에서 확인','op_att'],
   [/개인정보|계약·동의|계약서교부|계약.동의/,'대표','인사/급여관리 › 근로계약 › 「발행」 → 근로자 서명','hr_ctr'],
   [/연장수당 소급/,'대표','인사/급여관리 › 연장수당 소급 → 차액을 급여대장 「기타지급」','hr_retro'],
@@ -9570,7 +9570,7 @@ var AL_WHO=[
   [/이의 신청/,'대표','현장관리 › 공수 이의','op_disp'],
   [/퇴사 후/,'대표','인사/급여관리 › 인사정보 › 퇴사일 확인','hr_info'],
   [/비과세 요건/,'대표','시스템설정 › 급여 기준 › 수당','sy_alw'],
-  [/Tax-Risk/,'대표','메인 › 알림·점검 › 특수관계 거래 소명 → 소명 기록','alerts']
+  [/Tax_Check/,'대표','메인 › 알림·점검 › 관계사 거래 소명 → 소명 기록','alerts']
 ];
 function alWho(t){t=String(t||'');for(var i=0;i<AL_WHO.length;i++)if(AL_WHO[i][0].test(t))return {who:AL_WHO[i][1],where:AL_WHO[i][2],k:AL_WHO[i][3]};return {who:'대표',where:'',k:null}}
 function alAll(){
@@ -9591,7 +9591,7 @@ function alAll(){
       c = apOverdueCount;
     } else if(/발주서 · 계산서 미도착 60일/.test(r.title)){
       c = poOverdueCount;
-    } else if(/Tax-Risk 미확인/.test(r.title)){
+    } else if(/Tax_Check 미확인/.test(r.title)){
       c = trUnconfCount;
     } else if(/퇴근 미등록/.test(r.title)){
       c = noOutRows().length;
@@ -9600,7 +9600,7 @@ function alAll(){
   })
     .concat((D.intg||[]).filter(function(r){
       // 중복 무결성 항목 제거 (D.al에 이미 존재하는 항목 필터링)
-      return !/업무문서|Tax-Risk|계약·동의 미비/.test(r.check_name);
+      return !/업무문서|Tax_Check|계약·동의 미비/.test(r.check_name);
     }).map(function(r){
       return {title:r.check_name,cnt:+r.cnt||0,tier:alTier(r.check_name),domain:alDomain(r.check_name),action:alActionNote(r.check_name),intg:1};
     }))
@@ -11330,20 +11330,20 @@ renderSales=function(){
     gRender('gPtn');}catch(e){console.error(e)}
 };
 
-/* ═══ 2.24 (안티그래비티 R77 #5 · Tax-Risk Guard) 홈택스·통장 › 통장 거래 상대명에 「계열사 거래」 보라 표시 — 특수관계 거래처(거래처 › 특수관계=예)나 파이로·승승장구·황병승 이름이 들어간 줄. 누르면 안내: 엔티티 간 자금 이동은 단기대여금·가지급금으로 분리, 금액·명목·상환계획 확인 ═══ */
+/* ═══ 2.24 (안티그래비티 R77 #5 · Tax_Check Guard) 홈택스·통장 › 통장 거래 상대명에 「계열사 거래」 보라 표시 — 관계사 거래처(거래처 › 관계사=예)나 파이로·승승장구·황병승 이름이 들어간 줄. 누르면 안내: 엔티티 간 자금 이동은 단기대여금·임시지급금으로 분리, 금액·명목·상환계획 확인 ═══ */
 var RP224_WORDS=['파이로','승승장구','황병승','PYRO','SSJG','HBS'];
 function rp224Set(){var s={};(D.ptn||[]).forEach(function(p){if(p.is_related_party&&p.name)s[String(p.name).trim().toLowerCase()]=p.related_entity||'예'});return s}
 function rp224Hit(r,set){var nm=String(r.partner_name||r.counterparty||r.description||'').trim();if(!nm)return null;var k=nm.toLowerCase();if(set[k])return set[k];for(var i=0;i<RP224_WORDS.length;i++){if(k.indexOf(RP224_WORDS[i].toLowerCase())>=0)return RP224_WORDS[i]}return null}
-function rp224Info(){drOpen('계열사 거래 주의','<div style="line-height:1.8;font-size:13px">BVS·파이로·승승장구·대표 개인 사이의 이체는 일반 매입·외주비가 아니라 <b>단기대여금·가지급금(또는 가수금)</b>으로 분리해야 합니다.<br>개인 자금과 법인 자금이 섞이면 가지급금 인정이자·상여처분·부당행위계산부인(법인세법 제52조)이 실제로 발생합니다.<br>금액·방향·명목(임대료·대여·정산)·상환계획을 확인하고, 반증 자료가 없으면 세무사 확인을 받으십시오.<br><span class="tiny dim">판정 기준: 거래처 › 특수관계=예, 또는 상대명에 파이로·승승장구·황병승 포함</span></div>','<button class="btn" onclick="drClose()">닫기</button>')}
+function rp224Info(){drOpen('계열사 거래 주의','<div style="line-height:1.8;font-size:13px">BVS·파이로·승승장구·대표 개인 사이의 이체는 일반 매입·외주비가 아니라 <b>단기대여금·임시지급금(또는 임시수령금)</b>으로 분리해야 합니다.<br>개인 자금과 법인 자금이 섞이면 임시지급금 약정이자·소득처분·부당행위계산부인(법인세법 제52조)이 실제로 발생합니다.<br>금액·방향·명목(임대료·대여·정산)·상환계획을 확인하고, 반증 자료가 없으면 세무사 확인을 받으십시오.<br><span class="tiny dim">판정 기준: 거래처 › 관계사=예, 또는 상대명에 파이로·승승장구·황병승 포함</span></div>','<button class="btn" onclick="drClose()">닫기</button>')}
 var _renderHt224=renderHt;
 renderHt=function(){
   var r=_renderHt224.apply(this,arguments);
   try{var g=G.gBank;if(g&&g.cols){var c=g.cols.filter(function(x){return x.k==='counterparty'})[0];if(c&&!c._rp224){c._rp224=1;var f0=c.f;
-      c.f=function(v,row){var base=f0?f0(v,row):esc(v||'');var h=rp224Hit(row,rp224Set());return h?base+' <span class="pill tiny" style="background:#ede9fe;color:#6d28d9;border-color:transparent;cursor:pointer" onclick="event.stopPropagation();rp224Info()" title="계열사 거래 — 단기대여금·가지급금 분리">계열사 거래'+(h!=='예'?' · '+esc(h):'')+'</span>':base};
+      c.f=function(v,row){var base=f0?f0(v,row):esc(v||'');var h=rp224Hit(row,rp224Set());return h?base+' <span class="pill tiny" style="background:#ede9fe;color:#6d28d9;border-color:transparent;cursor:pointer" onclick="event.stopPropagation();rp224Info()" title="계열사 거래 — 단기대여금·임시지급금 분리">계열사 거래'+(h!=='예'?' · '+esc(h):'')+'</span>':base};
       gRender('gBank')}}
     var set=rp224Set(),n=(D.bank||[]).filter(function(x){return inP(x.period_ym)&&rp224Hit(x,set)}).length,k=el('htKpi');
     var old=el('rp224n');if(old)old.remove();
-    if(n&&k){var d=document.createElement('div');d.id='rp224n';d.style.cssText='margin:4px 0 8px';d.innerHTML='<span class="chip on" style="cursor:pointer;background:#ede9fe;color:#6d28d9;border-color:#6d28d9" onclick="rp224Info()">계열사 거래 '+n+'건'+rp760C()+' — 대여금·가지급금 분리 확인</span>';k.insertAdjacentElement('afterend',d)}
+    if(n&&k){var d=document.createElement('div');d.id='rp224n';d.style.cssText='margin:4px 0 8px';d.innerHTML='<span class="chip on" style="cursor:pointer;background:#ede9fe;color:#6d28d9;border-color:#6d28d9" onclick="rp224Info()">계열사 거래 '+n+'건'+rp760C()+' — 대여금·임시지급금 분리 확인</span>';k.insertAdjacentElement('afterend',d)}
   }catch(e){console.error(e)}
   return r;
 };
@@ -16223,7 +16223,7 @@ function rw429Txt(r){var k=String(r.source_key||''),w=function(v){return won(Mat
 
 /* ═══ v4.30 (안티그래비티 R316 #1·R317 #1·#2 10/12)
    ① 상황판 첫 칸(출역) 「청구 대기 견적」 아래 오래된 순 3건(견적일 기준 D+N)
-   ② 같은 칸에 이달 3사 간 계산서(공급가) — 매출·매입과 내부 매출을 뺀 외부 매출 계산서 공급가. 3사 간 거래 확인 안내(Tax-Risk)
+   ② 같은 칸에 이달 3사 간 계산서(공급가) — 매출·매입과 내부 매출을 뺀 외부 매출 계산서 공급가. 3사 간 거래 확인 안내(Tax_Check)
    ③ 문서 작성 창 매출 거래처 줄 마우스 올림에 최근 3개년 매출 계산서 공급가 추이(전년 대비) — 불러온 문서(최근 1,500건) 범위 밖이면 「일부」
    보류: R316 #2 손익분기 달성률(계약 총액 자료 없음 — 계약은 단가 계약, 프로젝트 누적 손익은 월별만). 다음 차례: R316 #3·R317 #3(BVS 데일리 앱) ═══ */
 var IC430=/승승장구|파이로/;
@@ -19296,7 +19296,7 @@ function ks605(box,i,txt){var k=box&&box.children[i];if(!k||!txt)return;var s=k.
    ② 일일 현장 출역 「현장매출」 카드에 1공수당 청구액, 「일 마진」 카드에 마진율·손해 인원·1공수당 마진, 매출처별 카드에 그 매출처 일 마진
    ③ 기술등급 「연 환산」 카드 빈 보조 줄에 현재 월 기술수당 합계·받는 인원, 「심사 대상」·「90일 내 체류 충족」 카드에 이름 앞 3명
    모두 이미 불러온 자료만 셈(급여·세금·수당 값 바뀌지 않음, 추가 DB 조회 없음)
-   다음 차례: R587 #1~#3(안전·교육·장비 개인 서랍·전자서명 카드), R588 #1·#3(공수 매출 조정·특수관계 소명 제목 줄), R584 #2, R582 #2·#3, R583 #1 ═══ */
+   다음 차례: R587 #1~#3(안전·교육·장비 개인 서랍·전자서명 카드), R588 #1·#3(공수 매출 조정·관계사 소명 제목 줄), R584 #2, R582 #2·#3, R583 #1 ═══ */
 (function(){var _p=renderClose;renderClose=function(){var r=_p.apply(this,arguments);try{if(!isOwner())return r;var m=M(),box=el('closeKpi');if(!box)return r;
     var pr=(D.mrev||[]).filter(function(x){return x.period_ym===m&&x.partner_id});
     var df=pr.filter(function(x){return x._diff!=null&&Math.abs(+x._diff)>=1}).length,z=pr.filter(function(x){return +x.entries>0&&!(+x._amt)}).length;
@@ -19321,7 +19321,7 @@ function ks605(box,i,txt){var k=box&&box.children[i];if(!k||!txt)return;var s=k.
    ② 장비·업무일지 개인 서랍 맨 위에 장비당 평균 작업일·주력 장비(작업일·비중)·주요 라인 3곳 한 줄
    ③ 근로계약 전자서명 「근로자 서명 대기」·「대표 날인 대기」 카드에 대기 이름(앞 3명), 「교부 완료」 카드에 정규직 대상 중 교부 완료 인원·비율
    모두 이미 불러온 자료만 셈(값 바뀌지 않음, 추가 DB 조회 없음)
-   다음 차례: R588 #1·#3(공수 매출 조정·특수관계 소명 제목 줄), R589 #1~#3(마감 전 점검·현장 라인·세금신고 일정 제목 줄), R584 #2, R582 #2·#3, R583 #1 ═══ */
+   다음 차례: R588 #1·#3(공수 매출 조정·관계사 소명 제목 줄), R589 #1~#3(마감 전 점검·현장 라인·세금신고 일정 제목 줄), R584 #2, R582 #2·#3, R583 #1 ═══ */
 function nm607(a,f){var u=[];a.forEach(function(x){var n=f(x);if(n&&u.indexOf(n)<0)u.push(n)});return u.slice(0,3).map(esc).join(', ')+(u.length>3?' 외 '+(u.length-3)+'명':'')}
 (function(){var _p=renderSafety;renderSafety=function(){var r=_p.apply(this,arguments);try{if(!isOwner())return r;var box=el('sfKpi');if(!box)return r;
     var pc=function(a){var u={},last='';a.forEach(function(x){u[x.employment_no||x.person_name]=1;var d=String(x.work_date||'');if(d>last)last=d});return [Object.keys(u).length,last]};
@@ -19343,7 +19343,7 @@ function nm607(a,f){var u=[];a.forEach(function(x){var n=f(x);if(n&&u.indexOf(n)
       ks605(box,3,'정규직 '+todo.length+'명 중 '+m+'명 · '+Math.round(m/todo.length*100)+'%')}}catch(e){console.error(e)}return r}})();
 /* ═══ v6.08 (안티그래비티 R588 #1·#3 10/16)
    ① 공수 매출 조정 제목 줄에 총 공수·매출액 합계·직접 넣은 금액 건수, 매출처 카드에 투입 인원·1공수당 매출
-   ② 특수관계자 거래 소명 「미소명」 제목 줄에 금액 합계, 「소명 기록」 제목 줄에 금액 합계·증빙 없음·만료 지남 건수
+   ② 관계사 거래 소명 「미소명」 제목 줄에 금액 합계, 「소명 기록」 제목 줄에 금액 합계·증빙 없음·만료 지남 건수
    모두 이미 불러온 자료만 셈(값 바뀌지 않음, 추가 DB 조회 없음)
    R588 #2(배치 자차·카풀)는 인사 자료라 대표 확인 전 보류
    다음 차례: R589 #1~#3(마감 전 점검·현장 라인·세금신고 일정 제목 줄), R590 #1·#3(통장 상대명 미연결·자재 단가), R584 #2, R582 #2·#3, R583 #1 ═══ */
@@ -19501,7 +19501,7 @@ function nm607(a,f){var u=[];a.forEach(function(x){var n=f(x);if(n&&u.indexOf(n)
 /* ═══ v6.16 (안티그래비티 R596 #1·#3, #2 중 계약·동의 미비 10/16)
    ① 도면·자재 원가 제목 줄에 확정·초안 건수, 단가 없는 도면(부품 줄), 전체 부품 줄, 출고 건수
    ② 계약·동의 미비 제목 줄에 3자제공·민감정보·계약교부 항목별 미비 인원
-   ③ 손익 연도별 영업이익 카드에 매출원가·판관비·회사마진·집계 월수(마감 월수), 대표 가지급·가수 약정 제목에 약정 건수·원금 합계·상계 건수·상계액
+   ③ 손익 연도별 영업이익 카드에 매출원가·판관비·회사마진·집계 월수(마감 월수), 대표 임시지급·가수 약정 제목에 약정 건수·원금 합계·상계 건수·상계액
    모두 이미 불러온 자료만 셈(급여·단가·금액 값 바뀌지 않음, 추가 DB 조회 없음)
    R596 #2 중 인력 마스터·급여 기준 제목 줄은 이미 다른 보강(건강진단·기초안전교육)이 붙는 자리라 겹침 정리 후 다음 차례
    다음 차례: R595 #2, R596 #2 나머지, R597 #1~#3, R598 #1~#3, R599 #1~#3, R584 #2, R582 #2·#3, R583 #1 ═══ */
@@ -19534,7 +19534,7 @@ function nm607(a,f){var u=[];a.forEach(function(x){var n=f(x);if(n&&u.indexOf(n)
     var mt=co.filter(function(x){return x.ar_gap===0&&x.ap_gap===0&&(x.inv_sales>0||x.inv_purchase>0)}).length,fd=R.length-co.length;
     n.textContent=(n.textContent?n.textContent+' · ':'')+'미수 '+ar.length+'곳 '+won(sm(ar,'ar_gap'))+' · 미지급 '+ap.length+'곳 '+won(sm(ap,'ap_gap'))+' · 완제 '+mt+'곳 · 비계산서 자금 '+fd+'곳'}catch(e){console.error(e)}return r}})();
 /* ═══ v6.18 (안티그래비티 R598 #2·#3 목록, R601 #2 10/16)
-   ① 거래처 마스터 제목 줄에 사용·안 씀, 거래 실적 있는 곳, 특수관계, 사업자번호 미입력 곳 수
+   ① 거래처 마스터 제목 줄에 사용·안 씀, 거래 실적 있는 곳, 관계사, 사업자번호 미입력 곳 수
    ② 프로젝트 문서·정산 흐름 목록 제목 줄에 매월·단건 건수, 기간 공수, 매출·청구·미청구(곳)·이익(적자 곳) 합계
    ③ 안전·교육 「교육 서명부」 제목 줄에 진행·마감 건수와 서명 인원·서명률, 「작업 전 안전점검」 제목 줄에 제출률·이상 보고·점검 현장 수
    모두 이미 불러온 자료만 셈(값 바뀌지 않음, 추가 DB 조회 없음)
@@ -19898,7 +19898,7 @@ function crew621(){try{if(!isOwner())return;var box=el('crewKpi'),c=D.crew||[];i
     put('사람별 단가',ph.length+'건 · 현재 '+pk.length+'명'+(pk.length?' · 평균 일 '+won(avg)+'원':''))}catch(e){console.error(e)}return x}})();
 
 /* ═══ v6.47 (안티그래비티 R633 #1 10/16)
-   대표 가지급·가수 약정: 약정 표 위에 요약 한 줄 — 가지급 약정 건수·원금 합계, 가수·대여 약정 건수·원금 합계, 상계 건수·금액 합계
+   대표 임시지급·가수 약정: 약정 표 위에 요약 한 줄 — 임시지급 약정 건수·원금 합계, 가수·대여 약정 건수·원금 합계, 상계 건수·금액 합계
    이미 불러온 약정·상계 자료만 셈(원금·이율·상계 값 바뀌지 않음, 추가 DB 조회 없음, 대표 전용)
    다음 차례: R633 #2·#3, R634, R635, R631, R630, R611 #1·#3, R612~R629, R606 #3 단가 이력, R605 #2·#3, R600 #1, R599 #1·#3, R598 #1, R597 #2, R601 #1·#3, R602~R604, R595 #2, R596 #2 나머지 ═══ */
 (function(){var _r=renderLn;renderLn=function(){var x=_r.apply(this,arguments);try{var g=el('gLnc');if(!g)return x;var s=el('ln647');
@@ -19906,7 +19906,7 @@ function crew621(){try{if(!isOwner())return;var box=el('crewKpi'),c=D.crew||[];i
     if(!s){s=document.createElement('div');s.id='ln647';s.className='tiny';s.style.margin='0 0 6px';g.parentNode.insertBefore(s,g)}
     var lc=D.lnc||[],lo=D.lno||[],sm=function(a,k){return a.reduce(function(t,y){return t+(+y[k]||0)},0)};
     var av=lc.filter(function(y){return y.direction==='advance'}),dp=lc.filter(function(y){return y.direction==='deposit'});
-    s.textContent=(lc.length||lo.length)?'가지급 약정 '+av.length+'건 · 원금 '+won(sm(av,'principal'))+'원 / 가수·대여 약정 '+dp.length+'건 · 원금 '+won(sm(dp,'principal'))+'원 / 상계 '+lo.length+'건 · '+won(sm(lo,'amount'))+'원':''}catch(e){console.error(e)}return x}})();
+    s.textContent=(lc.length||lo.length)?'임시지급 약정 '+av.length+'건 · 원금 '+won(sm(av,'principal'))+'원 / 가수·대여 약정 '+dp.length+'건 · 원금 '+won(sm(dp,'principal'))+'원 / 상계 '+lo.length+'건 · '+won(sm(lo,'amount'))+'원':''}catch(e){console.error(e)}return x}})();
 
 /* ═══ v6.48 (안티그래비티 R633 #3 10/16)
    프로젝트 일별 청구 서랍: 「현장별」 제목에 현장 수, 표 아래 공수·수량 청구·(공수 보장·보전)·청구액 합계 줄 / 「수량」 제목에 줄 수·품목 종류, 표 아래 수량·금액 합계 줄
@@ -20413,7 +20413,7 @@ function gl708J(L){try{var J={};(L||[]).forEach(function(l){if(l.journal_no!=nul
       [].forEach.call(kvb.querySelectorAll('.k'),function(k){if(String(k.textContent).trim()==='최근 로그인'&&k.nextElementSibling)k.nextElementSibling.insertAdjacentHTML('beforeend',' <span class="tiny dim">('+(dd<=0?'오늘':dd+'일 전')+')</span>')})}}catch(e){console.error(e)}return x};
 })();
 /* ═══ v7.10 안티그래비티 R663 (10/17)
-   ① 대표 가지급·가수 약정 서랍 위 「원금 · 상계 N건(합계) · 미상계 잔액」, 상계 등록의 약정 고르기에 약정별 (상계 · 잔액)
+   ① 대표 임시지급·가수 약정 서랍 위 「원금 · 상계 N건(합계) · 미상계 잔액」, 상계 등록의 약정 고르기에 약정별 (상계 · 잔액)
    ② 세무 신고 기록 서랍 위 「상태 · 기한 D-N · 세액-납부 차액 · 같은 세목 직전 귀속 세액·납부」, 새 기록은 세목을 고를 때마다 그 세목 최근 기록 안내
    ③ 공휴일 서랍 위 「요일 · 평일 공휴일/주말과 겹침 · 그 해 등록 N일(법정·평일)」, 날짜를 바꾸면 갱신
    이미 불러온 목록을 더해 보여줄 뿐 장부·세액 값은 그대로(추가 DB 조회 없음, 금액은 대표만) ═══ */
@@ -20741,7 +20741,7 @@ function mj748V(no){try{var L=(D.mj||[]).filter(function(l){return l.journal_no=
 (function(){var _s=mjSum;mjSum=function(){var r=_s.apply(this,arguments);try{var d=el('mj_diff');if(d&&r&&r.ls&&r.ls.length){var bad=r.ls.filter(function(l){return !l.account_code||!l._side||(l.debit_amt+l.credit_amt)<=0||(l._praw&&!l.partner_id)}).length;
     if(bad)d.insertAdjacentHTML('beforeend',' <span class="tiny wn mj748" style="cursor:pointer;text-decoration:underline dotted" title="누르면 첫 빈 칸으로" onclick="mj927()">· 미입력 '+bad+'줄</span>')}}catch(e){console.error(e)}return r}})();
 
-/* ═══ 7.49 (R702) 화면 보조만 — 특수관계 소명·세금신고·투입 매출 원장 거르기 칩에 건수, 미소명 원천별 건수·소명 30일 안 만료, 만료일 남은 날, 소명 취소·신고 삭제 확인창 상세,
+/* ═══ 7.49 (R702) 화면 보조만 — 관계사 소명·세금신고·투입 매출 원장 거르기 칩에 건수, 미소명 원천별 건수·소명 30일 안 만료, 만료일 남은 날, 소명 취소·신고 삭제 확인창 상세,
    신고 기록 전체·신고·납부 건수, 원장 인원·현장·청구/내부 건수와 매출처 카드 현장 수. 이미 불러온 자료만 셈(세액·단가·매출 값 바뀌지 않음, 추가 DB 조회 없음) ═══ */
 function ch749(rows,k,vals){try{if(!isOwner()||!rows||!rows.length)return vals;var c={};rows.forEach(function(r){var v=r[k];c[v]=(c[v]||0)+1});
   return vals.map(function(v){var n=v[0]===''?rows.length:(c[v[0]]||0);return n?[v[0],v[1]+' ('+n+')'].concat(v.slice(2)):v})}catch(e){return vals}}
@@ -21367,7 +21367,7 @@ document.addEventListener('keydown',function(ev){if(ev.key!=='Enter'||ev.isCompo
 /* ═══ v8.28 (안티그래비티 R852 #1·#2·#3 10/20)
    Enter로 다음 칸 → 마지막 칸은 그 화면의 기존 단추를 누른 것과 같음(한글 조합 중·키 반복·여러 줄 칸 제외)
    ① 알림·점검 확인 메모(#ak_memo) → 「확인함」  ② 프로젝트 정보: 열면 이름 칸 커서, 이름 → 메모 → 「저장」
-   ③ 특수관계 거래 소명: 열면 명목 칸 커서, 명목 → 근거 → 상환계획 → 메모 → 「저장」 / 정산 결제조건 일수 → 저장, 조정 금액 → 서류 → 메모 → 「조정 추가」
+   ③ 관계사 거래 소명: 열면 명목 칸 커서, 명목 → 근거 → 상환계획 → 메모 → 「저장」 / 정산 결제조건 일수 → 저장, 조정 금액 → 서류 → 메모 → 「조정 추가」
    금액 계산·DB 변경 없음 ═══ */
 var EN852=[[['ak_memo'],'alAck('],[['mf_name','mf_memo'],'mfSave('],[['rp_reason','rp_url','rp_plan','rp_memo'],'rpSave('],[['st_terms'],'stTermsSave('],[['sa_amt','sa_doc','sa_memo'],'stAdjAdd(']];
 document.addEventListener('keydown',function(ev){if(ev.key!=='Enter'||ev.isComposing||ev.repeat)return;var t=ev.target;if(!t||t.tagName!=='INPUT'||!t.id)return;
@@ -21379,7 +21379,7 @@ document.addEventListener('keydown',function(ev){if(ev.key!=='Enter'||ev.isCompo
 /* ═══ v8.29 (안티그래비티 R853 #1·#2·#3 일부 10/20)
    Enter 순서표(EN852)에 더함 — 막힌 칸·숨은 칸은 건너뜀, 마지막 칸은 기존 단추와 같은 동작
    ① 현장 묶음·라인·라인 청구단가  ② 프로젝트 마스터 기본정보·프로젝트 단가·현장 추가·현장 단가
-   ③ 가지급·가수 약정·상계, 세무 신고 기록, 공휴일 — 열면 첫 칸 커서
+   ③ 임시지급·가수 약정·상계, 세무 신고 기록, 공휴일 — 열면 첫 칸 커서
    보류: 설정값 이력(sethOpen) — 급여·세무 계산에 쓰는 값이라 Enter 바로 저장은 넣지 않음. 금액 계산·DB 변경 없음 ═══ */
 EN852.push([['sg_code','sg_name','sg_bs','sg_cc','sg_cn','sg_rc','sg_rn','sg_sort','sg_memo'],'sgSave('],[['st_line','st_id','st_name','st_addr','st_memo'],'siteSave('],[['sr_d','sr_ot','sr_memo'],'siteRateSave('],
   [['px_name','px_memo'],'pjxSave('],[['pxc_a','pxc_m'],'pjxCRateSave('],[['pxs_memo'],'pjxSiteAdd('],[['pxr_d','pxr_ot','pxr_memo'],'pjxRateSave('],
@@ -21612,7 +21612,7 @@ document.addEventListener('keydown',function(ev){if(ev.key!=='Enter'||ev.isCompo
    ⑥ 부재·휴무 등록: 달력·칩으로 고르면 작성 중 표시, 이름 직접 입력 시 칩 표시 동기화, 날짜 고르면 사람/장소 칸으로
    ⑦ 알림 상세 표: 줄을 누르면 해당 창(계정 지정·계산서·대사·문서·인사카드)으로, 제목 옆 「닫기」, Esc로 닫기
    ⑧ 공통 수정층 표 연결 바로잡음(발주서 미도착·거래처별 대사 요약·전자근로계약 발행 대상, 수당 기준표 제외), 발주서 번호도 문서 원장 링크
-   ⑨ 정산 발주서 미도착·대사 이력, 계약·동의 미비, 연장수당 소급, 가지급·가수 상계 표 줄 누르면 문서·대사·인사카드·전표
+   ⑨ 정산 발주서 미도착·대사 이력, 계약·동의 미비, 연장수당 소급, 임시지급·가수 상계 표 줄 누르면 문서·대사·인사카드·전표
       (두 번 눌러 고치는 칸·링크·단추를 누를 때는 열지 않음)
    금액 계산·DB 변경 없음. 보류: R870 #3 근무지 Enter 출근 넣기(출근 공수·급여 직결) ═══ */
 (function(){try{
@@ -21660,9 +21660,9 @@ document.addEventListener('keydown',function(ev){if(ev.key!=='Enter'||ev.isCompo
   /* ⑦ 알림 상세 */
   var emp=function(r){if(r&&r.employment_no)hxOpenEmp(r.employment_no)},doc=function(no){var d=(D.sd||[]).filter(function(x){return x.doc_no===no})[0];if(d)openDoc(d);else toast('문서를 찾지 못했습니다','e')};
   var att=function(r){if(r)attOpen(r)};
-  var AR=[[/개인정보|계약·동의|계약서교부|계약.동의 미비/,emp],[/연장수당 소급/,emp],[/이의 신청/,att],[/가지급금/,null],[/인박스|계정 미분류/,function(r){fiAssignOpen(r)}],[/청구기준/,null],
-    [/미도착 60일|발주서 · 계산서/,function(r){doc(r.po_no||r.doc_no)}],[/거래처 미등록/,function(r){htOpen(r)}],[/SD 문서 미연결/,function(r){htOpen(r)}],[/안전점검 미제출|교육 서명 미완료|승인 대기|Tax-Risk 미확인|엔티티 간 거래|Tax-Risk 엔티티/,null],
-    [/Tax-Risk/,function(r){htOpen(r)}],[/홈택스 수집/,null],[/업무문서.*회계전표|헤더|차대|라인합/,function(r){doc(r.doc_no)}],[/지급의제/,emp],[/휴일·토요일|휴일 근무/,att],[/기본 지역 미지정/,emp],[/주민번호·계좌/,null],[/퇴근 미등록|펌프실/,null],
+  var AR=[[/개인정보|계약·동의|계약서교부|계약.동의 미비/,emp],[/연장수당 소급/,emp],[/이의 신청/,att],[/임시지급금/,null],[/인박스|계정 미분류/,function(r){fiAssignOpen(r)}],[/청구기준/,null],
+    [/미도착 60일|발주서 · 계산서/,function(r){doc(r.po_no||r.doc_no)}],[/거래처 미등록/,function(r){htOpen(r)}],[/SD 문서 미연결/,function(r){htOpen(r)}],[/안전점검 미제출|교육 서명 미완료|승인 대기|Tax_Check 미확인|엔티티 간 거래|Tax_Check 엔티티/,null],
+    [/Tax_Check/,function(r){htOpen(r)}],[/홈택스 수집/,null],[/업무문서.*회계전표|헤더|차대|라인합/,function(r){doc(r.doc_no)}],[/지급의제/,emp],[/휴일·토요일|휴일 근무/,att],[/기본 지역 미지정/,emp],[/주민번호·계좌/,null],[/퇴근 미등록|펌프실/,null],
     [/미지급 기한|미수금 기한/,function(r){stOpen(r)}]];
   var _ad=alDetail;alDetail=function(t){var o=_ad.apply(this,arguments);try{if(o&&!o.onRow&&o.rows&&o.rows.length){var s=String(t||'');for(var i=0;i<AR.length;i++)if(AR[i][0].test(s)){if(AR[i][1])o.onRow=AR[i][1];break}}}catch(_){}return o};
   var _ra=renderAlerts;renderAlerts=function(){var o=_ra.apply(this,arguments);try{var h=el('alDetT');if(ALF.sel&&h&&!h.querySelector('.al873x'))h.insertAdjacentHTML('beforeend',' <button type="button" class="btn sm al873x" onclick="ALF.sel=null;renderAlerts()">닫기</button>')}catch(_){}return o};
@@ -21739,8 +21739,8 @@ el('gStLed').scrollIntoView({behavior:'smooth',block:'start'})};
           st875Go(r.partner_name||'',sd)}}}catch(e){console.error(e)}
     return _g.apply(this,arguments)};
   /* R876 ① */
-  var NEED=[[/개인정보|계약·동의|계약서교부|계약.동의 미비/,['cons']],[/연장수당 소급/,['retro']],[/이의 신청/,['disp','att','attk']],[/가지급금/,['di']],[/인박스|계정 미분류/,['inbox','acct','ptn']],
-    [/청구기준/,['mrev']],[/미도착 60일|발주서 · 계산서/,['po','sd']],[/거래처 미등록|SD 문서 미연결/,['ht','sd','ptn']],[/Tax-Risk/,['ht','sd']],[/홈택스 수집/,['htr']],
+  var NEED=[[/개인정보|계약·동의|계약서교부|계약.동의 미비/,['cons']],[/연장수당 소급/,['retro']],[/이의 신청/,['disp','att','attk']],[/임시지급금/,['di']],[/인박스|계정 미분류/,['inbox','acct','ptn']],
+    [/청구기준/,['mrev']],[/미도착 60일|발주서 · 계산서/,['po','sd']],[/거래처 미등록|SD 문서 미연결/,['ht','sd','ptn']],[/Tax_Check/,['ht','sd']],[/홈택스 수집/,['htr']],
     [/업무문서.*회계전표|헤더|차대|라인합/,['gap','sd']],[/휴일·토요일|휴일 근무/,['lm','att','attk']],[/기본 지역 미지정/,['staff']],[/펌프실/,['pumpd']],[/미지급 기한|미수금 기한/,['stl']],[/지급의제/,['pay','set']]];
   var _ap=alPick;alPick=function(t){var o=_ap.apply(this,arguments);try{if(!ALF.sel)return o;var sel=ALF.sel,ks=[];
       if(typeof LZ!=='undefined'&&!LZ.fns&&typeof lzFns==='function'){LZ.fns=lzFns();if(typeof LQ!=='undefined')LQ.fns=LZ.fns}
@@ -21753,7 +21753,7 @@ el('gStLed').scrollIntoView({behavior:'smooth',block:'start'})};
    ② 정산 KPI 카드(미수·미지급·초과) 누르면 빈 표 대신 그 분류로 걸러진 표, 「초과 수령·지급」 칩 추가 /
       통장 KPI(입금·출금 총액) 누르면 입금·출금 칩으로 거름(통장 표에 입출금 칩 추가, 전체 카드는 초기화) /
       구매·자재 「안전재고 부족」 누르면 부족 품목만(상태 칸도 검색), 자재 카드는 검색 초기화
-   ③ 무결성 점검 줄 → 이름이 조금 다른 위 경보 카드(업무문서·Tax-Risk·계약·동의)도 찾아 펼침 / 인쇄 창 「직인 포함」은 직인이 있는 문서에서만 보임
+   ③ 무결성 점검 줄 → 이름이 조금 다른 위 경보 카드(업무문서·Tax_Check·계약·동의)도 찾아 펼침 / 인쇄 창 「직인 포함」은 직인이 있는 문서에서만 보임
    금액 계산·DB 변경 없음 ═══ */
 (function(){try{
   var RX=/gChip\(\s*(["'])(.*?)\1\s*,\s*(["'])(.*?)\3\s*,\s*(["'])(.*?)\5/;
@@ -21769,7 +21769,7 @@ el('gStLed').scrollIntoView({behavior:'smooth',block:'start'})};
   var _hk=htKpiClick;htKpiClick=function(t){try{if((t==='deposit'||t==='withdraw'||t==='bank')&&G.gBank){G.gBank.q='';G.gBank.chip=G.gBank.chip||{};G.gBank.chip._dir=t==='deposit'?'입금':t==='withdraw'?'출금':'';G.gBank.page=1;gRender('gBank');
         htSubNav('sec-gBank',el('subnav-ht')&&el('subnav-ht').children[1]);return}}catch(e){console.error(e)}return _hk.apply(this,arguments)};
   var _pk=pmKpiClick;pmKpiClick=function(t){var r=_pk.apply(this,arguments);try{if(t==='mat'&&G.gMat&&G.gMat.q){G.gMat.q='';gRender('gMat')}}catch(e){}return r};
-  var MAP=[/업무문서/,/Tax-Risk/,/계약·동의/];
+  var MAP=[/업무문서/,/Tax_Check/,/계약·동의/];
   var _ap=alPick;alPick=function(t){try{var all=(typeof alAll==='function'?alAll():(D.al||[]))||[],ts=all.map(function(a){return a.title});
       if(t&&ts.indexOf(t)<0&&ALF.sel!==t){MAP.some(function(rx){if(rx.test(t)){var hit=ts.filter(function(x){return rx.test(x)})[0];if(hit){t=hit;return true}}return false})}}catch(e){}
     return _ap.call(this,t)};
@@ -21877,7 +21877,7 @@ function vat882(side){try{taxTab('vat')}catch(e){}var g=G.gTaxDocs;if(!g)return;
 /* ═══ v8.54 (안티그래비티 R883 10/20)
    ① 은행·카드·홈택스: 「확인요망」 배지·상대방·거래처 글자를 눌러도 계정 지정 창/계산서 창이 열림(원장 이동·연결 카드로 새지 않음) / 홈택스↔SD 대조 줄 → 아래 홈택스 계산서 목록을 그 거래처로
    ② 노무비·급여 정산: 「지급 예정」 카드 → 사람별 표 거르기·정렬 해제, 「기한 경과」「총 잔액」 → 잔액 표 검색어도 지움 / 소속별 요약 이름 → 아래 표 그 소속만(다시 누르면 전체) / 사람별 표 이름 글자 → 그 자리 펼침
-   ③ 손익 연도 카드 다시 누르면 전체 연도 + 표로 이동 / 프로젝트·장소·열람 권한·수기 전표·가지급 약정·특수관계 소명·세무 신고 기록·기준값 이력·공휴일 표: 글자 눌러도 그 줄 전용 창
+   ③ 손익 연도 카드 다시 누르면 전체 연도 + 표로 이동 / 프로젝트·장소·열람 권한·수기 전표·임시지급 약정·관계사 소명·세무 신고 기록·기준값 이력·공휴일 표: 글자 눌러도 그 줄 전용 창
    급여 정산 표(이달 정산·정산 잔액)의 줄 클릭 추가는 입력 칸과 겹칠 수 있어 보류
    금액 계산·DB 변경 없음 ═══ */
 function pm883Grp(k){var g=G.gPm;if(!g)return;g.q='';var cur=(g.chip&&g.chip.grp)||'';gSetChip('gPm','grp',cur===k?'':k)}
@@ -22152,7 +22152,7 @@ function map892Site(){var d=MAPD.day;go('site');if(!d)return;var n=0;(function t
 /* ═══ v8.66 (안티그래비티 R893 10/21)
    ① 출장일비 창: 날짜 줄 → 그날 현장 상황판, 「인사카드 →」
    ② 제조·프로젝트 상세(실제 쓰는 판): 단계 카드의 월 줄 → 그 달 청구·매출마감(거래처 검색), 같은 거래처 계산서 후보의 날짜·건명 → 문서 창, 위 요약 「인원」「공수」「원가」 → 아래 해당 구역으로
-   ③ 특수관계 소명 창 「대상」: 전표 → 전표 창, 통장 → 통장원장 / 가지급 상계 줄 → 상계 전표 창
+   ③ 관계사 소명 창 「대상」: 전표 → 전표 창, 통장 → 통장원장 / 임시지급 상계 줄 → 상계 전표 창
    보류: 인사카드 이전 근무 합산 줄 클릭으로 체크 켜고 끄기(근속·경력 합산에 쓰이는 칸이라 체크박스로만)
    금액 계산·DB 변경 없음 ═══ */
 function mf893Ym(ym,pt){try{setMonth(ym)}catch(e){}nav888('sd_close','gMrev',pt||'')}
@@ -22327,7 +22327,7 @@ function cl905(ym,k){try{setMonth(ym)}catch(e){}setTimeout(function(){try{closeK
    금액 계산·DB 변경 없음 ═══ */
 (function(){try{
   var M=[[/청구기준/,function(r){if(!isOwner())return;mrevOpen(r)}],[/안전점검 미제출|펌프실/,function(r){if(r&&r.work_date)fb888(String(r.work_date).slice(0,10))}],[/교육 서명 미완료/,function(r){if(r&&r.person_name)pp888(r.person_name)}],
-    [/엔티티 간 거래|Tax-Risk 엔티티/,function(r){if(!isOwner())return;var no=r&&(r.voucher_no||r.jv_no);if(no)glJournal(no);else toast('연결된 전표 번호가 없습니다','e')}]];
+    [/엔티티 간 거래|Tax_Check 엔티티/,function(r){if(!isOwner())return;var no=r&&(r.voucher_no||r.jv_no);if(no)glJournal(no);else toast('연결된 전표 번호가 없습니다','e')}]];
   var _ad=alDetail;alDetail=function(t){var o=_ad.apply(this,arguments);try{var s=String(t||'');if(o&&!o.onRow&&o.rows&&o.rows.length&&!/주민번호|계좌/.test(s)){for(var i=0;i<M.length;i++)if(M[i][0].test(s)){o.onRow=M[i][1];break}}}catch(_){}return o};
   var _f=mfFlowPaint;mfFlowPaint=function(){var r=_f.apply(this,arguments);try{var w=el('mfDetail'),f=MF.flow,p=f&&f.p;if(!w||!p)return r;
       var sm=document.querySelector('.mfsum');if(sm){var go3=function(){var s0=[].filter.call(w.querySelectorAll('.sec'),function(x){var h=x.querySelector('h3');return h&&h.textContent.indexOf('월별')===0})[0];if(s0)s0.scrollIntoView({behavior:'smooth',block:'center'})};
@@ -22361,13 +22361,13 @@ async function wx907(emp,name,mode){try{if(!WX.data){WX.cache=WX.cache||{};WX.da
 }catch(e){console.error(e)}})();
 
 /* ═══ v8.79 (안티그래비티 R908 10/21)
-   ① 계열사 거래 주의 창: 「가지급금·가수금」「알림·점검」 버튼
+   ① 계열사 거래 주의 창: 「임시지급금·임시수령금」「알림·점검」 버튼
    ② 콕핏 이달 손익 한눈에: 미발행 금액 → 그 거래처 청구·매출마감, 본사 인원 이름 → 인사카드, 장부 경비 줄 → 그 계정 원장(같은 기간)
    ③ 최저 원가선 가이드: 「참고: …」 누르면 그 칸에 참고값 채움(저장은 「기준값 저장」 단추)
    보류: 목표 마진 칸 Enter 저장(견적 원가 기준값 — 8.29 결정대로 칸 이동만), 변경 이력 줄 클릭 되돌리기(줄 잘못 누르면 값이 바뀜 — 「이 값으로」 단추만), 통장 표 계열사 거래만 거르기(창 안 목록으로 대신)
    금액 계산·DB 변경 없음 ═══ */
 (function(){try{
-  var _i=rp224Info;rp224Info=function(){var r=_i.apply(this,arguments);try{var f=el('drF');if(f&&!f.querySelector('.rp908'))dr890Foot('<button class="btn rp908" onclick="drClose();go(\'fi_loan\')">가지급금·가수금</button> <button class="btn" onclick="drClose();go(\'alerts\')">알림·점검</button>')}catch(e){console.error(e)}return r};
+  var _i=rp224Info;rp224Info=function(){var r=_i.apply(this,arguments);try{var f=el('drF');if(f&&!f.querySelector('.rp908'))dr890Foot('<button class="btn rp908" onclick="drClose();go(\'fi_loan\')">임시지급금·임시수령금</button> <button class="btn" onclick="drClose();go(\'alerts\')">알림·점검</button>')}catch(e){console.error(e)}return r};
   var _b=bep226Paint;bep226Paint=function(){var r=_b.apply(this,arguments);try{[['bep_md_cost'],['bep_md_monthly']].forEach(function(a){var i=el(a[0]);if(!i||!i.placeholder)return;var lb=i.parentNode&&i.parentNode.querySelector('label .tiny.dim');if(!lb||lb.dataset.b908)return;lb.dataset.b908=1;lb.style.cursor='pointer';lb.style.textDecoration='underline dotted';lb.title='참고값 '+i.placeholder+' 채우기';lb.onclick=function(e){e.preventDefault();i.value=i.placeholder;i.focus();try{i.dispatchEvent(new Event('input',{bubbles:true}))}catch(_){}}})}catch(e){console.error(e)}return r};
 }catch(e){console.error(e)}})();
 
@@ -25576,7 +25576,7 @@ function ck991Build(yr,gl,dash,sdm,mrev,arRows,diRows,gCash,curPl,htInv){
     }
   });
 
-  /* 통장 잔액 · 미수금 · 예상 부가세 · 가지급/가수금 */
+  /* 통장 잔액 · 미수금 · 예상 부가세 · 임시지급/임시수령금 */
   var bankBal=0,bankDate='';
   if(gCash&&Array.isArray(gCash.banks)){
     var bvsB=gCash.banks.filter(function(b){return !b.ent||b.ent==='BVS'})[0]||gCash.banks[0];
@@ -27393,7 +27393,7 @@ function rt997SyncMonthly(){
   document.head.appendChild(st);
 })();
 
-/* ─── [C1011] B: 전 화면 가지급·가수금·인정이자·상여처분·Tax-Risk·특수관계 표시 차단 ─── */
+/* ─── [C1011] B: 전 화면 임시지급·임시수령금·약정이자·소득처분·Tax_Check·관계사 표시 차단 ─── */
 renderLn=function(){var s=el('sec-gLn');if(s)s.style.display='none';};
 renderRp=function(){var s=el('sec-rp');if(s)s.style.display='none';};
 htRisk=function(){};
@@ -27456,7 +27456,7 @@ ckSidePaint=function(){
   if(!box)return;
   var full=D.apv||[];
   var F=full.filter(function(r){
-    return (!r.entity||r.entity==='BVS') && !/Tax-Risk|가지급|가수금|인정이자|특수관계/i.test(r.title||'');
+    return (!r.entity||r.entity==='BVS') && !/Tax_Check|임시지급|임시수령금|약정이자|관계사/i.test(r.title||'');
   });
   var tdn=el('ckTdN');
   if(tdn)tdn.textContent=F.length?(F.length+'건'):'';
@@ -27476,7 +27476,7 @@ ckSidePaint=function(){
     }).join('');
   }
   var alRows=(D.al||[]).filter(function(r){
-    return !/Tax-Risk|가지급|가수금|인정이자|지급의제|연장수당 소급|비과세 요건|휴일·토요일|휴일 근무|특수관계|엔티티 간 거래/i.test(r.title||'');
+    return !/Tax_Check|임시지급|임시수령금|약정이자|지급의제|연장수당 소급|비과세 요건|휴일·토요일|휴일 근무|관계사|엔티티 간 거래/i.test(r.title||'');
   });
   var alSum=alRows.reduce(function(s,r){return s+(+r.cnt||0)},0);
   h+='<div class="ck-it" style="cursor:pointer;margin-top:4px" onclick="go(\'alerts\')"><div class="t"><b>알림 '+alSum.toLocaleString('ko-KR')+'건 ›</b></div></div>';
@@ -27508,7 +27508,7 @@ alAll=function(){
   var apOverdueCount=(D.stl||[]).filter(function(r){return r.side==='purchase'&&r.settle_status==='overdue'&&(Math.abs(+r.balance_amt||0)>1000)}).length;
   var poOverdueCount=(D.po||[]).filter(function(r){return (+r.age_days||0)>setgNum('po_overdue_days',60)}).length;
   var list=(D.al||[]).filter(function(r){
-    return !/Tax-Risk|가지급|가수금|인정이자|지급의제|연장수당 소급|비과세 요건|휴일·토요일|휴일 근무|특수관계|엔티티 간 거래/i.test(r.title||'');
+    return !/Tax_Check|임시지급|임시수령금|약정이자|지급의제|연장수당 소급|비과세 요건|휴일·토요일|휴일 근무|관계사|엔티티 간 거래/i.test(r.title||'');
   }).map(function(r){
     var c=+r.cnt||0;
     if(/업무문서.*회계전표|헤더|차대|라인합/.test(r.title)&&typeof realGapRows==='function'){
