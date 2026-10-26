@@ -35711,7 +35711,7 @@ function cl9139EnhanceCockpitLateColor(){
 })();
 
 
-/* ═══ v9.141 ([C1090] / [R1096]·제안 #68·제안 #69 반영 10-26: ① [R1096] 결산 › 채권·채무 대사 #gPcash 합계행 복구(foot:true, 대표 전용)·#gStPtn 미결/기한경과/경과금액/초과 합계 보강 및 상단 KPI 동일 원천 단일화·#gStPo/#gStMatch 필터 칩 ② 제안 #68 죽은 앞 선언 18개 삭제 완료(전역 function 중복 0건) ③ 제안 #69 외부 js 2개 정적·버전·해시 검증 연동) ═══ */
+/* ═══ v9.141 ([C1090]·[C1091] / [R1096]·[R1097]·제안 #68·제안 #69 반영 10-26: ① [R1096] 결산 › 채권·채무 대사 #gPcash 합계행 복구(foot:true, 대표 전용)·#gStPtn 미결/기한경과/경과금액/초과 합계 보강 및 상단 KPI 동일 원천 단일화·#gStPo/#gStMatch 필터 칩 ② 제안 #68 죽은 앞 선언 18개 삭제 완료(전역 function 중복 0건) ③ [R1097] 세무·부가세 #gVatSum 상태 표시 및 행 클릭 시 tfOpen 미리 채우기(즉시 저장 0, 세액 옆 'ERP 계산' 출처 표기)·#gTaxPay 대표 전용 CSV(주민번호·계좌번호 열 제외) 및 사번 기반 hxOpenEmp/fdSlip 직결·#gTaxDocs 검색/발행상태 칩 ④ 제안 #69 외부 js 2개 정적·버전·해시 검증 연동) ═══ */
 (function(){
   try {
     window.V9141_APPLIED = true;
@@ -35748,7 +35748,6 @@ function cl9139EnhanceCockpitLateColor(){
       }
 
       if(cur.length > 0){
-        /* When D.stl (cur) is present, compute n_open, total_amt, paid_amt, balance_amt, n_overdue, overdue_amt from cur so #gStPtn and #stKpi share the exact same invoice source */
         cur.forEach(function(r){
           var item = ensureKey(r.side, r.partner_name, r);
           var tot = (+r.total_amt || 0);
@@ -35768,7 +35767,6 @@ function cl9139EnhanceCockpitLateColor(){
             }
           }
         });
-        /* Enrich first_due_on, last_paid_on, credit_amt from D.stp if available */
         ptn.forEach(function(p){
           if(!p) return;
           var item = ensureKey(p.side, p.partner_name, p);
@@ -35779,7 +35777,6 @@ function cl9139EnhanceCockpitLateColor(){
           if(+p.credit_amt > 0) item.credit_amt += (+p.credit_amt || 0);
         });
       } else {
-        /* Fallback when cur is empty: aggregate D.stp keyed by side|normPName */
         ptn.forEach(function(p){
           if(!p) return;
           var item = ensureKey(p.side, p.partner_name, p);
@@ -35793,7 +35790,6 @@ function cl9139EnhanceCockpitLateColor(){
         });
       }
 
-      /* Reconcile credit_amt with pcRows (ar_over / ap_over) so #gStPtn credit_amt sum matches stKpi Card 4 (초과 수령·지급) */
       var ptnCreditSum = Object.values(ptnMap).reduce(function(a, x){ return a + (+x.credit_amt || 0); }, 0);
       var pcCreditSum = pcRows.reduce(function(a, x){ return a + (+x.ar_over || 0) + (+x.ap_over || 0); }, 0);
       if(pcCreditSum > 0 && ptnCreditSum !== pcCreditSum){
@@ -35850,7 +35846,7 @@ function cl9139EnhanceCockpitLateColor(){
           }
         }
 
-        /* (b) #gStPtn tfoot (대표 전용, n_open / total_amt / paid_amt / balance_amt / n_overdue / overdue_amt / credit_amt 전 항목 합계) */
+        /* (b) #gStPtn tfoot (대표 전용) */
         var stPtnEl = el('gStPtn');
         if(stPtnEl){
           var stPtnTbl = stPtnEl.querySelector('table');
@@ -35893,6 +35889,92 @@ function cl9139EnhanceCockpitLateColor(){
       } catch(e){ console.error(e); }
     };
 
+    /* ── 2. [R1097] + [C1091] 조건 ①·②·③: 세무·부가세 (#gVatSum / #gTaxPay / #gTaxDocs / tfOpen) ── */
+    window.cl9141DefaultVatDue = function(qKey){
+      var m = String(qKey || '').match(/^(\d{4})-Q([1-4])$/);
+      if(!m) return '';
+      var y = +m[1], q = +m[2];
+      if(q === 1) return y + '-04-25';
+      if(q === 2) return y + '-07-25';
+      if(q === 3) return y + '-10-25';
+      return (y + 1) + '-01-25';
+    };
+
+    window.cl9141OpenVatFiling = function(r){
+      if(!r || !(typeof isOwner === 'function' && isOwner())) return;
+      var tfList = (typeof D !== 'undefined' && Array.isArray(D.tf)) ? D.tf : [];
+      var f = tfList.filter(function(x){ return x && x.tax_kind === 'vat' && x.period_label === r.name; })[0];
+      var defDue = r.due_date || cl9141DefaultVatDue(r.quarter);
+      var draft = f
+        ? Object.assign({}, f, {_fromVatSum: true, _erpCalcTax: r.net_tax})
+        : {tax_kind: 'vat', period_label: r.name || '', due_on: defDue, tax_amt: r.net_tax, _fromVatSum: true, _erpCalcTax: r.net_tax};
+      /* [C1091] 조건 ①: 미리 채우기만 하고 자동 저장 금지 (대표가 [저장] 클릭 시에만 tfSave 실행) */
+      if(typeof tfOpen === 'function') tfOpen(draft);
+    };
+
+    var _origTfOpen9141 = (typeof tfOpen === 'function') ? tfOpen : null;
+    if(_origTfOpen9141){
+      tfOpen = function(r){
+        var res = _origTfOpen9141.apply(this, arguments);
+        try {
+          /* [C1091] 조건 ①: 세액 칸 옆에 'ERP 계산'이라고 숫자 출처만 표시 (설명 문장 0건) */
+          var taxInp = el('tf_tax');
+          if(taxInp && r && (r._fromVatSum || r._erpCalcTax != null || r.tax_kind === 'vat')){
+            var fBox = taxInp.closest('.f');
+            var lbl = fBox ? fBox.querySelector('label') : null;
+            if(lbl && !lbl.querySelector('#tfErpCalcBadge9141')){
+              lbl.insertAdjacentHTML('beforeend', ' <span class="pill b" id="tfErpCalcBadge9141" style="margin-left:4px">ERP 계산</span>');
+            }
+          }
+        } catch(e){ console.error(e); }
+        return res;
+      };
+    }
+
+    /* [C1091] 조건 ②: #gTaxPay CSV는 대표 전용이며 주민번호(rrn/rrn_m)·계좌번호(bank/bank_m) 열을 제외 */
+    window.cl9141GetCsvCols = function(id){
+      var g = (typeof G !== 'undefined') ? G[id] : null;
+      if(!g || !Array.isArray(g.cols)) return [];
+      return g.cols.filter(function(c){
+        if(!c || c.noCsv) return false;
+        if(id === 'gTaxPay' && (c.k === 'rrn' || c.k === 'rrn_m' || c.k === 'bank' || c.k === 'bank_m')) return false;
+        return true;
+      });
+    };
+
+    window.cl9141BuildCsvLines = function(id){
+      var cols = cl9141GetCsvCols(id);
+      var rows = gData(id);
+      return [cols.map(function(c){ return '"' + c.t + '"'; }).join(',')].concat(
+        rows.map(function(r){
+          return cols.map(function(c){
+            var v = r[c.k];
+            return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+          }).join(',');
+        })
+      );
+    };
+
+    var _origGCsv9141 = (typeof gCsv === 'function') ? gCsv : null;
+    if(_origGCsv9141){
+      gCsv = function(id){
+        if(id === 'gTaxPay'){
+          if(!(typeof isOwner === 'function' && isOwner())) return;
+          var rows = gData(id);
+          var lines = cl9141BuildCsvLines(id);
+          window._lastCsvLines9141 = lines;
+          var b = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8'});
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = 'BVS_TaxPay_' + todayKst() + '.csv';
+          a.click();
+          toast('CSV 내보내기 ' + rows.length + '건');
+          return;
+        }
+        return _origGCsv9141.apply(this, arguments);
+      };
+    }
+
     var _origGrid9141 = grid;
     grid = function(id, cols, opt){
       try {
@@ -35914,6 +35996,8 @@ function cl9139EnhanceCockpitLateColor(){
           }
         }
         if(id === 'gStPo' && opt && Array.isArray(opt.rows)){
+          var bPo = el('gStPo');
+          if(bPo && !bPo.dataset.built9141){ delete bPo.dataset.built; bPo.dataset.built9141 = '1'; }
           opt.foot = own;
           opt.rows.forEach(function(r){
             if(!r) return;
@@ -35926,6 +36010,8 @@ function cl9139EnhanceCockpitLateColor(){
           }
         }
         if(id === 'gStMatch' && opt && Array.isArray(opt.rows)){
+          var bMt = el('gStMatch');
+          if(bMt && !bMt.dataset.built9141){ delete bMt.dataset.built; bMt.dataset.built9141 = '1'; }
           opt.foot = own;
           opt.chips = opt.chips || [];
           if(!opt.chips.some(function(c){ return c && c.k === 'side'; })){
@@ -35933,6 +36019,80 @@ function cl9139EnhanceCockpitLateColor(){
               {k:'side', vals:[['','구분 전체'],['sales','매출'],['purchase','매입']]},
               {k:'rule_name', vals:[['','방식 전체'],['자동','자동'],['수동','수동']]}
             ].concat(opt.chips);
+          }
+        }
+        /* [R1097] #gVatSum: 진행 상태(D.tf 연동) + 행 클릭 시 tfOpen 미리 채우기 */
+        if(id === 'gVatSum' && opt && Array.isArray(opt.rows)){
+          var tfArr = (typeof D !== 'undefined' && Array.isArray(D.tf)) ? D.tf : [];
+          opt.rows.forEach(function(r){
+            if(!r) return;
+            var f = tfArr.filter(function(x){ return x && x.tax_kind === 'vat' && x.period_label === r.name; })[0];
+            if(!r.due_date) r.due_date = (f && f.due_on) ? f.due_on : cl9141DefaultVatDue(r.quarter);
+            r.status = f ? (f.paid_on ? '납부' : (f.filed_on ? '신고' : '미신고')) : '미신고';
+          });
+          if(Array.isArray(cols)){
+            cols.forEach(function(c){
+              if(c && c.k === 'status'){
+                c.f = function(v){
+                  if(v === '납부') return '<span class="pill g">납부</span>';
+                  if(v === '신고') return '<span class="pill b">신고</span>';
+                  return '<span class="pill y">미신고</span>';
+                };
+              }
+            });
+          }
+          opt.onRow = function(r){ cl9141OpenVatFiling(r); };
+        }
+        /* [R1097] + [C1091] 조건 ②·③: #gTaxPay 대표 전용 CSV(주민번호·계좌번호 열 제외) + 성명 클릭 시 사번(employment_no) 인자만 사용 + 행 클릭 시 fdSlip */
+        if(id === 'gTaxPay' && opt && Array.isArray(opt.rows)){
+          var bTp = el('gTaxPay');
+          if(bTp && bTp.dataset.lastCsvOwn !== String(own)){
+            delete bTp.dataset.built;
+            bTp.dataset.lastCsvOwn = String(own);
+          }
+          opt.csv = own;
+          opt.rows.forEach(function(r){
+            if(!r) return;
+            var empNo = r.employment_no || ((typeof cl9137FindEmpNoByName === 'function') ? cl9137FindEmpNoByName(r.person_name) : '') || '';
+            r.employment_no = empNo;
+          });
+          if(Array.isArray(cols)){
+            cols.forEach(function(c){
+              if(!c) return;
+              if(c.k === 'rrn' || c.k === 'rrn_m' || c.k === 'bank' || c.k === 'bank_m'){
+                c.noCsv = 1;
+              }
+              if(c.k === 'person_name'){
+                c._pl233 = 1;
+                c.f = function(v, r){
+                  var empNo = (r && r.employment_no) ? String(r.employment_no).trim() : '';
+                  if(empNo && empNo !== String(v || '').trim()){
+                    return '<b class="cl9141-tax-emp" data-emp="' + esc(empNo) + '" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px" title="인사 원장 열기" onclick="event.stopPropagation();hxOpenEmp(' + ERPC.jsq(empNo) + ')">' + esc(v || '') + '</b>';
+                  }
+                  return '<b>' + esc(v || '') + '</b>';
+                };
+              }
+            });
+          }
+          opt.onRow = function(r){
+            if(own && r && r.person_name && typeof fdSlip === 'function'){
+              fdSlip(r.person_name);
+            }
+          };
+        }
+        /* [R1097] #gTaxDocs: 검색창 + 발행상태 칩 추가 */
+        if(id === 'gTaxDocs' && opt && Array.isArray(opt.rows)){
+          var bTd = el('gTaxDocs');
+          if(bTd && !bTd.dataset.built9141){ delete bTd.dataset.built; bTd.dataset.built9141 = '1'; }
+          opt.rows.forEach(function(r){
+            if(!r) return;
+            r._apvSt = r.approval_no ? 'issued' : 'unissued';
+          });
+          opt.q = opt.q || ['partner_name', 'title', 'approval_no', 'doc_date'];
+          opt.qph = opt.qph || '거래처·건명·승인번호·일자';
+          opt.chips = opt.chips || [];
+          if(!opt.chips.some(function(c){ return c && c.k === '_apvSt'; })){
+            opt.chips.push({k:'_apvSt', vals:[['','발행 전체'],['issued','발행완료'],['unissued','미발행']]});
           }
         }
       } catch(e){ console.error(e); }
@@ -35972,7 +36132,6 @@ function cl9139EnhanceCockpitLateColor(){
     renderSettle = function(){
       var res = _origRenderSettle9141.apply(this, arguments);
       try {
-        /* Ensure stKpi and #gStPtn use the exact same unified source (cl9141BuildCleanPtn + pcRows) */
         var stKpiEl = el('stKpi');
         if(stKpiEl && typeof G !== 'undefined' && G.gStPtn){
           var uRows = G.gStPtn.rows || [];
@@ -36004,7 +36163,6 @@ function cl9139EnhanceCockpitLateColor(){
     };
   } catch(e){ console.error(e); }
 })();
-
 </script>
 </body>
 </html>
