@@ -1606,13 +1606,23 @@ function grid(id,cols,opt){
   opt=opt||{};var g=G[id]=G[id]||{q:'',chip:{},page:1,sort:null};
   g.cols=cols;g.opt=opt;g.rows=opt.rows||[];
   if(opt.sort&&!g.sort)g.sort=opt.sort;
-  var box=el(id);
-  if(!box.dataset.built){box.dataset.built='1';
-    var bar='<div class="tbar">';
-    if(opt.q)bar+='<input id="q_'+id+'" class="q" placeholder="'+esc(opt.qph||'검색')+'" oninput="G['+ERPC.jsq(id)+'].q=this.value;G['+ERPC.jsq(id)+'].page=1;gRender('+ERPC.jsq(id)+')">';
-    (opt.chips||[]).forEach(function(c){bar+='<span class="chipgrp" data-k="'+c.k+'">'+c.vals.map(function(v){return '<span class="chip'+(v[0]===''?' on':'')+'" onclick="gChip('+ERPC.jsq(id)+','+ERPC.jsq(c.k)+','+ERPC.jsq(v[0])+',this)">'+esc(v[1])+'</span>'}).join(' ')+'</span>'});
-    bar+='<span class="cnt"></span>'+(opt.csv!==false?'<button class="btn sm" onclick="gCsv('+ERPC.jsq(id)+')">CSV</button>':'')+'</div>';
-    box.innerHTML=(opt.q||opt.chips||opt.csv!==false?bar:'')+'<div class="tw"><table><thead></thead><tbody></tbody><tfoot></tfoot></table></div><div class="more hide"></div>';
+  var box=el(id);if(!box)return;
+  var sig=JSON.stringify([!!opt.q,opt.qph||'',(opt.chips||[]).map(function(c){return c.k+':'+(c.vals||[]).map(function(v){return v[0]+'='+v[1]}).join(',')}),opt.csv!==false]);
+  var hasBar=!!(opt.q||opt.chips||opt.csv!==false);
+  var mkBar=function(){
+    var bar='';
+    if(opt.q)bar+='<input id="q_'+id+'" class="q" placeholder="'+esc(opt.qph||'검색')+'" value="'+esc(g.q||'')+'" oninput="G['+ERPC.jsq(id)+'].q=this.value;G['+ERPC.jsq(id)+'].page=1;gRender('+ERPC.jsq(id)+')">';
+    (opt.chips||[]).forEach(function(c){var cur=g.chip&&g.chip[c.k]!==undefined?String(g.chip[c.k]):'';bar+='<span class="chipgrp" data-k="'+c.k+'">'+c.vals.map(function(v){return '<span class="chip'+(String(v[0])===cur?' on':'')+'" onclick="gChip('+ERPC.jsq(id)+','+ERPC.jsq(c.k)+','+ERPC.jsq(v[0])+',this)">'+esc(v[1])+'</span>'}).join(' ')+'</span>'});
+    bar+='<span class="cnt"></span>'+(opt.csv!==false?'<button class="btn sm" onclick="gCsv('+ERPC.jsq(id)+')">CSV</button>':'');
+    return bar;
+  };
+  if(!box.dataset.built){box.dataset.built='1';box.dataset.sig=sig;
+    box.innerHTML=(hasBar?'<div class="tbar">'+mkBar()+'</div>':'')+'<div class="tw"><table><thead></thead><tbody></tbody><tfoot></tfoot></table></div><div class="more hide"></div>';
+  }else if(box.dataset.sig!==sig){box.dataset.sig=sig;
+    var ck={};(opt.chips||[]).forEach(function(c){ck[c.k]=1});Object.keys(g.chip||{}).forEach(function(k){if(!ck[k])delete g.chip[k]});
+    var tb=box.querySelector('.tbar');
+    if(hasBar){if(tb)tb.innerHTML=mkBar();else box.insertAdjacentHTML('afterbegin','<div class="tbar">'+mkBar()+'</div>')}
+    else if(tb)tb.remove();
   }
   gRender(id);
 }
@@ -6880,7 +6890,7 @@ function renderSiteM(){var sec=el('sec-gSiteM');if(!sec)return;if(!isOwner()){se
     grid('gSiteM',[{k:'group_code',t:'현장 코드',l:1,cls:'dim'},{k:'group_name',t:'현장',l:1,f:function(v){return '<b>'+esc(v)+'</b>'}},{k:'billing',t:'청구처',l:1,f:function(v){return v?esc(v):'<span class="dim">–</span>'}},
       {k:'line_txt',t:'라인',l:1,cls:'tiny'},{k:'act',t:'라인 수',f:'int'},{k:'dmin',t:'일단가',f:function(v,r){return v==null?'<span class="dim">기본값</span>':(r.dmin===r.dmax?won(v):won(r.dmin)+'~'+won(r.dmax))}},
       {k:'_act',t:'사용',l:1,f:function(v){return v==='1'?'사용':'<span class="dim">안 씀</span>'}}],
-      {rows:grp,q:['group_code','group_name','billing','line_txt'],qph:'현장·청구처·라인',page:60,onRow:siteGrpOpen,empty:'현장 없음'});
+      {rows:grp,q:['group_code','group_name','billing','line_txt'],qph:'현장·청구처·라인',chips:[{k:'_act',vals:[['','전체'],['1','사용'],['0','안 씀']]}],foot:isOwner(),page:60,onRow:siteGrpOpen,empty:'현장 없음'});
     return}
   grid('gSiteM',[{k:'site_id',t:'라인 코드',l:1,cls:'dim'},{k:'group_name',t:'현장',l:1},{k:'line_name',t:'라인',l:1},{k:'partner_name',t:'청구처',l:1,f:function(v){return v?esc(v):'<span class="wn">미지정</span>'}},
     {k:'_d',t:'일단가',f:function(v){return v==null?'<span class="dim">기본값</span>':won(v)}},{k:'_ot',t:'잔업 시급',f:function(v){return v==null?'<span class="dim">기본값</span>':won(v)}},
@@ -6888,7 +6898,8 @@ function renderSiteM(){var sec=el('sec-gSiteM');if(!sec)return;if(!isOwner()){se
     {rows:rows,q:['site_id','site_name','group_name','line_name','partner_name','memo'],qph:'현장·라인·청구처',chips:[{k:'_act',vals:[['','전체'],['1','사용'],['0','안 씀']]}],page:60,onRow:siteOpen,sort:{k:'site_name',d:1},empty:'현장 없음'});
 }
 function siteGrpOpen(G){var L=G.lines.slice().sort(function(a,b){return (a.is_active===false)-(b.is_active===false)||String(a.line_name||'').localeCompare(String(b.line_name||''),'ko')});
-  var body=kv([['현장 코드',esc(G.group_code||'-')],['현장',esc(G.group_name)],['청구처',esc(G.billing||'-')],['라인',G.act+'곳 사용 / 전체 '+G.n]])
+  var billHtml=typeof cl9143SiteGrpBill==='function'?cl9143SiteGrpBill(G,L):esc(G.billing||'-');
+  var body=kv([['현장 코드',esc(G.group_code||'-')],['현장',esc(G.group_name)],['청구처',billHtml],['라인',G.act+'곳 사용 / 전체 '+G.n]])
    +'<h4 style="margin:14px 0 6px">라인 '+sg687H(G,L)+' <span class="tiny dim">줄을 누르면 라인별 단가·청구처</span></h4><table style="width:100%"><thead><tr><th class="l">라인 코드</th><th class="l">라인</th><th>일단가</th><th>잔업 시급</th><th class="l">사용</th></tr></thead><tbody>'
    +L.map(function(r){var c=srateCur(r.site_id);return '<tr class="click" onclick="siteOpenId('+ERPC.jsq(r.site_id)+')"><td class="l dim">'+esc(r.site_id)+'</td><td class="l"><b>'+esc(r.line_name||r.site_name)+'</b></td><td>'+(c?won(c.contract_daily_amt):'<span class="dim">기본값</span>')+'</td><td>'+(c?won(c.contract_ot_hourly_amt):'')+'</td><td class="l">'+(r.is_active===false?'<span class="dim">안 씀</span>':'사용')+'</td></tr>'}).join('')+'</tbody></table>';
   drOpen(G.group_name+' · 현장',body,'<button class="btn" onclick="drClose()">닫기</button>'+(G.group_code?'<button class="btn" onclick="sgForm('+ERPC.jsq(G.group_code)+')">현장 정보 수정</button><button class="btn p" onclick="siteNewIn('+ERPC.jsq(G.group_code)+')">+ 라인 추가</button>':''))}
@@ -6981,7 +6992,7 @@ function siteOpen(r){var sid=r.site_id,h=srateOf(sid);
   var ph=(D.srate||[]).filter(function(x){return x.site_id===sid&&(x.job_grade||'default')==='default'&&x.employment_no&&!x.contract_code}).sort(function(a,b){return String(a.person_name||'').localeCompare(String(b.person_name||''),'ko')||String(b.valid_from).localeCompare(String(a.valid_from))});
   var ppl={};(D.staff||[]).filter(function(s){return !s.resigned_on}).forEach(function(s){ppl[s.employment_no]=s.name});ph.forEach(function(x){if(!ppl[x.employment_no])ppl[x.employment_no]=x.person_name||x.employment_no});
   var po=Object.keys(ppl).sort(function(a,b){return String(ppl[a]).localeCompare(String(ppl[b]),'ko')}).map(function(k){return '<option value="'+esc(k)+'">'+esc(ppl[k])+st748Cur(ph,k)+'</option>'}).join('');
-  var row=function(x,who){return '<tr>'+(who?'<td class="l">'+esc(x.person_name||x.employment_no)+'</td>':'')+'<td class="l">'+esc(x.valid_from)+'</td><td class="l">'+srInf(x.valid_to)+'</td><td>'+won(x.contract_daily_amt)+'</td><td>'+won(x.contract_ot_hourly_amt)+'</td><td class="l tiny">'+esc(x.memo||'')+'</td><td><button class="stbtn" onclick="srEdit('+x.rate_id+')">수정</button> <button class="stbtn x" onclick="srDel('+x.rate_id+')">삭제</button></td></tr>'};
+  var row=function(x,who){var pCell=who?'<td class="l">'+(x.employment_no?'<a href="#" class="siteRateEmp9143" onclick="event.preventDefault();event.stopPropagation();hxOpenEmp('+ERPC.jsq(String(x.employment_no))+')">'+esc(x.person_name||x.employment_no)+'</a>':esc(x.person_name||''))+'</td>':'';return '<tr class="siteRateRow9143" style="cursor:pointer" onclick="srEdit('+x.rate_id+')">'+pCell+'<td class="l">'+esc(x.valid_from)+'</td><td class="l">'+srInf(x.valid_to)+'</td><td>'+won(x.contract_daily_amt)+'</td><td>'+won(x.contract_ot_hourly_amt)+'</td><td class="l tiny">'+esc(x.memo||'')+'</td><td><button class="stbtn" onclick="event.stopPropagation();srEdit('+x.rate_id+')">수정</button> <button class="stbtn x" onclick="event.stopPropagation();srDel('+x.rate_id+')">삭제</button></td></tr>'};
   var body='<div class="stp-tabs"><button class="stp-tab" data-t="basic" onclick="stpGo(\'basic\')">기본정보</button><button class="stp-tab" data-t="rate" onclick="stpGo(\'rate\')">청구 단가'+((h.length+ph.length)?' ('+(h.length+ph.length)+')':'')+'</button></div>'
    +'<div class="stp" data-t="basic">'+siteForm(r)+'<button class="btn p" onclick="siteSave()">저장</button>'+chgBox([['op.sites',sid]])+'</div><div class="stp" data-t="rate">'
    +'<h4 style="margin:4px 0 6px">청구 단가 (현장 기본)</h4><table style="width:100%"><thead><tr><th class="l">적용</th><th class="l">종료</th><th>일단가</th><th>잔업 시급</th><th class="l">메모</th><th></th></tr></thead><tbody>'
@@ -6994,7 +7005,7 @@ function siteOpen(r){var sid=r.site_id,h=srateOf(sid);
    +'<div class="f"><label>메모</label><input id="sr_memo" class="in"></div>'
    +'<button class="btn sm p" onclick="siteRateSave('+ERPC.jsq(sid)+')">단가 저장</button></div>';
   drOpen('라인 · '+(r.site_name||sid),body,'<button class="btn d" style="margin-right:auto" onclick="siteDel('+ERPC.jsq(sid)+')">라인 삭제</button><button class="btn" onclick="drClose()">닫기</button>');stpGo(STP.last==='rate'?'rate':'basic');chgFill()}
-function srEdit(id){var x=(D.srate||[]).filter(function(y){return y.rate_id===id})[0];if(!x)return;el('sr_emp').value=x.employment_no||'';el('sr_from').value=x.valid_from;el('sr_d').value=x.contract_daily_amt;el('sr_ot').value=x.contract_ot_hourly_amt||0;el('sr_memo').value=x.memo||'';el('sr_d').focus()}
+function srEdit(id){var x=(D.srate||[]).filter(function(y){return y.rate_id===id})[0];if(!x)return;el('sr_emp').value=x.employment_no||'';el('sr_from').value=x.valid_from;var dEl=el('sr_d');dEl.value=x.contract_daily_amt;el('sr_ot').value=x.contract_ot_hourly_amt||0;el('sr_memo').value=x.memo||'';if(dEl.scrollIntoView)dEl.scrollIntoView({behavior:'smooth',block:'nearest'});dEl.focus()}
 async function srDel(id){var x=(D.srate||[]).filter(function(y){return y.rate_id===id})[0];if(!x)return;
   var ok=await ask('단가 삭제',esc(x.person_name||'현장 기본')+' · '+esc(x.valid_from)+' 적용 '+won(x.contract_daily_amt)+'. 지우면 직전 단가가 이 기간을 이어받습니다.',{ok:'삭제',danger:true});if(!ok)return;
   var r=await sb.rpc('ceo_site_rate_remove',{p_rate_id:id});rpcDone(r,'삭제했습니다')}
@@ -9942,7 +9953,8 @@ function fdTaxHtml(d){var im=d.inv_month||[],s=im.filter(function(x){return x.si
    +'<div class="sec"><h3>'+fdYm()+' 세금계산서 <span class="cnt">'+iv.length+'건'+fd753T(iv)+'</span><span class="r"><button class="btn sm p" onclick="fdTaxZip()">세무사 전달 엑셀(ZIP)</button></span></h3><div class="tb">'
    +(iv.length?'<div class="tw"><table><thead><tr><th class="l">작성일</th><th class="l">구분</th><th class="l">상대</th><th>공급가</th><th>세액</th><th class="l">장부</th><th class="l">결제</th></tr></thead><tbody>'+iv.map(function(x){
       return '<tr><td class="l">'+esc(x.date)+'</td><td class="l">'+(x.side==='sales'?'<span class="pill b">매출</span>':'<span class="pill">매입</span>')+'</td><td class="l">'+esc(x.who||'')+(x.related?' <span class="pill g">그룹사 '+esc(x.related)+'</span>':'')+(x.amended?' <span class="pill y">수정</span>':'')+'</td><td>'+won(x.supply)+'</td><td>'+won(x.tax)+'</td>'
-        +'<td class="l">'+(x.doc_no?'<span class="tiny">'+esc(x.doc_no)+'</span>':'<span class="wn">장부 미등록</span>')+'</td><td class="l">'+(x.settle==='paid'?'<span class="pill g">'+(x.side==='sales'?'입금 완료':'지급 완료')+'</span>':x.settle?'<span class="pill y">남음 '+won(x.balance)+'</span>':'<span class="dim">–</span>')+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="tiny" style="padding:10px 12px">이달 계산서 없음</div>')+'</div></div>'}
+        +'<td class="l">'+(x.doc_no?'<span class="tiny">'+esc(x.doc_no)+'</span>':'<span class="wn">장부 미등록</span>')+'</td><td class="l">'+(x.settle==='paid'?'<span class="pill g">'+(x.side==='sales'?'입금 완료':'지급 완료')+'</span>':x.settle?'<span class="pill y">남음 '+won(x.balance)+'</span>':'<span class="dim">–</span>')+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="tiny" style="padding:10px 12px">이달 계산서 없음</div>')+'</div></div>'
+}
 async function fdTaxZip(){TAX.period=fdYm();toast('자료 불러오는 중…','g');try{await lzFetch(['sd','ht'],false)}catch(e){}taxZip()}
 function fdPayHtml(d){var p=d.payout||{},ps=(p.people||[]).slice().sort(function(a,b){return (+b.month_left||0)-(+a.month_left||0)}),g=p.gongdan||{},t=p.tax||{};
   if(p.error)return '<div class="tiny" style="padding:12px">'+esc(p.error)+'</div>';
@@ -22629,7 +22641,8 @@ async function it935Open(){if(!isOwner())return;var m=M(),d=REG.cache[m]||{},L=i
    +(chk.length?'<div class="tiny dim" style="margin-bottom:8px;line-height:1.6">'+pm+' 실제 / 추정: '+chk.join(' · ')+'</div>':'')
    +'<table style="width:100%"><thead><tr><th class="l">이름</th><th>과세급여</th><th>가족</th><th>'+pm+' (과세 / 소득세)</th><th>추정</th><th>넣을 값</th></tr></thead><tbody>'
    +IT935.map(function(x,i){return '<tr><td class="l">'+n905(x.nm)+'</td><td>'+won(x.tx)+'</td><td>'+x.de+'명</td><td class="tiny">'+(x.ptx==null?'<span class="dim">없음</span>':won(x.ptx)+' / '+won(x.pit))+'</td><td>'+(x.est==null?'<span class="dim">표 밖</span>':won(x.est))+'</td><td><input class="in it935" data-i="'+i+'" type="number" step="10" style="width:110px;text-align:right" value="'+(x.est==null?'':x.est)+'"></td></tr>'}).join('')
-   +'</tbody></table><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" onclick="it935Fill(\'est\')">모두 추정값</button><button class="btn sm" onclick="it935Fill(\'prev\')">모두 지난달 값</button><button class="btn sm" onclick="regEmpList()">가족 수 설정</button></div>';
+   +'</tbody></table><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" onclick="it935Fill(\'est\')">모두 추정값</button><button class="btn sm" onclick="it935Fill(\'prev\')">모두 지난달 값</button><button class="btn sm" onclick="regEmpList()">가족 수 설정</button></div>'
+;
   drOpen(m+' 소득세 채우기 · '+L.length+'명',h,'<button class="btn" onclick="drClose()">닫기</button><button class="btn p" onclick="it935Apply()">적용</button>')}
 function it935Fill(k){[].forEach.call(document.querySelectorAll('input.it935'),function(inp){var x=IT935[+inp.dataset.i];if(!x)return;var v=k==='prev'?x.pit:x.est;if(v!=null)inp.value=v})}
 async function it935Apply(){if(!isOwner())return;var items=[],tot=0,skip=0;[].forEach.call(document.querySelectorAll('input.it935'),function(inp){var x=IT935[+inp.dataset.i];if(!x)return;if(inp.value===''){skip++;return}var v=Math.floor((+inp.value||0)/10)*10;items.push({employment_no:x.emp,item_code:'ITX',amount:v,memo:'임시 계산(간이세액 추정) — 세무사 급여대장 올리면 바뀜'});tot+=v});
@@ -24212,7 +24225,8 @@ function fd967Html(){var ym=fdYm(),d=PL967.d[ym];
   var ln=function(k,op,t,v,sub){return '<tr class="ln" onclick="PL967.open.'+k+'=!PL967.open.'+k+';fdPaint()"><td class="op">'+op+'</td><td class="nm">'+t+(sub?' <span class="tiny dim" style="font-weight:400">'+sub+'</span>':'')+'</td><td class="v">'+pl967W(v)+'</td><td class="ar">'+(O[k]?'▾':'▸')+'</td></tr>'+(O[k]?'<tr class="dt"><td colspan="4">'+D[k]+'</td></tr>':'')};
   var h='<div class="fd967"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h3 style="margin:0">'+(+ym.slice(0,4))+'년 '+(+ym.slice(5,7))+'월 손익</h3><span class="tiny dim">'+(d.partial?'진행 중 · '+d.elapsed+'/'+d.days+'일 경과':'월 전체')+' · 이달 한 일 기준</span><span style="flex:1"></span><button class="btn sm" onclick="pl967Fresh()">다시 계산</button></div>'
    +'<table class="st"><tbody>'+ln('rev','','매출',R,(d.rev.items||[]).length+'곳')+ln('buy','−','매입',B,'외주·자재·운송비')+ln('lab','−','인건비',L,'현장·사내·대표/최민영')+ln('fx','−','고정비',F,'임대료·전기·기장 등')
-   +'<tr class="tot"><td class="op">=</td><td class="nm">이익</td><td class="v '+(P<0?'neg':'pos')+'">'+pl967W(P)+'</td><td class="ar tiny dim" style="white-space:nowrap">'+pl967Pct(P,R)+'</td></tr></tbody></table>';
+   +'<tr class="tot"><td class="op">=</td><td class="nm">이익</td><td class="v '+(P<0?'neg':'pos')+'">'+pl967W(P)+'</td><td class="ar tiny dim" style="white-space:nowrap">'+pl967Pct(P,R)+'</td></tr></tbody></table>'
+;
   var ms=[];for(var i=5;i>=0;i--)ms.push(pl967Ym(ym,-i));var miss=ms.filter(function(m){return !PL967.d[m]&&!PL967.ld[m]&&!PL967.err[m]});
   if(miss.length){(function seq(a){if(!a.length){if(FD.tab==='pl')fdPaint();return}pl967Load(a[0]).then(function(){seq(a.slice(1))},function(){seq(a.slice(1))})})(miss)}
   h+='<h4 style="margin:18px 0 4px">최근 6개월</h4><table class="tr6"><thead><tr><th>달</th><th>매출</th><th>매입</th><th>인건비</th><th>고정비</th><th>이익</th><th>이익률</th></tr></thead><tbody>'
@@ -24481,7 +24495,8 @@ function mc969Paint(){var d=MC969.d,b=el('mcBody');if(!d||!b)return;var F=mc969F
   b.innerHTML=h}
 function mc969Hl(ds){MC969.hl=ds;mc969Paint();var r=el('mcd-'+ds);if(!r){var all=[].slice.call(document.querySelectorAll('#p-mcal tr.dh[id^="mcd-"]'));for(var i=all.length-1;i>=0;i--){if(all[i].id.slice(4)<=ds){r=all[i];break}}if(!r&&all.length)r=all[0]}if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.classList.add('flash');setTimeout(function(){r.classList.remove('flash')},1500)}}
 function mc969Edit(i){var it=(MC969.d.items||[])[i];if(!it)return;var man=it.kind==='manual';
-  drOpen((man?'직접 넣은 항목':'고치기')+' · '+(it.label||''),'<div class="tiny dim" style="margin-bottom:8px">'+esc(it.sub||'')+'</div><div class="f"><label>날짜</label><input class="in" type="date" id="mcE_d" value="'+esc(String(it.d).slice(0,10))+'"></div><div class="f"><label>금액 ('+(it.dir==='in'?'들어올 돈':'나갈 돈')+')</label><input class="in" inputmode="numeric" id="mcE_a" value="'+mcW(it.amt)+'"></div><div class="f"><label>메모</label><input class="in" id="mcE_m" placeholder="예: 세무사 신고 금액"></div>',
+  drOpen((man?'직접 넣은 항목':'고치기')+' · '+(it.label||''),'<div class="tiny dim" style="margin-bottom:8px">'+esc(it.sub||'')+'</div><div class="f"><label>날짜</label><input class="in" type="date" id="mcE_d" value="'+esc(String(it.d).slice(0,10))+'"></div><div class="f"><label>금액 ('+(it.dir==='in'?'들어올 돈':'나갈 돈')+')</label><input class="in" inputmode="numeric" id="mcE_a" value="'+mcW(it.amt)+'"></div><div class="f"><label>메모</label><input class="in" id="mcE_m" placeholder="예: 세무사 신고 금액"></div>'
+,
     '<button class="btn" onclick="drClose()">닫기</button>'+(man?'<button class="btn" onclick="mc969Save('+i+',\'removed\')">지우기</button>':'')+'<button class="btn" onclick="mc969Save('+i+',\'done\')">처리됨</button><button class="btn p" onclick="mc969Save('+i+',\'open\')">저장</button>')}
 async function mc969Save(i,st){var it=(MC969.d.items||[])[i];if(!it)return;var p={plan_date:el('mcE_d').value,amount:String(el('mcE_a').value||'').replace(/[^0-9]/g,''),memo:el('mcE_m').value||null,status:st};
   if(it.kind==='manual')p.item_id=it.item_id;else{p.ref_key=it.key;p.direction=it.dir;p.label=it.label;if(it.item_id)p.item_id=it.item_id}
@@ -35996,8 +36011,7 @@ function cl9139EnhanceCockpitLateColor(){
           }
         }
         if(id === 'gStPo' && opt && Array.isArray(opt.rows)){
-          var bPo = el('gStPo');
-          if(bPo && !bPo.dataset.built9141){ delete bPo.dataset.built; bPo.dataset.built9141 = '1'; }
+          /* [C1094] 제안 #73: grid() L1610 box.dataset.sig 공통 처리 */
           opt.foot = own;
           opt.rows.forEach(function(r){
             if(!r) return;
@@ -36010,8 +36024,7 @@ function cl9139EnhanceCockpitLateColor(){
           }
         }
         if(id === 'gStMatch' && opt && Array.isArray(opt.rows)){
-          var bMt = el('gStMatch');
-          if(bMt && !bMt.dataset.built9141){ delete bMt.dataset.built; bMt.dataset.built9141 = '1'; }
+          /* [C1094] 제안 #73: grid() L1610 box.dataset.sig 공통 처리 */
           opt.foot = own;
           opt.chips = opt.chips || [];
           if(!opt.chips.some(function(c){ return c && c.k === 'side'; })){
@@ -36045,11 +36058,7 @@ function cl9139EnhanceCockpitLateColor(){
         }
         /* [R1097] + [C1091] 조건 ②·③: #gTaxPay 대표 전용 CSV(주민번호·계좌번호 열 제외) + 성명 클릭 시 사번(employment_no) 인자만 사용 + 행 클릭 시 fdSlip */
         if(id === 'gTaxPay' && opt && Array.isArray(opt.rows)){
-          var bTp = el('gTaxPay');
-          if(bTp && bTp.dataset.lastCsvOwn !== String(own)){
-            delete bTp.dataset.built;
-            bTp.dataset.lastCsvOwn = String(own);
-          }
+          /* [C1094] 제안 #73: grid() L1610 box.dataset.sig 공통 처리 */
           opt.csv = own;
           opt.rows.forEach(function(r){
             if(!r) return;
@@ -36082,8 +36091,7 @@ function cl9139EnhanceCockpitLateColor(){
         }
         /* [R1097] #gTaxDocs: 검색창 + 발행상태 칩 추가 */
         if(id === 'gTaxDocs' && opt && Array.isArray(opt.rows)){
-          var bTd = el('gTaxDocs');
-          if(bTd && !bTd.dataset.built9141){ delete bTd.dataset.built; bTd.dataset.built9141 = '1'; }
+          /* [C1094] 제안 #73: grid() L1610 box.dataset.sig 공통 처리 */
           opt.rows.forEach(function(r){
             if(!r) return;
             r._apvSt = r.approval_no ? 'issued' : 'unissued';
@@ -36242,7 +36250,7 @@ function cl9139EnhanceCockpitLateColor(){
 })();
 
 
-/* ═══ v9.143 ([C1093] / L22543 glDrill (m,m) 교정 · [R1099] ① glAcctOv 전체 계정 요약표 및 전체 계정 버튼 · ② 기간 입력칸 6개 GLM 300ms 자동 조회 · ③ 계정↔거래처 partner_id/account_code 1클릭 교차 이동 · 제안 #72 8대 화면 첫 그리기 요청 수 기준선 반영 10-26) ═══ */
+/* ═══ v9.143 ([C1093]·[C1094] / L22543 glDrill (m,m) 교정 · [R1099] ①②③ 장부 요약·자동조회·교차이동 · [R1100] ①②③ 현장·라인 칩·단가행 수정란·청구처 partner_id/단독이름 연결 · 제안 #72 8대 화면 요청 기준선 · 제안 #73 grid() box.dataset.sig 도구줄 자동 재구성 반영 10-26) ═══ */
 (function(){
   try {
     window.V9143_APPLIED = true;
@@ -36330,6 +36338,49 @@ function cl9139EnhanceCockpitLateColor(){
         var S = glSt();
         glDrill(String(code), S.from, S.to);
       } catch(e){}
+    };
+
+    /* ── 3. [R1100] ③ siteGrpOpen 청구처 → 거래처 카드 (partner_id 우선, 없을 때만 단독 이름 매칭, 동명이인/동명거래처 2곳 이상이면 평문 유지) ── */
+    window.cl9143OpenSitePtn = function(pid){
+      try {
+        if(!pid || !(typeof isOwner === 'function' && isOwner())) return;
+        var p = ((typeof D !== 'undefined' && Array.isArray(D.ptn)) ? D.ptn : []).filter(function(x){
+          return x && String(x.partner_id) === String(pid);
+        })[0];
+        if(p && typeof openPartner === 'function') openPartner(p);
+      } catch(e){}
+    };
+
+    window.cl9143SiteGrpBill = function(G, L){
+      try {
+        var btxt = (G && G.billing) ? String(G.billing) : '-';
+        if(!(typeof isOwner === 'function' && isOwner())) return esc(btxt);
+        var ptns = (typeof D !== 'undefined' && Array.isArray(D.ptn)) ? D.ptn : [];
+        var lines = Array.isArray(L) ? L : (G && Array.isArray(G.lines) ? G.lines : []);
+        var pid = '';
+        for(var i = 0; i < lines.length; i++){
+          if(lines[i] && lines[i].partner_id){
+            pid = String(lines[i].partner_id);
+            break;
+          }
+        }
+        var pt = null;
+        if(pid){
+          pt = ptns.filter(function(x){ return x && String(x.partner_id) === pid; })[0] || null;
+        } else {
+          var nm = String((G && G.billing) || '').trim();
+          if(nm){
+            var matches = ptns.filter(function(x){ return x && String(x.name || '').trim() === nm; });
+            if(matches.length === 1) pt = matches[0];
+          }
+        }
+        if(pt && pt.partner_id){
+          return '<a href="#" id="siteGrpPtnLink9143" onclick="event.preventDefault();cl9143OpenSitePtn(' + ERPC.jsq(String(pt.partner_id)) + ')">' + esc(btxt) + '</a>';
+        }
+        return esc(btxt);
+      } catch(e){
+        return esc((G && G.billing) || '-');
+      }
     };
 
   } catch(e) { console.error('v9.143 init error:', e); }
