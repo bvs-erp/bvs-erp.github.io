@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.96</title>
+<title>BVS 데일리 v1.97</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4602,8 +4602,106 @@ function mk195Note(v){var c=mk195Cnt();v=String(v||'').slice(0,10);if(!v||!c)ret
     var J=(typeof trJfSorted==='function')?trJfSorted():(TR.data.jobs||[]),C=document.querySelectorAll('#trBody .card.tr-job');if(C.length!==J.length)return r;
     J.forEach(function(j,i){if(!j.made_on||C[i].querySelector('.mk195'))return;var t=C[i].querySelector('.tiny.dim');if(t)t.insertAdjacentHTML('beforeend','<span class="mk195"> · 제작 '+esc(String(j.made_on).slice(5,10))+'</span>')})}catch(x){}return r}}
 })();
-/* v1.96 (대표 지시 10-27 19:0x): 「재단표」 → 「제작표」(화면 글자) · 제작 설명의 긴 소수(112.10000000000002) 한 자리로 */
+/* v1.96 (대표 지시 10-27 18:0x): 「재단표」 → 「제작표」(화면 글자) · 제작 설명의 긴 소수(112.10000000000002) 한 자리로 */
 (function(){if(typeof trCutDetail==='function'){var _d=trCutDetail;trCutDetail=function(){var h=_d.apply(this,arguments);return String(h).replace(/(\d+\.\d{4,})/g,function(m){return String(Math.round(Number(m)*10)/10)})}}})();
+/* v1.97 (대표 지시 10-27 18:2x~18:3x): 재고 표에 작은 그림 + 다른 이름(예: 라이저 커넥터 = 수직커넥터) + 다른 이름으로도 찾기.
+   3M 단위로 사는 것(트레이·커버·격벽·덕트)은 「N개 · 3M짜리」, 미리 잘라 두는 것(전산볼트·C찬넬)은 한 줄로 묶어 「총 M + 3M·2M·1M 개수」. 그림은 DB icon_key(1130), 없으면 품목 코드로 고름 */
+var TRI197={q:''};
+var TRI_SVG={
+tray:'<path d="M3 9v14h26V9"/><path d="M8 19h3M15 19h3M22 19h2"/>',
+cover:'<path d="M3 20v-6h26v6"/>',
+endcap:'<rect x="6" y="7" width="20" height="18" rx="1"/><path d="M10 11v10h12V11"/>',
+cap:'<path d="M10 23v-7a6 6 0 0 1 12 0v7z"/><path d="M7 23h18"/>',
+sep:'<path d="M3 10v13h26V10" opacity=".35"/><path d="M16 5v18" stroke-width="3"/>',
+velbow:'<path d="M5 5v10a11 11 0 0 0 11 11h11"/><path d="M11 5v10a5 5 0 0 0 5 5h11"/>',
+ttray:'<path d="M3 9h26v7H19v10h-6V16H3z"/>',
+cch:'<path d="M12 9H7v15h18V9h-5"/><path d="M12 9v3M20 9v3"/>',
+cch_clamp:'<path d="M8 5v22h8"/><path d="M8 12h12l4 4"/><circle cx="13" cy="20" r="2"/>',
+angle:'<path d="M7 5h6v14h14v7H7z"/><circle cx="10" cy="10" r="1.5"/><circle cx="21" cy="22.5" r="1.5"/>',
+rod:'<rect x="3" y="13" width="26" height="6" rx="1"/><path d="M7 13l2 6M11 13l2 6M15 13l2 6M19 13l2 6M23 13l2 6"/>',
+nut_long:'<path d="M7 11h18l3 5-3 5H7l-3-5z"/><path d="M8 16h16" opacity=".4"/>',
+bolt:'<path d="M8 9c-4 0-5 3-5 7s1 7 5 7z"/><rect x="8" y="13" width="4" height="6"/><path d="M12 14h16v4H12"/><path d="M16 14l1 4M20 14l1 4M24 14l1 4"/>',
+nut:'<path d="M16 5l9.5 5.5v11L16 27l-9.5-5.5v-11z"/><circle cx="16" cy="16" r="4.5"/>',
+jbolt:'<path d="M12 3v17a6 6 0 0 0 12 0v-4"/><path d="M10 6l4 1M10 10l4 1M10 14l4 1"/>',
+screw:'<path d="M4 11h5v10H4z"/><path d="M9 14h14l5 2-5 2H9"/><path d="M13 14l1 4M17 14l1 4M21 14l1 4"/>',
+washer:'<circle cx="16" cy="16" r="10"/><circle cx="16" cy="16" r="4"/>',
+anchor:'<path d="M3 12h6v8H3z"/><path d="M9 13h17l3 3-3 3H9z"/><path d="M18 13v6M22 13v6"/>',
+anchor_a:'<path d="M7 26V9h18v17"/><circle cx="16" cy="9" r="2.5"/>',
+bclamp:'<path d="M24 7H9v18h15"/><path d="M24 7v4M24 25v-4"/><path d="M16 3v11M13 3h6"/>',
+hdclamp:'<path d="M4 23h8l4-9h12"/><path d="M20 7v13M17 7h6"/>',
+conn:'<rect x="4" y="11" width="24" height="10" rx="1"/><circle cx="9" cy="16" r="1.5"/><circle cx="14" cy="16" r="1.5"/><circle cx="18" cy="16" r="1.5"/><circle cx="23" cy="16" r="1.5"/>',
+conn_h:'<path d="M3 21l11-6M18 15l11 6" stroke-width="3"/><circle cx="16" cy="14" r="2.2"/>',
+conn_v:'<path d="M3 13h11M18 14l9 9" stroke-width="3"/><circle cx="16" cy="13" r="2.2"/>',
+conn_l:'<path d="M6 5h6v15h15v6H6z"/><circle cx="9" cy="10" r="1.3"/><circle cx="22" cy="23" r="1.3"/>',
+riser:'<path d="M3 24h8l10-15h8" stroke-width="3"/><circle cx="11" cy="24" r="2.2"/><circle cx="21" cy="9" r="2.2"/>',
+gnd:'<circle cx="6" cy="16" r="3"/><circle cx="26" cy="16" r="3"/><path d="M9 16c2-4 4 4 7 0s5 4 7 0"/>',
+spiral:'<path d="M3 12h26M3 20h26" opacity=".4"/><path d="M6 22l4-12M12 22l4-12M18 22l4-12M24 22l4-12"/>',
+holesaw:'<path d="M8 10h16v13H8z"/><path d="M8 23l2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3"/><path d="M16 3v7"/>',
+duct:'<rect x="4" y="10" width="24" height="14"/><path d="M8 10v5M12 10v5M16 10v5M20 10v5M24 10v5"/>',
+box:'<rect x="6" y="8" width="20" height="16" rx="2"/><path d="M6 13h20"/>'};
+function triKey(i){if(!i)return 'box';if(i.icon&&TRI_SVG[i.icon])return i.icon;var c=String(i.item_code||'');
+  var R=[[/^TRY-TRAY-/,'tray'],[/^TRY-COVER-/,'cover'],[/^TRY-ENDCAP-|^TRY-CAP-100$/,'endcap'],[/^TRY-CAP-/,'cap'],[/^TRY-SEP-/,'sep'],[/^TRY-VELBOW/,'velbow'],[/^TRY-TTRAY/,'ttray'],
+    [/^TRY-CCH-4040/,'cch'],[/^TRY-CCH-SCLAMP/,'cch_clamp'],[/^TRY-CCH-BRKT|^TRY-BRKT-/,'angle'],[/^TRY-ROD-NUT/,'nut_long'],[/^TRY-ROD-/,'rod'],[/^TRY-SHANK-B/,'bolt'],[/^TRY-SHANK-N/,'nut'],
+    [/^TRY-JBOLT/,'jbolt'],[/^TRY-SCREW/,'screw'],[/^TRY-WASHER/,'washer'],[/^TRY-ANC-SET/,'anchor'],[/^TRY-ANC-A/,'anchor_a'],[/^TRY-BCLAMP/,'bclamp'],[/^TRY-HDCLAMP/,'hdclamp'],
+    [/^TRY-CONN-RISER/,'riser'],[/^TRY-CONN-H/,'conn_h'],[/^TRY-CONN-V/,'conn_v'],[/^TRY-CONN-L/,'conn_l'],[/^TRY-CONN/,'conn'],[/^TRY-GNDBAR/,'gnd'],[/^TRY-(SPIRAL|ALBAND)-/,'spiral'],[/^TRY-HOLESAW/,'holesaw'],[/^TRY-PVCDUCT/,'duct']];
+  for(var k=0;k<R.length;k++)if(R[k][0].test(c))return R[k][1];return 'box'}
+function triSvg(i,px){px=px||26;return '<svg class="tri-svg" viewBox="0 0 32 32" width="'+px+'" height="'+px+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+TRI_SVG[triKey(i)]+'</svg>'}
+function triNorm(s){return String(s||'').toLowerCase().replace(/콘넥타|콘넥터|커넥타/g,'커넥터').replace(/채널|챤넬/g,'찬넬').replace(/앵커|앙커/g,'앙카').replace(/꺾쇠/g,'꺽쇠').replace(/세퍼레이터|세파레이터|세파레타|세퍼레타/g,'세파레터').replace(/[\s·\-_(),.×x*\/]/g,'')}
+function triAliases(i){return String((i&&i.aliases)||'').split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean)}
+function triLenM(i){var n=Number(i&&i.len);if(n>0)return n/1000;var m=String((i&&i.spec)||'').match(/(\d+(?:\.\d+)?)\s*M$/i);return m?Number(m[1]):0}
+function triBase(lbl){return String(lbl||'').replace(/\s*\d+(?:\.\d+)?\s*[Mm]$/,'')}
+function triPop(code){var i=trIm()[code];if(!i)return;var al=triAliases(i),d=document.createElement('div');d.className='tri-pop';d.onclick=function(){d.remove()};
+  d.innerHTML='<div class="tri-pc" onclick="event.stopPropagation()">'+triSvg(i,96)+'<b>'+esc(trLabel(i))+'</b>'+(al.length?'<div class="tiny">다른 이름: '+al.map(esc).join(', ')+'</div>':'')+'<div class="tiny dim">'+esc(i.unit||'')+(triLenM(i)?' · '+trQty(triLenM(i))+'M짜리':'')+'</div><button class="btn sm" onclick="this.closest(\'.tri-pop\').remove()">닫기</button></div>';document.body.appendChild(d)}
+function triFilter(){var q=triNorm(TRI197.q),rows=document.querySelectorAll('#trBody .tr-r[data-q]'),n=0;
+  rows.forEach(function(r){var ok=!q||r.getAttribute('data-q').indexOf(q)>=0;r.style.display=ok?'':'none';if(ok)n++});
+  document.querySelectorAll('#trBody .tr-g').forEach(function(g){var s=g.nextElementSibling,vis=false;while(s&&!s.classList.contains('tr-g')){if(s.hasAttribute('data-q')&&s.style.display!=='none'){vis=true;break}s=s.nextElementSibling}g.style.display=(vis||!q)?'':'none'});
+  var c=el('triN');if(c)c.textContent=q?n+'개 찾음':''}
+function stk197Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{},im=trIm();
+  var head=lc.count_on?'마지막 전수조사 '+esc(String(lc.count_on).slice(5))+' · '+lc.n+'품목':'아직 전수조사 전 — 지금 숫자는 매입 합계입니다';
+  var R={};p.rows.forEach(function(x){R[x.item_code]=x});
+  var kidOf={};Object.keys(im).forEach(function(k){var i=im[k];if(String(i.unit)==='본'&&triLenM(i)>0){var kids=Object.keys(im).filter(function(c){return c.indexOf(k+'-')===0&&triLenM(im[c])>0});if(kids.length)kids.forEach(function(c){kidOf[c]=k})}});
+  var fam={};Object.keys(kidOf).forEach(function(c){var pk=kidOf[c];(fam[pk]=fam[pk]||[]).push(c)});
+  var out=[];p.rows.forEach(function(x){if(kidOf[x.item_code])return;var i=im[x.item_code]||{},L=triLenM(i),o={x:x,i:i,code:x.item_code};
+    if(fam[x.item_code]){var parts=[{c:x.item_code,L:L,q:x.on_hand}].concat(fam[x.item_code].map(function(c){var k=R[c]||{};return {c:c,L:triLenM(im[c]),q:k.on_hand||0}})).sort(function(a,b){return b.L-a.L});
+      var tot=0,nM=0;parts.forEach(function(t){tot+=t.L*t.q});(x.offcuts||[]).forEach(function(mm){tot+=mm/1000});
+      parts.forEach(function(t){var k=R[t.c]||{};nM+=(k.need||0)*t.L});
+      o.fam={parts:parts,tot:tot,need:nM,short:Math.max(0,nM-tot)}}
+    out.push(o)});
+  var ns=0;out.forEach(function(o){if(o.fam?o.fam.short>0:o.x.short)ns++});
+  var rows=out.filter(function(o){var x=o.x;if(TRS978.short)return o.fam?o.fam.short>0:x.short;return TR.all||(o.fam?o.fam.tot>0||o.fam.need>0:(x.on_hand||x.need||x.offcuts.length))});
+  rows.sort(function(a,b){return trGroup(a.code)-trGroup(b.code)||a.code.localeCompare(b.code)});
+  var h='<div class="card"><h2>트레이 자재 재고</h2><div class="tiny dim" style="margin-bottom:8px">'+head+'</div>'+trDraftNote()
+    +(p.warn.length&&!EXT.on?'<div class="tr-note neg">'+p.warn.map(esc).join('<br>')+'</div>':'')
+    +'<div class="tri-find"><input id="triQ" class="in" placeholder="자재 찾기 — 다른 이름도 됩니다 (예: 수직커넥터)" value="'+esc(TRI197.q)+'" oninput="TRI197.q=this.value;triFilter()"><span class="tiny dim" id="triN"></span></div>'
+    +'<div class="tr-tbl"><div class="tr-r tr-r3 tr-h"><span>자재</span><span>재고</span><span>필요</span></div>';
+  var g=-1;rows.forEach(function(o){var x=o.x,i=o.i,gg=trGroup(o.code);if(gg!==g){g=gg;h+='<div class="tr-g">'+TR_GROUPS[g]+'</div>'}
+    var al=triAliases(i),lbl=trLabel(i),L=triLenM(i),qs=[lbl,i.name,i.spec].concat(al);
+    var sub=[];if(al.length)sub.push('다른 이름: '+al.map(esc).join(', '));
+    var stock,need,short=false;
+    if(o.fam){var F=o.fam;lbl=triBase(lbl);(fam[o.code]||[]).forEach(function(c){qs.push(trLabel(im[c]))});
+      sub.unshift(F.parts.filter(function(t,ix){return t.q||t.c===o.code}).map(function(t){return trQty(t.L)+'M '+trQty(t.q)+'개'}).join(' · ')+(x.offcuts.length?' · 자투리 '+esc(TRC.offSummary(x.offcuts)):''));
+      stock=trQty(F.tot)+'<small> M</small>';need=F.need?trQty(F.need)+'<small> M</small>':'-';if(F.short>0){short=true;need+='<small class="neg" style="display:block">부족 '+trQty(F.short)+'M</small>'}}
+    else{var u=String(x.unit||'');
+      if(u==='본'&&L>0){lbl=triBase(lbl);stock=trQty(x.on_hand)+'<small> 개</small>';sub.unshift(trQty(L)+'M짜리'+(x.on_hand?' · 총 '+trQty(x.on_hand*L)+'M':''));need=x.need?trQty(x.need)+'<small> 개</small>':'-'}
+      else{stock=trQty(x.on_hand)+'<small> '+esc(u)+'</small>';need=x.need?trQty(x.need):'-'}
+      if(x.offcuts.length&&!(u==='본'&&L>0&&o.fam))sub.push('자투리 '+esc(TRC.offSummary(x.offcuts)));
+      if(x.short){short=true;need+='<small class="neg" style="display:block">부족 '+trQty(x.short)+'</small>'}}
+    h+='<div class="tr-r tr-r3'+(short?' tr-short':'')+'" data-q="'+esc(triNorm(qs.join('|')))+'"><span class="tri-c"><i class="tri-i" onclick="triPop(\''+esc(o.code)+'\')" title="크게 보기">'+triSvg(i,26)+'</i><span><b>'+esc(lbl)+'</b>'
+      +(sub.length?'<div class="tiny dim">'+sub.join('<br>')+'</div>':'')+'</span></span>'
+      +'<span>'+stock+'</span><span>'+need+'</span></div>'});
+  if(!rows.length)h+='<div class="dim tiny" style="padding:10px 0">표시할 자재가 없습니다</div>';
+  h+='</div><div class="row2" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="TR.all=!TR.all;trPaint()">'+(TR.all?'쓰는 것만':'전체 보기')+'</button>'
+    +(ns||TRS978.short?'<button class="btn sm'+(TRS978.short?' p':'')+'" onclick="TRS978.short=!TRS978.short;trPaint()">'+(TRS978.short?'모두 보기':'부족한 것만 ('+ns+')')+'</button>':'')
+    +((IS_LEAD&&!EXT.on)?'<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button><button class="btn sm" onclick="cutOpen()">자재 자르기</button>':'')+'</div>'
+    +'<div class="tiny dim" style="margin-top:8px">그림을 누르면 크게 보입니다. 필요 = 아직 완료 안 된 제작표에 들어갈 양입니다. 자투리를 먼저 쓰고 모자라면 새 본으로 셉니다. 미리 잘라 둔 전산볼트·C찬넬은 길이를 모두 더한 M로 보입니다.</div></div>';
+  return h}
+(function(){
+  if(typeof trStockHtml==='function'){trStockHtml=function(){return stk197Html()+((IS_LEAD&&!EXT.on)?cutHtml():'')}}
+  if(typeof trPaint==='function'){var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(TRI197.q&&el('triQ'))triFilter()}catch(x){}return r}}
+  var c=document.createElement('style');c.textContent='.tri-c{display:flex;gap:8px;align-items:flex-start;text-align:left}.tr-r.tr-r3 .tri-c>span{text-align:left!important;flex:1;min-width:0}.tri-i{flex:none;width:30px;height:30px;border:1px solid var(--ln);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--dim,#667);cursor:pointer;font-style:normal}'
+    +'.tri-find{display:flex;gap:8px;align-items:center;margin-bottom:6px}.tri-find .in{flex:1;padding:8px 10px;min-height:0}'
+    +'.tri-pop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.tri-pc{background:var(--bg,#fff);color:inherit;border-radius:12px;padding:18px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}';
+  document.head.appendChild(c)})();
 /* ── 자재 자르기 (리드) ── */
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
