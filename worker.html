@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.93</title>
+<title>BVS 데일리 v1.94</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4519,13 +4519,15 @@ function extEnter(tok,name){EXT.on=true;EXT.token=tok;EXT.name=name||'';IS_LEAD=
       if(fn==='tray_load')return _extRpc('tray_ext_load',{p_token:EXT.token}).then(extChk);
       if(fn==='tray_job_save')return _extRpc('tray_ext_job_save',{p_token:EXT.token,p:args.p}).then(extChk);
       if(fn==='tray_job_cancel')return _extRpc('tray_ext_job_cancel',{p_token:EXT.token,p_job:args.p_job}).then(extChk);
+      if(fn==='daily_market')return _extRpc('tray_ext_market',{p_token:EXT.token});
       if(/^tray_ext_/.test(fn))return _extRpc(fn,args);
       return Promise.resolve({data:null,error:{message:'협력사 계정은 쓸 수 없는 기능입니다'}})}}
   document.body.classList.add('ext-mode');
   el('gate').classList.add('hide');el('app').classList.remove('hide');el('tabs').classList.remove('hide');
   if(el('uName'))el('uName').textContent=EXT.name||'협력사';if(el('uSub'))el('uSub').textContent='트레이 재고 · 재단표';
   if(el('uAvatar'))el('uAvatar').textContent=(EXT.name||'협력').slice(0,2);
-  TR.seg='stock';go('tray')}
+  try{TRJF.all=true}catch(e){}
+  TR.seg='stock';go('tray');try{mk149Load(true)}catch(e){}}
 function extChk(r){if(r&&r.data&&r.data.ok===false&&r.data.error==='login'){toast('로그인이 끝났습니다. 다시 로그인해 주세요','e');extTokSet('');setTimeout(function(){location.reload()},1200)}return r}
 (function(){
   if(typeof boot==='function'){var _b=boot;boot=async function(){var r=await _b.apply(this,arguments);
@@ -4542,16 +4544,16 @@ function extChk(r){if(r&&r.data&&r.data.ok===false&&r.data.error==='login'){toas
     if(r.data.name){EXT.name=r.data.name;if(el('uName'))el('uName').textContent=r.data.name}
     if(!r.data.last_count){var mx='',n=0;(r.data.items||[]).forEach(function(i){var c=String(i.count_on||'');if(c>mx){mx=c;n=0}if(c&&c===mx)n++});if(mx)r.data.last_count={count_on:mx,n:n}}
     TR.data=r.data;trPaint()}}
-  if(typeof trStockHtml==='function'){var _s=trStockHtml;trStockHtml=function(){var h=_s.apply(this,arguments);
-    if(EXT.on)return h.replace('<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>','');
-    if(IS_LEAD)h=h.replace('<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>','<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button><button class="btn sm" onclick="cutOpen()">자재 자르기</button>')+cutHtml();
-    return h}}
+  if(typeof trStockHtml==='function'){trStockHtml=function(){return stk194Html()+((IS_LEAD&&!EXT.on)?cutHtml():'')}}
   if(typeof trDraftNote==='function'){var _dn=trDraftNote;trDraftNote=function(){return EXT.on?'':_dn.apply(this,arguments)}}
   if(typeof trJobsHtml==='function'){var _j=trJobsHtml;trJobsHtml=function(){if(!EXT.on||TR.edit)return _j.apply(this,arguments);return extJobsHtml()}}
 })();
-function extJobsHtml(){var d=TR.data||{},jobs=d.jobs||[];TR.open=TR.open||{};
+function extJobsHtml(){var d=TR.data||{},jobs=(typeof trJfSorted==='function')?trJfSorted():(d.jobs||[]);TR.open=TR.open||{};
   var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2><button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button></div>'
     +'<div class="tiny dim" style="margin-top:6px">직접 쓴 재단표만 고치거나 지울 수 있습니다. 제작 완료는 BVS가 처리합니다.</div></div>';
+  if(jobs.length){var nOpen=jobs.filter(function(j){return j.status!=='done'}).length;
+    h+='<div class="card tr-jf"><span class="chip'+(TRJF.all?'':' on')+'" onclick="TRJF.all=false;trPaint()">진행 중 ('+nOpen+')</span><span class="chip'+(TRJF.all?' on':'')+'" onclick="TRJF.all=true;trPaint()">완료 포함 ('+jobs.length+')</span>'
+      +'<input id="trJq" placeholder="호기·위치 찾기 (예: 5EKF, 6층)" value="'+esc(TRJF.q||'')+'" oninput="TRJF.q=this.value;trJfFilter()"><span class="tiny dim" id="trJn"></span></div>'}
   if(!jobs.length)h+='<div class="card"><p class="dim">아직 재단표가 없습니다.</p></div>';
   jobs.forEach(function(j){var cuts=j.cuts||[],nDone=cuts.filter(function(c){return c.done_on}).length,open=!!TR.open[j.job_id];
     h+='<div class="card tr-job'+(open?' open':'')+'"><div class="tr-jh" onclick="TR.open['+j.job_id+']=!TR.open['+j.job_id+'];trPaint()"><div><b>'+esc(j.site_code||'')+'</b> '+esc(trFlLabel(j.floor))
@@ -4563,6 +4565,29 @@ function extJobsHtml(){var d=TR.data||{},jobs=d.jobs||[];TR.open=TR.open||{};
     h+='</div>'});
   return h}
 
+/* v1.94 (대표 지시 10-27): 재고 표는 「재고 · 필요」 두 칸만 — 필요 = 아직 완료 안 된 재단표에 들어갈 양(자투리 먼저, 모자라면 새 본). 모자라면 필요 칸에 「부족 N」.
+   협력사 화면: 완료된 재단표도 보이게(완료 포함 기본) · 맨 위 날씨·유가·환율 띠 보이게(tray_ext_market) */
+function stk194Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
+  var head=lc.count_on?'마지막 전수조사 '+esc(String(lc.count_on).slice(5))+' · '+lc.n+'품목':'아직 전수조사 전 — 지금 숫자는 매입 합계입니다';
+  var ns=p.rows.filter(function(x){return x.short}).length;
+  var rows=p.rows.filter(function(x){return TR.all||x.on_hand||x.need||x.offcuts.length});
+  rows.sort(function(a,b){return trGroup(a.item_code)-trGroup(b.item_code)||a.item_code.localeCompare(b.item_code)});
+  var h='<div class="card"><h2>트레이 자재 재고</h2><div class="tiny dim" style="margin-bottom:8px">'+head+'</div>'+trDraftNote()
+    +(p.warn.length&&!EXT.on?'<div class="tr-note neg">'+p.warn.map(esc).join('<br>')+'</div>':'')
+    +'<div class="tr-tbl"><div class="tr-r tr-r3 tr-h"><span>자재</span><span>재고</span><span>필요</span></div>';
+  var g=-1;rows.forEach(function(x){var gg=trGroup(x.item_code);if(gg!==g){g=gg;h+='<div class="tr-g">'+TR_GROUPS[g]+'</div>'}
+    var i=trIm()[x.item_code];
+    h+='<div class="tr-r tr-r3'+(x.short?' tr-short':'')+'"><span><b>'+esc(trLabel(i))+'</b>'
+      +(x.offcuts.length?'<div class="tiny dim">자투리 '+esc(TRC.offSummary(x.offcuts))+'</div>':'')+'</span>'
+      +'<span>'+trQty(x.on_hand)+'<small> '+esc(x.unit||'')+'</small></span>'
+      +'<span>'+(x.need?trQty(x.need):'-')+(x.short?'<small class="neg" style="display:block">부족 '+trQty(x.short)+'</small>':'')+'</span></div>'});
+  if(!rows.length)h+='<div class="dim tiny" style="padding:10px 0">표시할 자재가 없습니다</div>';
+  h+='</div><div class="row2" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="TR.all=!TR.all;trPaint()">'+(TR.all?'쓰는 것만':'전체 보기')+'</button>'
+    +(ns||TRS978.short?'<button class="btn sm'+(TRS978.short?' p':'')+'" onclick="TRS978.short=!TRS978.short;trPaint()">'+(TRS978.short?'모두 보기':'부족한 것만 ('+ns+')')+'</button>':'')
+    +((IS_LEAD&&!EXT.on)?'<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button><button class="btn sm" onclick="cutOpen()">자재 자르기</button>':'')+'</div>'
+    +'<div class="tiny dim" style="margin-top:8px">필요 = 아직 완료 안 된 재단표에 들어갈 양입니다. 자투리를 먼저 쓰고 모자라면 새 본으로 셉니다.</div></div>';
+  return h}
+(function(){var c=document.createElement('style');c.textContent='.tr-r.tr-r3{grid-template-columns:1fr 78px 78px}.tr-r.tr-r3 span:nth-child(2),.tr-r.tr-r3 span:nth-child(3){text-align:right}';document.head.appendChild(c)})();
 /* ── 자재 자르기 (리드) ── */
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
