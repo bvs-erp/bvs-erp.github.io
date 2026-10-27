@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.92</title>
+<title>BVS 데일리 v1.93</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4473,6 +4473,127 @@ function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC9
 (function(){if(typeof leadApproveAll!=='function')return;var _a=leadApproveAll;leadApproveAll=function(){if(!String(LD985.q||'').trim())return _a.apply(this,arguments);var B=el('leadPendingRows'),keep=LEAD.PEND||[];if(!B)return _a.apply(this,arguments);
   var its=[].filter.call(B.children,function(x){return x.classList.contains('item')}),vis=keep.filter(function(x,i){return its[i]&&its[i].style.display!=='none'});if(!vis.length){toast('보이는 대기 건이 없습니다');return}
   LEAD.PEND=vis;try{return _a.apply(this,arguments)}finally{LEAD.PEND=keep}}})();
+
+/* v1.93 (대표 지시 10-27, Claude 직접): ① 고객사(우주이엔지) 트레이 전용 로그인 — 직원 계정이 아니라 전화번호 + 6자리 PIN(대표가 ERP에서 발급).
+   로그인하면 트레이 탭(재고·재단표)만 보이고, DB도 tray_ext_* 함수만 부름(단가·매입처·금액·계약번호·사번 없음). 재단표는 새로 쓰기 + 본인이 쓴 것만 고치기·지우기. 완료 처리는 BVS 리드만.
+   ② 리드 › 트레이 › 재고에 [자재 자르기] — 3M 1본 → 2M·1M로 자른 기록(tray_stock_cut), 원가는 길이 비례, 300mm 이상 남은 길이는 자투리로. 방금 자른 것은 [되돌리기] ═══ */
+var EXT={on:false,token:'',name:''};
+function extTokGet(){try{return localStorage.getItem('bvs_tray_ext')||''}catch(e){return ''}}
+function extTokSet(t){try{if(t)localStorage.setItem('bvs_tray_ext',t);else localStorage.removeItem('bvs_tray_ext')}catch(e){}}
+(function(){
+  var css=document.createElement('style');
+  css.textContent='body.ext-mode .mob-menu-btn,body.ext-mode .ksearch,body.ext-mode #syncBtn,body.ext-mode #uMon,body.ext-mode #uGradePill,body.ext-mode .tabs div:not([data-p="tray"]){display:none!important}'
+    +'.ext-link{display:block;text-align:center;margin:12px 0 0;font-size:13px;color:var(--ac);cursor:pointer;text-decoration:underline}'
+    +'.cut-row{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center;padding:5px 0;font-size:13.5px}.cut-row input{padding:6px 8px;min-height:0;text-align:right}';
+  document.head.appendChild(css);
+  var lc=el('loginCard');
+  if(lc&&!el('extCard')){
+    var a=document.createElement('div');a.className='ext-link';a.id='extLink';a.textContent='협력사 로그인 (트레이)';a.onclick=function(){extShow(true)};lc.appendChild(a);
+    var c=document.createElement('div');c.className='card hide';c.id='extCard';c.style.boxShadow='var(--shx)';
+    c.innerHTML='<div style="font-size:13px;color:var(--tx3);margin-bottom:14px;text-align:center">협력사 트레이 재고 · 재단표</div>'
+      +'<div class="f"><label>전화번호</label><input id="extPhone" class="in" type="tel" inputmode="numeric" autocomplete="username" placeholder="010-0000-0000"></div>'
+      +'<div class="f"><label>PIN (숫자 6자리)</label><input id="extPin" class="in" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="대표에게 받은 PIN"></div>'
+      +'<button class="btn p w" onclick="extLogin()" style="font-size:16px;font-weight:700">로그인</button><div class="msg" id="extMsg"></div>'
+      +'<div class="ext-link" onclick="extShow(false)">직원 로그인으로</div>';
+    lc.parentNode.insertBefore(c,lc.nextSibling)}
+})();
+(function(){if(typeof trLabel==='function'){var _t=trLabel;trLabel=function(i){if(i&&/^TRY-SPIRAL-[RBK]$/.test(i.item_code||'')&&i.name)return i.name+(i.spec?' '+i.spec:'');return _t.apply(this,arguments)}}
+  try{TR_GROUPS[3]='알뱀띠'}catch(e){}})();
+function extShow(on){var a=el('loginCard'),b=el('extCard');if(a)a.classList.toggle('hide',!!on);if(b)b.classList.toggle('hide',!on);
+  if(on){try{var p=localStorage.getItem('bvs_tray_ext_phone');if(p&&el('extPhone')&&!el('extPhone').value)el('extPhone').value=p}catch(e){}}}
+async function extLogin(){var ph=String(el('extPhone').value||'').replace(/[^0-9]/g,''),pin=String(el('extPin').value||'').trim(),m=el('extMsg');
+  if(!/^0\d{8,10}$/.test(ph)){m.innerHTML='<span class="neg">전화번호를 확인해 주세요</span>';return}
+  if(!/^\d{6}$/.test(pin)){m.innerHTML='<span class="neg">PIN은 숫자 6자리입니다</span>';return}
+  if(!sb){m.innerHTML='<span class="neg">연결 준비 중입니다. 잠시 후 다시 눌러 주세요</span>';return}
+  m.textContent='확인 중…';
+  var r;try{r=await sb.rpc('tray_ext_login',{p_phone:ph,p_pin:pin})}catch(e){r={error:e}}
+  el('extPin').value='';
+  if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.data&&r.data.error)||(r.error&&r.error.message)||'로그인 실패')+'</span>';return}
+  try{localStorage.setItem('bvs_tray_ext_phone',ph)}catch(e){}
+  extTokSet(r.data.token);m.textContent='';extEnter(r.data.token,r.data.name)}
+var _extRpc=null;
+function extEnter(tok,name){EXT.on=true;EXT.token=tok;EXT.name=name||'';IS_LEAD=false;
+  if(sb&&!_extRpc){_extRpc=sb.rpc.bind(sb);
+    sb.rpc=function(fn,args){args=args||{};
+      if(!EXT.on)return _extRpc(fn,args);
+      if(fn==='tray_load')return _extRpc('tray_ext_load',{p_token:EXT.token}).then(extChk);
+      if(fn==='tray_job_save')return _extRpc('tray_ext_job_save',{p_token:EXT.token,p:args.p}).then(extChk);
+      if(fn==='tray_job_cancel')return _extRpc('tray_ext_job_cancel',{p_token:EXT.token,p_job:args.p_job}).then(extChk);
+      if(/^tray_ext_/.test(fn))return _extRpc(fn,args);
+      return Promise.resolve({data:null,error:{message:'협력사 계정은 쓸 수 없는 기능입니다'}})}}
+  document.body.classList.add('ext-mode');
+  el('gate').classList.add('hide');el('app').classList.remove('hide');el('tabs').classList.remove('hide');
+  if(el('uName'))el('uName').textContent=EXT.name||'협력사';if(el('uSub'))el('uSub').textContent='트레이 재고 · 재단표';
+  if(el('uAvatar'))el('uAvatar').textContent=(EXT.name||'협력').slice(0,2);
+  TR.seg='stock';go('tray')}
+function extChk(r){if(r&&r.data&&r.data.ok===false&&r.data.error==='login'){toast('로그인이 끝났습니다. 다시 로그인해 주세요','e');extTokSet('');setTimeout(function(){location.reload()},1200)}return r}
+(function(){
+  if(typeof boot==='function'){var _b=boot;boot=async function(){var r=await _b.apply(this,arguments);
+    try{if(!ME){var t=extTokGet();if(t){var s=await sb.auth.getSession();if(!(s.data&&s.data.session))extEnter(t,'')}}}catch(e){}return r}}
+  ['loadAll','loadRole','updateWorkerTerms','afterLogin','syncRefresh'].forEach(function(n){var f=window[n];if(typeof f==='function'){window[n]=function(){if(EXT.on)return;return f.apply(this,arguments)}}});
+  if(typeof doLogout==='function'){var _l=doLogout;doLogout=async function(){if(EXT.on){try{await _extRpc('tray_ext_logout',{p_token:EXT.token})}catch(e){}extTokSet('');location.reload();return}return _l.apply(this,arguments)}}
+  if(typeof go==='function'){var _g=go;go=function(p){if(EXT.on&&p!=='tray')p='tray';return _g.call(this,p)}}
+  if(typeof trOpen==='function'){var _o=trOpen;trOpen=async function(seg){if(!EXT.on)return _o.apply(this,arguments);
+    if(seg)TR.seg=seg;if(TR.seg!=='stock'&&TR.seg!=='jobs')TR.seg='stock';var b=el('trBody');if(!b)return;
+    ['stock','jobs','count','rules'].forEach(function(s){var x=el('trSeg_'+s);if(x){x.classList.toggle('on',s===TR.seg);x.style.display=(s==='stock'||s==='jobs')?'':'none'}});
+    b.innerHTML='<div class="card"><p class="dim">불러오는 중…</p></div>';
+    var r;try{r=await sb.rpc('tray_load')}catch(e){r={error:e}}
+    if(r.error||!r.data||!r.data.ok){b.innerHTML='<div class="card"><p class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'불러오지 못했습니다')+'</p></div>';return}
+    if(r.data.name){EXT.name=r.data.name;if(el('uName'))el('uName').textContent=r.data.name}
+    if(!r.data.last_count){var mx='',n=0;(r.data.items||[]).forEach(function(i){var c=String(i.count_on||'');if(c>mx){mx=c;n=0}if(c&&c===mx)n++});if(mx)r.data.last_count={count_on:mx,n:n}}
+    TR.data=r.data;trPaint()}}
+  if(typeof trStockHtml==='function'){var _s=trStockHtml;trStockHtml=function(){var h=_s.apply(this,arguments);
+    if(EXT.on)return h.replace('<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>','');
+    if(IS_LEAD)h=h.replace('<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button>','<button class="btn sm" onclick="trOpen(\'count\')">전수조사</button><button class="btn sm" onclick="cutOpen()">자재 자르기</button>')+cutHtml();
+    return h}}
+  if(typeof trDraftNote==='function'){var _dn=trDraftNote;trDraftNote=function(){return EXT.on?'':_dn.apply(this,arguments)}}
+  if(typeof trJobsHtml==='function'){var _j=trJobsHtml;trJobsHtml=function(){if(!EXT.on||TR.edit)return _j.apply(this,arguments);return extJobsHtml()}}
+})();
+function extJobsHtml(){var d=TR.data||{},jobs=d.jobs||[];TR.open=TR.open||{};
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">재단표</h2><button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 재단표</button></div>'
+    +'<div class="tiny dim" style="margin-top:6px">직접 쓴 재단표만 고치거나 지울 수 있습니다. 제작 완료는 BVS가 처리합니다.</div></div>';
+  if(!jobs.length)h+='<div class="card"><p class="dim">아직 재단표가 없습니다.</p></div>';
+  jobs.forEach(function(j){var cuts=j.cuts||[],nDone=cuts.filter(function(c){return c.done_on}).length,open=!!TR.open[j.job_id];
+    h+='<div class="card tr-job'+(open?' open':'')+'"><div class="tr-jh" onclick="TR.open['+j.job_id+']=!TR.open['+j.job_id+'];trPaint()"><div><b>'+esc(j.site_code||'')+'</b> '+esc(trFlLabel(j.floor))
+      +'<div class="tiny dim">'+(j.install_on?esc(String(j.install_on).slice(5))+trDow(j.install_on)+' 설치 · ':'')+cuts.length+'줄'+(nDone?' · 완료 '+nDone:'')+(j.mine?' · 내가 씀':'')+'</div></div>'
+      +'<span class="pill">'+esc(trStatus(j.status))+'</span></div>';
+    if(open){cuts.forEach(function(c){h+='<div class="tr-cut'+(c.done_on?' done':'')+'"><span>'+(c.floor&&c.floor!==j.floor?'<small class="dim">'+esc(trFlLabel(c.floor))+'</small> ':'')+trCutText(c)+'</span>'+(c.done_on?'<small class="dim" style="flex:none">완료 '+esc(String(c.done_on).slice(5))+'</small>':'')+'</div>'});
+      if(j.memo)h+='<div class="tiny dim" style="margin-top:6px">'+esc(j.memo)+'</div>';
+      if(j.mine&&j.status!=='done')h+='<div class="row2" style="margin-top:8px"><button class="btn sm" onclick="trEdit('+j.job_id+')">고치기</button><button class="btn sm" onclick="trCancelJob('+j.job_id+')">지우기</button></div>'}
+    h+='</div>'});
+  return h}
+
+/* ── 자재 자르기 (리드) ── */
+var CUT={open:false,from:'',qty:1,pcs:{},last:null};
+function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
+function cutKids(code){var im=trIm();return Object.keys(im).filter(function(k){return k.indexOf(code+'-')===0&&Number(im[k].len)>0}).map(function(k){return im[k]}).sort(function(a,b){return Number(b.len)-Number(a.len)})}
+function cutOpen(){CUT.open=!CUT.open;if(CUT.open&&!CUT.from){var p=cutParents();CUT.from=p.length?p[0].item_code:''}try{CUT.last=JSON.parse(localStorage.getItem('bvs_tray_cut_last')||'null')}catch(e){CUT.last=null}trPaint()}
+function cutSet(k,v){if(k==='from'){CUT.from=v;CUT.pcs={}}else if(k==='qty')CUT.qty=Math.max(0,parseInt(v,10)||0);else CUT.pcs[k]=Math.max(0,parseInt(v,10)||0);trPaint()}
+function cutLeft(){var im=trIm(),p=im[CUT.from];if(!p)return null;var used=0;cutKids(CUT.from).forEach(function(c){used+=Number(c.len)*(CUT.pcs[c.item_code]||0)});return {total:Number(p.len)*CUT.qty,used:used}}
+function cutHtml(){if(!CUT.open||!IS_LEAD||EXT.on)return '';var ps=cutParents(),im=trIm(),p=im[CUT.from];
+  var h='<div class="card"><h2>자재 자르기</h2><div class="tiny dim" style="margin-bottom:8px">미리 잘라 둔 것을 길이별 재고로 옮깁니다. 원가는 길이대로 나뉩니다.</div>';
+  if(!ps.length)return h+'<p class="dim">자를 수 있는 자재가 없습니다</p></div>';
+  h+='<div class="f"><label>자를 자재</label><select class="in" onchange="cutSet(\'from\',this.value)">'+ps.map(function(i){return '<option value="'+esc(i.item_code)+'"'+(i.item_code===CUT.from?' selected':'')+'>'+esc(trLabel(i))+' (지금 '+trQty(i.on_hand)+'본)</option>'}).join('')+'</select></div>';
+  h+='<div class="cut-row"><span>몇 본 자르나요</span><input class="in" type="number" min="1" inputmode="numeric" value="'+CUT.qty+'" onchange="cutSet(\'qty\',this.value)"><small>본</small></div>';
+  h+='<div class="tiny dim" style="margin:6px 0 2px">잘라서 나온 것</div>';
+  cutKids(CUT.from).forEach(function(c){h+='<div class="cut-row"><span>'+esc(trLabel(c))+'</span><input class="in" type="number" min="0" inputmode="numeric" value="'+(CUT.pcs[c.item_code]||0)+'" onchange="cutSet(\''+c.item_code+'\',this.value)"><small>본</small></div>'});
+  var L=cutLeft();if(L){var left=L.total-L.used,per=CUT.qty?left/CUT.qty:0;
+    h+='<div class="tiny '+(left<0?'neg':'dim')+'" style="margin:6px 0">'+(left<0?'자른 길이 합이 원래 길이보다 깁니다':'남는 길이 '+trQty(left/1000)+'m'+(CUT.qty?' (1본당 '+Math.round(per)+'mm'+(per>=300?' → 자투리로 남김':per>0?' → 버림':'')+')':''))+'</div>'}
+  h+='<div class="row2"><button class="btn p" onclick="cutSave()">자르기 저장</button><button class="btn" onclick="cutOpen()">닫기</button></div>';
+  if(CUT.last)h+='<div class="tr-note" style="margin-top:8px">방금 자른 기록: '+esc(CUT.last.text||'')+' <button class="btn sm" onclick="cutUndo()">되돌리기</button></div>';
+  return h+'</div>'}
+async function cutSave(){var L=cutLeft();if(!L||!CUT.qty){toast('자를 자재와 본 수를 넣으세요','e');return}if(L.used<=0){toast('잘라서 나온 것을 넣으세요','e');return}if(L.used>L.total){toast('자른 길이 합이 원래 길이보다 깁니다','e');return}
+  var im=trIm(),pcs=cutKids(CUT.from).filter(function(c){return CUT.pcs[c.item_code]>0}).map(function(c){return {item_code:c.item_code,qty:CUT.pcs[c.item_code]}});
+  var txt=trLabel(im[CUT.from])+' '+CUT.qty+'본 → '+pcs.map(function(x){return trLabel(im[x.item_code])+' '+x.qty+'본'}).join(', ');
+  if(!(await ERPC.ask('확인',txt+'\n이대로 저장할까요?')))return;
+  var r;try{r=await sb.rpc('tray_stock_cut',{p:{from:CUT.from,qty:CUT.qty,pieces:pcs}})}catch(e){r={error:e}}
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');return}
+  CUT.last={tag:r.data.tag,text:txt};try{localStorage.setItem('bvs_tray_cut_last',JSON.stringify(CUT.last))}catch(e){}
+  CUT.pcs={};toast('자르기 저장','g');trOpen('stock')}
+async function cutUndo(){if(!CUT.last||!CUT.last.tag)return;if(!(await ERPC.ask('확인','방금 자른 기록을 되돌릴까요?\n'+(CUT.last.text||''),{danger:true})))return;
+  var r;try{r=await sb.rpc('tray_stock_cut_undo',{p_tag:CUT.last.tag})}catch(e){r={error:e}}
+  if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'되돌리기 실패','e');return}
+  CUT.last=null;try{localStorage.removeItem('bvs_tray_cut_last')}catch(e){}toast('되돌렸습니다','g');trOpen('stock')}
 </script>
 </body>
 </html>
