@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.94</title>
+<title>BVS 데일리 v1.95</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4531,6 +4531,7 @@ function extEnter(tok,name){EXT.on=true;EXT.token=tok;EXT.name=name||'';IS_LEAD=
 function extChk(r){if(r&&r.data&&r.data.ok===false&&r.data.error==='login'){toast('로그인이 끝났습니다. 다시 로그인해 주세요','e');extTokSet('');setTimeout(function(){location.reload()},1200)}return r}
 (function(){
   if(typeof boot==='function'){var _b=boot;boot=async function(){var r=await _b.apply(this,arguments);
+    try{if(sb&&!sb._mk195){var _rr=sb.rpc.bind(sb);sb.rpc=function(fn,args){try{if((fn==='tray_job_save'||fn==='tray_ext_job_save')&&args&&args.p&&TR&&TR.edit&&!('made_on' in args.p))args.p.made_on=TR.edit.made_on||null}catch(x){}return _rr(fn,args)};sb._mk195=1}}catch(e){}
     try{if(!ME){var t=extTokGet();if(t){var s=await sb.auth.getSession();if(!(s.data&&s.data.session))extEnter(t,'')}}}catch(e){}return r}}
   ['loadAll','loadRole','updateWorkerTerms','afterLogin','syncRefresh'].forEach(function(n){var f=window[n];if(typeof f==='function'){window[n]=function(){if(EXT.on)return;return f.apply(this,arguments)}}});
   if(typeof doLogout==='function'){var _l=doLogout;doLogout=async function(){if(EXT.on){try{await _extRpc('tray_ext_logout',{p_token:EXT.token})}catch(e){}extTokSet('');location.reload();return}return _l.apply(this,arguments)}}
@@ -4588,6 +4589,19 @@ function stk194Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
     +'<div class="tiny dim" style="margin-top:8px">필요 = 아직 완료 안 된 재단표에 들어갈 양입니다. 자투리를 먼저 쓰고 모자라면 새 본으로 셉니다.</div></div>';
   return h}
 (function(){var c=document.createElement('style');c.textContent='.tr-r.tr-r3{grid-template-columns:1fr 78px 78px}.tr-r.tr-r3 span:nth-child(2),.tr-r.tr-r3 span:nth-child(3){text-align:right}';document.head.appendChild(c)})();
+/* v1.95 (대표 지시 10-27 18:2x): 재단표 제작일(made_on). 제작일이 마지막 전수조사일보다 앞이면 「기록용」 — 저장 때 DB가 완료로 남기고 재고에서 빼지 않음(DB 1129) */
+function mk195Cnt(){var d=TR.data||{},lc=d.last_count||{};if(lc.count_on)return String(lc.count_on).slice(0,10);var mx='';(d.items||[]).forEach(function(i){var c=String(i.count_on||'');if(c>mx)mx=c});return mx}
+function mk195Note(v){var c=mk195Cnt();v=String(v||'').slice(0,10);if(!v||!c)return '';return v<c?'<span class="wn">전수조사('+esc(c.slice(5))+') 전 제작 — 기록용으로 저장되고 재고에서 빼지 않습니다</span>':''}
+(function(){
+  if(typeof trEdit==='function'){var _e=trEdit;trEdit=function(id){var r=_e.apply(this,arguments);try{var j=id?trFindJob(id):null;if(TR.edit){TR.edit.made_on=TR.edit.made_on||(j&&j.made_on)||'';trPaint()}}catch(x){}return r}}
+  if(typeof trEditHtml==='function'){var _h=trEditHtml;trEditHtml=function(){var h=_h.apply(this,arguments),e=TR.edit||{};
+    var k=h.indexOf('<div style="flex:1"><label>설치일</label>');if(k<0)return h;var end=h.indexOf('</div></div>',k);if(end<0)return h;
+    var mk='<div style="flex:1"><label>제작일</label><input class="in" type="date" value="'+esc(String(e.made_on||'').slice(0,10))+'" oninput="trEf(\'made_on\',this.value);var n=el(\'mk195n\');if(n)n.innerHTML=mk195Note(this.value)" style="padding:8px 10px;min-height:0"></div>';
+    return h.slice(0,end+6)+mk+h.slice(end+6).replace('</div>','</div><div class="tiny" id="mk195n" style="margin:-4px 0 8px">'+mk195Note(e.made_on)+'</div>')}}
+  if(typeof trPaint==='function'){var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(TR.seg!=='jobs'||TR.edit||!TR.data)return r;
+    var J=(typeof trJfSorted==='function')?trJfSorted():(TR.data.jobs||[]),C=document.querySelectorAll('#trBody .card.tr-job');if(C.length!==J.length)return r;
+    J.forEach(function(j,i){if(!j.made_on||C[i].querySelector('.mk195'))return;var t=C[i].querySelector('.tiny.dim');if(t)t.insertAdjacentHTML('beforeend','<span class="mk195"> · 제작 '+esc(String(j.made_on).slice(5,10))+'</span>')})}catch(x){}return r}}
+})();
 /* ── 자재 자르기 (리드) ── */
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
