@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.99</title>
+<title>BVS 데일리 v2.00</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4704,6 +4704,19 @@ function stk197Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{},im=trIm();
   document.head.appendChild(c)})();
 /* v1.98 (대표 지시 10-28 09:2x): 라이저 커넥터(수직커넥터) 그림 — 대표가 보낸 제품 사진 기준 — 위는 둥근 머리에 둥근 구멍 1개, 아래는 넓은 판에 세로 긴 구멍 4개, 양옆 직각으로 꺾인 날개 */
 /* v1.99 (대표 지시 10-28 09:3x): 조인트 커넥터(ㄷ자형, 케이블트레이용)·조인트 커넥터 L(L자형, 덕트용)·수평조절 커넥터(경첩) 그림을 대표가 보낸 제품 사진대로 */
+/* v2.00 (대표 지시 10-28 09:5x): 자재 구분 3가지 — ① 케이블트레이(트레이 바디·커버·세퍼레이터·엔드캡, 수직엘보 트레이 포함) ② 연결부품(나머지 전체) ③ 볼트류(셋트앙카·전산볼트(1M·2M·연결너트 포함)·근각 볼트·근각 너트·볼트 캡) */
+(function(){
+  if(typeof trGroup==='function'){trGroup=function(c){c=String(c||'');if(/^TRY-(TRAY|COVER|SEP|ENDCAP|VELBOW|TTRAY)/.test(c)||c==='TRY-CAP-100')return 0;if(/^TRY-(ANC-SET|ROD|SHANK|CAP-[KR])/.test(c))return 2;return 1}}
+  if(typeof TR_GROUPS!=='undefined'){TR_GROUPS.length=0;TR_GROUPS.push('케이블트레이','연결부품','볼트류')}
+})();
+/* 케이블트레이 묶음 안 순서: 바디 → 커버 → 세퍼레이터 → 엔드캡 → 기타 */
+(function(){if(typeof stk197Html!=='function')return;var _s=stk197Html;stk197Html=function(){var h=_s.apply(this,arguments);try{
+  var a=h.indexOf('<div class="tr-g">'+TR_GROUPS[0]+'</div>');if(a<0)return h;a+=('<div class="tr-g">'+TR_GROUPS[0]+'</div>').length;
+  var e=h.indexOf('<div class="tr-g">',a),e2=h.indexOf('</div><div class="row2"',a);if(e<0||(e2>=0&&e2<e))e=e2;if(e<0)return h;
+  var seg=h.slice(a,e),parts=seg.split(/(?=<div class="tr-r tr-r3)/).filter(Boolean);
+  var key=function(p){var m=p.match(/data-q="([^"]*)"/),q=m?m[1]:'';return /^트레이w/.test(q)?0:/^커버|^트레이커버/.test(q)?1:/세파레터/.test(q)?2:/엔드캡/.test(q)?3:4};
+  parts=parts.map(function(p,i){return {p:p,i:i,k:key(p)}}).sort(function(x,y){return x.k-y.k||x.i-y.i}).map(function(o){return o.p});
+  return h.slice(0,a)+parts.join('')+h.slice(e)}catch(x){return h}}})();
 /* ── 자재 자르기 (리드) ── */
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
