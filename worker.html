@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v1.97</title>
+<title>BVS 데일리 v1.98</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -4633,7 +4633,7 @@ conn:'<rect x="4" y="11" width="24" height="10" rx="1"/><circle cx="9" cy="16" r
 conn_h:'<path d="M3 21l11-6M18 15l11 6" stroke-width="3"/><circle cx="16" cy="14" r="2.2"/>',
 conn_v:'<path d="M3 13h11M18 14l9 9" stroke-width="3"/><circle cx="16" cy="13" r="2.2"/>',
 conn_l:'<path d="M6 5h6v15h15v6H6z"/><circle cx="9" cy="10" r="1.3"/><circle cx="22" cy="23" r="1.3"/>',
-riser:'<path d="M3 24h8l10-15h8" stroke-width="3"/><circle cx="11" cy="24" r="2.2"/><circle cx="21" cy="9" r="2.2"/>',
+riser:'<path d="M10 14V9a6 6 0 0 1 12 0v5h4v15H6V14z"/><path d="M3.5 15.5v13M28.5 15.5v13"/><circle cx="16" cy="8.5" r="1.5"/><g fill="currentColor" stroke="none"><rect x="10.3" y="16.8" width="2.4" height="4" rx="1.2"/><rect x="19.3" y="16.8" width="2.4" height="4" rx="1.2"/><rect x="10.3" y="22.8" width="2.4" height="4" rx="1.2"/><rect x="19.3" y="22.8" width="2.4" height="4" rx="1.2"/></g>',
 gnd:'<circle cx="6" cy="16" r="3"/><circle cx="26" cy="16" r="3"/><path d="M9 16c2-4 4 4 7 0s5 4 7 0"/>',
 spiral:'<path d="M3 12h26M3 20h26" opacity=".4"/><path d="M6 22l4-12M12 22l4-12M18 22l4-12M24 22l4-12"/>',
 holesaw:'<path d="M8 10h16v13H8z"/><path d="M8 23l2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3"/><path d="M16 3v7"/>',
@@ -4702,6 +4702,7 @@ function stk197Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{},im=trIm();
     +'.tri-find{display:flex;gap:8px;align-items:center;margin-bottom:6px}.tri-find .in{flex:1;padding:8px 10px;min-height:0}'
     +'.tri-pop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.tri-pc{background:var(--bg,#fff);color:inherit;border-radius:12px;padding:18px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}';
   document.head.appendChild(c)})();
+/* v1.98 (대표 지시 10-28 09:2x): 라이저 커넥터(수직커넥터) 그림 — 대표가 보낸 제품 사진 기준 — 위는 둥근 머리에 둥근 구멍 1개, 아래는 넓은 판에 세로 긴 구멍 4개, 양옆 직각으로 꺾인 날개 */
 /* ── 자재 자르기 (리드) ── */
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
