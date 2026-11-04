@@ -38,6 +38,7 @@
 
       XL.injectNav();
       XL.injectPage();
+      XL.wrapNav();
     },
 
         injectNav: function() {
@@ -288,15 +289,35 @@
       var closeBtn = document.getElementById('xl9193_close_btn');
       if (closeBtn) {
         closeBtn.onclick = function() {
+          XL.hide();
           if (typeof wsBack === 'function') wsBack();
           else if (typeof wsGo === 'function') wsGo((window.SH && window.SH.ws) || 'cockpit');
-          else if (typeof go === 'function') go('ceo_today');
         };
       }
 
       // 전역 키보드 조작 (Ctrl+Z, 붙여넣기, 방향키 이동)
       p.addEventListener('keydown', XL.handleKeyDown);
       p.addEventListener('paste', XL.handlePaste);
+    },
+
+    // v9.197: 엑셀표 닫기 — 엑셀표 화면을 숨기고 탭 표시를 되돌림
+    hide: function() {
+      var p = document.getElementById('p-xl_sheet');
+      if (p) { p.classList.remove('on'); p.style.display = 'none'; }
+      document.querySelectorAll('.page').forEach(function(pg) { if (pg.id !== 'p-xl_sheet' && pg.style.display === 'none') pg.style.display = ''; });
+      var mx = document.querySelector('.mtab-xl9193');
+      if (mx) mx.classList.remove('on');
+    },
+    // v9.197: 다른 메뉴·탭(go / wsGo)으로 가면 엑셀표를 자동으로 닫음
+    wrapNav: function() {
+      ['go', 'wsGo'].forEach(function(fn) {
+        var f = window[fn];
+        if (typeof f === 'function' && !f._xlWrapped) {
+          var w = function() { try { XL.hide(); } catch (e) {} return f.apply(this, arguments); };
+          w._xlWrapped = true;
+          window[fn] = w;
+        }
+      });
     },
 
     open: function() {
@@ -307,7 +328,7 @@
       // 모든 .page 숨기고 #p-xl_sheet 표시
       document.querySelectorAll('.page').forEach(function(pg) {
         pg.classList.remove('on');
-        pg.style.display = 'none';
+        if (pg.id !== 'p-xl_sheet') pg.style.display = ''; // v9.197: 다른 화면에 display:none을 박지 않음(닫기·탭 이동 때 빈 화면 원인)
       });
       var p = document.getElementById('p-xl_sheet');
       if (p) {
