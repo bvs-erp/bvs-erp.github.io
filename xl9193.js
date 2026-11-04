@@ -976,3 +976,53 @@
     XL.init();
   }
 })();
+
+/* ═══ v9.198 (대표 지시 11-04 16:2x) 인쇄 품목표 — ① 일자 칸을 No 옆에(줄 메모가 「MM/DD 구매」인 청구서) ② 그런 문서는 비고 칸 빼고 규격 칸 넓힘
+   ③ 품명·품번 한 줄(품번은 옆에 작은 글씨), 규격은 작은 글씨 두 줄까지 — 줄 높이를 줄여 A4 한 장 맞추기(fit305)가 걸리게 ═══ */
+(function(){
+  var c=document.createElement('style');
+  c.textContent='#pr table.lines.c198{table-layout:fixed;width:100%}#pr table.lines.c198 td{padding-top:2px!important;padding-bottom:2px!important;line-height:1.25!important}'
+   +'#pr table.lines.c198 td.nm198{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#pr table.lines.c198 .pc198{font-size:.82em;color:#64748b;margin-left:4px}'
+   +'#pr table.lines.c198 td{padding-left:5px!important;padding-right:5px!important}'
+   +'#pr table.lines.c198 td.sp198{font-size:11px!important;word-break:keep-all;overflow-wrap:anywhere}'
+   +'#pr table.lines.c198 td.dt198{white-space:nowrap!important;padding-left:3px!important;padding-right:3px!important;text-align:center}';
+  document.head.appendChild(c);
+  var DM=/^(\d\d\/\d\d) 구매$/;
+  var _p=prLines;
+  prLines=function(lines,opt){
+    try{
+      opt=opt||{};var cols=opt.cols||[];var L=lines||[];
+      if(L.some(function(l){return l&&DM.test(l.memo||'')})){
+        var memoOnlyDate=L.every(function(l){return !l||!l.memo||DM.test(l.memo)||/^B\d{8}$/.test(l.memo)});
+        var out=[],dropMemo=false;
+        cols.forEach(function(cc){
+          if(!cc){out.push(cc);return}
+          if(cc.t==='비고'){
+            if(memoOnlyDate){dropMemo=true;return}
+            out.push({t:cc.t,w:'56px',cls:cc.cls,f:function(l,i){return DM.test(l.memo||'')?'':(cc.f?cc.f(l,i):esc(l.memo||''))}});return;
+          }
+          if(cc.k==='item_name'||cc.k==='item_name305'){
+            out.push({t:'품명 / 품번',cls:'nm198',f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?'<span class="pc198">'+cd+'</span>':'')}});return;
+          }
+          if(cc.k==='spec'){out.push({t:cc.t,k:'spec198',w:'150px',cls:'sp198',f:cc.f||function(l){return esc(l.spec||'')}});return}
+          if(cc.t==='No'){out.push({t:'No',w:'28px',cls:cc.cls,f:cc.f});out.push({t:'일자',w:'42px',cls:'dt198',f:function(l){var m=DM.exec(l.memo||'');return m?m[1]:''}});return}
+          if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단위'){out.push({t:cc.t,w:'32px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단가'){out.push({t:cc.t,w:'64px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='공급가액'||cc.t==='금액'){out.push({t:cc.t,w:'80px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='세액'){out.push({t:cc.t,w:'66px',cls:cc.cls,f:cc.f});return}
+          out.push(cc);
+        });
+        var o={};for(var k in opt)o[k]=opt[k];o.cols=out;
+        if(o.foot){
+          o.foot=String(o.foot).replace(/colspan="(\d+)"/g,function(m,n){return 'colspan="'+((+n)+1)+'"'});
+          if(dropMemo)o.foot=o.foot.replace(/<td><\/td><\/tr>/g,'</tr>');
+        }
+        return String(_p.call(this,lines,o)).replace(/<table class="lines( c305)?"/,'<table class="lines c305 c198"');
+      }
+    }catch(e){console.error('[v9198-prLines]',e)}
+    return _p.apply(this,arguments);
+  };
+})();
+window.V9198_APPLIED = true;
+
