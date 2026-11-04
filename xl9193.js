@@ -1782,7 +1782,11 @@ window.V9198_APPLIED = true;
   window.V9206_APPLIED=true;
 })();
 
-/* ═══ v9.209 (Claude, 대표 11-04 20:4x) 트레이 자재·보관 청구서 인쇄 — 칸 너비·한 장 맞춤·묶음 제목
+/* ═══ v9.210 (Claude, 대표 11-04 20:5x — v9.209 블록을 이것으로 바꿈) ─ 대표: 「숫자가 마지막 칸에 제대로 안 들어가 있고, 공급가액 세액 합계로 줄을 나누니까 1페이지에 안 들어가지네.. 공급가액 세액을 한 줄로, 합계액 한 줄로」「기청구분은 마이너스 - 로 표시하는 게 더 편리할 거 같은데 괄호보다는」
+   ⑦ 맨 아래: 「공급가액 · 세액」 한 줄(공급가액 칸·세액 칸에 맞춰) + 「합계 (VAT 포함)」 한 줄(공급가액·세액 두 칸 합침). 세 줄 → 두 줄.
+   ⑧ 음수는 괄호 대신 「-4,500,000」.  ⑨ 줄 위아래 여백 0·줄 간격 1.2 → 한 장에 여유.
+   ── 이하 v9.209 설명 ──
+   v9.209 (Claude, 대표 11-04 20:4x) 트레이 자재·보관 청구서 인쇄 — 칸 너비·한 장 맞춤·묶음 제목
    대표: 「구매일별 납품 이런 설명은 필요가 없거든」「칸벌린 … 어떤 자재는 규격이 2줄로 되어서 인쇄 시 2장으로 되어 버리고 가독성도 안 좋아」
    ① 묶음 제목 기본값 「① 자재」「② 대차 · 보관료」「③ 기청구분 차감」(설명 뺌). 문서별로 고친 제목(문서 extra.grp_titles, DB1174)이 있으면 그것.
    ⑤ 엑셀표 표 고르기에 「청구서 - 글자」(DB1174 p_sheet='inv') — 건명·청구일자·묶음 제목·줄의 일자·품명·규격·단위. 금액은 「청구 - 자재비」 그대로.
@@ -1791,7 +1795,7 @@ window.V9198_APPLIED = true;
    ③ 줄 높이 줄임(위아래 여백 1px, 글자 10.5px — 칸마다 직접 지정, 인쇄 창은 <style>을 안 받음) → 39줄 + 묶음 머리·소계 + 합계가 A4 한 장 안에. 합계·세액 줄은 다음 장으로 갈라지지 않게.
    ④ v9.206(합쳐진 문서 줄 일자 = 그 문서 일자) 그대로 포함. 트레이 재청구서(줄 메모 「MM/DD 구매」)만, 다른 문서는 그대로 안쪽으로. `window.V9209_APPLIED` ═══ */
 (function(){
-  if (window.V9209_APPLIED) return;
+  if (window.V9210_APPLIED) return;
   var DM=/^(\d\d\/\d\d) 구매$/, BN=/^[A-Z]\d{8}$/;
   var _prev=prLines;
   var DEF={1:'① 자재',2:'② 대차 · 보관료',3:'③ 기청구분 차감'};
@@ -1819,37 +1823,43 @@ window.V9198_APPLIED = true;
         cols.forEach(function(cc){
           if(!cc||cc.t==='비고')return;
           if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm209',nw:1,f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?' <span class="pc209" style="font-size:8px;color:#64748b">'+cd+'</span>':'')}});return}
-          if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',w:'200px',cls:'sp209',nw:1,st:function(l){return specCss(l.spec)},f:function(l){return esc(l.spec||'')}});return}
+          if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',w:'192px',cls:'sp209',nw:1,st:function(l){return specCss(l.spec)},f:function(l){return esc(l.spec||'')}});return}
           if(cc.t==='No'){out.push({t:'No',w:'22px',cls:cc.cls,nw:1,f:cc.f});out.push({t:'일자',w:'38px',cls:'dt209',nw:1,f:function(l){var m=DM.exec(l.memo||'');if(m)return m[1];var b=String(l.memo||'').trim();return BN.test(b)?bnDate(b):''}});return}
           if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
           if(cc.t==='단위'){out.push({t:cc.t,w:'28px',cls:cc.cls,f:cc.f});return}
-          if(cc.t==='단가'){out.push({t:cc.t,w:'58px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단가'){out.push({t:cc.t,w:'66px',cls:cc.cls,f:cc.f});return}
           if(cc.t==='공급가액'||cc.t==='금액'){out.push({t:cc.t,w:'74px',cls:cc.cls,f:cc.f});return}
           if(cc.t==='세액'){out.push({t:cc.t,w:'60px',cls:cc.cls,f:cc.f});return}
           out.push(cc);
         });
-        var hadMemo=cols.some(function(c){return c&&c.t==='비고'});
-        var foot=String(opt.foot||'').replace(/colspan="(\d+)"/g,function(m,n){return 'colspan="'+((+n)+1)+'"'});
-        if(hadMemo)foot=foot.replace(/<td><\/td><\/tr>/g,'</tr>');
-        foot=foot.replace(/<tr(?![^>]*class=)/g,'<tr class="f209" style="page-break-inside:avoid"');
         var iSup=-1,iTax=-1;out.forEach(function(c,i){if(c.t==='공급가액'||c.t==='금액')iSup=i;if(c.t==='세액')iTax=i});
         var G={1:[],2:[],3:[]};L.forEach(function(l){G[grpOf(l)].push(l)});
         var act=[1,2,3].filter(function(g){return G[g].length});
-        var w=function(v){return typeof wonA==='function'?wonA(v):(+v||0).toLocaleString('ko-KR')};
-        var B='padding-top:1px!important;padding-bottom:1px!important;font-size:10.5px!important;line-height:1.25!important;';
+        var neg=function(x){return (typeof x==='string')?x.replace(/\(([\d,]+)\)/g,'-$1'):x};
+        var w=function(v){v=+v||0;return (v<0?'-':'')+Math.abs(v).toLocaleString('ko-KR')};
+        var B='padding-top:0!important;padding-bottom:0!important;font-size:10.5px!important;line-height:1.2!important;';
         var NW='white-space:nowrap!important;';
         var h='<table class="lines c305 c198 c209"><thead><tr>'+out.map(function(c){return '<th style="'+B+NW+(c.w?'width:'+c.w+';':'')+'">'+c.t+'</th>'}).join('')+'</tr></thead><tbody>';
         var no=0;
         act.forEach(function(g){
           var s=0,t=0,tt=titleOf(g);
           if(act.length>1)h+='<tr class="g209"><td colspan="'+out.length+'" style="'+B+'background:#f1f5f9!important;font-weight:700!important;text-align:left!important">'+esc(tt)+'</td></tr>';
-          G[g].forEach(function(l){s+=(+l.supply_amt||0);t+=(+l.tax_amt||0);var i=no++;h+='<tr>'+out.map(function(c){var v=c.f?c.f(l,i):l[c.k];var st=B+(c.nw?NW:'')+(c.st?c.st(l):'');return '<td class="'+(c.cls||'')+'" style="'+st+'">'+(v==null?'':v)+'</td>'}).join('')+'</tr>'});
+          G[g].forEach(function(l){s+=(+l.supply_amt||0);t+=(+l.tax_amt||0);var i=no++;h+='<tr>'+out.map(function(c){var v=neg(c.f?c.f(l,i):l[c.k]);var st=B+(c.nw?NW:'')+(c.st?c.st(l):'');return '<td class="'+(c.cls||'')+'" style="'+st+'">'+(v==null?'':v)+'</td>'}).join('')+'</tr>'});
           if(act.length>1&&iSup>0){
             h+='<tr class="s209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+B+'text-align:right!important;background:#f8fafc!important;font-weight:700!important">'+esc(plain(tt))+' 소계</td><td class="n" style="'+B+'background:#f8fafc!important;font-weight:700!important">'+w(s)+'</td>'
               +(iTax>iSup?'<td class="n" style="'+B+'background:#f8fafc!important">'+w(t)+'</td>':'')
               +new Array(Math.max(0,out.length-1-Math.max(iSup,iTax))+1).join('<td style="background:#f8fafc!important"></td>')+'</tr>';
           }
         });
+        var S=0,T=0;L.forEach(function(l){S+=(+l.supply_amt||0);T+=(+l.tax_amt||0)});
+        var FB=B+'font-weight:700!important;background:#eef2f7!important;';
+        var foot='';
+        if(iSup>0){
+          foot+='<tr class="f209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+FB+'text-align:right!important">공급가액 · 세액</td><td class="n" style="'+FB+NW+'">'+w(S)+'</td>'
+            +(iTax>iSup?'<td class="n" style="'+FB+NW+'">'+w(T)+'</td>':'')
+            +new Array(Math.max(0,out.length-1-Math.max(iSup,iTax))+1).join('<td style="'+FB+'"></td>')+'</tr>';
+          foot+='<tr class="f209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+FB+'text-align:right!important">합계 (VAT 포함)</td><td class="n" colspan="'+(out.length-iSup)+'" style="'+FB+NW+'font-size:11.5px!important">'+w(S+T)+'</td></tr>';
+        }
         return h+foot+'</tbody></table>';
       }
     }catch(e){console.error('[v9209-prLines]',e)}
@@ -1881,5 +1891,5 @@ window.V9198_APPLIED = true;
     return true;
   };
   var tries=0,iv=setInterval(function(){if(addOpt()||++tries>600)clearInterval(iv)},1000);
-  window.V9209_APPLIED=true;
+  window.V9209_APPLIED=true;window.V9210_APPLIED=true;
 })();
