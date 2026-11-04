@@ -1862,8 +1862,7 @@ async function leadOpen(d){
   LEAD.date = d || LEAD.date || today();
   dateChips('leadDates', lastDays(7), LEAD.date, 'leadOpen');
 
-  if(el('leadPendingRows')) el('leadPendingRows').innerHTML = '';
-  el('leadWorkersRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
+    el('leadWorkersRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
 
   try {
     var r = await sb.rpc('lead_deployment', { p_date: LEAD.date });
@@ -1886,24 +1885,7 @@ async function leadOpen(d){
     
     el('leadWorkersN').textContent = rows.length + '명';
 
-    if(pendingRows.length === 0){
-      
-      el('btnApproveAll').disabled = true;
-    } else {
-      el('btnApproveAll').disabled = false;
-      el('leadPendingRows').innerHTML = pendingRows.map(function(x, idx){
-        return '<div class="item" style="border-left:3px solid var(--warn)">'
-          + '<div class="m">'
-          +   '<div class="s"><b>' + esc(x.name) + '</b> <span class="pill y">팀장 확인 전</span></div>'
-          +   '<div class="t">' + esc(x.site || '') + ' · ' + esc(x.project) + (x.start ? ' · ' + hhmm(x.start) + ' 출근' : '') + '</div>'
-          + '</div>'
-          + '<div class="r">'
-          +   '<b>' + (+x.md || 0).toFixed(1) + ' <small class="dim">M/D</small></b>'
-          +   '<button class="btn sm p" onclick="leadApproveRow(' + idx + ')" style="margin-top:4px;padding:3px 8px;font-size:11px">확인</button>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-    }
+    // [팀장 확인 전 카드 삭제완료 - #1454]
 
     el('leadWorkersRows').innerHTML = rows.map(function(x){
       var isSubmitted = x.status === 'submitted';
@@ -3763,7 +3745,7 @@ function ld985Apply(){var q=String(LD985.q||'').trim().toLowerCase().replace(/\s
   var M=el('leadMonthRollup');if(M)[].forEach.call(M.querySelectorAll('tbody tr'),function(tr){tr.style.display=!q||String(tr.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0?'':'none'});
   var s=el('ld985n');if(s)s.textContent=q?n+'명 보임 / '+t+'명':'';var x=el('ld985x');if(x)x.style.display=q?'':'none'}
 function ld985Clr(){LD985.q='';var i=el('ld985q');if(i)i.value='';ld985Apply()}
-(function(){var P=el('leadPendingRows');if(!P)return;var d=document.createElement('div');d.id='ld985';d.className='tr-jf';d.style.margin='0 0 8px';
+(function(){var P=el('leadWorkersRows');if(!P)return;var d=document.createElement('div');d.id='ld985';d.className='tr-jf';d.style.margin='0 0 8px';
   d.innerHTML='<input id="ld985q" placeholder="이름·현장 찾기" oninput="LD985.q=this.value;ld985Apply()" onkeydown="if(event.key===\'Escape\')ld985Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="ld985x" style="flex:none;display:none" onclick="ld985Clr()">✕</button><span class="tiny dim" id="ld985n"></span>';
   var card=P.closest('.card')||P.parentNode;card.parentNode.insertBefore(d,card);
   if(window.MutationObserver){var mo=new MutationObserver(function(){if(LD985.q)ld985Apply()});['leadWorkersRows','leadMonthRollup'].forEach(function(id){var x=el(id);if(x)mo.observe(x,{childList:true})})}})();
@@ -4509,9 +4491,7 @@ function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC9
 /* v1.92 (안티그래비티 R1015 ③ 10-25): 당일 관제 — 최근 7일 밖 날짜로 오면 날짜 칩 맨 앞에 그 날짜 · 월 달력에서 사람 칸으로 왔는데 이름·현장 찾기에 가려지면 찾기를 풀고 그 줄로 · 찾기로 거르는 중 「전체 확인」은 보이는 대기 건만 */
 (function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){try{if(LC991.name&&LD985.q&&String(LC991.name).toLowerCase().indexOf(String(LD985.q).trim().toLowerCase())<0)ld985Clr()}catch(e){}
   var r=await _o.apply(this,arguments);try{var L=lastDays(7);if(LEAD.date&&L.indexOf(LEAD.date)<0)dateChips('leadDates',[LEAD.date].concat(L),LEAD.date,'leadOpen')}catch(e){}return r}})();
-(function(){if(typeof leadApproveAll!=='function')return;var _a=leadApproveAll;leadApproveAll=function(){if(!String(LD985.q||'').trim())return _a.apply(this,arguments);var B=el('leadPendingRows'),keep=LEAD.PEND||[];if(!B)return _a.apply(this,arguments);
-  var its=[].filter.call(B.children,function(x){return x.classList.contains('item')}),vis=keep.filter(function(x,i){return its[i]&&its[i].style.display!=='none'});if(!vis.length){toast('보이는 대기 건이 없습니다');return}
-  LEAD.PEND=vis;try{return _a.apply(this,arguments)}finally{LEAD.PEND=keep}}})();
+// leadApproveAll removed
 
 /* v1.93 (대표 지시 10-27, Claude 직접): ① 고객사(우주이엔지) 트레이 전용 로그인 — 직원 계정이 아니라 전화번호 + 6자리 PIN(대표가 ERP에서 발급).
    로그인하면 트레이 탭(재고·제작표)만 보이고, DB도 tray_ext_* 함수만 부름(단가·매입처·금액·계약번호·사번 없음). 제작표는 새로 쓰기 + 본인이 쓴 것만 고치기·지우기. 완료 처리는 BVS 리드만.
