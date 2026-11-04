@@ -1893,3 +1893,32 @@ window.V9198_APPLIED = true;
   var tries=0,iv=setInterval(function(){if(addOpt()||++tries>600)clearInterval(iv)},1000);
   window.V9209_APPLIED=true;window.V9210_APPLIED=true;
 })();
+
+/* ═══ v9.211 (Claude, 대표 11-04 21:0x) 확정된 청구서도 「확정 풀고 수정」
+   대표: 「마감 풀고 수정하고 싶은데, 마감 푸는 버튼이 없어졌어」 — v2.96의 「확정 풀고 수정」은 견적서·발주서만이었음(청구서는 「새 버전」).
+   청구서(invoice)도 세금계산서가 아직 없고 이 청구서로 만든 문서가 없으면 같은 번호 그대로 작성 중(임시)으로 되돌림(DB sd_set_status — 기존 함수).
+   되돌린 뒤 트레이 재청구서는 엑셀표(「청구서 - 글자」·「청구 - 자재비」)에서 고치고 「확정 발행」. 세금계산서가 있으면 지금처럼 「새 버전」.
+   정산완료·취소 문서는 그대로(버튼 안 나옴). `window.V9211_APPLIED` ═══ */
+(function(){
+  if(window.V9211_APPLIED)return;
+  try{ if(typeof UL296==='object'&&UL296&&!UL296.invoice)UL296.invoice='청구서'; }catch(e){}
+  if(typeof ul296Go==='function'){
+    var _go=ul296Go;
+    ul296Go=async function(no){
+      var d=(window.D&&D.sd||[]).filter(function(x){return x.doc_no===no})[0];
+      if(!d||d.doc_kind!=='invoice')return _go.apply(this,arguments);
+      var nx=(D.sd||[]).filter(function(x){return x.prev_doc_no===no&&x.status!=='void'}).map(function(x){return x.doc_no});
+      if(d.has_invoice||nx.length){toast(no+' 은(는) '+(d.has_invoice?'세금계산서가 이미 있어':'이 청구서로 만든 문서('+nx.join(', ')+')가 있어')+' 「새 버전」으로 고칩니다','w');return}
+      var rb=!!(d.extra&&d.extra.bill_ym);
+      var ok=await ask('확정 풀기',no+' 청구서를 작성 중(임시)으로 되돌려 같은 번호로 고칩니다.'+(rb?'\n\n트레이 자재 청구서는 엑셀표 「청구서 - 글자」(품명·규격·일자·묶음 제목)와 「청구 - 자재비」(수량·단가)에서 고친 뒤 「확정 발행」을 다시 누르세요.':'\n\n고친 뒤 「확정 발행」을 다시 누르세요.'),{ok:'확정 풀기'});
+      if(!ok)return;
+      var r=await sb.rpc('sd_set_status',{p_doc_no:no,p_status:'draft'});
+      if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
+      d.status='draft';delete d._lines;
+      toast(no+' 확정 풀림 — 고친 뒤 「확정 발행」','g');
+      if(rb){try{if(typeof drClose==='function')drClose()}catch(e){} try{if(window.XL&&XL.open){XL.open();var sel=document.getElementById('xl9193_sheet_sel');if(sel&&sel.querySelector('option[value="inv"]')){sel.value='inv';XL.curSheet='inv';var ym=String(d.extra.bill_ym);var yi=document.getElementById('xl9193_ym_in');if(yi){yi.value=ym}XL.curYm=ym;if(d.partner_id){var ps=document.getElementById('xl9193_ptn_sel');if(ps&&ps.querySelector('option[value="'+d.partner_id+'"]')){ps.value=d.partner_id;XL.curPartner=d.partner_id}}XL.load()}}}catch(e){console.error('[v9211]',e)}}
+      else if(typeof docEdit285==='function')docEdit285(no);
+    };
+  }
+  window.V9211_APPLIED=true;
+})();
