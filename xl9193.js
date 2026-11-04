@@ -1026,3 +1026,129 @@
 })();
 window.V9198_APPLIED = true;
 
+/* ═══ v9.199 (대표 지시 11-04 16:3x 「공식서류에는 우리 문서번호를 보이지 말고」) 인쇄 머리 표에서 「…번호」 칸 중 값이 우리 문서번호(B26103101-I 같은 꼴)인 줄을 뺌 — 청구서·발주서·견적서 등 모든 인쇄 ═══ */
+(function(){
+  if (window.V9199_APPLIED) return;
+  var NO=/^[A-Z]\d{8}(-[A-Z]{1,3})?$/;
+  var _m=prMeta;
+  prMeta=function(rows){
+    try{
+      rows=(rows||[]).filter(function(r){
+        if(!r)return false;
+        var lab=String(r[0]||'').replace(/\s/g,''), v=String(r[1]==null?'':r[1]).replace(/<[^>]*>/g,'').trim();
+        return !(/번호$/.test(lab)&&NO.test(v));
+      });
+      return _m.call(this,rows);
+    }catch(e){console.error('[v9199-prMeta]',e)}
+    return _m.apply(this,arguments);
+  };
+  window.V9199_APPLIED = true;
+})();
+
+
+/* ═══ v9.200 [C1473-대표지시] #1425 급여계산·대장 「사업소득 3.3%」 표 연동 ═══ */
+(function(){
+  function tryWrapRegPaint() {
+    if (typeof window.regPaint === 'function' && !window.regPaint._bizWrapped) {
+      var _origRegPaint = window.regPaint;
+      window.regPaint = function() {
+        _origRegPaint.apply(this, arguments);
+        try {
+          if (typeof isOwner !== 'function' || !isOwner()) return;
+          var regTbl = document.getElementById('regTbl');
+          if (!regTbl) return;
+
+          var box = document.getElementById('bizPayBox9200');
+          if (!box) {
+            box = document.createElement('div');
+            box.id = 'bizPayBox9200';
+            box.style.cssText = 'margin-top:24px;padding-top:16px;border-top:2px dashed #cbd5e1;';
+            regTbl.parentNode.insertBefore(box, regTbl.nextSibling);
+          }
+
+          var curYm = (typeof M === 'function') ? M() : '';
+          if (!curYm) return;
+
+          box.innerHTML = '<div style="font-size:13px;color:#64748b;padding:8px 0;">' + curYm + ' 사업소득 3.3% (용역·프리랜서) 불러오는 중...</div>';
+
+          if (!window.sb || !window.sb.rpc) return;
+
+          window.sb.rpc('ceo_business_pay', { p_ym: curYm }).then(function(res) {
+            if (res.error || !res.data || !res.data.ok) {
+              box.innerHTML = '<div class="tiny dim" style="padding:8px 0;">' + curYm + ' 사업소득 대상자가 없거나 조회를 완료할 수 없습니다.</div>';
+              return;
+            }
+            var d = res.data;
+            var rows = d.rows || [];
+            var sum = d.sum || {};
+
+            var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+            h += '<h4 style="margin:0;font-size:14px;color:#0f172a;display:flex;align-items:center;gap:6px;">💼 ' + esc(curYm) + ' 사업소득 3.3% (프리랜서·용역) <span style="font-size:12px;font-weight:normal;color:#64748b;">(총 ' + rows.length + '명)</span></h4>';
+            h += '</div>';
+
+            if (!rows.length) {
+              h += '<div class="tiny dim" style="padding:12px 0;">' + curYm + ' 사업소득 3.3% 대상 내역이 없습니다.</div>';
+              box.innerHTML = h;
+              return;
+            }
+
+            var totWorkMd = 0, totOt = 0;
+            var bodyHtml = rows.map(function(r) {
+              totWorkMd += (+r.work_md || 0);
+              totOt += (+r.ot_hours || 0);
+              var empLink = (typeof hxOpenEmp === 'function' && r.employment_no) ? ' style="cursor:pointer;color:#2563eb;text-decoration:underline;" onclick="hxOpenEmp(\'' + r.employment_no + '\')"' : '';
+              return '<tr>'
+                + '<td class="nm"' + empLink + '>' + esc(r.person_name || '') + '</td>'
+                + '<td class="n">' + (+r.work_md || 0).toLocaleString() + '</td>'
+                + '<td class="n">' + (+r.ot_hours || 0).toLocaleString() + '</td>'
+                + '<td class="n tot" style="font-weight:600;">' + (+r.pay_amt || 0).toLocaleString() + '원</td>'
+                + '<td class="n" style="color:#dc2626;">' + (+r.income_tax || 0).toLocaleString() + '원</td>'
+                + '<td class="n" style="color:#dc2626;">' + (+r.local_tax || 0).toLocaleString() + '원</td>'
+                + '<td class="n net" style="color:#059669;font-weight:700;">' + (+r.net_amt || 0).toLocaleString() + '원</td>'
+                + '<td style="text-align:center;">' + (r.closed ? '<span class="pill tiny">마감</span>' : '<span class="pill tiny g">작성 중</span>') + '</td>'
+                + '</tr>';
+            }).join('');
+
+            var footHtml = '<tr>'
+              + '<td class="nm">합계 ' + rows.length + '명</td>'
+              + '<td class="n">' + totWorkMd.toLocaleString() + '</td>'
+              + '<td class="n">' + totOt.toLocaleString() + '</td>'
+              + '<td class="n tot" style="font-weight:700;">' + (+sum.pay || 0).toLocaleString() + '원</td>'
+              + '<td class="n" style="color:#dc2626;font-weight:600;">' + (+sum.income_tax || 0).toLocaleString() + '원</td>'
+              + '<td class="n" style="color:#dc2626;font-weight:600;">' + (+sum.local_tax || 0).toLocaleString() + '원</td>'
+              + '<td class="n net" style="color:#059669;font-weight:700;">' + (+sum.net || 0).toLocaleString() + '원</td>'
+              + '<td></td>'
+              + '</tr>';
+
+            h += '<table class="rg" style="width:100%;margin-top:4px;">'
+              + '<thead><tr>'
+              + '<th class="nmh">이름</th><th class="n">공수</th><th class="n">연장(H)</th><th class="n">지급액 (세전)</th>'
+              + '<th class="n">소득세 (3%)</th><th class="n">지방소득세 (0.3%)</th><th class="n">실지급액 (세후)</th><th>상태</th>'
+              + '</tr></thead>'
+              + '<tbody>' + bodyHtml + '</tbody>'
+              + '<tfoot>' + footHtml + '</tfoot>'
+              + '</table>';
+
+            box.innerHTML = h;
+          }).catch(function(err) {
+            box.innerHTML = '<div class="tiny neg" style="padding:8px 0;">사업소득 조회 오류: ' + esc(err.message || String(err)) + '</div>';
+          });
+        } catch(e) { console.error('[BIZ-PAY-ERR]', e); }
+      };
+      window.regPaint._bizWrapped = true;
+      if (document.getElementById('regTbl')) {
+        try { window.regPaint(); } catch(e){}
+      }
+    }
+  }
+
+  // 주기적으로 regPaint 래핑 시도
+  var _t = 0;
+  var _iv = setInterval(function() {
+    _t++;
+    if (typeof window.regPaint === 'function') {
+      tryWrapRegPaint();
+      if (window.regPaint._bizWrapped || _t > 120) clearInterval(_iv);
+    }
+  }, 500);
+})();
