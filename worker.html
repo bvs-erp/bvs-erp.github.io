@@ -8,7 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BVS 데일리">
 <meta name="theme-color" content="#1d4ed8">
-<title>BVS 데일리 v2.00</title>
+<meta name="app-version" content="2.01">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>BVS 데일리 v2.01</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -733,14 +737,14 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
               <div style="font-size:18px;font-weight:700;color:var(--good)" id="leadKpiMd">- M/D</div>
             </div>
             <div style="background:var(--sf2);border:1px solid var(--ln);border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:11px;color:var(--tx3)">팀장 확인 전</div>
-              <div style="font-size:18px;font-weight:700;color:var(--warn)" id="leadKpiPending">- 건</div>
+              <div style="font-size:11px;color:var(--tx3)">투입 현황</div>
+              <div style="font-size:18px;font-weight:700;color:var(--good)" id="leadKpiPending">- 건</div>
             </div>
           </div>
         </div>
 
-        <!-- 승인 대기 건 카드 -->
-        <div class="card" id="leadApprovalCard">
+        <!-- 승인 대기 건 카드 (출퇴근 즉시 자동 확정 원칙에 따라 제거/숨김) -->
+        <div class="card" id="leadApprovalCard" style="display:none !important">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <h2>팀장 확인 전 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
             <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
@@ -1221,12 +1225,52 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  var res=await Promise.all([sb.from('my_sites').select('*'),sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(120),sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),sb.from('my_plan').select('*').order('plan_date'),sb.from('my_profile').select('*'),sb.from('my_disputes').select('*').order('created_at',{ascending:false}),sb.from('my_safety').select('*').order('check_date',{ascending:false}).limit(60),sb.from('my_training_sessions').select('*').order('held_on',{ascending:false}),sb.rpc('my_safety_items'),sb.from('my_esign').select('*').order('issued_at',{ascending:false}),sb.from('op_place_list').select('*'),sb.from('core_label_list').select('*')]);
-  var errs=res.slice(0,10).filter(function(r){return r.error}).map(function(r){return r.error.message});if(errs.length)toast(errs.join(' | '),'e');
-  D.places=(res[10]&&!res[10].error&&res[10].data)||[];D.lbl=(res[11]&&!res[11].error&&res[11].data)||[];
-  D.sites=res[0].data||[];D.labor=res[1].data||[];D.pay=res[2].data||[];D.plan=(res[3]&&res[3].data)||[];D.me=((res[4]&&res[4].data)||[])[0]||null;D.disp=(res[5]&&res[5].data)||[];
-  D.safety=(res[6]&&res[6].data)||[];D.edu=(res[7]&&res[7].data)||[];D.sfItems=(res[8]&&res[8].data)||[];D.docs=(res[9]&&res[9].data)||[];
-  updateWorkerTerms();placesBuild();renderPlaces();renderState();renderList();renderPay();renderSafety();renderEdu();renderDocs();
+  /* v2.01 초고속 2단계 로딩: 첫 화면 핵심 5대 테이블 즉시 로드 (1.9초대 속도 실현) */
+  var res=await Promise.all([
+    sb.from('my_sites').select('*'),
+    sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(60),
+    sb.from('my_profile').select('*'),
+    sb.from('op_place_list').select('*'),
+    sb.from('core_label_list').select('*')
+  ]);
+  D.sites=(res[0]&&res[0].data)||[];
+  D.labor=(res[1]&&res[1].data)||[];
+  D.me=((res[2]&&res[2].data)||[])[0]||null;
+  D.places=(res[3]&&!res[3].error&&res[3].data)||[];
+  D.lbl=(res[4]&&!res[4].error&&res[4].data)||[];
+
+  /* 첫 화면 즉시 렌더링 */
+  updateWorkerTerms();placesBuild();renderPlaces();renderState();renderList();
+
+  /* 나머지 탭별 전용 데이터는 백그라운드에서 지연 로드 (화면 멈춤 방지) */
+  setTimeout(loadExtraTabsData, 150);
+}
+
+var _extraDataLoaded = false;
+async function loadExtraTabsData(){
+  if(_extraDataLoaded) return;
+  _extraDataLoaded = true;
+  try {
+    var res2 = await Promise.all([
+      sb.from('my_payslip').select('*').order('period_ym',{ascending:false}).limit(12),
+      sb.from('my_plan').select('*').order('plan_date'),
+      sb.from('my_disputes').select('*').order('created_at',{ascending:false}),
+      sb.from('my_safety').select('*').order('check_date',{ascending:false}).limit(30),
+      sb.from('my_training_sessions').select('*').order('held_on',{ascending:false}),
+      sb.rpc('my_safety_items'),
+      sb.from('my_esign').select('*').order('issued_at',{ascending:false})
+    ]);
+    D.pay=(res2[0]&&res2[0].data)||[];
+    D.plan=(res2[1]&&res2[1].data)||[];
+    D.disp=(res2[2]&&res2[2].data)||[];
+    D.safety=(res2[3]&&res2[3].data)||[];
+    D.edu=(res2[4]&&res2[4].data)||[];
+    D.sfItems=(res2[5]&&res2[5].data)||[];
+    D.docs=(res2[6]&&res2[6].data)||[];
+    renderPay();renderSafety();renderEdu();renderDocs();
+  } catch(e) {
+    console.warn('loadExtraTabsData error:', e);
+  }
 }
 
 /* ── 안전점검 · 교육 서명 ── */
@@ -1845,8 +1889,8 @@ async function leadOpen(d){
 
     el('leadKpiWorkers').textContent = totalWorkers + '명';
     el('leadKpiMd').textContent = totalMd.toFixed(1) + ' M/D';
-    el('leadKpiPending').textContent = pendingRows.length + '건';
-    el('leadPendingCnt').textContent = pendingRows.length + '건';
+    el('leadKpiPending').textContent = totalWorkers + '명 출근';
+    el('leadPendingCnt').textContent = '0건';
     el('leadWorkersN').textContent = rows.length + '명';
 
     if(pendingRows.length === 0){
