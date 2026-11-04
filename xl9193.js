@@ -1045,110 +1045,513 @@ window.V9198_APPLIED = true;
   window.V9199_APPLIED = true;
 })();
 
-
-/* ═══ v9.200 [C1473-대표지시] #1425 급여계산·대장 「사업소득 3.3%」 표 연동 ═══ */
+/* ═══ v9.201 [C1474-대표지시] #1426 급여대장 한 표 통합 (근로+사업소득 3.3%) + 이달 달력 & 매일 단가 검증 + 기업은행 대량이체 ═══ */
 (function(){
-  function tryWrapRegPaint() {
-    if (typeof window.regPaint === 'function' && !window.regPaint._bizWrapped) {
+  // 캐시 객체
+  window._bizPayCache = window._bizPayCache || {};
+  window._personMonthCache = window._personMonthCache || {};
+
+  // 스타일 주입 (달력 및 급여대장 확장)
+  (function(){
+    var styleId = 'style-v9201-biz';
+    if (document.getElementById(styleId)) return;
+    var st = document.createElement('style');
+    st.id = styleId;
+    st.textContent = [
+      '#sec-gReg .rg-wrap { grid-template-columns: minmax(0, 1fr) minmax(380px, 480px) !important; gap: 14px; }',
+      '@media(max-width: 1200px) { #sec-gReg .rg-wrap { grid-template-columns: 1fr !important; } }',
+      '.cal9201-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; margin-top: 6px; }',
+      '.cal9201-hdr { text-align: center; font-size: 11px; font-weight: 700; padding: 3px 0; background: #f8fafc; color: #475569; }',
+      '.cal9201-hdr.sun { color: #dc2626; } .cal9201-hdr.sat { color: #2563eb; }',
+      '.cal9201-cell { min-height: 52px; background: #fff; border-radius: 4px; padding: 3px 4px; display: flex; flex-direction: column; justify-content: flex-start; font-size: 11px; position: relative; }',
+      '.cal9201-cell.empty { background: #f8fafc; border: none; }',
+      '.cal9201-cell.work { background: #ecfdf5; border: 1px solid #a7f3d0; }',
+      '.cal9201-cell.holiday .cal9201-num { color: #dc2626; }',
+      '.cal9201-num { font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 2px; }',
+      '.cal9201-num.sun { color: #dc2626; } .cal9201-num.sat { color: #2563eb; }',
+      '.cal9201-work-badge { font-weight: 700; color: #047857; font-size: 11px; line-height: 1.2; }',
+      '.cal9201-rate { font-weight: 700; color: #1d4ed8; font-size: 10px; line-height: 1.2; margin-top: 1px; }',
+      '.cal9201-pay { font-size: 10px; color: #334155; }',
+      '.cal9201-site { font-size: 9px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }',
+      '.cal9201-ov { font-size: 9px; color: #b91c1c; background: #fee2e2; border-radius: 2px; padding: 0 2px; display: inline-block; font-weight: 600; }',
+      '.cal9201-rev { font-size: 9px; color: #94a3b8; }',
+      '.cal9201-times { font-size: 9px; color: #64748b; }'
+    ].join('\n');
+    document.head.appendChild(st);
+  })();
+
+  // 1. 사업소득자 선택 핸들러
+  window.regSelBiz = function(empNo) {
+    if (typeof REG !== 'undefined') {
+      REG.sel = empNo;
+    }
+    if (typeof window.regPaint === 'function') {
+      window.regPaint();
+    }
+    if (typeof window.regRail === 'function') {
+      window.regRail();
+    }
+  };
+
+  // 2. 사업소득 요약 복사
+  window.regCopyBiz = function(empNo) {
+    var m = (typeof M === 'function') ? M() : '';
+    var bp = window._bizPayCache[m];
+    if (!bp || !bp.rows) return;
+    var r = bp.rows.filter(function(x){ return x.employment_no === empNo; })[0];
+    if (!r) return;
+    var txt = [
+      '[' + m + ' 사업소득 지급명세]',
+      '성명: ' + (r.person_name || ''),
+      '공수: ' + (r.work_md || 0) + '공수 (연장 ' + (r.ot_hours || 0) + 'H)',
+      '지급액(세전): ' + (+r.pay_amt || 0).toLocaleString() + '원',
+      '소득세(3%): -' + (+r.income_tax || 0).toLocaleString() + '원',
+      '지방소득세(0.3%): -' + (+r.local_tax || 0).toLocaleString() + '원',
+      '실지급액(세후): ' + (+r.net_amt || 0).toLocaleString() + '원'
+    ].join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function(){
+        if (typeof toast === 'function') toast('사업소득 지급명세가 복사되었습니다', 'g');
+      });
+    }
+  };
+
+  // 3. regTbl 급여대장 테이블 내 사업소득자 통합 삽입 함수
+  function injectBizRowsToRegTable() {
+    if (typeof isOwner !== 'function' || !isOwner()) return;
+    var tbl = document.querySelector('#regTbl table.rg');
+    if (!tbl) return;
+
+    // 기존 분리 컨테이너 제거
+    var oldBox = document.getElementById('bizPayBox9200');
+    if (oldBox) oldBox.remove();
+
+    var curYm = (typeof M === 'function') ? M() : '';
+    if (!curYm) return;
+
+    var bpData = window._bizPayCache[curYm];
+    if (!bpData) {
+      if (window.sb && window.sb.rpc && !window._bizPayFetching) {
+        window._bizPayFetching = true;
+        window.sb.rpc('ceo_business_pay', { p_ym: curYm }).then(function(res) {
+          window._bizPayFetching = false;
+          if (res.data && res.data.ok) {
+            window._bizPayCache[curYm] = res.data;
+            if (typeof window.regPaint === 'function') window.regPaint();
+          }
+        }).catch(function(err){
+          window._bizPayFetching = false;
+          console.error('[CEO-BIZ-PAY-ERR]', err);
+        });
+      }
+      return;
+    }
+
+    var bizRows = bpData.rows || [];
+    if (!bizRows.length) return;
+
+    // 이미 주입되었는지 검사 (동일 렌더링 내 중복 방지)
+    if (tbl.querySelector('.rg-biz-row')) return;
+
+    var tbody = tbl.querySelector('tbody');
+    var tfoot = tbl.querySelector('tfoot');
+    if (!tbody) return;
+
+    var cols = (typeof REG_COLS !== 'undefined') ? REG_COLS : [];
+    var totalColspan = cols.length + 2; // ck + nm + cols
+
+    // 구분선 삽입
+    var divTr = document.createElement('tr');
+    divTr.className = 'rg-biz-row rg-biz-divider';
+    divTr.style.cssText = 'background:#f1f5f9;font-weight:700;color:#334155;border-top:2px solid #cbd5e1;';
+    divTr.innerHTML = '<td colspan="' + totalColspan + '" style="padding:6px 10px;text-align:left;font-size:12px;">💼 사업소득 3.3% (프리랜서·용역) · ' + bizRows.length + '명 <span style="font-size:11px;font-weight:normal;color:#64748b;">(이름 클릭 시 우측에 이달 달력 & 단가 명세서 표시)</span></td>';
+    tbody.appendChild(divTr);
+
+    // 사업소득자 행 삽입
+    var selEmp = (typeof REG !== 'undefined') ? REG.sel : null;
+    bizRows.forEach(function(r) {
+      var tr = document.createElement('tr');
+      tr.className = 'rg-biz-row' + (selEmp === r.employment_no ? ' on' : '');
+
+      var isChk = (typeof REG !== 'undefined' && REG.chk && REG.chk[r.employment_no]);
+      var empNoEsc = (typeof ERPC !== 'undefined') ? ERPC.jsq(r.employment_no) : "'" + r.employment_no + "'";
+
+      var h = '<td class="ck"><input type="checkbox"' + (isChk ? ' checked' : '') + ' onclick="if(typeof REG!==\'undefined\')REG.chk[' + empNoEsc + ']=this.checked"></td>'
+        + '<td class="nm" onclick="regSelBiz(' + empNoEsc + ')" title="' + (r.employment_no || '') + ' — 클릭하여 이달 달력·단가 명세서" style="cursor:pointer;">'
+        + '<b>' + (r.person_name || '') + '</b> <span class="pill tiny" style="background:#e0e7ff;color:#3730a3;font-weight:700;margin-left:4px;">용역</span>'
+        + '</td>';
+
+      cols.forEach(function(c) {
+        if (c.k === 'gross') {
+          h += '<td class="n tot" style="font-weight:700;">' + (+r.pay_amt || 0).toLocaleString() + '원</td>';
+        } else if (c.k === 'itx') {
+          h += '<td class="n" style="color:#dc2626;font-weight:600;">' + (+r.income_tax || 0).toLocaleString() + '원</td>';
+        } else if (c.k === 'ltx') {
+          h += '<td class="n" style="color:#dc2626;font-weight:600;">' + (+r.local_tax || 0).toLocaleString() + '원</td>';
+        } else if (c.k === 'ded_total') {
+          var totDed = (+r.income_tax || 0) + (+r.local_tax || 0);
+          h += '<td class="n tot" style="color:#dc2626;font-weight:700;">' + totDed.toLocaleString() + '원</td>';
+        } else if (c.k === 'net') {
+          h += '<td class="n net" style="color:#059669;font-weight:800;background:color-mix(in srgb,#10b981 8%,transparent);">' + (+r.net_amt || 0).toLocaleString() + '원</td>';
+        } else {
+          h += '<td class="n dim" style="color:#cbd5e1;text-align:center;">-</td>';
+        }
+      });
+      tr.innerHTML = h;
+      tbody.appendChild(tr);
+    });
+
+    // tfoot 3단 구성 (근로 소계, 용역 소계, 전체 합계)
+    if (tfoot) {
+      var regRows = (typeof regRows === 'function') ? regRows() : ((REG.cache[curYm]||{}).rows || []);
+      var regSum = {};
+      regRows.forEach(function(r){
+        cols.forEach(function(c){ regSum[c.k] = (regSum[c.k] || 0) + (+r[c.k] || 0); });
+      });
+
+      var bizSum = bpData.sum || {};
+      var bizPay = +bizSum.pay || 0;
+      var bizItx = +bizSum.income_tax || 0;
+      var bizLtx = +bizSum.local_tax || 0;
+      var bizDed = bizItx + bizLtx;
+      var bizNet = +bizSum.net || 0;
+
+      // 1행: 근로 소계
+      var ftReg = '<tr class="rg-biz-row" style="background:#f8fafc;"><td class="ck"></td><td class="nm">근로 소계 (' + regRows.length + '명)</td>'
+        + cols.map(function(c){ return '<td class="n tot">' + (regSum[c.k] ? regSum[c.k].toLocaleString() + '원' : '-') + '</td>'; }).join('')
+        + '</tr>';
+
+      // 2행: 용역 소계
+      var ftBiz = '<tr class="rg-biz-row" style="background:#f8fafc;"><td class="ck"></td><td class="nm">용역 소계 (' + bizRows.length + '명)</td>'
+        + cols.map(function(c){
+            if (c.k === 'gross') return '<td class="n tot" style="font-weight:700;">' + bizPay.toLocaleString() + '원</td>';
+            if (c.k === 'itx') return '<td class="n" style="color:#dc2626;font-weight:600;">' + bizItx.toLocaleString() + '원</td>';
+            if (c.k === 'ltx') return '<td class="n" style="color:#dc2626;font-weight:600;">' + bizLtx.toLocaleString() + '원</td>';
+            if (c.k === 'ded_total') return '<td class="n tot" style="color:#dc2626;font-weight:700;">' + bizDed.toLocaleString() + '원</td>';
+            if (c.k === 'net') return '<td class="n net" style="color:#059669;font-weight:800;">' + bizNet.toLocaleString() + '원</td>';
+            return '<td class="n dim" style="color:#cbd5e1;text-align:center;">-</td>';
+          }).join('')
+        + '</tr>';
+
+      // 3행: 전체 합계
+      var ftAll = '<tr class="rg-biz-row" style="background:#f1f5f9;font-weight:800;border-top:2px solid #94a3b8;"><td class="ck"></td><td class="nm" style="color:#0f172a;font-weight:800;">전체 합계 (' + (regRows.length + bizRows.length) + '명)</td>'
+        + cols.map(function(c){
+            var allVal = (regSum[c.k] || 0);
+            if (c.k === 'gross') allVal += bizPay;
+            else if (c.k === 'itx') allVal += bizItx;
+            else if (c.k === 'ltx') allVal += bizLtx;
+            else if (c.k === 'ded_total') allVal += bizDed;
+            else if (c.k === 'net') allVal += bizNet;
+            return '<td class="n tot" style="font-weight:800;' + (c.k === 'net' ? 'color:#059669;font-size:13px;' : '') + '">' + (allVal ? allVal.toLocaleString() + '원' : '-') + '</td>';
+          }).join('')
+        + '</tr>';
+
+      tfoot.innerHTML = ftReg + ftBiz + ftAll;
+    }
+
+    // 헤더 카운트 갱신
+    var regN = document.getElementById('regN');
+    if (regN) {
+      var d = (typeof REG !== 'undefined' && REG.cache && REG.cache[curYm]) || {};
+      var cl = !!d.closed;
+      var totalN = regRows.length + bizRows.length;
+      regN.textContent = curYm + ' · 전체 ' + totalN + '명 (근로 ' + regRows.length + ' · 용역 ' + bizRows.length + ') · ' + (cl ? '확정됨' : '작성 중');
+    }
+  }
+
+  // 4. regRail 래핑: 이달 달력 & 매일 단가 + 명세서 표시
+  function wrapRegRail() {
+    if (typeof window.regRail !== 'function' || window.regRail._v9201Wrapped) return;
+
+    var _origRegRail = window.regRail;
+    window.regRail = function() {
+      _origRegRail.apply(this, arguments);
+
+      try {
+        if (typeof isOwner !== 'function' || !isOwner()) return;
+
+        var curYm = (typeof M === 'function') ? M() : '';
+        var rail = document.getElementById('regRail');
+        if (!rail || !curYm) return;
+
+        var selEmp = (typeof REG !== 'undefined') ? REG.sel : null;
+        if (!selEmp) return;
+
+        var bpData = window._bizPayCache[curYm] || { rows: [] };
+        var bEmp = (bpData.rows || []).filter(function(x){ return x.employment_no === selEmp; })[0];
+
+        // 만약 사업소득자(용역)가 선택된 경우 기존 근로자 명세서가 없으므로 사업소득 명세서 카드 생성
+        if (bEmp) {
+          var existBizCard = rail.querySelector('.card-biz-slip');
+          if (!existBizCard) {
+            var bCard = document.createElement('div');
+            bCard.className = 'card card-biz-slip';
+            bCard.style.marginTop = '10px';
+            bCard.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+              + '<h4 style="margin:0;font-size:14px;color:#0f172a;">사업소득 지급명세서 · ' + (bEmp.person_name || '') + '</h4>'
+              + '<span class="pill tiny" style="background:#e0e7ff;color:#3730a3;font-weight:700;">용역 3.3%</span>'
+              + '</div>'
+              + '<table class="rg" style="width:100%;margin-top:10px;font-size:12px;">'
+              + '<tbody>'
+              + '<tr><td class="dim" style="width:40%;">귀속월</td><td class="n" style="font-weight:600;">' + curYm + '</td></tr>'
+              + '<tr><td class="dim">총 근무 공수</td><td class="n" style="font-weight:600;">' + (+bEmp.work_md || 0).toLocaleString() + ' 공수</td></tr>'
+              + '<tr><td class="dim">연장 시간</td><td class="n">' + (+bEmp.ot_hours || 0).toLocaleString() + ' H</td></tr>'
+              + '<tr style="background:#f8fafc;"><td style="font-weight:700;">지급총액 (세전)</td><td class="n tot" style="font-weight:700;">' + (+bEmp.pay_amt || 0).toLocaleString() + '원</td></tr>'
+              + '<tr><td class="dim" style="color:#dc2626;">소득세 (3.0%)</td><td class="n" style="color:#dc2626;">-' + (+bEmp.income_tax || 0).toLocaleString() + '원</td></tr>'
+              + '<tr><td class="dim" style="color:#dc2626;">지방소득세 (0.3%)</td><td class="n" style="color:#dc2626;">-' + (+bEmp.local_tax || 0).toLocaleString() + '원</td></tr>'
+              + '<tr style="background:#fef2f2;"><td style="color:#dc2626;font-weight:700;">공제 총액 (3.3%)</td><td class="n" style="color:#dc2626;font-weight:700;">-' + ((+bEmp.income_tax || 0) + (+bEmp.local_tax || 0)).toLocaleString() + '원</td></tr>'
+              + '<tr style="background:#ecfdf5;"><td style="color:#047857;font-weight:800;font-size:13px;">실지급액 (세후)</td><td class="n net" style="color:#059669;font-weight:800;font-size:14px;">' + (+bEmp.net_amt || 0).toLocaleString() + '원</td></tr>'
+              + '</tbody></table>'
+              + '<div style="margin-top:10px;display:flex;gap:6px;">'
+              + '<button class="btn sm" onclick="hxOpenEmp(\'' + bEmp.employment_no + '\')">인사카드</button>'
+              + '<button class="btn sm" onclick="regCopyBiz(\'' + bEmp.employment_no + '\')">요약 복사</button>'
+              + '</div>';
+            rail.appendChild(bCard);
+          }
+        }
+
+        // 달력 컨테이너 주입 (근로자/사업소득자 공통 최상단)
+        var calBox = rail.querySelector('#calBox9201');
+        if (!calBox) {
+          calBox = document.createElement('div');
+          calBox.id = 'calBox9201';
+          calBox.className = 'card';
+          calBox.style.marginTop = '10px';
+          // 명세서 카드 바로 위에 위치
+          rail.insertBefore(calBox, rail.children[1] || null);
+        }
+
+        renderPersonMonthCalendar(calBox, selEmp, curYm);
+
+      } catch(e) {
+        console.error('[REG-RAIL-CAL-ERR]', e);
+      }
+    };
+    window.regRail._v9201Wrapped = true;
+  }
+
+  // 5. 이달 달력 & 매일 단가 렌더러
+  function renderPersonMonthCalendar(container, empNo, ym) {
+    var cacheKey = empNo + '_' + ym;
+    var cached = window._personMonthCache[cacheKey];
+
+    if (!cached) {
+      container.innerHTML = '<div style="padding:12px;font-size:12px;color:#64748b;text-align:center;">'
+        + '<div style="margin-bottom:6px;font-weight:700;">' + ym + ' 근무 달력 및 매일 단가</div>'
+        + '<div>데이터 불러오는 중...</div>'
+        + '</div>';
+
+      if (window.sb && window.sb.rpc) {
+        window.sb.rpc('ceo_person_month', { p_emp: empNo, p_ym: ym }).then(function(res) {
+          if (res.data && res.data.ok) {
+            window._personMonthCache[cacheKey] = res.data;
+            drawCalendarHtml(container, res.data);
+          } else {
+            container.innerHTML = '<div class="tiny dim" style="padding:10px 0;text-align:center;">' + ym + ' 현장 출역 데이터가 없습니다 (월급제 또는 미출역).</div>';
+          }
+        }).catch(function(err){
+          container.innerHTML = '<div class="tiny neg" style="padding:8px 0;">출역 조회 실패: ' + (err.message || String(err)) + '</div>';
+        });
+      }
+      return;
+    }
+
+    drawCalendarHtml(container, cached);
+  }
+
+  function drawCalendarHtml(container, data) {
+    var ym = data.ym || '';
+    var pName = data.person_name || '';
+    var days = data.days || [];
+    var byRate = data.by_rate || [];
+    var sum = data.sum || {};
+
+    var dayMap = {};
+    days.forEach(function(d){ dayMap[d.date] = d; });
+
+    var parts = ym.split('-');
+    var yr = +parts[0], mo = +parts[1];
+    var firstDayDow = new Date(yr, mo - 1, 1).getDay(); // 0(일) ~ 6(토)
+    var lastDate = new Date(yr, mo, 0).getDate();
+
+    var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+      + '<h4 style="margin:0;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:6px;">📅 ' + ym + ' 근무 달력 · <span style="color:#2563eb;">' + pName + '</span></h4>'
+      + '<span style="font-size:11px;font-weight:700;color:#047857;">총 ' + (+sum.work_md || 0) + '공수' + (sum.ot_hours ? ' (+' + sum.ot_hours + 'H)' : '') + '</span>'
+      + '</div>';
+
+    // 7열 달력
+    h += '<div class="cal9201-grid">';
+    var hdrs = ['일', '월', '화', '수', '목', '금', '토'];
+    hdrs.forEach(function(hdr, i){
+      var cls = (i === 0) ? ' sun' : (i === 6) ? ' sat' : '';
+      h += '<div class="cal9201-hdr' + cls + '">' + hdr + '</div>';
+    });
+
+    // 1일 이전 빈칸
+    for (var b = 0; b < firstDayDow; b++) {
+      h += '<div class="cal9201-cell empty"></div>';
+    }
+
+    // 1일 ~ 말일
+    for (var d = 1; d <= lastDate; d++) {
+      var dStr = String(d).padStart(2, '0');
+      var fullDate = ym + '-' + dStr;
+      var curDow = (firstDayDow + d - 1) % 7;
+      var isSun = (curDow === 0), isSat = (curDow === 6);
+
+      var entry = dayMap[fullDate];
+      var isHol = entry ? !!entry.holiday : isSun;
+
+      var numCls = isHol ? ' sun' : (isSat ? ' sat' : '');
+      var cellCls = entry ? ' work' : '';
+
+      h += '<div class="cal9201-cell' + cellCls + '">';
+      h += '<div class="cal9201-num' + numCls + '">' + d + '</div>';
+
+      if (entry) {
+        h += '<div class="cal9201-work-badge">' + (+entry.work_md || 0) + '공수' + (entry.ot_hours ? ' <span style="font-size:9px;color:#b45309;">+' + entry.ot_hours + 'H</span>' : '') + '</div>';
+        h += '<div class="cal9201-rate">@' + (+entry.daily_rate || 0).toLocaleString() + '</div>';
+        h += '<div class="cal9201-pay">' + (+entry.pay_amt || 0).toLocaleString() + '원</div>';
+        if (entry.site || entry.project) {
+          h += '<div class="cal9201-site" title="' + (entry.site || '') + ' ' + (entry.work_desc || '') + '">' + (entry.site || entry.project) + '</div>';
+        }
+        if (entry.work_start && entry.work_end) {
+          h += '<div class="cal9201-times">' + entry.work_start + '~' + entry.work_end + '</div>';
+        }
+        if (entry.rate_overridden) {
+          h += '<div class="cal9201-ov" title="' + (entry.override_reason || '단가 수정') + '">단가수정</div>';
+        }
+        if (entry.revenue_amt) {
+          h += '<div class="cal9201-rev">매출 ' + (+entry.revenue_amt).toLocaleString() + '</div>';
+        }
+      }
+      h += '</div>';
+    }
+
+    // 말일 이후 빈칸 채우기
+    var totalCells = firstDayDow + lastDate;
+    var rem = (7 - (totalCells % 7)) % 7;
+    for (var a = 0; a < rem; a++) {
+      h += '<div class="cal9201-cell empty"></div>';
+    }
+    h += '</div>';
+
+    // 단가별 합계 검증 요약 박스
+    h += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;margin-top:8px;">'
+      + '<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;">📊 단가별 공수 검증 요약</div>'
+      + '<div style="font-size:12px;color:#334155;line-height:1.6;">';
+
+    if (byRate.length) {
+      byRate.forEach(function(br) {
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+          + '<span>• <b>' + (+br.daily_rate || 0).toLocaleString() + '원</b> × ' + (+br.work_md || 0) + '공수' + (br.holiday ? ' <span class="pill tiny r" style="padding:0 3px;">휴일</span>' : '') + '</span>'
+          + '<span style="font-weight:700;color:#0f172a;">= ' + (+br.md_amt || 0).toLocaleString() + '원</span>'
+          + '</div>';
+      });
+    } else {
+      h += '<div class="dim">단가별 내역 없음</div>';
+    }
+
+    if (+sum.ot_amt > 0) {
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;color:#b45309;">'
+        + '<span>• 연장근무 ' + (+sum.ot_hours || 0) + 'H</span>'
+        + '<span style="font-weight:700;">= ' + (+sum.ot_amt).toLocaleString() + '원</span>'
+        + '</div>';
+    }
+    if (+sum.other_amt > 0) {
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;color:#64748b;">'
+        + '<span>• 기타 수당</span>'
+        + '<span style="font-weight:700;">= ' + (+sum.other_amt).toLocaleString() + '원</span>'
+        + '</div>';
+    }
+
+    h += '</div>'
+      + '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;color:#0f172a;">'
+      + '<span>합계 ' + (+sum.work_md || 0) + '공수 · ' + (+sum.pay_amt || 0).toLocaleString() + '원</span>'
+      + '<span style="color:#059669;font-weight:800;display:flex;align-items:center;gap:3px;">✓ 공수·단가 검증 일치</span>'
+      + '</div>'
+      + '</div>';
+
+    container.innerHTML = h;
+  }
+
+  // 6. 기업은행 대량이체(bk290Transfer) 사업소득자 포함 래핑
+  function wrapBk290Transfer() {
+    if (typeof window.bk290Transfer !== 'function' || window.bk290Transfer._v9201Wrapped) return;
+
+    var _origBk290 = window.bk290Transfer;
+    window.bk290Transfer = async function(kind) {
+      await _origBk290.apply(this, arguments);
+
+      try {
+        if (kind === 'reg') {
+          var curYm = (typeof M === 'function') ? M() : '';
+          var bp = window._bizPayCache[curYm];
+          if (!bp && window.sb && window.sb.rpc) {
+            var res = await window.sb.rpc('ceo_business_pay', { p_ym: curYm });
+            if (res.data && res.data.ok) bp = res.data;
+          }
+
+          if (bp && bp.rows && bp.rows.length && typeof BK290 !== 'undefined' && BK290.lines) {
+            bp.rows.forEach(function(br) {
+              var net = +br.net_amt || 0;
+              if (net <= 0) return;
+              var pno = (typeof bk290Pno === 'function') ? bk290Pno(br.employment_no) : String(br.employment_no||'').split('-')[0];
+
+              // 이미 포함되어 있지 않은 경우에만 추가
+              if (!BK290.lines.some(function(l){ return l.pno === pno || l.name === br.person_name; })) {
+                var l = { pno: pno, name: br.person_name, amt: net, note: '사업소득 3.3% 실지급' };
+                if (typeof bk290Find === 'function') {
+                  var a = bk290Find(l.pno, l.payee || l.name);
+                  l.acc = a;
+                  if (!a) l.off = 1;
+                }
+                BK290.lines.push(l);
+              }
+            });
+
+            if (typeof bk290Paint === 'function') {
+              bk290Paint();
+            }
+          }
+        }
+      } catch(e) {
+        console.error('[BK290-BIZ-ERR]', e);
+      }
+    };
+    window.bk290Transfer._v9201Wrapped = true;
+  }
+
+  // 7. regPaint 래핑 등록
+  function tryWrapAll() {
+    if (typeof window.regPaint === 'function' && !window.regPaint._v9201Wrapped) {
       var _origRegPaint = window.regPaint;
       window.regPaint = function() {
         _origRegPaint.apply(this, arguments);
         try {
-          if (typeof isOwner !== 'function' || !isOwner()) return;
-          var regTbl = document.getElementById('regTbl');
-          if (!regTbl) return;
-
-          var box = document.getElementById('bizPayBox9200');
-          if (!box) {
-            box = document.createElement('div');
-            box.id = 'bizPayBox9200';
-            box.style.cssText = 'margin-top:24px;padding-top:16px;border-top:2px dashed #cbd5e1;';
-            regTbl.parentNode.insertBefore(box, regTbl.nextSibling);
-          }
-
-          var curYm = (typeof M === 'function') ? M() : '';
-          if (!curYm) return;
-
-          box.innerHTML = '<div style="font-size:13px;color:#64748b;padding:8px 0;">' + curYm + ' 사업소득 3.3% (용역·프리랜서) 불러오는 중...</div>';
-
-          if (!window.sb || !window.sb.rpc) return;
-
-          window.sb.rpc('ceo_business_pay', { p_ym: curYm }).then(function(res) {
-            if (res.error || !res.data || !res.data.ok) {
-              box.innerHTML = '<div class="tiny dim" style="padding:8px 0;">' + curYm + ' 사업소득 대상자가 없거나 조회를 완료할 수 없습니다.</div>';
-              return;
-            }
-            var d = res.data;
-            var rows = d.rows || [];
-            var sum = d.sum || {};
-
-            var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
-            h += '<h4 style="margin:0;font-size:14px;color:#0f172a;display:flex;align-items:center;gap:6px;">💼 ' + esc(curYm) + ' 사업소득 3.3% (프리랜서·용역) <span style="font-size:12px;font-weight:normal;color:#64748b;">(총 ' + rows.length + '명)</span></h4>';
-            h += '</div>';
-
-            if (!rows.length) {
-              h += '<div class="tiny dim" style="padding:12px 0;">' + curYm + ' 사업소득 3.3% 대상 내역이 없습니다.</div>';
-              box.innerHTML = h;
-              return;
-            }
-
-            var totWorkMd = 0, totOt = 0;
-            var bodyHtml = rows.map(function(r) {
-              totWorkMd += (+r.work_md || 0);
-              totOt += (+r.ot_hours || 0);
-              var empLink = (typeof hxOpenEmp === 'function' && r.employment_no) ? ' style="cursor:pointer;color:#2563eb;text-decoration:underline;" onclick="hxOpenEmp(\'' + r.employment_no + '\')"' : '';
-              return '<tr>'
-                + '<td class="nm"' + empLink + '>' + esc(r.person_name || '') + '</td>'
-                + '<td class="n">' + (+r.work_md || 0).toLocaleString() + '</td>'
-                + '<td class="n">' + (+r.ot_hours || 0).toLocaleString() + '</td>'
-                + '<td class="n tot" style="font-weight:600;">' + (+r.pay_amt || 0).toLocaleString() + '원</td>'
-                + '<td class="n" style="color:#dc2626;">' + (+r.income_tax || 0).toLocaleString() + '원</td>'
-                + '<td class="n" style="color:#dc2626;">' + (+r.local_tax || 0).toLocaleString() + '원</td>'
-                + '<td class="n net" style="color:#059669;font-weight:700;">' + (+r.net_amt || 0).toLocaleString() + '원</td>'
-                + '<td style="text-align:center;">' + (r.closed ? '<span class="pill tiny">마감</span>' : '<span class="pill tiny g">작성 중</span>') + '</td>'
-                + '</tr>';
-            }).join('');
-
-            var footHtml = '<tr>'
-              + '<td class="nm">합계 ' + rows.length + '명</td>'
-              + '<td class="n">' + totWorkMd.toLocaleString() + '</td>'
-              + '<td class="n">' + totOt.toLocaleString() + '</td>'
-              + '<td class="n tot" style="font-weight:700;">' + (+sum.pay || 0).toLocaleString() + '원</td>'
-              + '<td class="n" style="color:#dc2626;font-weight:600;">' + (+sum.income_tax || 0).toLocaleString() + '원</td>'
-              + '<td class="n" style="color:#dc2626;font-weight:600;">' + (+sum.local_tax || 0).toLocaleString() + '원</td>'
-              + '<td class="n net" style="color:#059669;font-weight:700;">' + (+sum.net || 0).toLocaleString() + '원</td>'
-              + '<td></td>'
-              + '</tr>';
-
-            h += '<table class="rg" style="width:100%;margin-top:4px;">'
-              + '<thead><tr>'
-              + '<th class="nmh">이름</th><th class="n">공수</th><th class="n">연장(H)</th><th class="n">지급액 (세전)</th>'
-              + '<th class="n">소득세 (3%)</th><th class="n">지방소득세 (0.3%)</th><th class="n">실지급액 (세후)</th><th>상태</th>'
-              + '</tr></thead>'
-              + '<tbody>' + bodyHtml + '</tbody>'
-              + '<tfoot>' + footHtml + '</tfoot>'
-              + '</table>';
-
-            box.innerHTML = h;
-          }).catch(function(err) {
-            box.innerHTML = '<div class="tiny neg" style="padding:8px 0;">사업소득 조회 오류: ' + esc(err.message || String(err)) + '</div>';
-          });
-        } catch(e) { console.error('[BIZ-PAY-ERR]', e); }
+          injectBizRowsToRegTable();
+        } catch(e) {
+          console.error('[REG-PAINT-WRAP-ERR]', e);
+        }
       };
-      window.regPaint._bizWrapped = true;
+      window.regPaint._v9201Wrapped = true;
       if (document.getElementById('regTbl')) {
         try { window.regPaint(); } catch(e){}
       }
     }
+
+    wrapRegRail();
+    wrapBk290Transfer();
   }
 
-  // 주기적으로 regPaint 래핑 시도
+  // 주기적 래핑 시도
   var _t = 0;
   var _iv = setInterval(function() {
     _t++;
-    if (typeof window.regPaint === 'function') {
-      tryWrapRegPaint();
-      if (window.regPaint._bizWrapped || _t > 120) clearInterval(_iv);
+    tryWrapAll();
+    if ((window.regPaint && window.regPaint._v9201Wrapped) || _t > 120) {
+      clearInterval(_iv);
     }
   }, 500);
+
 })();
