@@ -1026,6 +1026,97 @@
 })();
 window.V9198_APPLIED = true;
 
+/* ═══ v9.199 (대표 지시 11-04 16:3x 「공식서류에는 우리 문서번호를 보이지 말고」) 인쇄 머리 표에서 「…번호」 칸 중 값이 우리 문서번호(B26103101-I 같은 꼴)인 줄을 뺌 — 청구서·발주서·견적서 등 모든 인쇄 ═══ */
+(function(){
+  if (window.V9199_APPLIED) return;
+  var NO=/^[A-Z]\d{8}(-[A-Z]{1,3})?$/;
+  var _m=prMeta;
+  prMeta=function(rows){
+    try{
+      rows=(rows||[]).filter(function(r){
+        if(!r)return false;
+        var lab=String(r[0]||'').replace(/\s/g,''), v=String(r[1]==null?'':r[1]).replace(/<[^>]*>/g,'').trim();
+        return !(/번호$/.test(lab)&&NO.test(v));
+      });
+      return _m.call(this,rows);
+    }catch(e){console.error('[v9199-prMeta]',e)}
+    return _m.apply(this,arguments);
+  };
+  window.V9199_APPLIED = true;
+})();
+
+/* ═══ v9.204 [C1476-대표지시] #1430 트레이 자재·보관 청구서 인쇄 세 덩어리 소계 ═══ */
+(function(){
+  var _origPrLines = prLines;
+  prLines = function(lines, opt) {
+    try {
+      opt = opt || {};
+      var L = lines || [];
+      // 트레이/우주 청구서 판별: 구매일 메모가 있거나, 공급가 음수 또는 트레이 보관 항목이 있는 경우
+      var isTrayBilling = L.some(function(l){
+        return l && (/^\d\d\/\d\d 구매$/.test(l.memo||'') || (+l.supply_amt < 0) || String(l.item_name||'').indexOf('트레이 보관') === 0);
+      });
+
+      if (isTrayBilling && opt.cols) {
+        var cols = opt.cols;
+        // Grouping: 1 = 자재, 2 = 대차·보관료, 3 = 기청구분 차감
+        var getGrp = function(l) {
+          if (!l) return 1;
+          if (l.grp === 'deduct' || (+l.supply_amt || 0) < 0) return 3;
+          var memo = String(l.memo || '').trim();
+          var name = String(l.item_name || '').trim();
+          if (l.grp === 'extra' || l.grp === 'storage' || /^[A-Z]\d{8}/.test(memo) || name.indexOf('트레이 보관') === 0 || name.indexOf('대차') >= 0) return 2;
+          return 1;
+        };
+
+        var grpNames = { 1: '① 자재 (구매일별 납품)', 2: '② 대차 및 보관료', 3: '③ 기청구분 차감' };
+        var grouped = { 1: [], 2: [], 3: [] };
+        L.forEach(function(l){ grouped[getGrp(l)].push(l); });
+
+        // If only 1 group exists, fallback to standard rendering
+        var activeGrps = [1, 2, 3].filter(function(g){ return grouped[g].length > 0; });
+        if (activeGrps.length > 1) {
+          var h = '<table class="lines c305 c198"><thead><tr>' + cols.map(function(c){ return '<th' + (c.w ? ' style="width:' + c.w + '"' : '') + '>' + c.t + '</th>'; }).join('') + '</tr></thead><tbody>';
+
+          var spanCol = cols.length - 2; // amount and tax columns
+          if (spanCol < 1) spanCol = 1;
+
+          var itemNo = 0;
+          activeGrps.forEach(function(g) {
+            var gLines = grouped[g];
+            var gSup = 0, gTax = 0;
+            gLines.forEach(function(l){ gSup += (+l.supply_amt || 0); gTax += (+l.tax_amt || 0); });
+
+            // Group Header
+            h += '<tr style="background:#f1f5f9;font-weight:700;border-top:1px solid #cbd5e1;"><td colspan="' + cols.length + '" style="padding:4px 8px;text-align:left;color:#1e293b;font-size:11px;">' + grpNames[g] + '</td></tr>';
+
+            // Group Rows
+            gLines.forEach(function(l) {
+              itemNo++;
+              h += '<tr>' + cols.map(function(c){
+                var v = c.f ? c.f(l, itemNo - 1) : l[c.k];
+                return '<td class="' + (c.cls || '') + '">' + (v == null ? '' : v) + '</td>';
+              }).join('') + '</tr>';
+            });
+
+            // Group Subtotal Row
+            h += '<tr style="background:#f8fafc;font-weight:700;border-bottom:1px solid #cbd5e1;">'
+              + '<td colspan="' + spanCol + '" class="r" style="text-align:right;font-size:11px;color:#475569;">' + grpNames[g].slice(2) + ' 소계</td>'
+              + '<td class="n r" style="text-align:right;font-weight:700;">' + (typeof wonA === 'function' ? wonA(gSup) : gSup.toLocaleString()) + '</td>'
+              + '<td class="n r" style="text-align:right;">' + (typeof wonA === 'function' ? wonA(gTax) : gTax.toLocaleString()) + '</td>'
+              + '<td></td>'
+              + '</tr>';
+          });
+
+          h += (opt.foot || '') + '</tbody></table>';
+          return h;
+        }
+      }
+    } catch(e) { console.error('[v9204-prLines]', e); }
+    return _origPrLines.apply(this, arguments);
+  };
+})();
+
 /* ═══ v9.202 [C1475-대표지시] #1427 급여계산·대장 화면 정리 (중복 구역 제거 + 달력 연동 교정 + 우측 마감체크 제거 + 월급제 분기) ═══ */
 (function(){
   // 캐시 객체
