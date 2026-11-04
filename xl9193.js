@@ -1781,3 +1781,105 @@ window.V9198_APPLIED = true;
   };
   window.V9206_APPLIED=true;
 })();
+
+/* ═══ v9.209 (Claude, 대표 11-04 20:4x) 트레이 자재·보관 청구서 인쇄 — 칸 너비·한 장 맞춤·묶음 제목
+   대표: 「구매일별 납품 이런 설명은 필요가 없거든」「칸벌린 … 어떤 자재는 규격이 2줄로 되어서 인쇄 시 2장으로 되어 버리고 가독성도 안 좋아」
+   ① 묶음 제목 기본값 「① 자재」「② 대차 · 보관료」「③ 기청구분 차감」(설명 뺌). 문서별로 고친 제목(문서 extra.grp_titles, DB1174)이 있으면 그것.
+   ⑤ 엑셀표 표 고르기에 「청구서 - 글자」(DB1174 p_sheet='inv') — 건명·청구일자·묶음 제목·줄의 일자·품명·규격·단위. 금액은 「청구 - 자재비」 그대로.
+   ⑥ 인쇄 직전 그 문서 extra·줄을 새로 받아 엑셀표에서 고친 글자가 바로 나옴.
+   ② 규격 칸 200px, 규격·품명 한 줄(nowrap). 규격이 길면 글자만 작게(24자 넘으면 9px, 34자 넘으면 8px).
+   ③ 줄 높이 줄임(위아래 여백 1px, 글자 10.5px — 칸마다 직접 지정, 인쇄 창은 <style>을 안 받음) → 39줄 + 묶음 머리·소계 + 합계가 A4 한 장 안에. 합계·세액 줄은 다음 장으로 갈라지지 않게.
+   ④ v9.206(합쳐진 문서 줄 일자 = 그 문서 일자) 그대로 포함. 트레이 재청구서(줄 메모 「MM/DD 구매」)만, 다른 문서는 그대로 안쪽으로. `window.V9209_APPLIED` ═══ */
+(function(){
+  if (window.V9209_APPLIED) return;
+  var DM=/^(\d\d\/\d\d) 구매$/, BN=/^[A-Z]\d{8}$/;
+  var _prev=prLines;
+  var DEF={1:'① 자재',2:'② 대차 · 보관료',3:'③ 기청구분 차감'};
+  window.PR9209={titles:{},cur:null};
+  var grpOf=function(l){
+    if(!l)return 1;
+    if(l.grp==='deduct'||(+l.supply_amt||0)<0)return 3;
+    var nm=String(l.item_name||'');
+    if(l.grp==='extra'||BN.test(String(l.memo||'').trim())||nm.indexOf('트레이 보관')===0||nm.indexOf('대차')>=0)return 2;
+    return 1;
+  };
+  var bnDate=function(memo){
+    var sd=(window.D&&Array.isArray(window.D.sd))?window.D.sd:[],dd=null;
+    for(var i=0;i<sd.length;i++){var x=sd[i];if(x&&x.doc_no&&x.doc_date&&x.doc_no.indexOf(memo+'-')===0){dd=String(x.doc_date);if(/-I$/.test(x.doc_no))break}}
+    return (dd&&dd.length>=10)?dd.slice(5,7)+'/'+dd.slice(8,10):'';
+  };
+  var titleOf=function(g){var t=(PR9209.cur&&PR9209.titles[PR9209.cur])||{};var v=t[String(g)];return (v!=null&&String(v).trim()!=='')?String(v):DEF[g]};
+  var plain=function(s){return String(s||'').replace(/^[①②③④⑤]\s*/,'')};
+  var specCss=function(s){var n=String(s||'').length;return n>34?'font-size:8px!important;':n>24?'font-size:9px!important;':''};
+  prLines=function(lines,opt){
+    try{
+      opt=opt||{};var L=lines||[];var cols=opt.cols||[];
+      if(L.some(function(l){return l&&DM.test(l.memo||'')})&&cols.length){
+        var out=[];
+        cols.forEach(function(cc){
+          if(!cc||cc.t==='비고')return;
+          if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm209',nw:1,f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?' <span class="pc209" style="font-size:8px;color:#64748b">'+cd+'</span>':'')}});return}
+          if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',w:'200px',cls:'sp209',nw:1,st:function(l){return specCss(l.spec)},f:function(l){return esc(l.spec||'')}});return}
+          if(cc.t==='No'){out.push({t:'No',w:'22px',cls:cc.cls,nw:1,f:cc.f});out.push({t:'일자',w:'38px',cls:'dt209',nw:1,f:function(l){var m=DM.exec(l.memo||'');if(m)return m[1];var b=String(l.memo||'').trim();return BN.test(b)?bnDate(b):''}});return}
+          if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단위'){out.push({t:cc.t,w:'28px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단가'){out.push({t:cc.t,w:'58px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='공급가액'||cc.t==='금액'){out.push({t:cc.t,w:'74px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='세액'){out.push({t:cc.t,w:'60px',cls:cc.cls,f:cc.f});return}
+          out.push(cc);
+        });
+        var hadMemo=cols.some(function(c){return c&&c.t==='비고'});
+        var foot=String(opt.foot||'').replace(/colspan="(\d+)"/g,function(m,n){return 'colspan="'+((+n)+1)+'"'});
+        if(hadMemo)foot=foot.replace(/<td><\/td><\/tr>/g,'</tr>');
+        foot=foot.replace(/<tr(?![^>]*class=)/g,'<tr class="f209" style="page-break-inside:avoid"');
+        var iSup=-1,iTax=-1;out.forEach(function(c,i){if(c.t==='공급가액'||c.t==='금액')iSup=i;if(c.t==='세액')iTax=i});
+        var G={1:[],2:[],3:[]};L.forEach(function(l){G[grpOf(l)].push(l)});
+        var act=[1,2,3].filter(function(g){return G[g].length});
+        var w=function(v){return typeof wonA==='function'?wonA(v):(+v||0).toLocaleString('ko-KR')};
+        var B='padding-top:1px!important;padding-bottom:1px!important;font-size:10.5px!important;line-height:1.25!important;';
+        var NW='white-space:nowrap!important;';
+        var h='<table class="lines c305 c198 c209"><thead><tr>'+out.map(function(c){return '<th style="'+B+NW+(c.w?'width:'+c.w+';':'')+'">'+c.t+'</th>'}).join('')+'</tr></thead><tbody>';
+        var no=0;
+        act.forEach(function(g){
+          var s=0,t=0,tt=titleOf(g);
+          if(act.length>1)h+='<tr class="g209"><td colspan="'+out.length+'" style="'+B+'background:#f1f5f9!important;font-weight:700!important;text-align:left!important">'+esc(tt)+'</td></tr>';
+          G[g].forEach(function(l){s+=(+l.supply_amt||0);t+=(+l.tax_amt||0);var i=no++;h+='<tr>'+out.map(function(c){var v=c.f?c.f(l,i):l[c.k];var st=B+(c.nw?NW:'')+(c.st?c.st(l):'');return '<td class="'+(c.cls||'')+'" style="'+st+'">'+(v==null?'':v)+'</td>'}).join('')+'</tr>'});
+          if(act.length>1&&iSup>0){
+            h+='<tr class="s209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+B+'text-align:right!important;background:#f8fafc!important;font-weight:700!important">'+esc(plain(tt))+' 소계</td><td class="n" style="'+B+'background:#f8fafc!important;font-weight:700!important">'+w(s)+'</td>'
+              +(iTax>iSup?'<td class="n" style="'+B+'background:#f8fafc!important">'+w(t)+'</td>':'')
+              +new Array(Math.max(0,out.length-1-Math.max(iSup,iTax))+1).join('<td style="background:#f8fafc!important"></td>')+'</tr>';
+          }
+        });
+        return h+foot+'</tbody></table>';
+      }
+    }catch(e){console.error('[v9209-prLines]',e)}
+    return _prev.apply(this,arguments);
+  };
+  /* 인쇄 직전: 그 문서의 묶음 제목(extra.grp_titles)·줄(고친 글자 반영)을 새로 받음 — 엑셀표 「청구서」 표에서 고친 것이 바로 인쇄에 나오게 */
+  if(typeof printDoc==='function'){
+    var _pd=printDoc;
+    printDoc=async function(no){
+      try{PR9209.cur=no||null;
+        var d=(window.D&&Array.isArray(D.sd))?D.sd.filter(function(x){return x.doc_no===no})[0]:null;
+        if(d&&typeof sb!=='undefined'&&sb&&sb.from){
+          var r=await sb.from('ceo_sd_docs').select('extra,title,doc_date').eq('doc_no',no).limit(1);
+          if(r&&!r.error&&r.data&&r.data[0]){d.extra=r.data[0].extra;d.title=r.data[0].title;d.doc_date=r.data[0].doc_date}
+          if(d.extra&&d.extra.bill_ym)delete d._lines;
+        }
+        PR9209.titles[no]=(d&&d.extra&&d.extra.grp_titles)||{};
+      }catch(e){}
+      return _pd.apply(this,arguments);
+    };
+  }
+  /* 엑셀표 표 고르기에 「청구서 - 글자」 추가(DB1174 p_sheet='inv'). 금액은 「청구 - 자재비」에서 */
+  var addOpt=function(){
+    var sel=document.getElementById('xl9193_sheet_sel');if(!sel)return false;
+    if(!sel.querySelector('option[value="inv"]')){
+      var o=document.createElement('option');o.value='inv';o.textContent='청구서 - 글자(품명·규격·일자·묶음 제목)';
+      var mat=sel.querySelector('option[value="mat"]');if(mat&&mat.nextSibling)sel.insertBefore(o,mat.nextSibling);else sel.appendChild(o);
+    }
+    return true;
+  };
+  var tries=0,iv=setInterval(function(){if(addOpt()||++tries>600)clearInterval(iv)},1000);
+  window.V9209_APPLIED=true;
+})();
