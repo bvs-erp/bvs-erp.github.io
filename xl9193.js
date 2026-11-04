@@ -1922,3 +1922,21 @@ window.V9198_APPLIED = true;
   }
   window.V9211_APPLIED=true;
 })();
+
+/* ═══ v9.219 (Claude, 11-04 22:2x) 공식 인쇄 — 합친 청구서 줄 비고 칸의 우리 문서번호 숨김
+   대표 상시 규칙 「공식서류에는 우리 문서번호를 보이지 말고」. 표지 청구서(B26103103-I) 2번 줄 비고에 몸통 번호 「B26103101」이 찍히던 것.
+   트레이 재청구서(「MM/DD 구매」 메모)는 v9.209·v9.210이 따로 처리 — 그 밖의 문서에서 비고가 「영문 1자 + 숫자 8자리」면 인쇄에서만 비움(DB 그대로). `window.V9219_APPLIED` ═══ */
+(function(){
+  if(window.V9219_APPLIED)return;
+  var BN=/^[A-Z]\d{8}$/, DM=/^\d\d\/\d\d 구매$/;
+  var _p=prLines;
+  prLines=function(lines,opt){
+    try{
+      if(Array.isArray(lines)&&!lines.some(function(l){return l&&DM.test(l.memo||'')})&&lines.some(function(l){return l&&BN.test(String(l.memo||'').trim())})){
+        lines=lines.map(function(l){if(l&&BN.test(String(l.memo||'').trim())){var c=Object.assign({},l);c.memo='';return c}return l});
+      }
+    }catch(e){}
+    var a=[].slice.call(arguments);a[0]=lines;return _p.apply(this,a);
+  };
+  window.V9219_APPLIED=true;
+})();
