@@ -1755,3 +1755,29 @@ window.V9198_APPLIED = true;
   window.V9205_APPLIED = true;
 })();
 
+
+/* ===== v9.206 (C1477 대표 11-04 19:3x 「트레이용 대차는 20일 납품했으니 청구서에도 10/20으로」) =====
+   트레이 재청구서에 합쳐진 문서 줄(비고 = 문서 몸통 번호)은 일자 칸이 비었음 → 그 문서의 일자(문서 원장 D.sd)를 일자 칸에 넣음.
+   덩어리는 그대로 대차·보관료(extra). 화면 표시만, DB 그대로. 바깥에서 v9.205를 감쌈. */
+(function(){
+  if(window.V9206_APPLIED)return;
+  var BN=/^[A-Z]\d{8}$/,DM=/^\d\d\/\d\d 구매$/;
+  var _in=prLines;
+  prLines=function(lines,opt){
+    try{
+      if(Array.isArray(lines)&&lines.some(function(l){return l&&DM.test(l.memo||'')})&&lines.some(function(l){return l&&BN.test(l.memo||'')})){
+        var sd=(window.D&&Array.isArray(window.D.sd))?window.D.sd:[];
+        lines=lines.map(function(l){
+          if(!l||!BN.test(l.memo||''))return l;
+          var dd=null;
+          for(var i=0;i<sd.length;i++){var x=sd[i];
+            if(x&&x.doc_no&&x.doc_date&&x.doc_no.indexOf(l.memo+'-')===0){dd=String(x.doc_date);if(/-I$/.test(x.doc_no))break}}
+          if(!dd||dd.length<10)return l;
+          var c=Object.assign({},l);c.memo=dd.slice(5,7)+'/'+dd.slice(8,10)+' 구매';c.grp='extra';return c;
+        });
+      }
+    }catch(e){}
+    return _in(lines,opt);
+  };
+  window.V9206_APPLIED=true;
+})();
