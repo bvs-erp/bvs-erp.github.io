@@ -743,14 +743,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           </div>
         </div>
 
-        <!-- 승인 대기 건 카드 (출퇴근 즉시 자동 확정 원칙에 따라 제거/숨김) -->
-        <div class="card" id="leadApprovalCard" style="display:none !important">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <h2>팀장 확인 전 <small class="dim tiny" id="leadPendingCnt">0건</small></h2>
-            <button class="btn sm p" onclick="leadApproveAll()" id="btnApproveAll" style="font-weight:700">전원 확인 완료</button>
-          </div>
-          <div id="leadPendingRows"></div>
-        </div>
+        
 
         <!-- WO-57: 일지 미작성 관제 카드 -->
         <div class="card" id="leadPendingLogCard">
@@ -1869,14 +1862,14 @@ async function leadOpen(d){
   LEAD.date = d || LEAD.date || today();
   dateChips('leadDates', lastDays(7), LEAD.date, 'leadOpen');
 
-  el('leadPendingRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
+  if(el('leadPendingRows')) el('leadPendingRows').innerHTML = '';
   el('leadWorkersRows').innerHTML = '<div class="dim tiny" style="padding:12px;text-align:center">불러오는 중…</div>';
 
   try {
     var r = await sb.rpc('lead_deployment', { p_date: LEAD.date });
     if(r.error || !r.data || !r.data.ok){
       el('leadWorkersRows').innerHTML = '<div class="empty">조회 권한이 없거나 데이터가 없습니다.</div>';
-      el('leadPendingRows').innerHTML = '<div class="empty">대기 건이 없습니다.</div>';
+      
       return;
     }
     var rows = (r.data.rows || []).slice();
@@ -1890,11 +1883,11 @@ async function leadOpen(d){
     el('leadKpiWorkers').textContent = totalWorkers + '명';
     el('leadKpiMd').textContent = totalMd.toFixed(1) + ' M/D';
     el('leadKpiPending').textContent = totalWorkers + '명 출근';
-    el('leadPendingCnt').textContent = '0건';
+    
     el('leadWorkersN').textContent = rows.length + '명';
 
     if(pendingRows.length === 0){
-      el('leadPendingRows').innerHTML = '<div class="empty" style="color:var(--good)">확인할 공수 없음</div>';
+      
       el('btnApproveAll').disabled = true;
     } else {
       el('btnApproveAll').disabled = false;
@@ -1975,12 +1968,14 @@ async function leadConfirm(ids, label){
   toast(label + ' ' + r.data.confirmed + '건 확인', 'g');
   leadOpen(LEAD.date);
 }
-function leadApproveRow(idx){
+function leadApproveRow(idx){ return; // #1454 제거
+
   var row = LEAD.PEND && LEAD.PEND[idx];
   if(!row || !row.id){ toast('대상을 찾지 못했습니다. 새로고침 후 다시 눌러 주세요', 'e'); return; }
   leadConfirm([row.id], row.name);
 }
-function leadApproveAll(){
+function leadApproveAll(){ return; // #1454 제거
+
   var ids = (LEAD.PEND || []).map(function(x){ return x.id; }).filter(Boolean);
   if(!ids.length) return;
   leadConfirm(ids, '팀 전원');
@@ -3764,14 +3759,14 @@ function l984Clr(){L984.q='';var i=el('l984q');if(i)i.value='';l984Apply()}
 /* v1.85 (안티그래비티 R1005 ③·R1006 ③ 10-24): 리드 출역 확인 위 이름·현장 찾기(대기·출역·당월 집계 함께 거름, ✕·Esc) · 트레이 제작표 길이·종류 칸 Enter = 줄 넣기(길이 칸에 계속), 전수조사 자투리 칸 Enter = 넣기, 목록 외 자재 수량 Enter = 추가 */
 var LD985={q:''};
 function ld985Apply(){var q=String(LD985.q||'').trim().toLowerCase().replace(/\s+/g,''),n=0,t=0;
-  ['leadPendingRows','leadWorkersRows'].forEach(function(id){var B=el(id);if(!B)return;[].forEach.call(B.querySelectorAll(':scope > .item'),function(it){var ok=!q||String(it.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;it.style.display=ok?'':'none';if(id==='leadWorkersRows'){t++;if(ok)n++}})});
+  ['leadWorkersRows'].forEach(function(id){var B=el(id);if(!B)return;[].forEach.call(B.querySelectorAll(':scope > .item'),function(it){var ok=!q||String(it.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;it.style.display=ok?'':'none';if(id==='leadWorkersRows'){t++;if(ok)n++}})});
   var M=el('leadMonthRollup');if(M)[].forEach.call(M.querySelectorAll('tbody tr'),function(tr){tr.style.display=!q||String(tr.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0?'':'none'});
   var s=el('ld985n');if(s)s.textContent=q?n+'명 보임 / '+t+'명':'';var x=el('ld985x');if(x)x.style.display=q?'':'none'}
 function ld985Clr(){LD985.q='';var i=el('ld985q');if(i)i.value='';ld985Apply()}
 (function(){var P=el('leadPendingRows');if(!P)return;var d=document.createElement('div');d.id='ld985';d.className='tr-jf';d.style.margin='0 0 8px';
   d.innerHTML='<input id="ld985q" placeholder="이름·현장 찾기" oninput="LD985.q=this.value;ld985Apply()" onkeydown="if(event.key===\'Escape\')ld985Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="ld985x" style="flex:none;display:none" onclick="ld985Clr()">✕</button><span class="tiny dim" id="ld985n"></span>';
   var card=P.closest('.card')||P.parentNode;card.parentNode.insertBefore(d,card);
-  if(window.MutationObserver){var mo=new MutationObserver(function(){if(LD985.q)ld985Apply()});['leadPendingRows','leadWorkersRows','leadMonthRollup'].forEach(function(id){var x=el(id);if(x)mo.observe(x,{childList:true})})}})();
+  if(window.MutationObserver){var mo=new MutationObserver(function(){if(LD985.q)ld985Apply()});['leadWorkersRows','leadMonthRollup'].forEach(function(id){var x=el(id);if(x)mo.observe(x,{childList:true})})}})();
 document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target,id=t&&t.id||'';
   if(id==='tr_len'||id==='tr_kx'){e.preventDefault();try{if(id==='tr_len')TR.form.len=t.value;else TR.form.kx=t.value}catch(x){}trAddCut();setTimeout(function(){var l=el('tr_len');if(l){l.focus();try{l.setSelectionRange(l.value.length,l.value.length)}catch(x){}}},60);return}
   var m=/^tr(Ol|On)_(.+)$/.exec(id);if(m){e.preventDefault();trOffAdd(m[2]);return}
@@ -4508,7 +4503,7 @@ function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC9
 (function(){if(typeof leadMonthCalendarOpen!=='function')return;var _o=leadMonthCalendarOpen;leadMonthCalendarOpen=async function(){LC991.k=-1;var r=await _o.apply(this,arguments);try{var hd=el('leadCalThead'),T=el('leadCalTable');if(!hd||!T)return r;var tr=hd.querySelector('tr');if(!tr)return r;
     [].forEach.call(tr.children,function(h,i){if(!(h.classList.contains('col-name')||h.classList.contains('col-sum')))return;h.classList.add('s991');h.setAttribute('data-t991',h.textContent);h.setAttribute('data-i991',i);h.title='누르면 정렬';h.onclick=function(e){e.stopPropagation();lc991Sort(i)}});
     if(!T.__k991){T.__k991=1;T.addEventListener('click',function(e){var c=e.target.closest('td');if(!c||c.closest('tfoot'))return;var nm=c.parentNode.querySelector('td.col-name');LC991.name=nm?String(nm.textContent).trim():null},true)}}catch(e){console.error(e)}return r}})();
-(function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){var nm=LC991.name;LC991.name=null;var r=await _o.apply(this,arguments);if(nm){try{var it=[].filter.call(document.querySelectorAll('#leadWorkersRows .item, #leadPendingRows .item'),function(x){return x.offsetParent&&String(x.textContent).indexOf(nm)>=0})[0];
+(function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){var nm=LC991.name;LC991.name=null;var r=await _o.apply(this,arguments);if(nm){try{var it=[].filter.call(document.querySelectorAll('#leadWorkersRows .item'),function(x){return x.offsetParent&&String(x.textContent).indexOf(nm)>=0})[0];
     if(it){it.scrollIntoView({block:'center',behavior:'smooth'});it.classList.remove('f991');void it.offsetWidth;it.classList.add('f991');setTimeout(function(){it.classList.remove('f991')},2600)}}catch(e){}}return r}})();
 
 /* v1.92 (안티그래비티 R1015 ③ 10-25): 당일 관제 — 최근 7일 밖 날짜로 오면 날짜 칩 맨 앞에 그 날짜 · 월 달력에서 사람 칸으로 왔는데 이름·현장 찾기에 가려지면 찾기를 풀고 그 줄로 · 찾기로 거르는 중 「전체 확인」은 보이는 대기 건만 */
