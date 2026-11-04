@@ -8,7 +8,62 @@
   'use strict';
 
   var XL = {
-    curSheet: 'mat',   // 'mat' | 'labor' | 'pay'
+    curSheet: 'mat',
+
+    sortMode: 'default',
+    setSort: function(mode) {
+      XL.sortMode = mode;
+      var cols = (XL.data && XL.data.cols) || [];
+      if (mode === 'default') {
+        XL.sortCol = null;
+        XL.sortAsc = true;
+      } else if (mode === 'name') {
+        // 이름/작업자/품명 컬럼 탐색
+        var col = cols.find(function(c){
+          var k = (c.k||'').toLowerCase(), l = (c.label||'').toLowerCase();
+          return k.indexOf('name') >= 0 || k.indexOf('person') >= 0 || k.indexOf('emp') >= 0 || k.indexOf('worker') >= 0 ||
+                 l.indexOf('이름') >= 0 || l.indexOf('성명') >= 0 || l.indexOf('작업자') >= 0 || l.indexOf('품명') >= 0;
+        });
+        if (col) {
+          XL.sortCol = col.k;
+          XL.sortAsc = true;
+        }
+      } else if (mode === 'site') {
+        // 현장/프로젝트 컬럼 탐색
+        var col = cols.find(function(c){
+          var k = (c.k||'').toLowerCase(), l = (c.label||'').toLowerCase();
+          return k.indexOf('site') >= 0 || k.indexOf('project') >= 0 || k.indexOf('place') >= 0 ||
+                 l.indexOf('현장') >= 0 || l.indexOf('프로젝트') >= 0;
+        });
+        if (col) {
+          XL.sortCol = col.k;
+          XL.sortAsc = true;
+        }
+      }
+      XL.updateSortBtns();
+      XL.renderBody();
+    },
+
+    updateSortBtns: function() {
+      var grp = document.getElementById('xl9193_sort_grp');
+      if (!grp) return;
+      var cur = XL.sortMode || 'default';
+      grp.querySelectorAll('.xl-sort-btn').forEach(function(btn){
+        var m = btn.getAttribute('data-m');
+        if (m === cur) {
+          btn.style.background = '#2563eb';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#1d4ed8';
+          btn.style.fontWeight = '700';
+        } else {
+          btn.style.background = '#ffffff';
+          btn.style.color = '#475569';
+          btn.style.borderColor = '#cbd5e1';
+          btn.style.fontWeight = '500';
+        }
+      });
+    },
+   // 'mat' | 'labor' | 'pay'
     curYm: '',         // 'YYYY-MM'
     curPartner: 'C0087', // 우주이엔지 기본
     data: null,        // {cols, rows, sums, bill}
