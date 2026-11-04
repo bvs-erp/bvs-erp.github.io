@@ -1694,3 +1694,64 @@ window.V9198_APPLIED = true;
   }, 500);
 
 })();
+
+/* ═══ v9.205 (Claude, 대표 11-04 18:2x) 트레이 자재·보관 청구서 인쇄 — v9.204 세 덩어리 소계 + v9.198 칸(No 옆 일자·품명/품번 한 줄·규격 넓게·비고 빼기)을 함께
+   v9.204가 v9.198 칸 정리를 건너뛰고 원래 칸(비고에 「10/06 구매」·대차 번호)으로 그리던 것, 소계 줄 칸 수가 하나 넘쳐 오른쪽 빈 칸 생기던 것 고침.
+   이 블록이 맨 바깥에서 트레이 재청구서(줄 메모 「MM/DD 구매」)만 직접 그림. 다른 문서는 안쪽 감싸기들로 그대로. ═══ */
+(function(){
+  if (window.V9205_APPLIED) return;
+  var DM=/^(\d\d\/\d\d) 구매$/, BN=/^[A-Z]\d{8}$/;
+  var _inner=prLines;
+  var grpOf=function(l){
+    if(!l)return 1;
+    if(l.grp==='deduct'||(+l.supply_amt||0)<0)return 3;
+    var nm=String(l.item_name||'');
+    if(l.grp==='extra'||BN.test(String(l.memo||'').trim())||nm.indexOf('트레이 보관')===0||nm.indexOf('대차')>=0)return 2;
+    return 1;
+  };
+  var GN={1:'① 자재 (구매일별 납품)',2:'② 대차 · 보관료',3:'③ 기청구분 차감'};
+  prLines=function(lines,opt){
+    try{
+      opt=opt||{};var L=lines||[];var cols=opt.cols||[];
+      if(L.some(function(l){return l&&DM.test(l.memo||'')})&&cols.length){
+        var onlyDate=L.every(function(l){return !l||!l.memo||DM.test(l.memo)||BN.test(String(l.memo).trim())});
+        var out=[],dropMemo=false;
+        cols.forEach(function(cc){
+          if(!cc)return;
+          if(cc.t==='비고'){if(onlyDate){dropMemo=true;return}out.push({t:'비고',w:'56px',cls:cc.cls,f:function(l,i){var m=String(l.memo||'');return (DM.test(m)||BN.test(m.trim()))?'':(cc.f?cc.f(l,i):esc(m))}});return}
+          if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm198',f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?'<span class="pc198">'+cd+'</span>':'')}});return}
+          if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',k:'spec198',w:'150px',cls:'sp198',f:function(l){return esc(l.spec||'')}});return}
+          if(cc.t==='No'){out.push({t:'No',w:'28px',cls:cc.cls,f:cc.f});out.push({t:'일자',w:'42px',cls:'dt198',f:function(l){var m=DM.exec(l.memo||'');return m?m[1]:''}});return}
+          if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단위'){out.push({t:cc.t,w:'32px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='단가'){out.push({t:cc.t,w:'64px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='공급가액'||cc.t==='금액'){out.push({t:cc.t,w:'80px',cls:cc.cls,f:cc.f});return}
+          if(cc.t==='세액'){out.push({t:cc.t,w:'66px',cls:cc.cls,f:cc.f});return}
+          out.push(cc);
+        });
+        var foot=String(opt.foot||'').replace(/colspan="(\d+)"/g,function(m,n){return 'colspan="'+((+n)+1)+'"'});
+        if(dropMemo)foot=foot.replace(/<td><\/td><\/tr>/g,'</tr>');
+        var iSup=-1,iTax=-1;out.forEach(function(c,i){if(c.t==='공급가액'||c.t==='금액')iSup=i;if(c.t==='세액')iTax=i});
+        var G={1:[],2:[],3:[]};L.forEach(function(l){G[grpOf(l)].push(l)});
+        var act=[1,2,3].filter(function(g){return G[g].length});
+        var w=function(v){return typeof wonA==='function'?wonA(v):(+v||0).toLocaleString('ko-KR')};
+        var h='<table class="lines c305 c198"><thead><tr>'+out.map(function(c){return '<th'+(c.w?' style="width:'+c.w+'"':'')+'>'+c.t+'</th>'}).join('')+'</tr></thead><tbody>';
+        var no=0;
+        act.forEach(function(g){
+          var s=0,t=0;
+          if(act.length>1)h+='<tr class="g205"><td colspan="'+out.length+'" style="background:#f1f5f9!important;font-weight:700!important;text-align:left!important">'+GN[g]+'</td></tr>';
+          G[g].forEach(function(l){s+=(+l.supply_amt||0);t+=(+l.tax_amt||0);var i=no++;h+='<tr>'+out.map(function(c){var v=c.f?c.f(l,i):l[c.k];return '<td class="'+(c.cls||'')+'">'+(v==null?'':v)+'</td>'}).join('')+'</tr>'});
+          if(act.length>1&&iSup>0){
+            h+='<tr class="s205"><td colspan="'+iSup+'" style="text-align:right!important;background:#f8fafc!important;font-weight:700!important">'+GN[g].slice(2)+' 소계</td><td class="n" style="background:#f8fafc!important;font-weight:700!important">'+w(s)+'</td>'
+              +(iTax>iSup?'<td class="n" style="background:#f8fafc!important">'+w(t)+'</td>':'')
+              +new Array(Math.max(0,out.length-1-Math.max(iSup,iTax))+1).join('<td style="background:#f8fafc!important"></td>')+'</tr>';
+          }
+        });
+        return h+foot+'</tbody></table>';
+      }
+    }catch(e){console.error('[v9205-prLines]',e)}
+    return _inner.apply(this,arguments);
+  };
+  window.V9205_APPLIED = true;
+})();
+
