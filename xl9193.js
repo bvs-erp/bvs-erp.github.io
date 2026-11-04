@@ -35,32 +35,168 @@
       XL.injectPage();
     },
 
-    injectNav: function() {
-      // 1. 콕핏 처리할 일 영역 옆에 엑셀표 빠른 진입 버튼 주입
-      var todoSec = document.getElementById('sec-todo') || document.querySelector('.sec-todo');
-      if (todoSec && !document.getElementById('btnCockpitXl9193')) {
-        var head = todoSec.querySelector('.sttl, .sec-title, h3, h4') || todoSec;
-        var btn = document.createElement('button');
-        btn.id = 'btnCockpitXl9193';
-        btn.type = 'button';
-        btn.className = 'btn-sm';
-        btn.style.cssText = 'margin-left:8px;padding:3px 9px;font-size:12px;font-weight:600;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;vertical-align:middle;';
-        btn.innerHTML = '📊 엑셀표';
-        btn.onclick = function() { XL.open(); };
-        head.appendChild(btn);
-      }
+        injectNav: function() {
+      // 1. 콕핏 처리/현황 영역 내 버튼 주입 (기존 호환)
+      try {
+        var todoSec = document.getElementById('sec-todo') || document.querySelector('.sec-todo');
+        if (todoSec && !document.getElementById('btnCockpitXl9193')) {
+          var head = todoSec.querySelector('.sttl, .sec-title, h3, h4') || todoSec;
+          var btn = document.createElement('button');
+          btn.id = 'btnCockpitXl9193';
+          btn.type = 'button';
+          btn.className = 'btn-sm';
+          btn.style.cssText = 'margin-left:8px;padding:3px 9px;font-size:12px;font-weight:600;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;vertical-align:middle;';
+          btn.innerHTML = '📊 «엑셀표»';
+          btn.onclick = function() { XL.open(); };
+          head.appendChild(btn);
+        }
+      } catch(e) {}
 
-      // 2. 2영업 메뉴 또는 상단 네비에 메뉴 항목 주입
-      var menuArea = document.querySelector('.nav-group[data-g="2"], #nav-g2, .nav-sub');
-      if (menuArea && !document.getElementById('menuXl9193')) {
-        var a = document.createElement('div');
-        a.id = 'menuXl9193';
-        a.className = 'nav-item';
-        a.style.cssText = 'cursor:pointer;padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:6px;';
-        a.innerHTML = '<span style="color:#059669;font-weight:bold;">📊</span> <span>엑셀표</span>';
-        a.onclick = function() { XL.open(); };
-        menuArea.appendChild(a);
-      }
+      // 2. 상단 modbar (1콕핏 2휴먼 3딜 4캐시플로우 옆) 에 «엑셀표» 버튼 추가
+      try {
+        var mb = document.getElementById('modbar');
+        if (mb && !document.getElementById('btnModXl9193')) {
+          var xlModBtn = document.createElement('button');
+          xlModBtn.id = 'btnModXl9193';
+          xlModBtn.type = 'button';
+          xlModBtn.className = 'mod-btn ws-btn';
+          xlModBtn.style.cssText = 'color:#059669!important;font-weight:700!important;border:1px solid #10b981;border-radius:4px;margin-left:4px;';
+          xlModBtn.innerHTML = '<span class="ws-n" style="background:#059669;color:#fff;">XL</span>«엑셀표»';
+          xlModBtn.title = '대표 전용 실시간 엑셀표 (클릭하여 열기)';
+          xlModBtn.onclick = function() { XL.open(); };
+          mb.appendChild(xlModBtn);
+        }
+      } catch(e) {}
+
+      // 3. shTabs 래핑: 1콕핏·3사이트(딜)·4캐시플로우 하단 서브탭(mtabs) 맨 끝에 «엑셀표» 탭 자동 부착
+      try {
+        if (typeof window.shTabs === 'function' && !window.shTabs._xlWrapped) {
+          var _origShTabs = window.shTabs;
+          window.shTabs = function() {
+            _origShTabs.apply(this, arguments);
+            try {
+              var tb = document.getElementById('mtabs');
+              if (tb && typeof isOwner === 'function' && isOwner()) {
+                if (!tb.querySelector('.mtab-xl9193')) {
+                  var xlTab = document.createElement('div');
+                  xlTab.className = 'mtab mtab-xl9193';
+                  xlTab.style.cssText = 'color:#059669;font-weight:700;cursor:pointer;margin-left:auto;padding:0 12px;background:rgba(5,150,105,0.08);border-radius:4px;display:inline-flex;align-items:center;gap:4px;';
+                  xlTab.innerHTML = '📊 <span>«엑셀표»</span>';
+                  xlTab.title = '자재·인건비·급여 실시간 엑셀 그리드 (클릭하여 열기)';
+                  xlTab.onclick = function(e) {
+                    e.stopPropagation();
+                    XL.open();
+                  };
+                  tb.appendChild(xlTab);
+                }
+              }
+            } catch(e) { console.error('[XL-SHTABS-ERR]', e); }
+          };
+          window.shTabs._xlWrapped = true;
+          window.shTabs();
+        }
+      } catch(e) {}
+
+      // 4. cpItems (Ctrl + K) 래핑: 검색창 최상단에 «엑셀표» 노출
+      try {
+        if (typeof window.cpItems === 'function' && !window.cpItems._xlWrapped) {
+          var _origCpItems = window.cpItems;
+          window.cpItems = function(q) {
+            var out = _origCpItems.apply(this, arguments);
+            try {
+              if (typeof isOwner === 'function' && isOwner()) {
+                var query = (q || '').toLowerCase();
+                if (!query || '엑셀표 실시간 수정 저장 자재 인건비 급여 xl sheet'.indexOf(query) >= 0) {
+                  out.unshift({
+                    g: '대표',
+                    t: '«엑셀표» (실시간 수정·저장)',
+                    sub: '자재·인건비·급여 엑셀 그리드 (XL.open)',
+                    run: function() { XL.open(); }
+                  });
+                }
+              }
+            } catch(e) { console.error('[XL-CPITEMS-ERR]', e); }
+            return out;
+          };
+          window.cpItems._xlWrapped = true;
+        }
+      } catch(e) {}
+
+      // 5. 트레이 청구창 (rb811Paint) 래핑: 트레이 M단가 환산 및 전산볼트 3M 환산 표시 보강
+      try {
+        if (typeof window.rb811Paint === 'function' && !window.rb811Paint._xlWrapped) {
+          var _origRb811 = window.rb811Paint;
+          window.rb811Paint = function() {
+            var res = _origRb811.apply(this, arguments);
+            try {
+              var box = document.getElementById('rb811');
+              if (!box || !window.RB811 || !window.RB811.d) return res;
+              var lines = window.RB811.d.lines || [];
+              var tbody = box.querySelector('table tbody');
+              if (!tbody) return res;
+              var trs = tbody.querySelectorAll('tr');
+              trs.forEach(function(tr, idx) {
+                var l = lines[idx];
+                if (!l) return;
+                var code = String(l.code || '');
+                var isTray = /^TRY-(TRAY|COVER|SEP)-/.test(code) || /트레이|커버|세퍼레이터/.test(l.name || '');
+                var isRod = /^TRY-ROD-/.test(code) || /전산\s*볼트/.test(l.name || '');
+
+                var tds = tr.querySelectorAll('td');
+                if (tds.length < 8) return;
+                var tdQty = tds[3];     // 수량
+                var tdAlpha = tds[6];   // 재청구 단가
+
+                if (isTray) {
+                  var len = 3;
+                  var mLen = (l.spec || '').match(/(\d+(?:\.\d+)?)\s*M/i);
+                  if (mLen && +mLen[1] > 0) len = +mLen[1];
+                  var mQty = Math.round((+l.qty || 0) * len * 100) / 100;
+                  var mPrice = (l.alpha != null && len > 0) ? Math.round((+l.alpha) / len) : null;
+
+                  if (tdQty && !tdQty.querySelector('.tray-m-conv')) {
+                    var spanQ = document.createElement('div');
+                    spanQ.className = 'tiny tray-m-conv';
+                    spanQ.style.cssText = 'color:#059669;font-weight:600;margin-top:2px;';
+                    spanQ.textContent = '(' + mQty.toLocaleString() + ' M)';
+                    tdQty.appendChild(spanQ);
+                  }
+                  if (tdAlpha && mPrice != null && !tdAlpha.querySelector('.tray-m-conv')) {
+                    var spanP = document.createElement('div');
+                    spanP.className = 'tiny tray-m-conv';
+                    spanP.style.cssText = 'color:#059669;margin-top:2px;';
+                    spanP.textContent = '(@' + mPrice.toLocaleString() + '/M)';
+                    tdAlpha.appendChild(spanP);
+                  }
+                } else if (isRod) {
+                  var rLen = 3;
+                  var rSpec = (l.spec || '').match(/(\d+(?:\.\d+)?)\s*M/i);
+                  if (rSpec && +rSpec[1] > 0) rLen = +rSpec[1];
+                  var totalM = (+l.qty || 0) * rLen;
+                  var conv3mQty = Math.round((totalM / 3) * 100) / 100;
+
+                  if (tdQty && !tdQty.querySelector('.rod-3m-conv')) {
+                    var spanQ2 = document.createElement('div');
+                    spanQ2.className = 'tiny rod-3m-conv';
+                    spanQ2.style.cssText = 'color:#2563eb;font-weight:600;margin-top:2px;';
+                    spanQ2.textContent = '(3M환산: ' + conv3mQty.toLocaleString() + '본 / ' + totalM.toLocaleString() + 'M)';
+                    tdQty.appendChild(spanQ2);
+                  }
+                  if (tdAlpha && !tdAlpha.querySelector('.rod-3m-conv')) {
+                    var spanP2 = document.createElement('div');
+                    spanP2.className = 'tiny rod-3m-conv';
+                    spanP2.style.cssText = 'color:#2563eb;margin-top:2px;';
+                    spanP2.textContent = '(@2,500/3M)';
+                    tdAlpha.appendChild(spanP2);
+                  }
+                }
+              });
+            } catch(e) { console.error('[RB811-M-CONV-ERR]', e); }
+            return res;
+          };
+          window.rb811Paint._xlWrapped = true;
+        }
+      } catch(e) {}
     },
 
     injectPage: function() {
@@ -94,6 +230,7 @@
         '  <div style="display:flex;align-items:center;gap:8px;">',
         '    <span style="font-size:11px;color:#64748b;">(칸 클릭 후 바로 수정 · Tab/Enter 이동 · Ctrl+Z 되돌리기)</span>',
         '    <button type="button" id="xl9193_history_btn" style="padding:4px 10px;background:#3b82f6;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">📜 변경 이력</button>',
+        '    <button type="button" id="xl9193_close_btn" style="padding:4px 10px;background:#64748b;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;margin-left:4px;">✕ 닫기(복귀)</button>',
         '  </div>',
         '</div>',
 
@@ -143,6 +280,14 @@
       document.getElementById('xl9193_reload_btn').onclick = function() { XL.load(); };
       document.getElementById('xl9193_history_btn').onclick = function() { XL.toggleHistory(); };
       document.getElementById('xl9193_drawer_close').onclick = function() { XL.toggleHistory(false); };
+      var closeBtn = document.getElementById('xl9193_close_btn');
+      if (closeBtn) {
+        closeBtn.onclick = function() {
+          if (typeof wsBack === 'function') wsBack();
+          else if (typeof wsGo === 'function') wsGo((window.SH && window.SH.ws) || 'cockpit');
+          else if (typeof go === 'function') go('ceo_today');
+        };
+      }
 
       // 전역 키보드 조작 (Ctrl+Z, 붙여넣기, 방향키 이동)
       p.addEventListener('keydown', XL.handleKeyDown);
@@ -165,12 +310,20 @@
         p.style.display = 'flex';
       }
       var ttl = document.getElementById('ttl');
-      if (ttl) ttl.textContent = '엑셀표';
+      if (ttl) ttl.textContent = '«엑셀표»';
       var crumb = document.getElementById('crumb');
-      if (crumb) crumb.textContent = '2 영업 › 엑셀표';
+      if (crumb) crumb.textContent = '대표 전용 · «엑셀표»';
+
+      // 탭 활성화 상태 표시
+      var mtabXl = document.querySelector('.mtab-xl9193');
+      if (mtabXl) {
+        document.querySelectorAll('#mtabs .mtab').forEach(function(t){ t.classList.remove('on'); });
+        mtabXl.classList.add('on');
+      }
 
       XL.load();
     },
+
 
     load: function() {
       var tbody = document.getElementById('xl9193_tbody');
@@ -788,6 +941,7 @@
   };
 
   // 전역 노출 및 초기화
+  window.XL = XL;
   window.XL9193 = XL;
 
   if (document.readyState === 'loading') {
