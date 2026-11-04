@@ -21,9 +21,14 @@
     historyOpen: false,
 
     init: function() {
-      if (typeof isOwner === 'function' && !isOwner()) {
-        return; // 대표 전용: 대표가 아니면 UI 일체 노출 안 함
+      if (typeof isOwner !== 'function' || !isOwner()) {
+        // v9.196: 페이지가 열릴 때는 로그인(세션 복원)이 아직 안 끝나 isOwner()가 false — 1초마다 다시 봄(30분까지). 대표가 아니면 끝까지 UI 노출 안 함
+        XL._initTry = (XL._initTry || 0) + 1;
+        if (XL._initTry <= 1800) setTimeout(XL.init, 1000);
+        return;
       }
+      if (XL._inited) return;
+      XL._inited = true;
 
       // 마감 안 된 가장 이른 대상 달 (지난달 기본, 예: 2026-10)
       var now = new Date();
