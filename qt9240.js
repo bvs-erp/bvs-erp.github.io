@@ -1,7 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.6 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.7 (Claude 작성 · 2026-11-05)
  * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
+ * v1.7: 줄 위·아래 옮기기(▲▼ 단추 · Alt+↑/↓) — 고른 줄을 하위 줄째로 같은 단계 앞뒤 줄과 자리 바꿈
  * v1.6: 네고·할인 줄(이름이 네고/할인/D·C 이거나 금액이 마이너스인 맨 위 줄)은 관리비·이윤·시운전비 계산 바탕(제조원가)에서 뺌
  * v1.5: ① 인쇄 방식(관리비·이윤 따로 / 단가에 섞기 — 저장은 따로, 인쇄 때만 섞음, 합계 그대로) ② 시운전·기술지원비 줄(직접원가의 %) ③ 결제조건 가산(이윤 %에 더함)
  * v1.4: 일반관리비·기업이윤 줄은 줄이 바뀔 때마다 자동 다시 계산(규격 「제조원가의 7%」의 %를 고치면 그 %로, 금액을 직접 치면 % 를 거꾸로 계산해 규격에 적음)
@@ -82,6 +83,21 @@
     get: function (k) { var i = QT.idx(k); return i >= 0 ? QT.rows[i] : null; },
     kids: function (k) { return QT.rows.filter(function (r) { return r.par === k; }); },
     level: function (r) { var n = 0, p = r.par; while (p) { n++; var pr = QT.get(p); p = pr ? pr.par : null; if (n > 30) break; } return n; },
+    moveRow: function (dir) {
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      var R = QT.rows, i = QT.sel.r, r = R[i]; if (!r) return;
+      var end = QT.subEnd(i), block = R.slice(i, end + 1);
+      if (dir < 0) {
+        var j = -1; for (var x = i - 1; x >= 0; x--) { if (R[x].k === r.par) break; if (R[x].par === r.par) { j = x; break; } }
+        if (j < 0) { say('맨 위 줄입니다'); return; }
+        QT.rows = R.slice(0, j).concat(block, R.slice(j, i), R.slice(end + 1)); QT.sel.r = j;
+      } else {
+        var n = end + 1; if (n >= R.length || R[n].par !== r.par) { say('맨 아래 줄입니다'); return; }
+        var end2 = QT.subEnd(n);
+        QT.rows = R.slice(0, i).concat(R.slice(n, end2 + 1), block, R.slice(end2 + 1)); QT.sel.r = i + (end2 - end);
+      }
+      QT.dirty = true; QT.render(); try { QT.el('qt_grid').focus(); } catch (e) {}
+    },
     subEnd: function (i) { /* i번 줄 아래 자손이 끝나는 위치(포함) */
       var lv = QT.level(QT.rows[i]), j = i + 1;
       while (j < QT.rows.length && QT.level(QT.rows[j]) > lv) j++;
@@ -502,6 +518,7 @@
       if (QT.el('qt9240').style.display === 'none') return;
       if (e.target && e.target.tagName === 'INPUT' && e.target.className !== 'qtin' && e.target.id !== 'qt_grid') return;
       var k = e.key;
+      if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown')) { e.preventDefault(); QT.moveRow(k === 'ArrowUp' ? -1 : 1); return; }
       if (k === 'ArrowUp') { e.preventDefault(); QT.move('up'); }
       else if (k === 'ArrowDown') { e.preventDefault(); QT.move('down'); }
       else if (k === 'ArrowLeft') { e.preventDefault(); QT.move('left'); }
@@ -599,11 +616,11 @@
       o.innerHTML = [
         '<div class="qtbar">',
         '<b style="font-size:14px;margin-right:6px">견적 엑셀표</b><input id="qt_title" placeholder="건명"><span style="margin-left:6px">매출처</span><input id="qt_ptnq" type="search" placeholder="검색" style="width:90px"><select id="qt_ptn" style="max-width:220px"></select><span id="qt_info" style="color:#64748b"></span>',
-        '<span class="qthelp">방향키·Enter·Tab 이동 · 바로 치면 입력 · 엑셀에서 붙여넣기 · Ctrl+] 하위로 · Ctrl+[ 위로 · Ctrl+S 저장</span>',
+        '<span class="qthelp">Alt+↑↓ 줄 옮기기 · 방향키·Enter·Tab 이동 · 바로 치면 입력 · 엑셀에서 붙여넣기 · Ctrl+] 하위로 · Ctrl+[ 위로 · Ctrl+S 저장</span>',
         '</div>',
         '<div class="qtbar">',
         '<button onclick="QT9240.indent()">하위로 ⇥</button><button onclick="QT9240.outdent()">위로 ⇤</button>',
-        '<button onclick="QT9240.addRow()">줄 추가</button><button onclick="QT9240.delRow()">줄 빼기</button>',
+        '<button onclick="QT9240.addRow()">줄 추가</button><button onclick="QT9240.delRow()">줄 빼기</button><button onclick="QT9240.moveRow(-1)" title="고른 줄을 하위 줄째로 위로 (Alt+↑)">▲ 줄 위로</button><button onclick="QT9240.moveRow(1)" title="고른 줄을 하위 줄째로 아래로 (Alt+↓)">▼ 줄 아래로</button>',
         '<span style="margin-left:8px">하위 단가</span><button onclick="QT9240.allChild(false)">모두 숨김</button><button onclick="QT9240.allChild(true)">모두 보임</button>',
         '<span style="margin-left:8px">가산</span><input id="qt_mk" style="width:54px" placeholder="20">%',
         '<select id="qt_rd"><option value="1">원 단위</option><option value="100" selected>100원 절사</option><option value="1000">1,000원 절사</option></select>',
