@@ -2372,6 +2372,54 @@ window.V9228_APPLIED=true;
   window.V9235_APPLIED=true;
 })();
 
+/* ═══ v9.239 [Claude · 대표 11-05 23:1x] 「품명 너비는 남아돌고, 규격 너비가 넓어지면 보기 좋아질거 아니야」
+   v9.235는 글자 수로 너비를 「짐작」해서 품명을 크게 잡고 규격은 남은 만큼만 줘서 두 줄이 됨(D-STK 40줄: 품명 198px·규격 109px, 실제 필요 136px·125px).
+   이제 미리보기가 그려진 뒤 품명·도번·규격 칸의 실제 글자 폭을 그 칸의 글꼴·크기 그대로 재서(canvas measureText),
+   ① 세 칸 모두 한 줄에 들어가면 각자 필요한 만큼 + 남는 폭은 비례로 나눔(전부 한 줄, 줄 높이 일정)
+   ② 모자라면 규격·도번을 먼저 한 줄로 주고 품명이 남은 폭에서 줄바꿈 ③ 그래도 모자라면 품명·규격이 모자란 만큼 나눠 줄바꿈.
+   글자 크기가 바뀌면(fill9236 키움 단계마다) 다시 잼. 인쇄 폭은 718px 기준. `window.cw9239` ═══ */
+(function(){
+  if(window.V9239_APPLIED)return;
+  var S=function(el,p,v){el.style.setProperty(p,v,'important')};
+  var cv=null,LRX=/(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/;
+  var textW=function(el){if(!cv)cv=document.createElement('canvas').getContext('2d');var cs=getComputedStyle(el);
+    cv.font=cs.fontStyle+' '+cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+    var tx=(el.textContent||'').replace(/\s+/g,' ').trim();if(!tx)return 0;
+    return Math.ceil(cv.measureText(tx).width+(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0)+(parseFloat(cs.letterSpacing)||0)*tx.length+3)};
+  window.cw9239=function(t){
+    try{
+      if(!t||!t.tHead||!t.tHead.rows[0]||!t.tBodies[0])return;
+      var hr=t.tHead.rows[0],heads=[].map.call(hr.cells,function(c){return (c.textContent||'').trim()});
+      var flex=[];heads.forEach(function(h,i){if(h==='품명'||h==='품명 / 품번'||h==='도번'||h==='규격')flex.push(i)});if(!flex.length)return;
+      var iNm=heads.indexOf('품명')>=0?heads.indexOf('품명'):heads.indexOf('품명 / 품번'),iSp=heads.indexOf('규격'),iCd=heads.indexOf('도번');
+      var W=t.getBoundingClientRect().width;if(!(W>0))return;
+      var Wp=Math.min(W,718),k=Wp/W;
+      var avail=0;flex.forEach(function(i){avail+=hr.cells[i].getBoundingClientRect().width*k});
+      var LR=[].filter.call(t.tBodies[0].rows,function(tr){return LRX.test(tr.className)});if(!LR.length)return;
+      /* 재기 전에 한 줄로 펴서 잼 */
+      LR.forEach(function(tr){flex.forEach(function(i){var td=tr.cells[i];if(td)S(td,'white-space','nowrap')})});
+      var need={};flex.forEach(function(i){need[i]=Math.max(36,textW(hr.cells[i]))});
+      LR.forEach(function(tr){flex.forEach(function(i){var td=tr.cells[i];if(!td||td.colSpan>1)return;var w=textW(td);if(w>need[i])need[i]=w})});
+      var sum=0;flex.forEach(function(i){sum+=need[i]});
+      var wid={},wrap={};
+      if(sum<=avail){var extra=avail-sum;flex.forEach(function(i){wid[i]=need[i]+extra*need[i]/sum})}
+      else{
+        var others=0;flex.forEach(function(i){if(i!==iNm)others+=need[i]});
+        var restNm=avail-others;
+        if(iNm>=0&&restNm>=need[iNm]*0.6){flex.forEach(function(i){wid[i]=i===iNm?restNm:need[i]});wrap[iNm]=1}
+        else{var short=sum-avail,ws=(iNm>=0?need[iNm]:0)+(iSp>=0?need[iSp]:0);
+          flex.forEach(function(i){wid[i]=need[i];if((i===iNm||i===iSp)&&ws>0){wid[i]=need[i]-short*need[i]/ws;wrap[i]=1}})}
+      }
+      flex.forEach(function(i){S(hr.cells[i],'width',(Math.round(wid[i]/Wp*1000)/10)+'%')});
+      LR.forEach(function(tr){flex.forEach(function(i){var td=tr.cells[i];if(!td)return;
+        if(wrap[i]){S(td,'white-space','normal');S(td,'overflow','visible');S(td,'word-break','keep-all')}
+        else{S(td,'white-space','nowrap');S(td,'overflow','hidden');S(td,'text-overflow','ellipsis')}})});
+      t.dataset.cw9239=flex.map(function(i){return heads[i]+':'+Math.round(need[i])+'/'+Math.round(wid[i])+(wrap[i]?'w':'')}).join(',');
+    }catch(e){console.error('[v9239]',e)}
+  };
+  window.V9239_APPLIED=true;
+})();
+
 /* ═══ v9.236 [Claude · 대표 11-05 22:5x] 「자재가 많지 않음에도 하단 표를 딱 눌러 붙여놔서 가독성이 안좋아. 반응형으로 UI 좀 잘 짜줄 수 없을까?」
    ① 「한 장에 맞추기」가 모든 문서를 84%로 줄이던 원인(안쪽 .sheet 겹) 고침 ② 인쇄 미리보기가 열린 뒤 A4 한 장(718×1015px, erp 한 장 맞춤 fit305와 같은 기준)에 남는 높이를 실제로 재서,
    견적서 품목 표(l9234·t9240) 줄 위아래 여백·글자를 남는 만큼 키움(한 줄 최대 30px·12px). 남는 높이가 없으면(줄 많은 견적) 그대로 촘촘히.
@@ -2392,15 +2440,19 @@ window.V9228_APPLIED=true;
       var pr=document.getElementById('pr'),body=document.getElementById('prBody');if(!pr||!body||!pr.classList.contains('on'))return;
       var t=body.querySelector('table.t9240,table.l9234');if(!t||t.dataset.f9236)return;t.dataset.f9236='1';
       var LR=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});if(!LR.length)return;
-      var h0=measure(body),free=PAGE-h0-8;if(free<LR.length*2)return;
-      var apply=function(add){var big=add>=6,mid=add>=3;
+      var cw=function(){try{if(typeof window.cw9239==='function')window.cw9239(t)}catch(x){}};cw();
+      var h0=measure(body),free=PAGE-h0-8;if(free<LR.length*2){try{if(typeof fit305Bar==='function')fit305Bar()}catch(x){}return;}
+      var apply=function(add,fl){if(fl==null)fl=add>=6?2:add>=3?1:0;var big=fl>=2,mid=fl>=1;
         LR.forEach(function(tr){var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className);
           [].forEach.call(tr.cells,function(td){var p=1+Math.floor(add/2);S(td,'padding-top',p+'px');S(td,'padding-bottom',p+'px');
             if(!/(^|\s)k9234(\s|$)/.test(td.className)&&!td.style.getPropertyValue('font-size').match(/^9(\.5)?px/))S(td,'font-size',(big?(det?11.5:12):mid?(det?11:11.5):(det?10:10.5))+'px');});});
-        var th=t.tHead&&t.tHead.rows[0];if(th)[].forEach.call(th.cells,function(c){S(c,'padding',(big?'6px 4px':mid?'4px 3px':'3px 3px'));if(big)S(c,'font-size','11.5px')});};
+        var th=t.tHead&&t.tHead.rows[0];if(th)[].forEach.call(th.cells,function(c){S(c,'padding',(big?'6px 4px':mid?'4px 3px':'3px 3px'));if(big)S(c,'font-size','11.5px')});cw();};
       var add=Math.min(14,Math.floor(free/LR.length));
-      while(add>0){apply(add);if(measure(body)<=PAGE)break;add--;}
-      if(add<=0)apply(0);
+      /* v9.239: 줄 간격(여백)은 남는 높이만큼 키우되, 글자는 품명·도번·규격이 한 줄로 들어가는 크기까지만 키움.
+         단계: 여백 큰 것부터 → 그 여백에서 글자 큰 것부터. 페이지에 들어가고 줄바꿈 없는 첫 조합을 씀. 없으면 페이지에 들어가는 가장 큰 여백 */
+      var fit=null,ok=null,wr=function(){return /w(,|$)/.test(t.dataset.cw9239||'')};
+      for(;add>0&&!ok;add--){var f0=add>=6?2:add>=3?1:0;for(var fl=f0;fl>=0;fl--){apply(add,fl);if(measure(body)<=PAGE){if(!fit)fit=[add,fl];if(!wr()){ok=[add,fl];break}}}}
+      var pick=ok||fit||[0,0];apply(pick[0],pick[1]);t.dataset.f9239=pick.join('/');
       try{if(typeof fit305Bar==='function')fit305Bar()}catch(x){}
     }catch(e){console.error('[v9236]',e)}
   };
