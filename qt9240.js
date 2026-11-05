@@ -1,7 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.7 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.8 (Claude 작성 · 2026-11-05)
  * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
+ * v1.8: 기업이윤 = (제조원가 + 일반관리비) × % · 관리비·이윤·시운전비 줄은 규격 비우고 수량 칸에 %, 단위 「%」(인쇄도 수량 7 · 단위 % · 단가 빈칸)
  * v1.7: 줄 위·아래 옮기기(▲▼ 단추 · Alt+↑/↓) — 고른 줄을 하위 줄째로 같은 단계 앞뒤 줄과 자리 바꿈
  * v1.6: 네고·할인 줄(이름이 네고/할인/D·C 이거나 금액이 마이너스인 맨 위 줄)은 관리비·이윤·시운전비 계산 바탕(제조원가)에서 뺌
  * v1.5: ① 인쇄 방식(관리비·이윤 따로 / 단가에 섞기 — 저장은 따로, 인쇄 때만 섞음, 합계 그대로) ② 시운전·기술지원비 줄(직접원가의 %) ③ 결제조건 가산(이윤 %에 더함)
@@ -226,7 +227,7 @@
       var c = QT.cc || {}, n = function (v) { return +parseNum(v) || 0; };
       var mat = 0, S = 0; QT.rows.forEach(function (r) { if (r.par) return; var co = QT.cost(r); if (co) mat += co; var a = QT.amount(r); if (a) S += a; });
       var md = n(c.ppl) * n(c.days), labor = Math.round(md * n(c.md_cost)), fexp = Math.round(n(c.fdays) * n(c.fday_cost)), oth = n(c.other);
-      var dir = mat + labor + fexp + oth, as = Math.round(dir * n(c.as_pct) / 100), mfg = dir + as, adm = Math.round(mfg * n(c.admin_pct) / 100), pro = Math.round(mfg * (n(c.profit_pct) + n(c.pay_pct)) / 100);
+      var dir = mat + labor + fexp + oth, as = Math.round(dir * n(c.as_pct) / 100), mfg = dir + as, adm = Math.round(mfg * n(c.admin_pct) / 100), pro = Math.round((mfg + adm) * (n(c.profit_pct) + n(c.pay_pct)) / 100);
       var rd = QT.rounding || 100, prop = Math.ceil((mfg + adm + pro) / rd) * rd;
       return { mat: mat, md: md, labor: labor, fexp: fexp, oth: oth, as: as, mfg: mfg, adm: adm, pro: pro, prop: prop, S: S, keep: S - mfg, keepPct: mfg ? Math.round((S - mfg) / mfg * 1000) / 10 : null };
     },
@@ -249,7 +250,7 @@
         + '<button onclick="QT9240.costSaveOnly()">계산만 저장</button><button onclick="QT9240.costDefaults()">관리비·이윤 %·1공수를 기본값으로</button></div></div>'
         + '<div class="qtcr"><table>'
         + row('재료비 (매입가 그대로)', won(k.mat)) + row('노무비 ' + num(k.md) + '공수', won(k.labor)) + row('공장 경비', won(k.fexp)) + row('기타 경비', won(k.oth))
-        + row('시운전·A/S ' + num(+c.as_pct || 0) + '%', won(k.as)) + row('<b>제조원가</b>', '<b>' + won(k.mfg) + '</b>', 'qtct') + row('일반관리비 ' + num(c.admin_pct) + '%', won(k.adm)) + row('이윤 ' + num((+c.profit_pct || 0) + (+c.pay_pct || 0)) + '%', won(k.pro))
+        + row('시운전·A/S ' + num(+c.as_pct || 0) + '%', won(k.as)) + row('<b>제조원가</b>', '<b>' + won(k.mfg) + '</b>', 'qtct') + row('일반관리비 ' + num(c.admin_pct) + '%', won(k.adm)) + row('이윤 ' + num((+c.profit_pct || 0) + (+c.pay_pct || 0)) + '% (제조원가+관리비)', won(k.pro))
         + row('<b>제안 견적가</b>', '<b>' + won(k.prop) + '</b>', 'qtct')
         + row('지금 견적 공급가', won(k.S)) + row('지금 남는 몫', '<b class="' + (k.keepPct != null && k.keepPct < target ? 'neg' : '') + '">' + won(k.keep) + (k.keepPct != null ? ' (원가의 ' + k.keepPct + '%)' : '') + '</b>')
         + '</table></div></div>';
@@ -283,36 +284,43 @@
     isNego: function (r) { if (r.par) return false; if (/^(네고|할인|특별\s*할인|D\/?C|DC)/i.test(String(r.name || '').trim())) return true; var a = QT.amount(r); return a != null && a < 0; },
     isTech: function (r) { return !r.par && String(r.name || '').trim() === QT.TECH; },
     techBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isTech(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
-    techSetPct: function (pct) { QT.rows.forEach(function (r) { if (QT.isTech(r)) { r.spec = '직접원가의 ' + pct + '%'; r.ohKeep = false; } }); },
+    techSetPct: function (pct) { QT.rows.forEach(function (r) { if (QT.isTech(r)) { r.mk = pct; r.unit = '%'; r.ohKeep = false; } }); },
     techLine: function () {
       if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
       var pct = +parseNum((QT.cc || {}).as_pct) || 3; if (QT.cc) QT.cc.as_pct = pct;
       var r = QT.rows.filter(QT.isTech)[0];
-      if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: QT.TECH, spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; var at = QT.rows.length; QT.rows.forEach(function (x, i) { if (QT.isOh(x) && i < at) at = i; }); QT.rows.splice(at, 0, r); }
-      r.spec = '직접원가의 ' + pct + '%'; r.ohKeep = false; QT.dirty = true; QT.render(); QT.costPaint(); say(QT.TECH + ' ' + won(r.price) + '원 (직접원가의 ' + pct + '%)');
+      if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: QT.TECH, spec: '', qty: 1, unit: '%', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; var at = QT.rows.length; QT.rows.forEach(function (x, i) { if (QT.isOh(x) && i < at) at = i; }); QT.rows.splice(at, 0, r); }
+      r.mk = pct; r.unit = '%'; r.ohKeep = false; QT.dirty = true; QT.render(); QT.costPaint(); say(QT.TECH + ' ' + won(r.price) + '원 (직접원가의 ' + pct + '%)');
     },
     payGuess: function () { var t = String((QT.doc && QT.doc.payment_terms) || ''); return /어음|90/.test(t) ? 3 : /60/.test(t) ? 2 : 0; },
     ohDef: function (r) { var nm = String(r.name || '').trim(), c = QT.cc || {}, p = (QT.basis && QT.basis.params) || {}; return nm === '일반관리비' ? (+c.admin_pct || +p.admin_pct || 7) : (+c.profit_pct || +p.profit_pct || 11); },
-    ohPct: function (r) { var m = /([\d.]+)\s*%/.exec(String(r.spec || '')); return m ? +m[1] : QT.ohDef(r); },
+    isPctRow: function (r) { return QT.isOh(r) || QT.isTech(r); },
+    pctOf: function (r) {
+      if (r.unit === '%' && r.mk != null && isFinite(+r.mk)) return +r.mk;
+      var m = /([\d.]+)\s*%/.exec(String(r.spec || '')); if (m) return +m[1];
+      return QT.isTech(r) ? (+parseNum((QT.cc || {}).as_pct) || 3) : QT.ohDef(r);
+    },
+    ohPct: function (r) { return QT.pctOf(r); },
+    isProfit: function (r) { return QT.isOh(r) && /이윤/.test(String(r.name || '')); },
+    pctBase: function (r) { /* 이 줄 %를 곱할 바탕 */
+      if (QT.isTech(r)) return QT.techBase();
+      var b = QT.ohBase(); if (!QT.isProfit(r)) return b;
+      QT.rows.forEach(function (x) { if (QT.isOh(x) && !QT.isProfit(x)) b += +x.price || 0; }); return b;
+    },
     ohBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
     ohSync: function () {
       var rd = QT.rounding || 100;
-      QT.rows.filter(QT.isTech).forEach(function (r) {
-        var tb = QT.techBase(); if (r.ohKeep && r.ohBase === tb) return;
-        r.ohKeep = false; var m = /([\d.]+)\s*%/.exec(String(r.spec || '')), pct = m ? +m[1] : (+parseNum((QT.cc || {}).as_pct) || 3);
-        r.qty = 1; if (!r.unit) r.unit = '식'; r.spec = '직접원가의 ' + pct + '%';
-        var np = Math.round(tb * pct / 100 / rd) * rd; if (np !== +r.price) { r.price = np; QT.dirty = true; }
-      });
-      var oh = QT.rows.filter(QT.isOh); if (!oh.length) return;
-      var base = QT.ohBase();
-      oh.forEach(function (r) {
-        if (r.ohKeep && r.ohBase === base) return;
-        r.ohKeep = false; var pct = QT.ohPct(r);
-        r.qty = 1; if (!r.unit) r.unit = '식'; r.spec = '제조원가의 ' + pct + '%';
-        var np = Math.round(base * pct / 100 / rd) * rd; if (np !== +r.price) { r.price = np; QT.dirty = true; }
-      });
+      var one = function (r) {
+        var pct = QT.pctOf(r);
+        r.qty = 1; r.unit = '%'; r.mk = pct; if (/원가의/.test(String(r.spec || ''))) r.spec = '';
+        var b = QT.pctBase(r); if (r.ohKeep && r.ohBase === b) return;
+        r.ohKeep = false; var np = Math.round(b * pct / 100 / rd) * rd; if (np !== +r.price) { r.price = np; QT.dirty = true; }
+      };
+      QT.rows.filter(QT.isTech).forEach(one);
+      QT.rows.filter(function (r) { return QT.isOh(r) && !QT.isProfit(r); }).forEach(one);
+      QT.rows.filter(QT.isProfit).forEach(one);
     },
-    ohSetPct: function (nm, pct) { QT.rows.forEach(function (r) { if (QT.isOh(r) && String(r.name).trim() === nm) { r.spec = '제조원가의 ' + pct + '%'; r.ohKeep = false; } }); },
+    ohSetPct: function (nm, pct) { QT.rows.forEach(function (r) { if (QT.isOh(r) && (String(r.name).trim() === nm || (nm === '기업이윤' && QT.isProfit(r)))) { r.mk = pct; r.unit = '%'; r.ohKeep = false; } }); },
     costCostPrice: function () {
       if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
       var n = 0; QT.rows.forEach(function (r) { if (QT.counted(r) && !QT.kids(r.k).length && r.cu != null && +r.cu > 0) { r.price = +r.cu; n++; } });
@@ -332,11 +340,13 @@
       var base = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) base += a; });
       var put = function (nm, pct) {
         var r = QT.rows.filter(function (x) { return QT.isOh(x) && String(x.name).trim() === nm; })[0];
-        if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: nm, spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; QT.rows.push(r); }
-        r.qty = 1; r.unit = '식'; r.spec = '제조원가의 ' + pct + '%'; r.ohKeep = false; r.price = Math.round(base * pct / 100 / rd) * rd; r.cu = null; return r.price;
+        if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: nm, spec: '', qty: 1, unit: '%', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; QT.rows.push(r); }
+        r.qty = 1; r.unit = '%'; r.mk = pct; r.spec = ''; r.ohKeep = false; r.cu = null; return 0;
       };
-      var a = put('일반관리비', ap), b = put('기업이윤', pp);
-      QT.dirty = true; QT.render(); say('제조원가 ' + won(base) + ' · 일반관리비 ' + won(a) + ' · 기업이윤 ' + won(b) + ' → 공급가 ' + won(base + a + b) + ' (저장해야 들어갑니다)');
+      put('일반관리비', ap); put('기업이윤', pp + (+parseNum(c.pay_pct) || 0));
+      QT.dirty = true; QT.render();
+      var a = (QT.rows.filter(function (x) { return QT.isOh(x) && !QT.isProfit(x); })[0] || {}).price || 0, b = (QT.rows.filter(QT.isProfit)[0] || {}).price || 0;
+      say('제조원가 ' + won(base) + ' · 일반관리비 ' + won(a) + ' · 기업이윤 ' + won(b) + ' → ' + won(base + a + b) + ' (저장해야 들어갑니다)');
     },
     costPayload: function () {
       var prev = (QT.doc && QT.doc.extra && QT.doc.extra.cost_calc) || {}, c = QT.cc, o = {};
@@ -426,9 +436,9 @@
           var v = '', ex = '', ed = QT.editable(r, c);
           if (c.k === 'no') v = no[r.k];
           else if (c.k === 'name') v = '<span style="padding-left:' + (lv * 16) + 'px">' + (lv ? '└ ' : '') + esc(r.name) + '</span>';
-          else if (c.k === 'qty') v = num(r.qty);
+          else if (c.k === 'qty') v = QT.isPctRow(r) ? num(QT.pctOf(r)) : num(r.qty);
           else if (c.k === 'cu') { v = cuDisp != null ? won(cuDisp) : ''; if (hasKids && !r.cm && cuDisp != null) ex = ' qtauto'; if (r.cm && hasKids) ex = ' qtman'; }
-          else if (c.k === 'mk') { v = (cnt && cuDisp && r.price) ? (Math.round((r.price / cuDisp - 1) * 1000) / 10) : ''; }
+          else if (c.k === 'mk') { v = QT.isPctRow(r) ? '' : (cnt && cuDisp && r.price) ? (Math.round((r.price / cuDisp - 1) * 1000) / 10) : ''; }
           else if (c.k === 'price') { v = cnt ? won(r.price) : (sub && r.qty ? won(Math.round(amt / r.qty)) : '—'); if (!cnt) ex = ' qtauto'; }
           else if (c.k === 'amt') v = amt != null ? won(amt) : '';
           else if (c.k === 'pf') v = pf != null ? won(pf) + (amt ? ' <span class="qtpp">(' + (Math.round(pf / amt * 1000) / 10) + '%)</span>' : '') : '';
@@ -473,12 +483,12 @@
     /* ── 칸 고치기 ── */
     setCell: function (i, ck, val) {
       var r = QT.rows[i]; if (!r) return;
-      if (ck === 'qty') { var q = parseNum(val); if (q == null) return; r.qty = q; }
+      if (ck === 'qty' && QT.isPctRow(r)) { var qp = parseNum(String(val).replace('%', '')); if (qp == null) return; r.mk = qp; r.unit = '%'; r.ohKeep = false; }
+      else if (ck === 'qty') { var q = parseNum(val); if (q == null) return; r.qty = q; }
       else if (ck === 'cu') { var c = parseNum(val); r.cu = c; r.cm = QT.kids(r.k).length > 0 && c != null; r.src = ''; r.vendor = c == null ? '' : r.vendor; }
       else if (ck === 'price') { var p = parseNum(val); r.price = p || 0;
-        if (QT.isOh(r)) { var bb = QT.ohBase(); if (bb > 0) { r.spec = '제조원가의 ' + (Math.round(r.price / bb * 10000) / 100) + '%'; r.ohKeep = true; r.ohBase = bb; r.qty = 1; } }
-        else if (QT.isTech(r)) { var tb = QT.techBase(); if (tb > 0) { r.spec = '직접원가의 ' + (Math.round(r.price / tb * 10000) / 100) + '%'; r.ohKeep = true; r.ohBase = tb; r.qty = 1; } } }
-      else if (ck === 'spec' && (QT.isOh(r) || QT.isTech(r))) { var pm = /([\d.]+)/.exec(String(val || '')); if (pm) { r.spec = (QT.isTech(r) ? '직접원가의 ' : '제조원가의 ') + (+pm[1]) + '%'; r.ohKeep = false; } else r.spec = String(val || ''); }
+        if (QT.isPctRow(r)) { var bb = QT.pctBase(r); if (bb > 0) { r.mk = Math.round(r.price / bb * 10000) / 100; r.unit = '%'; r.ohKeep = true; r.ohBase = bb; r.qty = 1; } } }
+      else if (ck === 'spec' && QT.isPctRow(r) && /^\s*[\d.]+\s*%?\s*$/.test(String(val || ''))) { r.mk = +parseNum(String(val).replace('%', '')); r.unit = '%'; r.spec = ''; r.ohKeep = false; }
       else if (ck === 'mk') { var m = parseNum(val); r.mk = m; var co = QT.cost(r); if (m != null && co && r.qty) r.price = QT.roundP(co / r.qty * (1 + m / 100)); }
       else if (ck === 'code' || ck === 'name' || ck === 'spec' || ck === 'unit' || ck === 'memo') r[ck] = String(val == null ? '' : val);
       else return;
@@ -487,7 +497,7 @@
     startEdit: function (td, first) {
       var i = +td.getAttribute('data-r'), ck = td.getAttribute('data-c'), r = QT.rows[i], c = QT.cols().filter(function (x) { return x.k === ck; })[0];
       if (!r || !c || !QT.editable(r, c)) return;
-      var cur = ck === 'cu' ? (r.cu == null ? (QT.cost(r) != null && r.qty ? Math.round(QT.cost(r) / r.qty) : '') : r.cu) : ck === 'mk' ? (r.mk == null ? '' : r.mk) : (r[ck] == null ? '' : r[ck]);
+      var cur = (ck === 'qty' && QT.isPctRow(r)) ? QT.pctOf(r) : ck === 'cu' ? (r.cu == null ? (QT.cost(r) != null && r.qty ? Math.round(QT.cost(r) / r.qty) : '') : r.cu) : ck === 'mk' ? (r.mk == null ? '' : r.mk) : (r[ck] == null ? '' : r[ck]);
       var inp = document.createElement('input');
       inp.value = first != null ? first : cur; inp.className = 'qtin'; td.innerHTML = ''; td.appendChild(inp); inp.focus();
       if (first == null) inp.select();
@@ -701,7 +711,8 @@
     prLines = function (lines, opt) {
       try {
         var L = lines || [];
-        if (L.some(function (l) { return l && l.parent_no != null; })) {
+        var pctLine = function (l) { return l && l.parent_no == null && l.unit === '%' && l.markup_pct != null && /^(일반관리비|기업이윤|이윤|시운전·기술지원비)$/.test(String(l.item_name || '').trim()); };
+        if (L.some(function (l) { return l && l.parent_no != null; }) || (L.some(pctLine) && !L.some(function (l) { return l && l.role === 'detail'; }))) {
           var cols = (opt && opt.cols) || [], byNo = {}, kids = {};
           L.forEach(function (l) { byNo[l.line_no] = l; var p = l.parent_no == null ? '_' : l.parent_no; (kids[p] = kids[p] || []).push(l); });
           var lv = function (l) { var n = 0, p = l.parent_no; while (p != null && byNo[p] && n < 30) { n++; p = byNo[p].parent_no; } return n; };
@@ -720,10 +731,11 @@
               if (c.t === 'No') return '<td class="' + cls + '">' + numb[l.line_no] + '</td>';
               if (isName(c)) return '<td style="padding-left:' + (6 + d * 14) + 'px">' + (d ? '└ ' : '') + esc(l.item_name) + (l.item_code ? ' <span class="k9240">' + esc(l.item_code) + '</span>' : '') + '</td>';
               if (c.t === '규격') return '<td>' + esc(l.spec || '') + '</td>';
-              if (c.t === '수량') return '<td class="' + cls + '">' + num(l.qty) + '</td>';
+              if (c.t === '수량') return '<td class="' + cls + '">' + (pctLine(l) ? num(+l.markup_pct) : num(l.qty)) + '</td>';
               if (c.t === '단위') return '<td class="' + cls + '">' + esc(l.unit || '') + '</td>';
               if (c.t === '비고') return '<td>' + esc(l.memo || '') + '</td>';
               if (!sh) return '<td class="' + cls + '"></td>';
+              if (c.t === '단가' && pctLine(l)) return '<td class="' + cls + '"></td>';
               if (c.t === '단가') return '<td class="' + cls + '">' + (sub ? (l.qty ? won(Math.round(sa / l.qty)) : '') : won(l.unit_price)) + '</td>';
               if (c.t === '공급가액' || c.t === '금액') return '<td class="' + cls + '">' + (sub ? won(sa) : won(l.supply_amt)) + '</td>';
               if (c.t === '세액') return '<td class="' + cls + '">' + (sub ? '' : won(l.tax_amt)) + '</td>';
