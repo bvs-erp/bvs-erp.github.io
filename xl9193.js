@@ -1869,7 +1869,7 @@ window.V9198_APPLIED = true;
   };
   var titleOf=function(g){var t=(PR9209.cur&&PR9209.titles[PR9209.cur])||{};var v=t[String(g)];return (v!=null&&String(v).trim()!=='')?String(v):DEF[g]};
   var plain=function(s){return String(s||'').replace(/^[①②③④⑤]\s*/,'')};
-  var specCss=function(s){var n=String(s||'').length;return n>34?'font-size:calc(var(--f29,10.5px) - 2.5px)!important;':n>24?'font-size:calc(var(--f29,10.5px) - 1.5px)!important;':''};
+  var specCss=function(s){var n=String(s||'').length;return n>24?'white-space:normal!important;word-break:keep-all!important;overflow-wrap:anywhere!important;line-height:1.15!important;font-size:calc(var(--f29,10.5px) - 1.5px)!important;':''}; /* v9.232: 긴 규격은 칸 안에서 줄바꿈(옆 칸 침범 금지) */
   prLines=function(lines,opt){
     try{
       opt=opt||{};var L=lines||[];var cols=opt.cols||[];
@@ -2076,9 +2076,11 @@ window.V9228_APPLIED=true;
     /* 작업내역서 색 줄이기 */
     '#pr .wl2.u29w .wv th.pg.pg{background:#e2e8f0!important;color:#0f172a!important;border:1px solid #94a3b8!important}',
     '#pr .wl2.u29w .wv th.pp.pp,#pr .wl2.u29w .wg th.h.h{background:#1e3a8a!important;border-color:#1e3a8a!important}',
-    '#pr .wl2.u29w .wv td.d.d{background:#ffffff!important}',
-    '#pr .wl2.u29w .wv tr.hr td{background:#f8fafc!important}',
-    '#pr .wl2.u29w .wv td.d.d:not(:empty){background:#eef2f7!important}',
+    '#pr .wl2.u29w .wv tbody:not(.ft) td.d.d{background:#ffffff!important}',
+    '#pr .wl2.u29w .wv tbody:not(.ft) tr.hr td{background:#f8fafc!important}',
+    '#pr .wl2.u29w .wv tbody:not(.ft) td.d.d:not(:empty){background:#eef2f7!important}',
+    '#pr .wl2.u29w .wv tbody.ft tr.sr td.d.d{background:#f8fafc!important;color:#0f172a!important}',
+    '#pr .wl2.u29w .wv tbody.ft tr.gt td,#pr .wl2.u29w .wv tbody.ft tr.gt td.d.d{background:#1e3a8a!important;color:#ffffff!important;font-weight:700!important}',
     '#pr .wl2.u29w .wv td.dn.dn,#pr .wl2.u29w .wv td.dw.dw{background:#ffffff!important;color:#0f172a!important}',
     '#pr .wl2.u29w .wv td.dn.h.h,#pr .wl2.u29w .wv td.dw.h.h{background:#f8fafc!important;color:#b91c1c!important;font-weight:700!important}',
     '#pr .wl2.u29w .wv td.pp.pp{background:transparent!important}',
@@ -2141,7 +2143,7 @@ window.V9228_APPLIED=true;
         if(wm){var bs=wm.querySelectorAll('b'),dt=bs.length>1?bs[1].innerHTML:(bs[0]?bs[0].innerHTML:'');
           swap(wm,grid([{k:'작성일자',v:dt},{k:'건 명',v:esc31(d.title||'')}]));}
         Array.prototype.slice.call(wl.querySelectorAll('table.wv tbody.ft tr')).forEach(function(r){
-          var c=r.cells[r.cells.length-1];if(c&&/×/.test(c.textContent||''))c.innerHTML='<span class="fx29">'+c.innerHTML+'</span>';
+          var c=r.cells[r.cells.length-1];var t=c?(c.textContent||''):'';if(c&&/×/.test(t)&&t.indexOf('=')>=0)c.textContent=t.slice(t.lastIndexOf('=')+1).trim(); /* v9.232: 「102 공수 × 220,000 =」 식은 빼고 금액만 */
         });
         return box.innerHTML;
       }
@@ -2156,7 +2158,8 @@ window.V9228_APPLIED=true;
     var old=u.getAttribute('style')||'';
     var W=Math.round(190*MM),LIM=kind==='wl'?Math.floor(265*MM)-6:Math.min(1010,Math.floor(268*MM));
     var tv=kind==='wl'?u.querySelector('table.wv'):null,tvOld=tv?(tv.getAttribute('style')||''):'';
-    var fits=function(){var tb=u.querySelectorAll('table');for(var i=0;i<tb.length;i++){if(tb[i].scrollWidth>u.clientWidth+1)return false}return u.scrollHeight<=LIM};
+    var cells=Array.prototype.slice.call(u.querySelectorAll('table td'));
+    var fits=function(){var tb=u.querySelectorAll('table');for(var i=0;i<tb.length;i++){if(tb[i].scrollWidth>u.clientWidth+1)return false}if(u.scrollHeight>LIM)return false;for(var j=0;j<cells.length;j++){var c=cells[j];if(c.scrollWidth>c.clientWidth+1)return false}return true}; /* v9.232: 칸 넘침도 검사 */
     if(kind==='wl')u.classList.add('f29');
     u.style.setProperty('width',W+'px','important');u.style.setProperty('max-width',W+'px','important');
     if(kind==='wl'){u.style.setProperty('height','auto','important');if(tv)tv.style.setProperty('height','auto','important')}
@@ -2190,5 +2193,16 @@ window.V9228_APPLIED=true;
   var hook=function(){var b=document.getElementById('prBody');if(!b)return false;new MutationObserver(kick).observe(b,{childList:true});return true};
   if(!hook()){var n=0,iv=setInterval(function(){if(hook()||++n>120)clearInterval(iv)},500)}
   window.addEventListener('beforeprint',run);
-  window.V9231_APPLIED=true;
+  window.V9231_APPLIED=true;window.V9232_APPLIED=true;
+})();
+
+/* ═══ v9.232 [Claude · 대표 17:3x] 「BOM 엑셀 올리기 눌렀더니 메일이 없습니다」 — erp mailOpen이 버튼에 mail_id를 넣기 전에 id 변수를 써서 undefined가 넘어감.
+   여기서는 열린 메일 번호를 기억했다가 비어 있으면 채워 넣음(안티그래비티가 erp를 고치면 그대로 둬도 됨). `window.V9232B_APPLIED` ═══ */
+(function(){
+  if(window.V9232B_APPLIED)return;
+  var cur=null;
+  if(typeof mailOpen==='function'){var _mo=mailOpen;mailOpen=function(m){try{if(m&&m.mail_id)cur=m.mail_id}catch(e){}return _mo.apply(this,arguments)}}
+  var fromDrawer=function(){try{var ths=document.querySelectorAll('#dr *');for(var i=0;i<ths.length;i++){if((ths[i].textContent||'').trim()==='메일 번호'){var n=ths[i].nextElementSibling;var v=n&&parseInt((n.textContent||'').trim(),10);if(v)return v}}}catch(e){}return null};
+  if(typeof mlRfqBomPick==='function'){var _pk=mlRfqBomPick;mlRfqBomPick=function(mailId){if(!mailId)mailId=cur||fromDrawer();if(!mailId){if(typeof toast==='function')toast('메일 번호를 찾지 못했습니다 — 메일을 다시 열어 주세요','e');return}return _pk.call(this,mailId)}}
+  window.V9232B_APPLIED=true;
 })();
