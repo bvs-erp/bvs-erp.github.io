@@ -2267,3 +2267,89 @@ window.V9228_APPLIED=true;
   }
   window.V9234_APPLIED=true;
 })();
+
+/* ═══ v9.235 [Claude · 대표 11-05 19:5x] 견적서 구성 목록(하위 품번) 인쇄 정리
+   대표: 「글씨 정렬이 너무 안돼」「CAM PLATE 한 줄 띄고 품번」「상세에서는 굳이 세액을 뺄까봐」「너비가 부족해서 칸이 상하로 늘어나 1장 인쇄가 힘들어」
+   대상: 구성 목록이 들어간 견적 표(v9.234 l9234 · 견적 엑셀표 t9240) — 그 밖의 문서 표는 손대지 않음
+   ① 세액 칸 뺌(합계 줄은 공급가액 칸 밑으로) ② 품번(도번)은 품명 옆 따로 「도번」 칸(작은 글씨) — 품명이 잘려 두세 줄로 늘어나지 않게
+   ③ 줄마다 한 줄 고정(넘치면 … ) · No(1-1) 가운데 ④ 칸 너비 다시 나눔 · 위아래 여백·글자 줄여 한 장 맞춤(나머지는 erp 한 장 맞춤 fit305가 줄임)
+   동결 7종 손대지 않음. `window.V9235_APPLIED`, 견적 엑셀표(qt9240.js)는 window.prTidy9235(html, lines)로 같이 씀 ═══ */
+(function(){
+  if(window.V9235_APPLIED)return;
+  var esc5=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var W={'No':'34px','도번':'94px','규격':'19%','수량':'34px','단위':'34px','단가':'72px','공급가액':'84px','금액':'84px','비고':'56px'};
+    var cellsAt=function(tr){var out=[],x=0;[].forEach.call(tr.cells,function(td){var n=+td.getAttribute('colspan')||1;out.push({td:td,a:x,b:x+n-1});x+=n});return out};
+  var S=function(el,p,v){el.style.setProperty(p.replace(/[A-Z]/g,function(c){return '-'+c.toLowerCase()}),v,'important')};
+  var one=function(td){S(td,'whiteSpace','nowrap');S(td,'overflow','hidden');S(td,'textOverflow','ellipsis')};
+  window.prTidy9235=function(html,lines){
+    try{
+      if(typeof html!=='string'||!/class="lines (l9234|t9240)"/.test(html))return html;
+      var tp=document.createElement('template');tp.innerHTML=html;
+      var t=tp.content.querySelector('table.l9234,table.t9240');if(!t)return html;
+      var hr=t.tHead&&t.tHead.rows[0];if(!hr)return html;
+      var heads=[].map.call(hr.cells,function(th){return (th.textContent||'').trim()});
+      /* ① 세액 칸 빼기 */
+      var ix=heads.indexOf('세액');
+      if(ix>=0){
+        [].slice.call(t.rows).forEach(function(tr){
+          if(tr===hr){tr.deleteCell(ix);return}
+          var cs=cellsAt(tr),hit=null,k=-1;cs.forEach(function(c,i){if(c.a<=ix&&ix<=c.b){hit=c;k=i}});if(!hit)return;
+          var sp=hit.b-hit.a+1;
+          if(sp>1){hit.td.setAttribute('colspan',String(sp-1));return}
+          var val=(hit.td.textContent||'').trim(),prev=k>0?cs[k-1]:null;
+          if(val&&prev&&prev.b-prev.a>0){var ps=prev.b-prev.a+1;if(ps>2)prev.td.setAttribute('colspan',String(ps-1));else prev.td.removeAttribute('colspan');return}
+          tr.deleteCell(k);
+        });
+        heads.splice(ix,1);
+      }
+      /* ② 도번 칸 넣기 */
+      var iNm=-1;heads.forEach(function(h,i){if(h==='품명'||h==='품명 / 품번')iNm=i});
+      var codes=(lines||[]).map(function(l){return l&&l.item_code?String(l.item_code).trim():''}).filter(Boolean).sort(function(a,b){return b.length-a.length});
+      if(iNm>=0){
+        var nth=document.createElement('th');nth.textContent='도번';hr.insertBefore(nth,hr.cells[iNm+1]||null);
+        if(hr.cells[iNm].textContent.trim()==='품명 / 품번')hr.cells[iNm].textContent='품명';
+        heads.splice(iNm+1,0,'도번');
+        [].forEach.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){
+          var lineRow=/(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className);
+          if(!lineRow){
+            var cs=cellsAt(tr),hit=null;cs.forEach(function(c){if(c.a<=iNm&&iNm<=c.b)hit=c});
+            if(hit&&hit.b>hit.a)hit.td.setAttribute('colspan',String(hit.b-hit.a+2));else if(hit){var e0=document.createElement('td');tr.insertBefore(e0,hit.td.nextSibling)}
+            return;
+          }
+          var nc=tr.cells[iNm],cd='';
+          var sp=nc&&nc.querySelector('.c9234,.k9240');
+          if(sp){cd=(sp.textContent||'').trim();sp.parentNode.removeChild(sp);nc.innerHTML=nc.innerHTML.replace(/\s+$/,'')}
+          else if(nc){var tx=nc.textContent||'';for(var j=0;j<codes.length;j++){if(tx.indexOf(codes[j])>=0){cd=codes[j];break}}
+            if(cd){var nm=tx.replace('('+cd+')','').replace(cd,'').replace(/[\s(]+$/,'');nc.innerHTML=esc5(nm)}}
+          var ct=document.createElement('td');ct.textContent=cd;S(ct,'fontSize','9px');S(ct,'color','#475569');S(ct,'letterSpacing','-.2px');
+          tr.insertBefore(ct,nc?nc.nextSibling:null);
+        });
+      }
+      /* ④ 칸 너비 */
+      [].forEach.call(hr.cells,function(th,i){var w=W[heads[i]];S(th,'width',w||'');S(th,'padding','3px 3px');S(th,'whiteSpace','nowrap')});
+      S(t,'tableLayout','fixed');S(t,'width','100%');
+      var iNo=heads.indexOf('No'),iCd=heads.indexOf('도번');
+      /* ③ 한 줄 고정·정렬 */
+      [].forEach.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){
+        var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=/(^|\s)(m9234|p9240)(\s|$)/.test(tr.className);
+        if(!det&&!main)return;
+        [].forEach.call(tr.cells,function(td,i){
+          S(td,'paddingTop','1px');S(td,'paddingBottom','1px');S(td,'paddingRight','3px');S(td,'lineHeight','1.25');S(td,'verticalAlign','middle');
+          if(i!==iCd)S(td,'fontSize',det?'10px':'10.5px');
+          if(i!==iNm)S(td,'paddingLeft','3px');
+          one(td);
+          if(i===iNo){S(td,'textAlign','center');S(td,'fontSize','9.5px')}
+          if(i===iCd||heads[i]==='단위')S(td,'textAlign','center');
+          if(heads[i]==='비고'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'fontSize','9px');S(td,'lineHeight','1.15')}
+        });
+        if(main&&iNm>=0)S(tr.cells[iNm],'fontWeight','700');
+      });
+      return tp.innerHTML;
+    }catch(x){console.error('[v9235]',x);return html}
+  };
+  if(typeof prLines==='function'){
+    var _p=prLines;
+    prLines=function(lines,opt){var r=_p.apply(this,arguments);try{if(typeof r==='string'&&r.indexOf('lines l9234')>=0)r=window.prTidy9235(r,lines)}catch(x){console.error('[v9235-pr]',x)}return r};
+  }
+  window.V9235_APPLIED=true;
+})();

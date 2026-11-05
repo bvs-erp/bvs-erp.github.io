@@ -1,7 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.1 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.2 (Claude 작성 · 2026-11-05)
  * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
+ * v1.2: 트리 인쇄 표를 xl9193 v9.235 prTidy9235로 정리(세액 칸 뺌 · 도번 따로 칸 · 줄마다 한 줄 · 한 장 맞춤)
  * 설계: 261105_BVS_견적엑셀표_BOM트리_매입업체비교_설계_v1.0.md / DB1192(#1474)
  * 대표 지시: 고객 BOM → 우리 견적(엄마-자녀 트리) → 매입업체 여러 곳 비교. 엑셀처럼.
  *  - 왼쪽: 판매 견적 트리(도번·품명·규격·수량·단위·매입가·가산%·판매단가·금액·이익·하위 단가 보이기·비고)
@@ -511,7 +512,9 @@
             }).join('') + '</tr>';
           });
           if (typeof PR310 !== 'undefined') PR310 = null;
-          return h + ((opt && opt.foot) || '') + '</tbody></table>';
+          var out9240 = h + ((opt && opt.foot) || '') + '</tbody></table>';
+          try { if (typeof window.prTidy9235 === 'function') out9240 = window.prTidy9235(out9240, L); } catch (x) {}
+          return out9240;
         }
       } catch (e) { console.error('[qt9240-print]', e); }
       return _p.apply(this, arguments);
