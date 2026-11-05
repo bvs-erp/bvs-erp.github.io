@@ -2206,3 +2206,64 @@ window.V9228_APPLIED=true;
   if(typeof mlRfqBomPick==='function'){var _pk=mlRfqBomPick;mlRfqBomPick=function(mailId){if(!mailId)mailId=cur||fromDrawer();if(!mailId){if(typeof toast==='function')toast('메일 번호를 찾지 못했습니다 — 메일을 다시 열어 주세요','e');return}return _pk.call(this,mailId)}}
   window.V9232B_APPLIED=true;
 })();
+
+/* ═══ v9.234 [Claude · 대표 11-05 19:0x] 견적서 「본문 줄(고객 BOM 조립품) + 그 아래 구성 목록(하위 품번·수량, 단가 없음)」
+   대표: 「하위품번으로 보기좋게 나누어 주는거지.. 일일이 개별 단가는 안들어가도」
+   ① 작성 화면: 상세 줄 단가가 모두 0이면 본문 줄 단가를 「상세 합 ÷ 수량」(=0)으로 덮어쓰지 않음 — 대표가 본문 줄 단가를 직접 넣음(매입가는 상세 매입가 합 ÷ 수량 그대로)
+   ② 인쇄: 그런 문서는 본문 줄 바로 아래에 구성 목록(No 1-1·품명/도번·규격·수량·단위·비고, 값 칸 비움)을 들여서 넣고, 2장째 상세내역서는 붙이지 않음
+   상세 줄에 단가가 하나라도 있으면 예전 상세내역서 방식(v3.10) 그대로. 동결 7종 손대지 않음. `window.V9234_APPLIED` ═══ */
+(function(){
+  if(window.V9234_APPLIED)return;
+  var st=document.createElement('style');st.id='v9234css';
+  st.textContent='#pr table.l9234 tr.m9234 td{font-weight:600!important;background:#f8fafc!important}'
+    +'#pr table.l9234 tr.d9234 td{font-size:.86em!important;color:#334155!important;padding-top:1px!important;padding-bottom:1px!important;background:#fff!important}'
+    +'#pr table.l9234 tr.d9234 td.n9234{padding-left:18px!important}'
+    +'#pr table.l9234 tr.d9234 .c9234{color:#64748b;font-size:.92em;margin-left:6px}'
+    +'#pr table.l9234 tr.d9234 td.k9234{color:#64748b!important;text-align:center!important}';
+  document.head.appendChild(st);
+  var e=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var q=function(v){v=+v||0;return Math.abs(v-Math.round(v))<1e-9?Math.round(v).toLocaleString('ko-KR'):String(v)};
+  /* ① 작성 화면 */
+  if(typeof d310Sync==='function'){
+    var _s=d310Sync;
+    d310Sync=function(){
+      var keep=[];try{(window.WL||[]).forEach(function(l,i){keep[i]=l?l.unit_price:0})}catch(x){}
+      var acc=_s.apply(this,arguments)||{};
+      try{Object.keys(acc).forEach(function(i){var a=acc[i];if(a&&a.s===0&&WL[i]){WL[i].unit_price=keep[i]||0;WL[i]._g310=false}})}catch(x){console.error('[v9234-sync]',x)}
+      return acc;
+    };
+  }
+  /* ② 인쇄 */
+  if(typeof prLines==='function'){
+    var _p=prLines;
+    prLines=function(lines,opt){
+      try{
+        var L=lines||[],det=L.filter(function(l){return l&&l.role==='detail'});
+        if(det.length&&det.every(function(l){return !(+l.unit_price)})){
+          var main=L.filter(function(l){return l&&l.role!=='detail'}),cols=(opt&&opt.cols)||[],by={};
+          det.forEach(function(l){(by[+l.grp]=by[+l.grp]||[]).push(l)});
+          var isName=function(c){return c&&(c.k==='item_name'||c.k==='item_name305'||c.t==='품명'||c.t==='품명 / 품번')};
+          var dcell=function(c,d,mi,di){
+            if(!c)return '<td></td>';
+            if(c.t==='No')return '<td class="k9234">'+(mi+1)+'-'+(di+1)+'</td>';
+            if(isName(c))return '<td class="n9234">└ '+e(d.item_name)+(d.item_code?'<span class="c9234">'+e(d.item_code)+'</span>':'')+'</td>';
+            if(c.t==='규격')return '<td>'+e(d.spec||'')+'</td>';
+            if(c.t==='수량')return '<td class="'+(c.cls||'')+'">'+q(d.qty)+'</td>';
+            if(c.t==='단위')return '<td class="'+(c.cls||'')+'">'+e(d.unit||'')+'</td>';
+            if(c.t==='비고')return '<td>'+e(d.memo||'')+'</td>';
+            return '<td></td>';
+          };
+          var h='<table class="lines l9234"><thead><tr>'+cols.map(function(c){return '<th'+(c&&c.w?' style="width:'+c.w+'"':'')+'>'+(c?c.t:'')+'</th>'}).join('')+'</tr></thead><tbody>';
+          main.forEach(function(m,mi){
+            h+='<tr class="m9234">'+cols.map(function(c){var v=c&&c.f?c.f(m,mi):(c?m[c.k]:'');return '<td class="'+((c&&c.cls)||'')+'">'+(v==null?'':v)+'</td>'}).join('')+'</tr>';
+            (by[+m.line_no]||[]).forEach(function(d,di){h+='<tr class="d9234">'+cols.map(function(c){return dcell(c,d,mi,di)}).join('')+'</tr>'});
+          });
+          if(typeof PR310!=='undefined')PR310=null;
+          return h+((opt&&opt.foot)||'')+'</tbody></table>';
+        }
+      }catch(x){console.error('[v9234-print]',x)}
+      return _p.apply(this,arguments);
+    };
+  }
+  window.V9234_APPLIED=true;
+})();
