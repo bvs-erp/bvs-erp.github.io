@@ -1,6 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * sheet9250.js v1.1 — 「장부 엑셀표」 통장 · 세금계산서 · 급여 (대표 전용)
+ * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
+ * v1.2 시트 2개 추가(거래처·인사, DB1201 — 저장은 공통 수정층 ceo_record_set을 거침). 거래처·인사는 기간과 상관없이 전체(인사는 기간 시작 뒤 퇴사자 포함)
  * v1.1 시트 5개(통장·카드·세금계산서·문서 원장·급여 지급, DB1200) · [안티 #1490 검토 ③④] 계정·거래처 고르기 목록: 글자·초성(ㅅㅁㅌ)·코드로 찾기 + ↑↓ Enter · 저장된 칸 연두색 표시 · SH9250.open('bank'|'tax'|'pay') 외부 호출용
  * [Claude · 대표 11-06 01:2x 「BVS ERP를 전체 엑셀화… 통장, 계산서, 급여 등등 전 시스템을 변경해」] 게시요청 #1491 (계획 #1490)
  * DB: DB1199 ceo_sheet_load / ceo_sheet_save / ceo_sheet_undo / ceo_sheet_log
@@ -21,7 +22,9 @@
     {k:'card', t:'카드'},
     {k:'tax',  t:'세금계산서'},
     {k:'doc',  t:'문서 원장'},
-    {k:'pay',  t:'급여 지급'}
+    {k:'pay',  t:'급여 지급'},
+    {k:'ptn',  t:'거래처'},
+    {k:'hr',   t:'인사'}
   ];
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var won = function(n){ if (n == null || n === '') return ''; var v = Number(n); return isFinite(v) ? v.toLocaleString('ko-KR') : String(n); };
@@ -336,6 +339,9 @@
       if (SH.sheet === 'tax') { var nd = SH.view.filter(function(r){ return !r.doc; }).length; var np = SH.view.filter(function(r){ return !r.paid; }).length; parts.push('문서 미연결 ' + nd + '줄'); parts.push('통장 짝 없음 ' + np + '줄'); }
       if (SH.sheet === 'pay') { var nb = SH.view.filter(function(r){ return !r.bank; }).length; if (nb) parts.push('통장 짝 없음 ' + nb + '줄'); }
       if (SH.sheet === 'card') { var uc = SH.view.filter(function(r){ return !r.acct || r.acct === '8900' || r.acct === 'Z999'; }).length; if (uc) parts.push('<span style="color:#b45309">기타판관비·미분류 ' + uc + '줄</span>'); if (!all) parts.push('<span style="color:#b45309">이 기간 카드 내역 없음(카드 원본은 2026-09-29까지 들어와 있음)</span>'); }
+      if (SH.sheet === 'ptn') { var na = SH.view.filter(function(r){ return r.is_active === '예'; }).length; parts[1] = '기간 상관없이 전체'; parts.push('사용 ' + na + '곳 · 안 씀 ' + (n - na) + '곳'); var nc = SH.view.filter(function(r){ return r.is_active === '예' && !r.contact_email; }).length; if (nc) parts.push('담당 이메일 없음 ' + nc + '곳'); }
+      if (SH.sheet === 'hr') { var cur = SH.view.filter(function(r){ return !r.resigned_on; }).length; parts[1] = SH.from + ' 이후 재직'; parts.push('재직 ' + cur + '명' + (n - cur ? ' · 기간 중 퇴사 ' + (n - cur) + '명' : '')); var t0 = kstToday(), soon = new Date(Date.now() + 9*3600e3 + 30*864e5).toISOString().slice(0,10);
+        var ex = SH.view.filter(function(r){ return !r.resigned_on && ((r.health_exam_until && r.health_exam_until <= soon) || (r.visa_until && r.visa_until <= soon)); }).length; if (ex) parts.push('<span style="color:#b45309">건강진단·체류 만료 30일 안 ' + ex + '명</span>'); var nb = SH.view.filter(function(r){ return !r.resigned_on && !r.basic_safety_on; }).length; if (nb) parts.push('기초안전교육 기록 없음 ' + nb + '명'); }
       if (SH.sheet === 'doc') { var ns = SH.view.filter(function(r){ return r.side === '매출'; }).length; parts.push('매출 ' + ns + '건 · 매입 ' + (n - ns) + '건'); }
       if (SH.nDirty()) parts.push('<span style="color:#b45309;font-weight:700">저장 안 한 칸 ' + SH.nDirty() + '개</span>');
       el.innerHTML = parts.join(' · ');
