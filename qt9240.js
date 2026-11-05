@@ -1,6 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.0 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.1 (Claude 작성 · 2026-11-05)
+ * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
  * 설계: 261105_BVS_견적엑셀표_BOM트리_매입업체비교_설계_v1.0.md / DB1192(#1474)
  * 대표 지시: 고객 BOM → 우리 견적(엄마-자녀 트리) → 매입업체 여러 곳 비교. 엑셀처럼.
  *  - 왼쪽: 판매 견적 트리(도번·품명·규격·수량·단위·매입가·가산%·판매단가·금액·이익·하위 단가 보이기·비고)
@@ -29,8 +30,10 @@
       if (typeof isOwner === 'function' && !isOwner()) { say('대표 전용입니다', 'e'); return; }
       if (!docNo) { say('견적서 번호가 없습니다', 'e'); return; }
       QT.ensureUi();
+      try { QT.el('qt_ptnq').value = ''; } catch (x) {}
       QT.el('qt_body').innerHTML = '<tr><td colspan="20" style="padding:40px;text-align:center;color:#64748b">불러오는 중…</td></tr>';
       QT.el('qt9240').style.display = 'flex';
+      try { if ((!window.D || !Array.isArray(D.ptn) || !D.ptn.length) && typeof lzFetch === 'function') await lzFetch(['ptn'], false); } catch (x) {}
       var r = await sb.rpc('ceo_quote_sheet_load', { p_doc: docNo });
       if (r.error || !r.data || !r.data.ok) { say((r.error && r.error.message) || (r.data && r.data.error) || '불러오기 실패', 'e'); QT.close(true); return; }
       QT.fromLoad(r.data);
@@ -182,11 +185,41 @@
       return true;
     },
 
+    /* ── 매출처 고르기 (v1.1) ── */
+    ptnList: function () {
+      var L = (window.D && Array.isArray(D.ptn)) ? D.ptn : [];
+      return L.filter(function (p) { return p && p.partner_id && p.name && p.is_active !== false; });
+    },
+    ptnPaint: function (q) {
+      var s = QT.el('qt_ptn'); if (!s) return;
+      var d = QT.doc || {}, cur = d.partner_id || '';
+      var nq = String(q || '').replace(/\s/g, '').toLowerCase();
+      var L = QT.ptnList().filter(function (p) { return !nq || String(p.name).replace(/\s/g, '').toLowerCase().indexOf(nq) >= 0 || String(p.partner_id).toLowerCase().indexOf(nq) >= 0 || String(p.biz_no || '').indexOf(nq) >= 0; });
+      L.sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'ko'); });
+      if (L.length > 300) L = L.slice(0, 300);
+      var seen = {}; L.forEach(function (p) { seen[p.partner_id] = 1; });
+      var h = '<option value="">(매출처 고르기)</option>';
+      if (cur && !seen[cur]) h += '<option value="' + esc(cur) + '">' + esc(d.partner_name || cur) + '</option>';
+      h += L.map(function (p) { return '<option value="' + esc(p.partner_id) + '">' + esc(p.name) + '</option>'; }).join('');
+      s.innerHTML = h; s.value = cur;
+      if (nq && L.length === 1 && !cur) { s.value = L[0].partner_id; QT.ptnSet(L[0].partner_id); }
+      s.disabled = d.status !== 'draft';
+      s.style.borderColor = s.value ? '#cbd5e1' : '#dc2626';
+    },
+    ptnSet: function (v) {
+      if (!QT.doc) return;
+      var p = QT.ptnList().filter(function (x) { return x.partner_id === v; })[0];
+      QT.doc.partner_id = v || null; QT.doc.partner_name = p ? p.name : null; QT.dirty = true;
+      var s = QT.el('qt_ptn'); if (s) s.style.borderColor = v ? '#cbd5e1' : '#dc2626';
+      say(v ? '매출처: ' + (p ? p.name : v) + ' — 저장을 눌러야 들어갑니다' : '매출처를 비웠습니다 — 저장을 눌러야 반영됩니다');
+    },
+
     /* ── 그리기 ── */
     render: function () {
       var cols = QT.cols(), no = QT.numbering(), d = QT.doc || {};
       QT.el('qt_title').value = d.title || '';
-      QT.el('qt_info').textContent = (d.partner_name || '거래처 미지정') + ' · ' + (d.doc_date || '') + ' · ' + (d.status === 'draft' ? '초안' : '확정(고칠 수 없음)');
+      QT.ptnPaint((QT.el('qt_ptnq') || {}).value);
+      QT.el('qt_info').textContent = (d.doc_date || '') + ' · ' + (d.status === 'draft' ? '초안' : '확정(고칠 수 없음)');
       var vh = QT.vendors.map(function (v) { return '<th class="qtv" title="' + esc(v.pq) + '">' + esc(v.name) + (v.cat ? '<div class="qtc">' + esc(v.cat) + '</div>' : '') + '</th>'; }).join('');
       QT.el('qt_head').innerHTML = '<tr>' + cols.map(function (c) { return '<th style="width:' + c.w + 'px">' + c.t + '</th>'; }).join('') + vh + (QT.vendors.length ? '<th style="width:90px">고른 곳</th>' : '') + '</tr>';
       var S = 0, C = 0;
@@ -328,7 +361,7 @@
       });
       QT.busy = true; QT.el('qt_save').textContent = '저장 중…';
       try {
-        var res = await sb.rpc('ceo_quote_sheet_save', { p: { doc_no: QT.doc.doc_no, title: QT.el('qt_title').value, lines: lines } });
+        var res = await sb.rpc('ceo_quote_sheet_save', { p: { doc_no: QT.doc.doc_no, title: QT.el('qt_title').value, partner_id: QT.doc.partner_id || '', lines: lines } });
         if (res.error || !res.data || !res.data.ok) { say((res.error && res.error.message) || (res.data && res.data.error) || '저장 실패', 'e'); return; }
         say('저장됨 · 공급가 ' + won(res.data.supply) + ' · 매입 ' + won(res.data.cost), 'g');
         try { var d = (window.D && D.sd || []).filter(function (x) { return x.doc_no === QT.doc.doc_no; })[0]; if (d) { delete d._lines; d.supply_amt = res.data.supply; d.tax_amt = res.data.tax; } } catch (x) {}
@@ -381,7 +414,7 @@
       var o = document.createElement('div'); o.id = 'qt9240';
       o.innerHTML = [
         '<div class="qtbar">',
-        '<b style="font-size:14px;margin-right:6px">견적 엑셀표</b><input id="qt_title" placeholder="건명"><span id="qt_info" style="color:#64748b"></span>',
+        '<b style="font-size:14px;margin-right:6px">견적 엑셀표</b><input id="qt_title" placeholder="건명"><span style="margin-left:6px">매출처</span><input id="qt_ptnq" type="search" placeholder="검색" style="width:90px"><select id="qt_ptn" style="max-width:220px"></select><span id="qt_info" style="color:#64748b"></span>',
         '<span class="qthelp">방향키·Enter·Tab 이동 · 바로 치면 입력 · 엑셀에서 붙여넣기 · Ctrl+] 하위로 · Ctrl+[ 위로 · Ctrl+S 저장</span>',
         '</div>',
         '<div class="qtbar">',
@@ -402,6 +435,8 @@
       document.body.appendChild(o);
       QT.el('qt_rd').onchange = function () { QT.rounding = +this.value || 1; };
       QT.el('qt_title').oninput = function () { if (QT.doc) { QT.doc.title = this.value; QT.dirty = true; } };
+      QT.el('qt_ptn').onchange = function () { QT.ptnSet(this.value); };
+      QT.el('qt_ptnq').oninput = function () { QT.ptnPaint(this.value); };
       QT.el('qt_body').addEventListener('click', function (e) {
         var td = e.target.closest ? e.target.closest('td[data-r]') : null; if (!td || (e.target.tagName === 'INPUT')) return;
         var i = +td.getAttribute('data-r'), ck = td.getAttribute('data-c');
