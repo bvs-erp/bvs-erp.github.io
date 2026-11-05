@@ -1869,7 +1869,7 @@ window.V9198_APPLIED = true;
   };
   var titleOf=function(g){var t=(PR9209.cur&&PR9209.titles[PR9209.cur])||{};var v=t[String(g)];return (v!=null&&String(v).trim()!=='')?String(v):DEF[g]};
   var plain=function(s){return String(s||'').replace(/^[①②③④⑤]\s*/,'')};
-  var specCss=function(s){var n=String(s||'').length;return n>34?'font-size:8px!important;':n>24?'font-size:9px!important;':''};
+  var specCss=function(s){var n=String(s||'').length;return n>34?'font-size:calc(var(--f29,10.5px) - 2.5px)!important;':n>24?'font-size:calc(var(--f29,10.5px) - 1.5px)!important;':''};
   prLines=function(lines,opt){
     try{
       opt=opt||{};var L=lines||[];var cols=opt.cols||[];
@@ -1878,7 +1878,7 @@ window.V9198_APPLIED = true;
         var out=[];
         cols.forEach(function(cc){
           if(!cc||cc.t==='비고')return;
-          if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm209',nw:1,f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?' <span class="pc209" style="font-size:8px;color:#64748b">'+cd+'</span>':'')}});return}
+          if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm209',nw:1,f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?' <span class="pc209" style="font-size:calc(var(--f29,10.5px) - 2.5px);color:#64748b">'+cd+'</span>':'')}});return}
           if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',w:'192px',cls:'sp209',nw:1,st:function(l){return specCss(l.spec)},f:function(l){return esc(l.spec||'')}});return}
           if(cc.t==='No'){out.push({t:'No',w:'22px',cls:cc.cls,nw:1,f:cc.f});if(hasDate)out.push({t:'일자',w:'38px',cls:'dt209',nw:1,f:function(l){var m=DM.exec(l.memo||'');if(m)return m[1];var mm=/^(\d{1,2}월) 구매$/.exec(l.memo||'');if(mm)return mm[1];var b=String(l.memo||'').trim();return BN.test(b)?bnDate(b):''}});return}
           if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
@@ -1893,7 +1893,7 @@ window.V9198_APPLIED = true;
         var act=[1,2,3].filter(function(g){return G[g].length});
         var neg=function(x){return (typeof x==='string')?x.replace(/\(([\d,]+)\)/g,'-$1'):x};
         var w=function(v){v=+v||0;return (v<0?'-':'')+Math.abs(v).toLocaleString('ko-KR')};
-        var B='padding-top:0!important;padding-bottom:0!important;font-size:10.5px!important;line-height:1.2!important;';
+        var B='padding-top:var(--p29,0px)!important;padding-bottom:var(--p29,0px)!important;font-size:var(--f29,10.5px)!important;line-height:1.2!important;'; /* v9.229: 글자·줄 높이는 --f29·--p29(한 장 채우기)로 */
         var NW='white-space:nowrap!important;';
         var h='<table class="lines c305 c198 c209"><thead><tr>'+out.map(function(c){return '<th style="'+B+NW+(c.w?'width:'+c.w+';':'')+'">'+c.t+'</th>'}).join('')+'</tr></thead><tbody>';
         var no=0;
@@ -1914,7 +1914,7 @@ window.V9198_APPLIED = true;
           foot+='<tr class="f209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+FB+'text-align:right!important">공급가액 · 세액</td><td class="n" style="'+FB+NW+'">'+w(S)+'</td>'
             +(iTax>iSup?'<td class="n" style="'+FB+NW+'">'+w(T)+'</td>':'')
             +new Array(Math.max(0,out.length-1-Math.max(iSup,iTax))+1).join('<td style="'+FB+'"></td>')+'</tr>';
-          foot+='<tr class="f209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+FB+'text-align:right!important">합계 (VAT 포함)</td><td class="n" colspan="'+(out.length-iSup)+'" style="'+FB+NW+'font-size:11.5px!important">'+w(S+T)+'</td></tr>';
+          foot+='<tr class="f209" style="page-break-inside:avoid"><td colspan="'+iSup+'" style="'+FB+'text-align:right!important">합계 (VAT 포함)</td><td class="n" colspan="'+(out.length-iSup)+'" style="'+FB+NW+'font-size:calc(var(--f29,10.5px) + 1px)!important">'+w(S+T)+'</td></tr>';
         }
         return h+foot+'</tbody></table>';
       }
@@ -2039,3 +2039,156 @@ window.V9226_APPLIED=true;
 
 /* ═══ v9.228 [Claude DB1185] 대표 11-05 15:4x 「전부 날짜 없이 합산」 — 재청구 자재내역서 줄 비고가 모두 「10월 구매」면 v9.210 양식(묶음·소계·바닥 2줄) 그대로, 일자 칸만 뺌. `window.V9228_APPLIED` ═══ */
 window.V9228_APPLIED=true;
+
+/* ═══ v9.231 [Claude · 대표 11-05 16:4x·17:0x] 인쇄 3종(청구서·작업내역서·자재내역서) 한 양식으로 — (v9.229 안 대신)
+   ① 자재내역서 밑 「첨부: …」 줄 지움 — 청구서(표지)에만, 이름은 「작업내역서 1부 · 자재내역서 1부」
+   ② 위쪽은 세 문서 모두 「청구서」 모양: 파란 제목+작은 영문 제목, 공급받는자·공급자 칸 크기, 일자·건명 줄
+   ③ 일자·건명 줄을 공급받는자 칸 · 공급자 칸 경계에 맞춤(작업내역서는 작성일자 · 건명)
+   ④ 작업내역서: 색 줄임(일한 칸 연회색 한 색, 휴일 줄 옅은 회색·날짜만 빨간 글씨, 묶음 머리 회색), 「당일 금액」 칸 좁게(아래 합계 식은 두 줄로)
+   ⑤ A4 한 장 채우기: 먼저 글자를 키우고(자재 10.5→최대 12.5px, 작업 8→최대 12px), 남는 높이는 줄 간격으로 채움. 위쪽은 세 문서 같은 크기로 조금 촘촘히(표에 자리 더 줌).
+   DB·저장 없음. 동결 7종 손대지 않음. `window.V9231_APPLIED` ═══ */
+(function(){
+  if(window.V9231_APPLIED)return;
+  if(typeof buildSingleDocHtml!=='function'){console.warn('[v9231] buildSingleDocHtml 없음');return}
+  var FONT='\'Noto Sans KR\',\'Malgun Gothic\',sans-serif';
+  var st=document.createElement('style');st.id='v9231css';
+  st.textContent=[
+    '#pr .u29,#pr .u29 *{font-family:'+FONT+'!important}',
+    '#pr .u29 .hd,#pr .wl2 .hd{gap:10px!important}',
+    /* 일자·건명 줄 — 청구서 일자 칸과 같은 크기 */
+    '#pr .m29{margin:0 0 8px!important}',
+    '#pr .m29r{display:flex!important;gap:10px!important;margin-top:-1px!important}',
+    '#pr .m29r:first-child{margin-top:0!important}',
+    '#pr .m29h{flex:1 1 0!important;min-width:0!important;display:flex!important;border:1px solid #cbd5e1!important;line-height:1.35!important}',
+    '#pr .m29h .k{flex:0 0 15%!important;box-sizing:border-box!important;background:#f8fafc!important;color:#334155!important;font-weight:600!important;font-size:10.5px!important;text-align:center!important;border-right:1px solid #cbd5e1!important;padding:3px 6px!important;white-space:nowrap!important;display:flex!important;align-items:center!important;justify-content:center!important}',
+    '#pr .m29h .v{flex:1 1 auto!important;min-width:0!important;padding:3px 10px!important;font-size:11px!important;color:#0f172a!important;display:flex!important;align-items:center!important}',
+    '#pr .m29h.full .k{flex:0 0 calc((100% - 10px) * 0.075)!important}',
+    '#pr .m29h.empty{border-color:transparent!important}',
+    /* 세 문서 위쪽 같은 크기(청구서 모양, A4 한 장에 표가 더 들어가게 조금 촘촘히) */
+    '#pr .u29 h1,#pr .wl2.u29w h1{font-size:24px!important;letter-spacing:12px!important;text-indent:12px!important;text-align:center!important;margin:0 0 10px!important;font-weight:700!important;color:#1e3a8a!important}',
+    '#pr .u29 h1 small,#pr .wl2.u29w h1 small{display:block!important;font-size:11.5px!important;letter-spacing:3px!important;text-indent:3px!important;font-weight:600!important;color:#475569!important;margin-top:3px!important}',
+    '#pr .u29 .hd,#pr .wl2.u29w .hd{margin-bottom:8px!important}',
+    '#pr .u29 .box th,#pr .wl2.u29w .box th{font-size:10.5px!important;padding:3px 6px!important}',
+    '#pr .u29 .box td,#pr .wl2.u29w .box td{font-size:11px!important;padding:3px 8px!important}',
+    '#pr .u29 .box tr.cap th,#pr .wl2.u29w .box tr.cap th{font-size:12px!important;padding:4px!important}',
+    '#pr .u29 img.sealimg,#pr .wl2.u29w img.sealimg{width:40px!important;height:40px!important}',
+    '#pr .u29 .tot,#pr .wl2.u29w .tot{margin:8px 0!important;padding:8px 14px!important}',
+    /* 작업내역서 색 줄이기 */
+    '#pr .wl2.u29w .wv th.pg.pg{background:#e2e8f0!important;color:#0f172a!important;border:1px solid #94a3b8!important}',
+    '#pr .wl2.u29w .wv th.pp.pp,#pr .wl2.u29w .wg th.h.h{background:#1e3a8a!important;border-color:#1e3a8a!important}',
+    '#pr .wl2.u29w .wv td.d.d{background:#ffffff!important}',
+    '#pr .wl2.u29w .wv tr.hr td{background:#f8fafc!important}',
+    '#pr .wl2.u29w .wv td.d.d:not(:empty){background:#eef2f7!important}',
+    '#pr .wl2.u29w .wv td.dn.dn,#pr .wl2.u29w .wv td.dw.dw{background:#ffffff!important;color:#0f172a!important}',
+    '#pr .wl2.u29w .wv td.dn.h.h,#pr .wl2.u29w .wv td.dw.h.h{background:#f8fafc!important;color:#b91c1c!important;font-weight:700!important}',
+    '#pr .wl2.u29w .wv td.pp.pp{background:transparent!important}',
+    '#pr .wl2.u29w .lg.lg{background:#eef2f7!important}',
+    '#pr .wl2.u29w .wv td.d b{color:#0f172a!important}',
+    '#pr .wl2.u29w .fx29{display:block!important;max-width:calc(var(--wf,8px) * 8.5)!important;margin-left:auto!important;white-space:normal!important;word-break:keep-all!important;line-height:1.2!important;text-align:right!important}',
+    /* 글자 키우기(--wf) */
+    '#pr .wl2.f29 table.wt td,#pr .wl2.f29 table.wt th{font-size:var(--wf,8px)!important}',
+    '#pr .wl2.f29 table.w1 td,#pr .wl2.f29 table.w1 th{padding-top:var(--wp,1px)!important;padding-bottom:var(--wp,1px)!important}',
+    '#pr .wl2.f29 .wh{font-size:calc(var(--wf,8px) + 1.5px)!important}',
+    '#pr .wl2.f29 .wn{font-size:calc(var(--wf,8px) - .5px)!important}',
+    '#pr .wl2.f29 .wv td,#pr .wl2.f29 .wv th{line-height:1.05!important;padding-top:0!important;padding-bottom:0!important}',
+    '#pr .wl2.f29 .wv tbody td{padding-top:var(--wv,0px)!important;padding-bottom:var(--wv,0px)!important}',
+    '#pr .wl2.f29 .wh{margin:4px 0 2px!important}',
+    '#pr .wl2.u29w .wv th.t,#pr .wl2.u29w .wv td.t{width:calc(var(--wf,8px) * 7)!important}'
+  ].join('\n');
+  document.head.appendChild(st);
+
+  var esc31=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var half=function(k,v,cls){return '<div class="m29h'+(cls?' '+cls:'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'};
+  var grid=function(P){
+    var out='<div class="m29">',q=[];
+    var flush=function(){if(!q.length)return;out+='<div class="m29r">'+half(q[0].k,q[0].v)+(q[1]?half(q[1].k,q[1].v):'<div class="m29h empty"></div>')+'</div>';q=[]};
+    P.forEach(function(p){if(p.full){flush();out+='<div class="m29r">'+half(p.k,p.v,'full')+'</div>'}else{q.push(p);if(q.length===2)flush()}});
+    flush();return out+'</div>';
+  };
+  var swap=function(node,html){var w=document.createElement('div');w.innerHTML=html;node.parentNode.replaceChild(w.firstChild,node)};
+  var _b=buildSingleDocHtml;
+  buildSingleDocHtml=async function(no){
+    var h=await _b.apply(this,arguments);
+    try{
+      if(typeof h!=='string'||!h)return h;
+      var d=(window.D&&Array.isArray(D.sd))?D.sd.filter(function(x){return x.doc_no===no})[0]:null;
+      if(!d)return h;
+      var box=document.createElement('div');box.innerHTML=h;
+      if(d.doc_kind==='invoice'){
+        var mat=!!(d.extra&&d.extra.detail_of);
+        Array.prototype.slice.call(box.querySelectorAll('div')).forEach(function(x){
+          if(x.querySelector('div'))return;var t=(x.textContent||'').trim();
+          if(t.indexOf('첨부:')!==0)return;
+          if(mat){x.parentNode.removeChild(x)}else{x.textContent=t.replace('인건비 내역서','작업내역서')}
+        });
+        var m=box.querySelector('table.meta');
+        if(m){
+          var P=[];
+          Array.prototype.slice.call(m.rows).forEach(function(r){
+            if(r.style&&r.style.display==='none')return;
+            var c=r.cells;for(var i=0;i<c.length;i++){if(c[i].tagName!=='TH')continue;var td=c[i+1]&&c[i+1].tagName==='TD'?c[i+1]:null;
+              P.push({k:c[i].innerHTML,v:td?td.innerHTML:'',full:!!(td&&td.colSpan>1)});}
+          });
+          swap(m,grid(P));
+        }
+        return '<div class="u29'+(mat?' u29m':' u29c')+'">'+box.innerHTML+'</div>';
+      }
+      if(d.doc_kind==='worklog'){
+        var wl=box.querySelector('.wl2');if(!wl)return h;
+        wl.classList.add('u29w');
+        var t1=wl.querySelector('h1.wttl');if(t1){t1.className='';t1.innerHTML='작업내역서<small>WORK SPECIFICATION / 작업내역서</small>'}
+        var wm=wl.querySelector('.wmeta');
+        if(wm){var bs=wm.querySelectorAll('b'),dt=bs.length>1?bs[1].innerHTML:(bs[0]?bs[0].innerHTML:'');
+          swap(wm,grid([{k:'작성일자',v:dt},{k:'건 명',v:esc31(d.title||'')}]));}
+        Array.prototype.slice.call(wl.querySelectorAll('table.wv tbody.ft tr')).forEach(function(r){
+          var c=r.cells[r.cells.length-1];if(c&&/×/.test(c.textContent||''))c.innerHTML='<span class="fx29">'+c.innerHTML+'</span>';
+        });
+        return box.innerHTML;
+      }
+      return h;
+    }catch(e){console.error('[v9231-build]',e);return h}
+  };
+
+  /* 한 장 채우기 — 인쇄 폭(190mm)에서 재서 A4 한 장을 넘지 않게 */
+  var mmPx=function(){var t=document.createElement('div');t.style.cssText='position:absolute;visibility:hidden;left:-9999px;top:0;height:100mm;width:10px';document.body.appendChild(t);var v=t.offsetHeight/100;t.parentNode.removeChild(t);return v||3.7795};
+  var bsearch=function(set,fits,steps){var lo=0,hi=1;set(1);if(fits())return 1;set(0);if(!fits())return 0;for(var k=0;k<(steps||9);k++){var mid=(lo+hi)/2;set(mid);if(fits())lo=mid;else hi=mid}return lo};
+  var fitOne=function(u,kind,MM){
+    var old=u.getAttribute('style')||'';
+    var W=Math.round(190*MM),LIM=kind==='wl'?Math.floor(265*MM)-6:Math.min(1010,Math.floor(268*MM));
+    var tv=kind==='wl'?u.querySelector('table.wv'):null,tvOld=tv?(tv.getAttribute('style')||''):'';
+    var fits=function(){var tb=u.querySelectorAll('table');for(var i=0;i<tb.length;i++){if(tb[i].scrollWidth>u.clientWidth+1)return false}return u.scrollHeight<=LIM};
+    if(kind==='wl')u.classList.add('f29');
+    u.style.setProperty('width',W+'px','important');u.style.setProperty('max-width',W+'px','important');
+    if(kind==='wl'){u.style.setProperty('height','auto','important');if(tv)tv.style.setProperty('height','auto','important')}
+    var vars={};
+    var put=function(k,v){vars[k]=v;u.style.setProperty(k,v)};
+    if(kind==='wl'){
+      var a=bsearch(function(s){put('--wf',(8+4*s).toFixed(2)+'px');put('--wp',(1+3*s).toFixed(2)+'px')},fits);
+      put('--wf',(8+4*a).toFixed(2)+'px');put('--wp',(1+3*a).toFixed(2)+'px');
+      put('--wv','0px');var b=bsearch(function(s){put('--wv',(6*s).toFixed(2)+'px')},fits);put('--wv',(6*b).toFixed(2)+'px'); /* 남는 높이는 출역 표 줄 간격으로 */
+    }else{
+      put('--p29','0px');
+      var f=bsearch(function(s){put('--f29',(10.5+2*s).toFixed(2)+'px')},fits);
+      put('--f29',(10.5+2*f).toFixed(2)+'px');
+      var p=bsearch(function(s){put('--p29',(9*s).toFixed(2)+'px')},fits);
+      put('--p29',(9*p).toFixed(2)+'px');
+    }
+    u.setAttribute('style',old);if(tv)tv.setAttribute('style',tvOld);
+    Object.keys(vars).forEach(function(k){u.style.setProperty(k,vars[k])});
+    u.dataset.fit29=JSON.stringify(vars);
+  };
+  var run=function(){
+    try{
+      var pr=document.getElementById('pr');if(!pr||!pr.classList.contains('on'))return;
+      var MM=mmPx();
+      Array.prototype.slice.call(pr.querySelectorAll('.u29m')).forEach(function(u){fitOne(u,'mat',MM)});
+      Array.prototype.slice.call(pr.querySelectorAll('.wl2')).forEach(function(u){fitOne(u,'wl',MM)});
+    }catch(e){console.error('[v9231-fit]',e)}
+  };
+  window.V9231Fit=run;
+  var tm=null,kick=function(){clearTimeout(tm);tm=setTimeout(function(){run();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(run)},80)};
+  var hook=function(){var b=document.getElementById('prBody');if(!b)return false;new MutationObserver(kick).observe(b,{childList:true});return true};
+  if(!hook()){var n=0,iv=setInterval(function(){if(hook()||++n>120)clearInterval(iv)},500)}
+  window.addEventListener('beforeprint',run);
+  window.V9231_APPLIED=true;
+})();
