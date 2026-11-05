@@ -1995,3 +1995,40 @@ window.V9198_APPLIED = true;
   };
   window.V9219_APPLIED=true;
 })();
+
+/* ═══ v9.224 [Claude #1455] 문서 원장 — v9.220 다시 쓰면서 빠진 함수 5개 되살림(없을 때만 정의)
+   sg9189Open(문서 열기) · sg9189Detach(청구서에서 빼기) · sg9189DragStart/DragOver/Drop(몸통 끌어 청구서에 넣기)
+   DB: public.sd_bill_attach(p_invoice, p_body) / public.sd_bill_detach(p_invoice, p_body) — 대표 계정만 ═══ */
+(function(){
+  if(window.V9224_APPLIED)return;
+  function own(){try{return typeof isOwner==='function'&&isOwner()}catch(e){return false}}
+  async function reload(open){try{if(typeof sd874Quick==='function')await sd874Quick()}catch(e){}try{if(typeof gRender==='function')gRender('gSd')}catch(e){}
+    if(open){var d=(window.D&&D.sd||[]).filter(function(x){return x.doc_no===open})[0];if(d&&typeof openDoc==='function')openDoc(d)}}
+  if(typeof window.sg9189Open!=='function')window.sg9189Open=async function(no){
+    if(!no)return;var d=(window.D&&D.sd||[]).filter(function(x){return x.doc_no===no})[0];
+    if(!d){try{if(typeof sd874Quick==='function')await sd874Quick()}catch(e){}d=(window.D&&D.sd||[]).filter(function(x){return x.doc_no===no})[0]}
+    if(d&&typeof openDoc==='function')return openDoc(d);
+    if(typeof toast==='function')toast('문서 목록에 없습니다','e')};
+  if(typeof window.sg9189DragStart!=='function')window.sg9189DragStart=function(ev,b){
+    if(!own())return;window.SG9189=window.SG9189||{};SG9189.drag=b;try{ev.dataTransfer.setData('text/plain',b);ev.dataTransfer.effectAllowed='link'}catch(e){}};
+  if(typeof window.sg9189DragOver!=='function')window.sg9189DragOver=function(ev){
+    if(window.SG9189&&SG9189.drag){ev.preventDefault();try{ev.dataTransfer.dropEffect='link'}catch(e){}}};
+  if(typeof window.sg9189Drop!=='function')window.sg9189Drop=async function(ev,target){
+    try{ev.preventDefault();ev.stopPropagation()}catch(e){}
+    var src=(window.SG9189&&SG9189.drag)||'';try{src=src||ev.dataTransfer.getData('text/plain')}catch(e){}
+    if(window.SG9189)SG9189.drag=null;
+    if(!own()||!src||!target||src===target)return;
+    var row=(window.SG9189&&SG9189.rows||[]).filter(function(x){return x.body===target})[0];
+    var invs=row?[].concat((row.st&&row.st.invoice)||[],row.invDoc?[row.invDoc]:[],row.combo?[row.combo]:[]):[];
+    var inv=invs.filter(function(d){return d&&d.trade_side==='sales'&&d.status==='draft'})[0];
+    if(!inv){if(typeof toast==='function')toast('놓은 줄에 고칠 수 있는 매출 청구서(확정 전)가 없습니다','e');return}
+    var r;try{r=await sb.rpc('sd_bill_attach',{p_invoice:inv.doc_no,p_body:src})}catch(e){r={error:e}}
+    if(r.error||!r.data||!r.data.ok){if(typeof toast==='function')toast((r.error&&r.error.message)||(r.data&&r.data.error)||'넣지 못했습니다','e');return}
+    if(typeof toast==='function')toast(src+' → 청구서 '+inv.doc_no+'에 넣음','g');await reload()};
+  if(typeof window.sg9189Detach!=='function')window.sg9189Detach=async function(inv,body){
+    if(!own()||!inv||!body)return;
+    var r;try{r=await sb.rpc('sd_bill_detach',{p_invoice:inv,p_body:body})}catch(e){r={error:e}}
+    if(r.error||!r.data||!r.data.ok){if(typeof toast==='function')toast((r.error&&r.error.message)||(r.data&&r.data.error)||'빼지 못했습니다','e');return}
+    if(typeof toast==='function')toast(body+' → 청구서 '+inv+'에서 뺌','g');await reload()};
+  window.V9224_APPLIED=true;
+})();
