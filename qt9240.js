@@ -1,7 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.2 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.4 (Claude 작성 · 2026-11-05)
  * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
+ * v1.4: 일반관리비·기업이윤 줄은 줄이 바뀔 때마다 자동 다시 계산(규격 「제조원가의 7%」의 %를 고치면 그 %로, 금액을 직접 치면 % 를 거꾸로 계산해 규격에 적음)
+ * v1.3: 메일 서랍 「빈 견적서 만들기」(ceo_quote_from_mail) + 「원가 계산」 칸(재료비·공수·공장 사용 일수·기타 경비·일반관리비·이윤 → 제안 견적가, ceo_cost_basis·ceo_quote_cost_save)
  * v1.2: 트리 인쇄 표를 xl9193 v9.235 prTidy9235로 정리(세액 칸 뺌 · 도번 따로 칸 · 줄마다 한 줄 · 한 장 맞춤)
  * 설계: 261105_BVS_견적엑셀표_BOM트리_매입업체비교_설계_v1.0.md / DB1192(#1474)
  * 대표 지시: 고객 BOM → 우리 견적(엄마-자녀 트리) → 매입업체 여러 곳 비교. 엑셀처럼.
@@ -32,6 +34,7 @@
       if (!docNo) { say('견적서 번호가 없습니다', 'e'); return; }
       QT.ensureUi();
       try { QT.el('qt_ptnq').value = ''; } catch (x) {}
+      if (!QT.doc || QT.doc.doc_no !== docNo) { QT.cc = null; try { QT.el('qt_cost').style.display = 'none'; } catch (x) {} }
       QT.el('qt_body').innerHTML = '<tr><td colspan="20" style="padding:40px;text-align:center;color:#64748b">불러오는 중…</td></tr>';
       QT.el('qt9240').style.display = 'flex';
       try { if ((!window.D || !Array.isArray(D.ptn) || !D.ptn.length) && typeof lzFetch === 'function') await lzFetch(['ptn'], false); } catch (x) {}
@@ -186,6 +189,136 @@
       return true;
     },
 
+    /* ── 원가 계산 (v1.3) ── */
+    cc: null, basis: null,
+    costOpen: async function () {
+      var box = QT.el('qt_cost'); if (!box) return;
+      if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+      box.style.display = 'block'; box.innerHTML = '<div style="padding:10px;color:#64748b">기준값 불러오는 중…</div>';
+      if (!QT.basis) { var r = await sb.rpc('ceo_cost_basis'); if (r.error || !r.data || !r.data.ok) { box.innerHTML = '<div style="padding:10px;color:#dc2626">' + esc((r.error && r.error.message) || (r.data && r.data.error) || '기준값을 못 불러옴') + '</div>'; return; } QT.basis = r.data; }
+      if (!QT.cc) {
+        var b = QT.basis, p = b.params || {}, x = (QT.doc && QT.doc.extra && QT.doc.extra.cost_calc) || {};
+        QT.cc = { ppl: x.ppl || '', days: x.days || '', md_cost: x.md_cost || b.md_cost || 0, fdays: x.fdays || '', fday_cost: x.fday_cost || b.factory_day_cost || 0,
+                  other: x.other || '', admin_pct: x.admin_pct != null ? x.admin_pct : +p.admin_pct, profit_pct: x.profit_pct != null ? x.profit_pct : +p.profit_pct, memo: x.memo || '' };
+      }
+      QT.costPaint();
+    },
+    costCalc: function () {
+      var c = QT.cc || {}, n = function (v) { return +parseNum(v) || 0; };
+      var mat = 0, S = 0; QT.rows.forEach(function (r) { if (r.par) return; var co = QT.cost(r); if (co) mat += co; var a = QT.amount(r); if (a) S += a; });
+      var md = n(c.ppl) * n(c.days), labor = Math.round(md * n(c.md_cost)), fexp = Math.round(n(c.fdays) * n(c.fday_cost)), oth = n(c.other);
+      var mfg = mat + labor + fexp + oth, adm = Math.round(mfg * n(c.admin_pct) / 100), pro = Math.round(mfg * n(c.profit_pct) / 100);
+      var rd = QT.rounding || 100, prop = Math.ceil((mfg + adm + pro) / rd) * rd;
+      return { mat: mat, md: md, labor: labor, fexp: fexp, oth: oth, mfg: mfg, adm: adm, pro: pro, prop: prop, S: S, keep: S - mfg, keepPct: mfg ? Math.round((S - mfg) / mfg * 1000) / 10 : null };
+    },
+    costPaint: function () {
+      var box = QT.el('qt_cost'); if (!box || box.style.display === 'none' || !QT.cc) return;
+      var c = QT.cc, k = QT.costCalc(), b = QT.basis || {}, bs = b.basis || {}, p = b.params || {};
+      var inp = function (key, w, ph) { return '<input class="qtci" data-k="' + key + '" value="' + esc(c[key] == null ? '' : c[key]) + '" style="width:' + (w || 70) + 'px" placeholder="' + (ph || '') + '">'; };
+      var row = function (a, b2, cl) { return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + a + '</td><td class="n">' + b2 + '</td></tr>'; };
+      var target = (+c.admin_pct || 0) + (+c.profit_pct || 0);
+      box.innerHTML = '<div class="qtcw"><div class="qtcl"><b>원가 계산</b> <span class="qtcs2">인쇄에는 안 나갑니다</span>'
+        + '<div class="qtcf">조립 인원 ' + inp('ppl', 46) + '명 × ' + inp('days', 46) + '일 = <b>' + num(k.md) + '공수</b> × 1공수 ' + inp('md_cost', 80) + '원</div>'
+        + '<div class="qtcf">공장 사용 ' + inp('fdays', 46) + '일 × 1일 경비 ' + inp('fday_cost', 80) + '원 · 기타 경비(운반·소모품) ' + inp('other', 90) + '원</div>'
+        + '<div class="qtcf">일반관리비 ' + inp('admin_pct', 40) + '% · 이윤 ' + inp('profit_pct', 40) + '% · 메모 ' + inp('memo', 180) + '</div>'
+        + '<div class="qtcs2">기준: 1공수 ' + won(b.md_cost_auto) + '원(' + esc(bs.from || '') + '~' + esc(bs.to || '') + ' 확정 출역 ' + num(bs.md) + '공수, 4대보험 회사분 ' + num(p.ins_pct) + '%)'
+        + ' · 공장 1일 ' + won(b.factory_day_cost) + '원(임대료 공장 몫 ' + num(p.factory_rent_pct) + '% + 전기 ÷ ' + num(p.workdays) + '일)</div>'
+        + '<div style="margin-top:6px"><b style="font-size:12px">관리비·이윤 따로 표시</b> <button onclick="QT9240.costCostPrice()">① 매입가를 단가로</button><button onclick="QT9240.costAsmLine()">② 조립비 = 노무비+공장경비+기타</button><button class="p" onclick="QT9240.costOhLines()">③ 일반관리비·기업이윤 줄 넣기</button></div>'
+        + '<div style="margin-top:4px"><b style="font-size:12px">단가에 섞기</b> <button onclick="QT9240.costPut(false)">제안가를 선택한 줄에</button><button onclick="QT9240.costPut(true)">제안가를 조립비 줄에</button>'
+        + '<button onclick="QT9240.costSaveOnly()">계산만 저장</button><button onclick="QT9240.costDefaults()">관리비·이윤 %·1공수를 기본값으로</button></div></div>'
+        + '<div class="qtcr"><table>'
+        + row('재료비 (매입가 그대로)', won(k.mat)) + row('노무비 ' + num(k.md) + '공수', won(k.labor)) + row('공장 경비', won(k.fexp)) + row('기타 경비', won(k.oth))
+        + row('<b>제조원가</b>', '<b>' + won(k.mfg) + '</b>', 'qtct') + row('일반관리비 ' + num(c.admin_pct) + '%', won(k.adm)) + row('이윤 ' + num(c.profit_pct) + '%', won(k.pro))
+        + row('<b>제안 견적가</b>', '<b>' + won(k.prop) + '</b>', 'qtct')
+        + row('지금 견적 공급가', won(k.S)) + row('지금 남는 몫', '<b class="' + (k.keepPct != null && k.keepPct < target ? 'neg' : '') + '">' + won(k.keep) + (k.keepPct != null ? ' (원가의 ' + k.keepPct + '%)' : '') + '</b>')
+        + '</table></div></div>';
+      Array.prototype.forEach.call(box.querySelectorAll('input.qtci'), function (el) {
+        el.oninput = function () { var key = this.getAttribute('data-k'); QT.cc[key] = this.value; QT.dirty = true; QT.costPaintSoft(); };
+        if (/^(admin_pct|profit_pct)$/.test(el.getAttribute('data-k'))) el.onchange = function () { var key = this.getAttribute('data-k'), v = +parseNum(this.value); if (!isFinite(v)) return; QT.ohSetPct(key === 'admin_pct' ? '일반관리비' : '기업이윤', v); QT.render(); };
+      });
+    },
+    costPaintSoft: function () { /* 입력 중 커서 유지: 표만 다시 */
+      var box = QT.el('qt_cost'); if (!box) return; var a = document.activeElement, key = a && a.getAttribute && a.getAttribute('data-k'), pos = a && a.selectionStart;
+      QT.costPaint();
+      if (key) { var el = box.querySelector('input.qtci[data-k="' + key + '"]'); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} } }
+    },
+    costPut: function (asm) {
+      if (!QT.cc) return; if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      var r = null;
+      if (asm) r = QT.rows.filter(function (x) { return !x.par && /조립/.test(x.name || ''); })[0];
+      if (!r) r = QT.rows[QT.sel.r];
+      if (!r) { say('넣을 줄을 먼저 고르세요', 'e'); return; }
+      if (!QT.counted(r)) { say('그 줄은 단가가 들어가는 줄이 아닙니다(하위 단가 보이는 부모·목록 줄)', 'e'); return; }
+      var k = QT.costCalc(), cur = QT.amount(r) || 0, want = k.prop - (k.S - cur), q = +r.qty || 1, rd = QT.rounding || 100;
+      r.price = Math.ceil(want / q / rd) * rd; QT.dirty = true; QT.render(); QT.costPaint();
+      say((r.name || '줄') + ' 단가 ' + won(r.price) + '원 — 공급가 ' + won(QT.costCalc().S) + '원 (저장해야 들어갑니다)');
+    },
+    isOh: function (r) { return !r.par && /^(일반관리비|기업이윤|이윤)$/.test(String(r.name || '').trim()); },
+    ohDef: function (r) { var nm = String(r.name || '').trim(), c = QT.cc || {}, p = (QT.basis && QT.basis.params) || {}; return nm === '일반관리비' ? (+c.admin_pct || +p.admin_pct || 7) : (+c.profit_pct || +p.profit_pct || 11); },
+    ohPct: function (r) { var m = /([\d.]+)\s*%/.exec(String(r.spec || '')); return m ? +m[1] : QT.ohDef(r); },
+    ohBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
+    ohSync: function () {
+      var oh = QT.rows.filter(QT.isOh); if (!oh.length) return;
+      var base = QT.ohBase(), rd = QT.rounding || 100;
+      oh.forEach(function (r) {
+        if (r.ohKeep && r.ohBase === base) return;
+        r.ohKeep = false; var pct = QT.ohPct(r);
+        r.qty = 1; if (!r.unit) r.unit = '식'; r.spec = '제조원가의 ' + pct + '%';
+        var np = Math.round(base * pct / 100 / rd) * rd; if (np !== +r.price) { r.price = np; QT.dirty = true; }
+      });
+    },
+    ohSetPct: function (nm, pct) { QT.rows.forEach(function (r) { if (QT.isOh(r) && String(r.name).trim() === nm) { r.spec = '제조원가의 ' + pct + '%'; r.ohKeep = false; } }); },
+    costCostPrice: function () {
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      var n = 0; QT.rows.forEach(function (r) { if (QT.counted(r) && !QT.kids(r.k).length && r.cu != null && +r.cu > 0) { r.price = +r.cu; n++; } });
+      QT.dirty = true; QT.render(); say('매입가를 단가로 ' + n + '줄 (저장해야 들어갑니다)');
+    },
+    costAsmLine: function () {
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      var k = QT.costCalc(), v = k.labor + k.fexp + k.oth; if (!v) { say('조립 인원·일수·공장 사용 일수를 먼저 넣으세요', 'e'); return; }
+      var r = QT.rows.filter(function (x) { return !x.par && /조립/.test(x.name || ''); })[0];
+      if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: '조립비', spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; var at = QT.rows.length; QT.rows.forEach(function (x, i) { if (QT.isOh(x) && i < at) at = i; }); QT.rows.splice(at, 0, r); }
+      var q = +r.qty || 1, rd = QT.rounding || 100; r.price = Math.ceil(v / q / rd) * rd; r.cu = null;
+      QT.dirty = true; QT.render(); say('조립비 ' + won(r.price * q) + '원 (노무비 ' + won(k.labor) + ' + 공장경비 ' + won(k.fexp) + ' + 기타 ' + won(k.oth) + ')');
+    },
+    costOhLines: function () {
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      var c = QT.cc || {}, ap = +parseNum(c.admin_pct) || 0, pp = +parseNum(c.profit_pct) || 0, rd = QT.rounding || 100;
+      var base = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r)) return; var a = QT.amount(r); if (a) base += a; });
+      var put = function (nm, pct) {
+        var r = QT.rows.filter(function (x) { return QT.isOh(x) && String(x.name).trim() === nm; })[0];
+        if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: nm, spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; QT.rows.push(r); }
+        r.qty = 1; r.unit = '식'; r.spec = '제조원가의 ' + pct + '%'; r.ohKeep = false; r.price = Math.round(base * pct / 100 / rd) * rd; r.cu = null; return r.price;
+      };
+      var a = put('일반관리비', ap), b = put('기업이윤', pp);
+      QT.dirty = true; QT.render(); say('제조원가 ' + won(base) + ' · 일반관리비 ' + won(a) + ' · 기업이윤 ' + won(b) + ' → 공급가 ' + won(base + a + b) + ' (저장해야 들어갑니다)');
+    },
+    costPayload: function () { var c = QT.cc || {}, k = QT.costCalc(); var o = {}; ['ppl','days','md_cost','fdays','fday_cost','other','admin_pct','profit_pct','memo'].forEach(function (x) { o[x] = c[x]; }); o.result = k; return o; },
+    costSaveOnly: async function () {
+      if (!QT.cc || !QT.doc) return;
+      var r = await sb.rpc('ceo_quote_cost_save', { p_doc: QT.doc.doc_no, p_calc: QT.costPayload() });
+      if (r.error || !r.data || !r.data.ok) { say((r.error && r.error.message) || (r.data && r.data.error) || '저장 실패', 'e'); return; }
+      QT.doc.extra = QT.doc.extra || {}; QT.doc.extra.cost_calc = QT.costPayload(); say('원가 계산 저장됨', 'g');
+    },
+    costDefaults: async function () {
+      if (!QT.cc) return; var c = QT.cc, p = { admin_pct: c.admin_pct, profit_pct: c.profit_pct };
+      var auto = QT.basis && QT.basis.md_cost_auto; p.md_cost_manual = (+parseNum(c.md_cost) && +parseNum(c.md_cost) !== +auto) ? +parseNum(c.md_cost) : '';
+      var r = await sb.rpc('ceo_cost_params_save', { p: p });
+      if (r.error || !r.data || !r.data.ok) { say((r.error && r.error.message) || (r.data && r.data.error) || '저장 실패', 'e'); return; }
+      QT.basis = r.data; QT.costPaint(); say('기본값 저장됨 — 다음 견적부터 이 값으로 시작', 'g');
+    },
+    fromMail: async function (mailId) {
+      if (!mailId) { say('메일 번호를 찾지 못했습니다', 'e'); return; }
+      var r = await sb.rpc('ceo_quote_from_mail', { p_mail_id: +mailId });
+      if (r.error || !r.data || !r.data.ok) { say((r.error && r.error.message) || (r.data && r.data.error) || '만들기 실패', 'e'); return; }
+      var d = r.data;
+      say(d.existed ? '이 메일로 만든 견적 ' + d.doc_no + ' 을 엽니다' : '견적서 초안 ' + d.doc_no + ' 만듦' + (d.partner_name ? ' · 매출처 ' + d.partner_name : ' · 매출처는 위에서 고르세요'), 'g');
+      try { if (typeof sd874Quick === 'function') await sd874Quick(); } catch (x) {}
+      try { if (typeof drClose === 'function') drClose(); } catch (x) {}
+      await QT.open(d.doc_no);
+      if (!d.existed) { QT.cc = null; QT.costOpen(); }
+    },
+
     /* ── 매출처 고르기 (v1.1) ── */
     ptnList: function () {
       var L = (window.D && Array.isArray(D.ptn)) ? D.ptn : [];
@@ -217,6 +350,7 @@
 
     /* ── 그리기 ── */
     render: function () {
+      try { QT.ohSync(); } catch (x) { console.error('[qt9240-oh]', x); }
       var cols = QT.cols(), no = QT.numbering(), d = QT.doc || {};
       QT.el('qt_title').value = d.title || '';
       QT.ptnPaint((QT.el('qt_ptnq') || {}).value);
@@ -266,6 +400,7 @@
         return '<span class="qtvo">' + esc(x.v.name) + ': ' + esc(x.l.name || x.l.code) + ' ' + num(x.l.qty) + (x.l.unit ? esc(x.l.unit) : '') + ' × ' + won(x.l.price) + ' <a href="javascript:void 0" onclick="QT9240.addVendorOnly(' + n + ')">줄로 넣기</a></span>';
       }).join(' ') : '';
       QT._vo = vo;
+      try { QT.costPaint(); } catch (x) {}
       var ro = (QT.doc && QT.doc.status) !== 'draft';
       QT.el('qt_save').disabled = ro; QT.el('qt_save').title = ro ? '확정된 문서는 고칠 수 없습니다' : '';
     },
@@ -281,7 +416,9 @@
       var r = QT.rows[i]; if (!r) return;
       if (ck === 'qty') { var q = parseNum(val); if (q == null) return; r.qty = q; }
       else if (ck === 'cu') { var c = parseNum(val); r.cu = c; r.cm = QT.kids(r.k).length > 0 && c != null; r.src = ''; r.vendor = c == null ? '' : r.vendor; }
-      else if (ck === 'price') { var p = parseNum(val); r.price = p || 0; }
+      else if (ck === 'price') { var p = parseNum(val); r.price = p || 0;
+        if (QT.isOh(r)) { var bb = QT.ohBase(); if (bb > 0) { r.spec = '제조원가의 ' + (Math.round(r.price / bb * 10000) / 100) + '%'; r.ohKeep = true; r.ohBase = bb; r.qty = 1; } } }
+      else if (ck === 'spec' && QT.isOh(r)) { var pm = /([\d.]+)/.exec(String(val || '')); if (pm) { r.spec = '제조원가의 ' + (+pm[1]) + '%'; r.ohKeep = false; } else r.spec = String(val || ''); }
       else if (ck === 'mk') { var m = parseNum(val); r.mk = m; var co = QT.cost(r); if (m != null && co && r.qty) r.price = QT.roundP(co / r.qty * (1 + m / 100)); }
       else if (ck === 'code' || ck === 'name' || ck === 'spec' || ck === 'unit' || ck === 'memo') r[ck] = String(val == null ? '' : val);
       else return;
@@ -365,6 +502,7 @@
         var res = await sb.rpc('ceo_quote_sheet_save', { p: { doc_no: QT.doc.doc_no, title: QT.el('qt_title').value, partner_id: QT.doc.partner_id || '', lines: lines } });
         if (res.error || !res.data || !res.data.ok) { say((res.error && res.error.message) || (res.data && res.data.error) || '저장 실패', 'e'); return; }
         say('저장됨 · 공급가 ' + won(res.data.supply) + ' · 매입 ' + won(res.data.cost), 'g');
+        if (QT.cc) { try { await sb.rpc('ceo_quote_cost_save', { p_doc: QT.doc.doc_no, p_calc: QT.costPayload() }); } catch (x) {} }
         try { var d = (window.D && D.sd || []).filter(function (x) { return x.doc_no === QT.doc.doc_no; })[0]; if (d) { delete d._lines; d.supply_amt = res.data.supply; d.tax_amt = res.data.tax; } } catch (x) {}
         QT.dirty = false;
         await QT.open(QT.doc.doc_no);
@@ -409,6 +547,7 @@
         '#qt9240 td.qtsrc{font-size:11.5px;color:#475569}#qt9240 .qtpp{color:#64748b;font-size:11px}',
         '#qt9240 input.qtin{width:100%;box-sizing:border-box;border:none;outline:none;font:inherit;background:#fff;padding:0}',
         '#qt9240 .qtvo{display:inline-block;margin:2px 10px 2px 0}#qt9240 #qt_vo{padding:6px 12px;background:#fffbeb;border-top:1px solid #fde68a;font-size:12px}#qt9240 #qt_vo:empty{display:none}',
+        '#qt9240 #qt_cost{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 12px;font-size:12.5px}#qt9240 .qtcw{display:flex;gap:16px;flex-wrap:wrap}#qt9240 .qtcl{flex:1;min-width:420px}#qt9240 .qtcf{margin:5px 0}#qt9240 .qtcs2{color:#64748b;font-size:11.5px}#qt9240 .qtci{padding:3px 5px;border:1px solid #cbd5e1;border-radius:4px;text-align:right}#qt9240 .qtci[data-k=memo]{text-align:left}#qt9240 #qt_cost button{padding:4px 9px;border:1px solid #cbd5e1;background:#fff;border-radius:5px;cursor:pointer;font-size:12px;margin-right:4px}#qt9240 .qtcr table{border-collapse:collapse;min-width:300px}#qt9240 .qtcr td{padding:2px 8px;border-bottom:1px solid #e2e8f0}#qt9240 .qtcr td.n{text-align:right}#qt9240 .qtcr tr.qtct td{background:#eef2ff}#qt9240 .neg{color:#dc2626}',
         '#qt9240 .qthelp{color:#64748b;font-size:11.5px;margin-left:auto}'
       ].join('\n');
       document.head.appendChild(st);
@@ -426,10 +565,12 @@
         '<select id="qt_rd"><option value="1">원 단위</option><option value="100" selected>100원 절사</option><option value="1000">1,000원 절사</option></select>',
         '<button onclick="QT9240.applyMarkup()">단가 넣기</button>',
         '<button onclick="QT9240.allBest()">업체 전부 최저가</button>',
+        '<button onclick="QT9240.costOpen()" style="margin-left:8px;border-color:#1d4ed8;color:#1d4ed8;font-weight:700">원가 계산</button>',
         '<span style="flex:1"></span>',
         '<button onclick="QT9240.print()">인쇄 미리보기</button><button id="qt_save" class="p" onclick="QT9240.save()">저장 (Ctrl+S)</button><button onclick="QT9240.close()">닫기</button>',
         '</div>',
         '<div class="qtsum" id="qt_sum"></div>',
+        '<div id="qt_cost" style="display:none"></div>',
         '<div id="qt_grid" tabindex="0"><table><thead id="qt_head"></thead><tbody id="qt_body"></tbody></table></div>',
         '<div id="qt_vo"></div>'
       ].join('');
@@ -455,7 +596,22 @@
 
   /* ── 여는 단추: 문서·메일 서랍에 판매견적 번호(-Q)가 보이면 「견적 엑셀표로 열기」 ── */
   var QRX = /\bB\d{8}-Q\d*\b/;
+  var injectMail = function () {
+    try {
+      var dr = document.getElementById('dr'); if (!dr || !dr.classList.contains('on') || dr.querySelector('.qt9240mail')) return;
+      var lab = Array.prototype.filter.call(dr.querySelectorAll('*'), function (e) { return e.children.length === 0 && (e.textContent || '').trim() === '메일 번호'; })[0];
+      if (!lab || !lab.nextElementSibling) return;
+      var mid = parseInt((lab.nextElementSibling.textContent || '').trim(), 10); if (!mid) return;
+      var anchor = Array.prototype.filter.call(dr.querySelectorAll('div'), function (e) { return /매입견적 올리기/.test(e.textContent || '') && e.querySelector('button') && e.querySelectorAll('div').length < 6; }).pop();
+      var b = document.createElement('div'); b.className = 'qt9240mail';
+      b.style.cssText = 'margin:8px 0;padding:10px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+      b.innerHTML = '<span><b style="color:#9a3412">빈 견적서 만들기</b><br><span style="color:#475569;font-size:12px">BOM·매입견적 없이 조립비 등 직접 입력 — 매출처·건명은 이 메일로 채우고 견적 엑셀표(원가 계산)로 바로 엽니다</span></span><button class="btn sm p" type="button">빈 견적서 만들기</button>';
+      b.querySelector('button').onclick = function () { QT.fromMail(mid); };
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(b, anchor.nextSibling); else (document.getElementById('drB') || dr).appendChild(b);
+    } catch (e) { console.error('[qt9240-mail]', e); }
+  };
   var inject = function () {
+    try { if (typeof isOwner !== 'function' || isOwner()) injectMail(); } catch (x) {}
     try {
       if (typeof isOwner === 'function' && !isOwner()) return;
       var dr = document.getElementById('dr'); if (!dr || !dr.classList.contains('on')) return;
