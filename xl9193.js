@@ -1879,7 +1879,7 @@ window.V9198_APPLIED = true;
           if(!cc||cc.t==='비고')return;
           if(cc.k==='item_name'||cc.k==='item_name305'||cc.t==='품명'||cc.t==='품명 / 품번'){out.push({t:'품명 / 품번',cls:'nm209',nw:1,f:function(l){var n=esc(l.item_name||''),cd=esc(l.item_code||'');return (n||cd)+(n&&cd?' <span class="pc209" style="font-size:8px;color:#64748b">'+cd+'</span>':'')}});return}
           if(cc.k==='spec'||cc.t==='규격'){out.push({t:'규격',w:'192px',cls:'sp209',nw:1,st:function(l){return specCss(l.spec)},f:function(l){return esc(l.spec||'')}});return}
-          if(cc.t==='No'){out.push({t:'No',w:'22px',cls:cc.cls,nw:1,f:cc.f});out.push({t:'일자',w:'38px',cls:'dt209',nw:1,f:function(l){var m=DM.exec(l.memo||'');if(m)return m[1];var b=String(l.memo||'').trim();return BN.test(b)?bnDate(b):''}});return}
+          if(cc.t==='No'){out.push({t:'No',w:'22px',cls:cc.cls,nw:1,f:cc.f});out.push({t:'일자',w:'38px',cls:'dt209',nw:1,f:function(l){var m=DM.exec(l.memo||'');if(m)return m[1];var mm=/^(\d{1,2}월) 구매$/.exec(l.memo||'');if(mm)return mm[1];var b=String(l.memo||'').trim();return BN.test(b)?bnDate(b):''}});return}
           if(cc.t==='수량'){out.push({t:cc.t,w:'40px',cls:cc.cls,f:cc.f});return}
           if(cc.t==='단위'){out.push({t:cc.t,w:'28px',cls:cc.cls,f:cc.f});return}
           if(cc.t==='단가'){out.push({t:cc.t,w:'66px',cls:cc.cls,f:cc.f});return}
@@ -2032,3 +2032,6 @@ window.V9198_APPLIED = true;
     if(typeof toast==='function')toast(body+' → 청구서 '+inv+'에서 뺌','g');await reload()};
   window.V9224_APPLIED=true;
 })();
+
+/* ═══ v9.226 [Claude DB1182] 트레이 사다리형은 그 달 합계 한 줄(비고 「10월 구매」) → 자재내역서 일자 칸에 「10월」 (v9.210 일자 칸에 한 줄 추가). `window.V9226_APPLIED` ═══ */
+window.V9226_APPLIED=true;
