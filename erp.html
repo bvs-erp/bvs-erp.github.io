@@ -3912,7 +3912,7 @@ async function mailOpen(m){
     +'</div>'
     +'<div style="margin:14px 0;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;display:flex;align-items:center;justify-content:space-between">'
     +'<div><b style="color:#1e40af">📄 매입견적 올리기</b><div class="tiny" style="color:#1d4ed8;margin-top:2px">외주·가공 매입업체 견적을 등록하고 판매견적의 매입가(-PQ)를 자동 연동합니다.</div></div>'
-    +'<button class="btn sm p" style="background:#2563eb;color:#fff;font-weight:700;padding:6px 14px" onclick="pqModalOpen({mail_id:'+m.mail_id+',title:'+ERPC.jsq(m.subject||'')+'+',partner_id:'+ERPC.jsq(m.partner_id||'')+'+',contact:'+ERPC.jsq(m.from_name||m._from||'')+'+',linked_doc:'+ERPC.jsq(m.linked_doc_no||'')+'+})">매입견적 올리기</button>'
+    +'<button class="btn sm p" style="background:#2563eb;color:#fff;font-weight:700;padding:6px 14px" onclick="pqModalOpen({mail_id:'+m.mail_id+'})">매입견적 올리기</button>'
     +'</div>'
     +'<input type="file" id="ml_rfq_bom_file" accept=".xlsx,.xls" style="display:none" onchange="mlRfqBomRead(this.files)">'
     +'<h4 style="margin:14px 0 6px">첨부 '+at.length+'</h4>'+atH+form;
@@ -41001,6 +41001,13 @@ var PQ_OPTS = {};
 
 function pqModalOpen(opt){
   opt = opt || {};
+  if(opt.mail_id){
+    var m = ((window.MAIL&&MAIL.rows)||[]).filter(function(x){return String(x.mail_id)===String(opt.mail_id)})[0] || {};
+    if(!opt.title && m.subject) opt.title = m.subject;
+    if(!opt.partner_id && m.partner_id) opt.partner_id = m.partner_id;
+    if(!opt.contact && (m.from_name || m._from)) opt.contact = m.from_name || m._from;
+    if(!opt.linked_doc && m.linked_doc_no) opt.linked_doc = m.linked_doc_no;
+  }
   PQ_OPTS = opt;
   var today = (typeof todayKst === 'function' ? todayKst() : new Date().toISOString().slice(0,10));
 
@@ -41147,28 +41154,27 @@ function pqRenderLines(){
   PQ_LINES.forEach(function(l, i){
     var amt = Math.round((+l.qty||0)*(+l.unit_price||0));
     var detCnt = (l.details && l.details.length) || 0;
-    html += '<tr>'
-      + '<td><input class="in sm" style="width:100%" value="' + esc(l.item_code||'') + '" placeholder="도번" onchange="pqSetLine(' + i + ','item_code',this.value)"></td>'
-      + '<td><input class="in sm" style="width:100%" value="' + esc(l.item_name||'') + '" placeholder="품명" onchange="pqSetLine(' + i + ','item_name',this.value)"></td>'
-      + '<td><input class="in sm" style="width:100%" value="' + esc(l.spec||'') + '" placeholder="규격" onchange="pqSetLine(' + i + ','spec',this.value)"></td>'
-      + '<td><input class="in sm" style="width:100%;text-align:right" type="number" step="any" value="' + (l.qty!=null?l.qty:1) + '" oninput="pqSetLine(' + i + ','qty',this.value)"></td>'
-      + '<td><input class="in sm" style="width:100%;text-align:center" value="' + esc(l.unit||'EA') + '" onchange="pqSetLine(' + i + ','unit',this.value)"></td>'
-      + '<td><input class="in sm" style="width:100%;text-align:right;font-weight:700" type="number" value="' + (l.unit_price||0) + '" oninput="pqSetLine(' + i + ','unit_price',this.value)"></td>'
+    html += '<tr data-idx="' + i + '">'
+      + '<td><input class="in sm pq-f-code" style="width:100%" value="' + esc(l.item_code||'') + '" placeholder="도번"></td>'
+      + '<td><input class="in sm pq-f-name" style="width:100%" value="' + esc(l.item_name||'') + '" placeholder="품명"></td>'
+      + '<td><input class="in sm pq-f-spec" style="width:100%" value="' + esc(l.spec||'') + '" placeholder="규격"></td>'
+      + '<td><input class="in sm pq-f-qty" style="width:100%;text-align:right" type="number" step="any" value="' + (l.qty!=null?l.qty:1) + '"></td>'
+      + '<td><input class="in sm pq-f-unit" style="width:100%;text-align:center" value="' + esc(l.unit||'EA') + '"></td>'
+      + '<td><input class="in sm pq-f-price" style="width:100%;text-align:right;font-weight:700" type="number" value="' + (l.unit_price||0) + '"></td>'
       + '<td style="text-align:right;font-weight:700" id="pq_amt_' + i + '">' + won(amt) + '</td>'
-      + '<td><input class="in sm" style="width:100%" value="' + esc(l.memo||'') + '" placeholder="비고" onchange="pqSetLine(' + i + ','memo',this.value)"></td>'
+      + '<td><input class="in sm pq-f-memo" style="width:100%" value="' + esc(l.memo||'') + '" placeholder="비고"></td>'
       + '<td style="text-align:center"><button type="button" class="stbtn tiny" onclick="pqToggleDetail(' + i + ')">세부(' + detCnt + ')</button></td>'
       + '<td style="text-align:center"><button type="button" class="ibtn" onclick="pqDelLine(' + i + ')" title="삭제">✕</button></td>'
       + '</tr>';
 
-    // Sub-row for details
     var detRows = (l.details||[]).map(function(d, j){
-      return '<tr>'
-        + '<td><input class="in sm" style="width:100%" value="' + esc(d.item_name||'') + '" placeholder="품명/비용명" onchange="pqSetDetail(' + i + ',' + j + ','item_name',this.value)"></td>'
-        + '<td><input class="in sm" style="width:100%" value="' + esc(d.spec||'') + '" placeholder="규격" onchange="pqSetDetail(' + i + ',' + j + ','spec',this.value)"></td>'
-        + '<td style="width:50px"><input class="in sm" style="width:100%;text-align:right" type="number" step="any" value="' + (d.qty!=null?d.qty:1) + '" oninput="pqSetDetail(' + i + ',' + j + ','qty',this.value)"></td>'
-        + '<td style="width:40px"><input class="in sm" style="width:100%;text-align:center" value="' + esc(d.unit||'EA') + '" onchange="pqSetDetail(' + i + ',' + j + ','unit',this.value)"></td>'
-        + '<td style="width:85px"><input class="in sm" style="width:100%;text-align:right" type="number" value="' + (d.unit_price||0) + '" oninput="pqSetDetail(' + i + ',' + j + ','unit_price',this.value)"></td>'
-        + '<td><input class="in sm" style="width:100%" value="' + esc(d.memo||'') + '" placeholder="비고" onchange="pqSetDetail(' + i + ',' + j + ','memo',this.value)"></td>'
+      return '<tr data-idx="' + i + '" data-jdx="' + j + '">'
+        + '<td><input class="in sm pq-d-name" style="width:100%" value="' + esc(d.item_name||'') + '" placeholder="품명/비용명"></td>'
+        + '<td><input class="in sm pq-d-spec" style="width:100%" value="' + esc(d.spec||'') + '" placeholder="규격"></td>'
+        + '<td style="width:50px"><input class="in sm pq-d-qty" style="width:100%;text-align:right" type="number" step="any" value="' + (d.qty!=null?d.qty:1) + '"></td>'
+        + '<td style="width:40px"><input class="in sm pq-d-unit" style="width:100%;text-align:center" value="' + esc(d.unit||'EA') + '"></td>'
+        + '<td style="width:85px"><input class="in sm pq-d-price" style="width:100%;text-align:right" type="number" value="' + (d.unit_price||0) + '"></td>'
+        + '<td><input class="in sm pq-d-memo" style="width:100%" value="' + esc(d.memo||'') + '" placeholder="비고"></td>'
         + '<td style="width:30px;text-align:center"><button type="button" class="ibtn" onclick="pqDelDetail(' + i + ',' + j + ')">✕</button></td>'
         + '</tr>';
     }).join('');
@@ -41186,6 +41192,37 @@ function pqRenderLines(){
   });
   tbody.innerHTML = html;
   pqCalcSum();
+
+  tbody.querySelectorAll('input').forEach(function(inp){
+    inp.addEventListener('input', pqOnInput);
+    inp.addEventListener('change', pqOnInput);
+  });
+}
+
+function pqOnInput(ev){
+  var tr = ev.target.closest('tr');
+  if(!tr) return;
+  var i = parseInt(tr.dataset.idx, 10);
+  if(isNaN(i) || !PQ_LINES[i]) return;
+  var cl = ev.target.className;
+  if(cl.indexOf('pq-f-code')>=0) PQ_LINES[i].item_code = ev.target.value;
+  else if(cl.indexOf('pq-f-name')>=0) PQ_LINES[i].item_name = ev.target.value;
+  else if(cl.indexOf('pq-f-spec')>=0) PQ_LINES[i].spec = ev.target.value;
+  else if(cl.indexOf('pq-f-qty')>=0){ PQ_LINES[i].qty = parseFloat(ev.target.value)||0; pqCalcSum(); }
+  else if(cl.indexOf('pq-f-unit')>=0) PQ_LINES[i].unit = ev.target.value;
+  else if(cl.indexOf('pq-f-price')>=0){ PQ_LINES[i].unit_price = parseFloat(ev.target.value)||0; pqCalcSum(); }
+  else if(cl.indexOf('pq-f-memo')>=0) PQ_LINES[i].memo = ev.target.value;
+  else if(tr.dataset.jdx !== undefined){
+    var j = parseInt(tr.dataset.jdx, 10);
+    if(PQ_LINES[i].details && PQ_LINES[i].details[j]){
+      if(cl.indexOf('pq-d-name')>=0) PQ_LINES[i].details[j].item_name = ev.target.value;
+      else if(cl.indexOf('pq-d-spec')>=0) PQ_LINES[i].details[j].spec = ev.target.value;
+      else if(cl.indexOf('pq-d-qty')>=0) PQ_LINES[i].details[j].qty = parseFloat(ev.target.value)||0;
+      else if(cl.indexOf('pq-d-unit')>=0) PQ_LINES[i].details[j].unit = ev.target.value;
+      else if(cl.indexOf('pq-d-price')>=0) PQ_LINES[i].details[j].unit_price = parseFloat(ev.target.value)||0;
+      else if(cl.indexOf('pq-d-memo')>=0) PQ_LINES[i].details[j].memo = ev.target.value;
+    }
+  }
 }
 
 async function pqSubmit(dry){
