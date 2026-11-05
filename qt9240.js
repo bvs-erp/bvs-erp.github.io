@@ -1,7 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.5 (Claude 작성 · 2026-11-05)
+ * qt9240.js — 「견적 엑셀표」 v1.6 (Claude 작성 · 2026-11-05)
  * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
+ * v1.6: 네고·할인 줄(이름이 네고/할인/D·C 이거나 금액이 마이너스인 맨 위 줄)은 관리비·이윤·시운전비 계산 바탕(제조원가)에서 뺌
  * v1.5: ① 인쇄 방식(관리비·이윤 따로 / 단가에 섞기 — 저장은 따로, 인쇄 때만 섞음, 합계 그대로) ② 시운전·기술지원비 줄(직접원가의 %) ③ 결제조건 가산(이윤 %에 더함)
  * v1.4: 일반관리비·기업이윤 줄은 줄이 바뀔 때마다 자동 다시 계산(규격 「제조원가의 7%」의 %를 고치면 그 %로, 금액을 직접 치면 % 를 거꾸로 계산해 규격에 적음)
  * v1.3: 메일 서랍 「빈 견적서 만들기」(ceo_quote_from_mail) + 「원가 계산」 칸(재료비·공수·공장 사용 일수·기타 경비·일반관리비·이윤 → 제안 견적가, ceo_cost_basis·ceo_quote_cost_save)
@@ -263,8 +264,9 @@
     },
     isOh: function (r) { return !r.par && /^(일반관리비|기업이윤|이윤)$/.test(String(r.name || '').trim()); },
     TECH: '시운전·기술지원비',
+    isNego: function (r) { if (r.par) return false; if (/^(네고|할인|특별\s*할인|D\/?C|DC)/i.test(String(r.name || '').trim())) return true; var a = QT.amount(r); return a != null && a < 0; },
     isTech: function (r) { return !r.par && String(r.name || '').trim() === QT.TECH; },
-    techBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isTech(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
+    techBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isTech(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
     techSetPct: function (pct) { QT.rows.forEach(function (r) { if (QT.isTech(r)) { r.spec = '직접원가의 ' + pct + '%'; r.ohKeep = false; } }); },
     techLine: function () {
       if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
@@ -276,7 +278,7 @@
     payGuess: function () { var t = String((QT.doc && QT.doc.payment_terms) || ''); return /어음|90/.test(t) ? 3 : /60/.test(t) ? 2 : 0; },
     ohDef: function (r) { var nm = String(r.name || '').trim(), c = QT.cc || {}, p = (QT.basis && QT.basis.params) || {}; return nm === '일반관리비' ? (+c.admin_pct || +p.admin_pct || 7) : (+c.profit_pct || +p.profit_pct || 11); },
     ohPct: function (r) { var m = /([\d.]+)\s*%/.exec(String(r.spec || '')); return m ? +m[1] : QT.ohDef(r); },
-    ohBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
+    ohBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
     ohSync: function () {
       var rd = QT.rounding || 100;
       QT.rows.filter(QT.isTech).forEach(function (r) {
@@ -311,7 +313,7 @@
     costOhLines: function () {
       if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
       var c = QT.cc || {}, ap = +parseNum(c.admin_pct) || 0, pp = +parseNum(c.profit_pct) || 0, rd = QT.rounding || 100;
-      var base = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r)) return; var a = QT.amount(r); if (a) base += a; });
+      var base = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) base += a; });
       var put = function (nm, pct) {
         var r = QT.rows.filter(function (x) { return QT.isOh(x) && String(x.name).trim() === nm; })[0];
         if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: nm, spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; QT.rows.push(r); }
