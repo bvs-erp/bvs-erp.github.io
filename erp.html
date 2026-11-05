@@ -6111,7 +6111,7 @@ async function bkUpRead(files){files=Array.prototype.slice.call(files||[]);if(!f
   if(r.error){toast(r.error.message,'e');return}var d=r.data||{};
   toast('새 거래 '+(d.inserted||0)+'건 · 중복 건너뜀 '+(d.duplicates||0)+'건 · 자동 분류 '+(d.classified||0)+'건'+((d.unclassified||0)?' · 계정 지정 필요 '+d.unclassified+'건(증빙 수신함)':'')+(isOwner()?' · 파일 기준 입금 '+won(info.reduce(function(a,x){return a+x.is},0))+' · 출금 '+won(info.reduce(function(a,x){return a+x.os},0)):''),'g');
   var F=lzFns();for(var k of ['bank','inbox','stl','pay','htr']){if(F[k]){try{var x=await lqPaged(F[k]);if(!x.error)D[k]=x.data}catch(e){}}}
-  try{renderHt()}catch(e){}try{renderAlerts()}catch(e){}}
+  try{renderHt()}catch(e){}try{renderAlerts()}catch(e){}try{if(typeof renderFin==='function'&&ST.page==='fin')renderFin();}catch(e){}}
 function fiAssignOpen(r){var accts=D.acct||[];var groups={};accts.forEach(function(a){(groups[a.pl_section||'기타']=groups[a.pl_section||'기타']||[]).push(a)});
   var opts=Object.keys(groups).map(function(g){return '<optgroup label="'+esc(g)+'">'+groups[g].map(function(a){return '<option value="'+esc(a.account_code)+'"'+(a.account_code===r.cur?' selected':'')+'>'+esc(a.account_code)+' '+esc(a.account_name)+'</option>'}).join('')+'</optgroup>'}).join('');
   var ptns=(D.ptn||[]).map(function(p){return '<option value="'+esc(p.partner_id)+'"'+(p.partner_id===r.partner_id?' selected':'')+'>'+esc(p.name)+'</option>'}).join('');
@@ -10260,8 +10260,8 @@ async function fdAcct(){var x=FD.cur,a=el('fd_acct').value;if(!a){toast('계정�
   if(r.error||!r.data||r.data.ok===false){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}drClose();toast('계정 지정'+fd781(x,a),'g');renderFin()}
 function fdBankHtml(d){var bs=d.banks||[],cs=d.cards||[],ct=d.card_top||[],tot=bs.reduce(function(a,b){return a+(+b.balance||0)},0);
   return '<div class="kpis">'+kpi('통장 잔액 합계',won(tot),bs.length+'개 계좌','hl')+kpi(fdYm().slice(5)+'월 입금',won(bs.reduce(function(a,b){return a+(+b.in_m||0)},0)),'')+kpi(fdYm().slice(5)+'월 출금',won(bs.reduce(function(a,b){return a+(+b.out_m||0)},0)),'')+kpi(fdYm().slice(5)+'월 카드 사용',won(cs.reduce(function(a,b){return a+(+b.amt||0)},0)),cs.reduce(function(a,b){return a+(+b.n||0)},0)+'건')+'</div>'
-   +'<div class="sec"><h3>통장</h3><div class="tb"><div class="tw"><table><thead><tr><th class="l">은행</th><th class="l">계좌</th><th>지금 잔액</th><th class="l">마지막 거래</th><th>이달 입금</th><th>이달 출금</th><th>이달 건수</th></tr></thead><tbody>'
-   +bs.map(function(b){var old=b.last&&b.last<tyAddDays(todayKst(),-7);return '<tr><td class="l">'+esc(b.bank)+'</td><td class="l">…'+esc(b.acct)+'</td><td><b>'+won(b.balance)+'</b></td><td class="l">'+esc(b.last||'')+(old?' <span class="pill y">수집 오래됨</span>':'')+'</td><td>'+won(b.in_m)+'</td><td>'+won(b.out_m)+'</td><td>'+(b.n_m||0)+'</td></tr>'}).join('')+'</tbody></table></div></div></div>'
+   +'<div class="sec"><h3>통장'+(isOwner()?'<span class="r"><button class="btn sm p" onclick="bkUpPick()">통장 엑셀 올리기</button></span>':'')+'</h3><div class="tb"><div class="tw"><table><thead><tr><th class="l">은행</th><th class="l">계좌</th><th>지금 잔액</th><th class="l">마지막 거래</th><th>이달 입금</th><th>이달 출금</th><th>이달 건수</th></tr></thead><tbody>'
+   +bs.map(function(b){var old=b.last&&b.last<tyAddDays(todayKst(),-7);return '<tr><td class="l">'+esc(b.bank)+'</td><td class="l">…'+esc(b.acct)+'</td><td><b>'+won(b.balance)+'</b></td><td class="l">'+esc(b.last||'')+(old?' <span class="pill y">수집 오래됨</span>'+(isOwner()?' <button class="btn sm" style="padding:1px 6px;font-size:11px" onclick="event.stopPropagation();bkUpPick()">올리기</button>':'') : '')+'</td><td>'+won(b.in_m)+'</td><td>'+won(b.out_m)+'</td><td>'+(b.n_m||0)+'</td></tr>'}).join('')+'</tbody></table></div></div></div>'
    +'<div class="sec"><h3>카드 (이달)</h3><div class="tb">'+(cs.length?'<div class="tw"><table><thead><tr><th class="l">카드</th><th>사용액</th><th>부가세</th><th>건수</th><th class="l">마지막</th></tr></thead><tbody>'+cs.map(function(c){return '<tr><td class="l">'+esc(c.issuer||'')+' …'+esc(c.tail||'')+'</td><td><b>'+won(c.amt)+'</b></td><td>'+won(c.vat)+'</td><td>'+c.n+'</td><td class="l">'+esc(c.last||'')+'</td></tr>'}).join('')+'</tbody></table></div>'
      +(ct.length?'<div style="padding:8px 12px" class="tiny"><b>많이 쓴 곳</b> '+ct.map(function(c){return '<a href="#" class="pl233" title="법인카드에서 이 가맹점" onclick="event.preventDefault();fd9109CardWho('+ERPC.jsq(c.who||'')+')">'+esc(c.who)+'</a> '+won(c.amt)}).join(' · ')+'</div>':''):'<div class="tiny" style="padding:10px 12px">이달 카드 사용 없음(또는 아직 수집 전)</div>')+'</div></div>'}
 function fdTaxHtml(d){var im=d.inv_month||[],s=im.filter(function(x){return x.side==='sales'})[0]||{},p=im.filter(function(x){return x.side==='purchase'})[0]||{},v=d.vat_q||{},iv=d.invoices||[];
@@ -30985,7 +30985,7 @@ async function fdCardTailOpen(tail,issuer){
               var b=bs[idx];
               if(!b)return;
               tr.style.cursor='pointer';
-              tr.setAttribute('onclick','fdBankAcctOpen('+ERPC.jsq(b.acct||'')+','+ERPC.jsq(b.bank||'')+')');
+              tr.setAttribute('onclick','fdBankAcctOpen('+JSON.stringify(b.acct||'')+','+JSON.stringify(b.bank||'')+')');
             });
           }else if(txt.indexOf('카드')===0){
             var trs2=sec.querySelectorAll('tbody tr');
@@ -30993,7 +30993,7 @@ async function fdCardTailOpen(tail,issuer){
               var c=cs[idx];
               if(!c)return;
               tr.style.cursor='pointer';
-              tr.setAttribute('onclick','fdCardTailOpen('+ERPC.jsq(c.tail||'')+','+ERPC.jsq(c.issuer||'')+')');
+              tr.setAttribute('onclick','fdCardTailOpen('+JSON.stringify(c.tail||'')+','+JSON.stringify(c.issuer||'')+')');
             });
           }
         });
