@@ -2268,7 +2268,8 @@ window.V9228_APPLIED=true;
   window.V9234_APPLIED=true;
 })();
 
-/* ═══ v9.235 [Claude · 대표 11-05 19:5x] 견적서 구성 목록(하위 품번) 인쇄 정리
+/* ═══ v9.235→v9.236 [Claude · 대표 11-05 19:5x · 22:5x] 견적서 구성 목록(하위 품번) 인쇄 정리
+   v9.236(대표 22:5x 「자재가 많지 않음에도 하단 표를 딱 눌러 붙여놔서 가독성이 안좋아. 반응형으로」): 줄 수에 따라 줄 높이·글자 크기를 바꿈 — 적으면 넉넉히(최대 30px·12px, 품명·규격 줄바꿈 허용), 많으면 한 줄 16px
    대표: 「글씨 정렬이 너무 안돼」「CAM PLATE 한 줄 띄고 품번」「상세에서는 굳이 세액을 뺄까봐」「너비가 부족해서 칸이 상하로 늘어나 1장 인쇄가 힘들어」
    대상: 구성 목록이 들어간 견적 표(v9.234 l9234 · 견적 엑셀표 t9240) — 그 밖의 문서 표는 손대지 않음
    ① 세액 칸 뺌(합계 줄은 공급가액 칸 밑으로) ② 품번(도번)은 품명 옆 따로 「도번」 칸(작은 글씨) — 품명이 잘려 두세 줄로 늘어나지 않게
@@ -2329,18 +2330,23 @@ window.V9228_APPLIED=true;
       [].forEach.call(hr.cells,function(th,i){var w=W[heads[i]];S(th,'width',w||'');S(th,'padding','3px 3px');S(th,'whiteSpace','nowrap')});
       S(t,'tableLayout','fixed');S(t,'width','100%');
       var iNo=heads.indexOf('No'),iCd=heads.indexOf('도번');
-      /* ③ 한 줄 고정·정렬 */
-      [].forEach.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){
-        var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=/(^|\s)(m9234|p9240)(\s|$)/.test(tr.className);
-        if(!det&&!main)return;
+      /* ③ 줄 수에 맞춘 반응형 높이(v9.236): 줄이 적으면 A4 표 칸(약 430px)을 넉넉히 채우고, 많으면 한 줄로 줄임 */
+      var LR=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});
+      var nR=Math.max(LR.length,1),rowH=Math.max(16,Math.min(30,Math.floor(430/nR))),roomy=rowH>=21,wrap=nR<=20;
+      var fsM=rowH>=26?12:rowH>=21?11.5:10.5,fsD=rowH>=26?11.5:rowH>=21?11:10,lh=roomy?1.3:1.25,padV=Math.max(1,Math.round((rowH-fsM*lh)/2));
+      if(roomy)[].forEach.call(hr.cells,function(th){S(th,'padding','6px 4px');S(th,'fontSize','11.5px')});
+      LR.forEach(function(tr){
+        var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=!det;
         [].forEach.call(tr.cells,function(td,i){
-          S(td,'paddingTop','1px');S(td,'paddingBottom','1px');S(td,'paddingRight','3px');S(td,'lineHeight','1.25');S(td,'verticalAlign','middle');
-          if(i!==iCd)S(td,'fontSize',det?'10px':'10.5px');
-          if(i!==iNm)S(td,'paddingLeft','3px');
+          S(td,'paddingTop',padV+'px');S(td,'paddingBottom',padV+'px');S(td,'paddingRight',roomy?'5px':'3px');S(td,'lineHeight',String(lh));S(td,'verticalAlign','middle');
+          if(i!==iCd)S(td,'fontSize',(det?fsD:fsM)+'px');
+          if(i!==iNm)S(td,'paddingLeft',roomy?'5px':'3px');
           one(td);
-          if(i===iNo){S(td,'textAlign','center');S(td,'fontSize','9.5px')}
-          if(i===iCd||heads[i]==='단위')S(td,'textAlign','center');
-          if(heads[i]==='비고'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'fontSize','9px');S(td,'lineHeight','1.15')}
+          if(wrap&&(i===iNm||heads[i]==='규격')){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'wordBreak','keep-all')}
+          if(i===iNo){S(td,'textAlign','center');S(td,'fontSize',(roomy?10.5:9.5)+'px')}
+          if(i===iCd){S(td,'textAlign','center');if(roomy)S(td,'fontSize','10px')}
+          if(heads[i]==='단위')S(td,'textAlign','center');
+          if(heads[i]==='비고'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'fontSize',(roomy?10:9)+'px');S(td,'lineHeight','1.15')}
         });
         if(main&&iNm>=0)S(tr.cells[iNm],'fontWeight','700');
       });
