@@ -2268,8 +2268,7 @@ window.V9228_APPLIED=true;
   window.V9234_APPLIED=true;
 })();
 
-/* ═══ v9.235→v9.236 [Claude · 대표 11-05 19:5x · 22:5x] 견적서 구성 목록(하위 품번) 인쇄 정리
-   v9.236(대표 22:5x 「자재가 많지 않음에도 하단 표를 딱 눌러 붙여놔서 가독성이 안좋아. 반응형으로」): 줄 수에 따라 줄 높이·글자 크기를 바꿈 — 적으면 넉넉히(최대 30px·12px, 품명·규격 줄바꿈 허용), 많으면 한 줄 16px
+/* ═══ v9.235 [Claude · 대표 11-05 19:5x] (v9.236: 줄 20개 이하면 품명·규격 줄바꿈 허용·규격 칸 25%) 견적서 구성 목록(하위 품번) 인쇄 정리
    대표: 「글씨 정렬이 너무 안돼」「CAM PLATE 한 줄 띄고 품번」「상세에서는 굳이 세액을 뺄까봐」「너비가 부족해서 칸이 상하로 늘어나 1장 인쇄가 힘들어」
    대상: 구성 목록이 들어간 견적 표(v9.234 l9234 · 견적 엑셀표 t9240) — 그 밖의 문서 표는 손대지 않음
    ① 세액 칸 뺌(합계 줄은 공급가액 칸 밑으로) ② 품번(도번)은 품명 옆 따로 「도번」 칸(작은 글씨) — 품명이 잘려 두세 줄로 늘어나지 않게
@@ -2330,23 +2329,36 @@ window.V9228_APPLIED=true;
       [].forEach.call(hr.cells,function(th,i){var w=W[heads[i]];S(th,'width',w||'');S(th,'padding','3px 3px');S(th,'whiteSpace','nowrap')});
       S(t,'tableLayout','fixed');S(t,'width','100%');
       var iNo=heads.indexOf('No'),iCd=heads.indexOf('도번');
-      /* ③ 줄 수에 맞춘 반응형 높이(v9.236): 줄이 적으면 A4 표 칸(약 430px)을 넉넉히 채우고, 많으면 한 줄로 줄임 */
-      var LR=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});
-      var nR=Math.max(LR.length,1),rowH=Math.max(16,Math.min(30,Math.floor(430/nR))),roomy=rowH>=21,wrap=nR<=20;
-      var fsM=rowH>=26?12:rowH>=21?11.5:10.5,fsD=rowH>=26?11.5:rowH>=21?11:10,lh=roomy?1.3:1.25,padV=Math.max(1,Math.round((rowH-fsM*lh)/2));
-      if(roomy)[].forEach.call(hr.cells,function(th){S(th,'padding','6px 4px');S(th,'fontSize','11.5px')});
-      LR.forEach(function(tr){
-        var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=!det;
+      /* v9.237 칸 너비를 내용 길이로(대표 23:0x 「품명 도번 규격도 너비가 반응형으로 작동한 게 아니야… 규격이 두 줄된 칸들 때문에 칸 높낮이가 이랬다 저랬다」)
+         품명·도번·규격 세 칸은 실제 글자 길이(12px 기준 추정)로 나눠 갖고, 나머지 칸은 고정. 셋 다 한 줄에 들어가면 줄바꿈 없음(줄 높이 고름),
+         모자라면 가장 긴 규격 칸만 줄바꿈. 모든 칸 %로 지정해 화면·인쇄 폭이 달라도 같은 비율 */
+      var LRw=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});
+      var est=function(txt,px){var w=0;String(txt||'').replace(/\s+/g,' ').trim().split('').forEach(function(ch){var c=ch.charCodeAt(0);w+=c>0x2e80?1.0:/[A-Z0-9#&@%]/.test(ch)?0.66:/[a-z]/.test(ch)?0.55:0.4});return Math.ceil(w*px)};
+      var TOT=720,fixW={'No':34,'수량':36,'단위':34,'단가':74,'공급가액':86,'금액':86,'비고':58},flex={},need={};
+      heads.forEach(function(h,i){if(h==='품명'||h==='품명 / 품번'||h==='도번'||h==='규격'){flex[i]=1;need[i]=est(h,12)+12}});
+      LRw.forEach(function(tr){Object.keys(flex).forEach(function(k){var td=tr.cells[k];if(!td)return;var pl=parseInt((td.getAttribute('style')||'').replace(/.*padding-left:\s*(\d+)px.*/,'$1'),10);
+        var w=est(td.textContent,+k===iCd?10:12)+(isFinite(pl)?pl:4)+8;if(w>need[k])need[k]=w})});
+      var fixSum=0;heads.forEach(function(h,i){if(!flex[i])fixSum+=fixW[h]||50});
+      var avail=TOT-fixSum,sumNeed=0;Object.keys(need).forEach(function(k){sumNeed+=need[k]});
+      var fits=sumNeed<=avail,iSp=heads.indexOf('규격');
+      var widthOf={};Object.keys(need).forEach(function(k){widthOf[k]=fits?need[k]+(avail-sumNeed)*need[k]/sumNeed:need[k]});
+      if(!fits&&iSp>=0){var others=0;Object.keys(need).forEach(function(k){if(+k!==iSp)others+=need[k]});widthOf[iSp]=Math.max(90,avail-others);
+        if(avail-others<90){Object.keys(need).forEach(function(k){if(+k!==iSp)widthOf[k]=need[k]*(avail-90)/others})}}
+      [].forEach.call(hr.cells,function(th,i){var px=flex[i]?widthOf[i]:(fixW[heads[i]]||50);S(th,'width',(Math.round(px/TOT*1000)/10)+'%')});
+      var few=LRw.length<=20,wrapSp=!fits;
+      /* ③ 한 줄 고정·정렬 */
+      [].forEach.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){
+        var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=/(^|\s)(m9234|p9240)(\s|$)/.test(tr.className);
+        if(!det&&!main)return;
         [].forEach.call(tr.cells,function(td,i){
-          S(td,'paddingTop',padV+'px');S(td,'paddingBottom',padV+'px');S(td,'paddingRight',roomy?'5px':'3px');S(td,'lineHeight',String(lh));S(td,'verticalAlign','middle');
-          if(i!==iCd)S(td,'fontSize',(det?fsD:fsM)+'px');
-          if(i!==iNm)S(td,'paddingLeft',roomy?'5px':'3px');
+          S(td,'paddingTop','1px');S(td,'paddingBottom','1px');S(td,'paddingRight','3px');S(td,'lineHeight','1.25');S(td,'verticalAlign','middle');
+          if(i!==iCd)S(td,'fontSize',det?'10px':'10.5px');
+          if(i!==iNm)S(td,'paddingLeft','3px');
           one(td);
-          if(wrap&&(i===iNm||heads[i]==='규격')){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'wordBreak','keep-all')}
-          if(i===iNo){S(td,'textAlign','center');S(td,'fontSize',(roomy?10.5:9.5)+'px')}
-          if(i===iCd){S(td,'textAlign','center');if(roomy)S(td,'fontSize','10px')}
-          if(heads[i]==='단위')S(td,'textAlign','center');
-          if(heads[i]==='비고'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'fontSize',(roomy?10:9)+'px');S(td,'lineHeight','1.15')}
+          if(i===iNo){S(td,'textAlign','center');S(td,'fontSize','9.5px')}
+          if(i===iCd||heads[i]==='단위')S(td,'textAlign','center');
+          if(heads[i]==='비고'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'fontSize','9px');S(td,'lineHeight','1.15')}
+          if(wrapSp&&heads[i]==='규격'){S(td,'whiteSpace','normal');S(td,'overflow','visible');S(td,'wordBreak','keep-all')}
         });
         if(main&&iNm>=0)S(tr.cells[iNm],'fontWeight','700');
       });
@@ -2358,4 +2370,90 @@ window.V9228_APPLIED=true;
     prLines=function(lines,opt){var r=_p.apply(this,arguments);try{if(typeof r==='string'&&r.indexOf('lines l9234')>=0)r=window.prTidy9235(r,lines)}catch(x){console.error('[v9235-pr]',x)}return r};
   }
   window.V9235_APPLIED=true;
+})();
+
+/* ═══ v9.236 [Claude · 대표 11-05 22:5x] 「자재가 많지 않음에도 하단 표를 딱 눌러 붙여놔서 가독성이 안좋아. 반응형으로 UI 좀 잘 짜줄 수 없을까?」
+   ① 「한 장에 맞추기」가 모든 문서를 84%로 줄이던 원인(안쪽 .sheet 겹) 고침 ② 인쇄 미리보기가 열린 뒤 A4 한 장(718×1015px, erp 한 장 맞춤 fit305와 같은 기준)에 남는 높이를 실제로 재서,
+   견적서 품목 표(l9234·t9240) 줄 위아래 여백·글자를 남는 만큼 키움(한 줄 최대 30px·12px). 남는 높이가 없으면(줄 많은 견적) 그대로 촘촘히.
+   키운 뒤 다시 재서 한 장을 넘으면 한 단계씩 되돌림. 동결 7종 손대지 않음. `window.V9236_APPLIED` ═══ */
+(function(){
+  if(window.V9236_APPLIED)return;
+  /* 원인 고침: printDoc(#1450-2)이 #prBody(.sheet) 안에 .sheet.pr-main-sheet를 한 겹 더 씌워 min-height 1120px·여백이 두 번 들어감
+     → 「한 장에 맞추기」가 모든 문서를 늘 1,208px로 재서 약 84%로 줄였음. 한 장짜리 문서는 안쪽 겹을 투명하게(여러 장 인쇄는 그대로) */
+  (function(){var c=document.createElement('style');c.id='v9236css';
+    c.textContent='#prBody>.pr-main-sheet:only-child{width:auto!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:none!important;border-radius:0!important;min-height:0!important;background:transparent!important}';
+    document.head.appendChild(c)})();
+  var PAGE=1015;
+  var S=function(el,p,v){el.style.setProperty(p,v,'important')};
+  var measure=function(body){var sh=body.closest('.sheet')||body,old=sh.getAttribute('style')||'',z=body.style.zoom;body.style.zoom='';
+    sh.style.width='718px';sh.style.maxWidth='718px';sh.style.padding='0';sh.style.minHeight='0';var h=body.scrollHeight;sh.setAttribute('style',old);body.style.zoom=z;return h};
+  window.fill9236=function(){
+    try{
+      var pr=document.getElementById('pr'),body=document.getElementById('prBody');if(!pr||!body||!pr.classList.contains('on'))return;
+      var t=body.querySelector('table.t9240,table.l9234');if(!t||t.dataset.f9236)return;t.dataset.f9236='1';
+      var LR=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});if(!LR.length)return;
+      var h0=measure(body),free=PAGE-h0-8;if(free<LR.length*2)return;
+      var apply=function(add){var big=add>=6,mid=add>=3;
+        LR.forEach(function(tr){var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className);
+          [].forEach.call(tr.cells,function(td){var p=1+Math.floor(add/2);S(td,'padding-top',p+'px');S(td,'padding-bottom',p+'px');
+            if(!/(^|\s)k9234(\s|$)/.test(td.className)&&!td.style.getPropertyValue('font-size').match(/^9(\.5)?px/))S(td,'font-size',(big?(det?11.5:12):mid?(det?11:11.5):(det?10:10.5))+'px');});});
+        var th=t.tHead&&t.tHead.rows[0];if(th)[].forEach.call(th.cells,function(c){S(c,'padding',(big?'6px 4px':mid?'4px 3px':'3px 3px'));if(big)S(c,'font-size','11.5px')});};
+      var add=Math.min(14,Math.floor(free/LR.length));
+      while(add>0){apply(add);if(measure(body)<=PAGE)break;add--;}
+      if(add<=0)apply(0);
+      try{if(typeof fit305Bar==='function')fit305Bar()}catch(x){}
+    }catch(e){console.error('[v9236]',e)}
+  };
+  if(typeof printDoc==='function'){
+    var _pd=printDoc;
+    printDoc=function(){var r=_pd.apply(this,arguments);var go=function(){setTimeout(window.fill9236,60)};if(r&&typeof r.then==='function')r.then(go);else go();return r};
+  }
+  /* 미리보기 내용이 바뀌면(문서 바꿔 열기·내용 고치기) 다시 맞춤 — printDoc 감싸기가 다른 덧씌움에 가려도 동작 */
+  (function hook(n){var pb=document.getElementById('prBody');if(!pb){if((n||0)<120)setTimeout(function(){hook((n||0)+1)},500);return}
+    var tm=null;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(window.fill9236,90)}).observe(pb,{childList:true});})();
+  window.V9236_APPLIED=true;
+})();
+
+/* ═══ v9.237 [Claude · 대표 11-05 23:0x] 「매출과 매입 색상 차이가 없어서 눈에 확실하게 안 들어온다. 매입은 파란색, 매출은 빨간색. 글씨에 색을 주는 것보다는 음영」
+   「구분」 칸(매출·매입)이 있는 표(문서 원장 등)의 줄 전체에 옅은 음영 + 「구분」 칸은 진한 색 표시. 글씨 색은 그대로.
+   매출 = 옅은 빨강, 매입 = 옅은 파랑. 화면 표만(인쇄 양식 아님). `window.V9237_APPLIED` ═══ */
+(function(){
+  if(window.V9237_APPLIED)return;
+  var c=document.createElement('style');c.id='v9237css';
+  c.textContent='tr.sd9237s>td{background-color:#fff1f1!important}tr.sd9237p>td{background-color:#eef5ff!important}'
+    +'tr.sd9237s:hover>td{background-color:#ffe3e3!important}tr.sd9237p:hover>td{background-color:#dfeeff!important}'
+    +'td.k9237s{box-shadow:inset 4px 0 0 #dc2626;color:#b91c1c!important;font-weight:700}td.k9237p{box-shadow:inset 4px 0 0 #2563eb;color:#1d4ed8!important;font-weight:700}'
+    +'@media print{tr.sd9237s>td,tr.sd9237p>td{background-color:transparent!important}td.k9237s,td.k9237p{box-shadow:none}}';
+  document.head.appendChild(c);
+  var paintTable=function(t){
+    try{
+      if(t.closest&&t.closest('#pr'))return;
+      var hr=t.tHead&&t.tHead.rows[0];if(!hr)return;
+      var ix=-1;[].forEach.call(hr.cells,function(th,i){var tx=(th.textContent||'').trim();if(tx==='구분')ix=i});
+      if(ix<0||!t.tBodies[0])return;
+      [].forEach.call(t.tBodies[0].rows,function(tr){
+        var td=tr.cells[ix];if(!td)return;var v=(td.textContent||'').trim(),k=v==='매출'?'s':v==='매입'?'p':'';
+        if(tr.getAttribute('data-k9237')===k)return;tr.setAttribute('data-k9237',k);
+        tr.classList.remove('sd9237s','sd9237p');td.classList.remove('k9237s','k9237p');
+        if(k){tr.classList.add('sd9237'+k);td.classList.add('k9237'+k)}
+      });
+    }catch(e){console.error('[v9237]',e)}
+  };
+  var tm=null,run=function(){tm=null;[].forEach.call(document.querySelectorAll('table'),function(t){if(t.offsetParent!==null)paintTable(t)})};
+  new MutationObserver(function(){if(!tm)tm=setTimeout(run,150)}).observe(document.body,{childList:true,subtree:true});
+  setTimeout(run,500);
+  window.V9237_APPLIED=true;
+})();
+
+/* ═══ v9.238 [Claude · 대표 11-05 23:0x] 「글씨체도 좀 맞춰줘… 우리 헌법으로 지정한 거 있잖아. Noto Sans KR… erp 전체에 제발」
+   erp 화면·인쇄 미리보기·견적 엑셀표 등 전부 Noto Sans KR 하나로(지금은 IBM Plex Sans KR가 앞에 있어 섞여 보임). 숫자 칸은 자릿수 맞춤(tabular-nums).
+   코드·고정폭 글자(code·pre·kbd·samp)는 그대로. `window.V9238_APPLIED` ═══ */
+(function(){
+  if(window.V9238_APPLIED)return;
+  try{if(![].some.call(document.querySelectorAll('link[rel=stylesheet]'),function(l){return /Noto\+Sans\+KR/.test(l.href)})){var lk=document.createElement('link');lk.rel='stylesheet';lk.href='https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap';document.head.appendChild(lk)}}catch(e){}
+  var c=document.createElement('style');c.id='v9238css';
+  c.textContent='html body,html body *:not(code):not(pre):not(kbd):not(samp){font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif!important}'
+    +'td.n,th.n,.n,td.k9234{font-variant-numeric:tabular-nums}';
+  document.head.appendChild(c);
+  window.V9238_APPLIED=true;
 })();
