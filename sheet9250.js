@@ -1,6 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
+ * v1.3 [대표 11-06 09:2x 「옛 화면을 쓰지 않으니까 엑셀 형식으로만 하자」] 메뉴가 바로 이 표를 열도록 · 옛 화면에만 있던 작업 단추(통장 올리기·짝 맞추기·세무사 제출 등)를
+ *      표 위 「작업」 줄로 옮겨 붙이는 자리: SH9250.addTool('bank', '통장 올리기', function(){…}) — 시트를 바꾸면 그 시트 단추만 보임
  * v1.2 시트 2개 추가(거래처·인사, DB1201 — 저장은 공통 수정층 ceo_record_set을 거침). 거래처·인사는 기간과 상관없이 전체(인사는 기간 시작 뒤 퇴사자 포함)
  * v1.1 시트 5개(통장·카드·세금계산서·문서 원장·급여 지급, DB1200) · [안티 #1490 검토 ③④] 계정·거래처 고르기 목록: 글자·초성(ㅅㅁㅌ)·코드로 찾기 + ↑↓ Enter · 저장된 칸 연두색 표시 · SH9250.open('bank'|'tax'|'pay') 외부 호출용
  * [Claude · 대표 11-06 01:2x 「BVS ERP를 전체 엑셀화… 통장, 계산서, 급여 등등 전 시스템을 변경해」] 게시요청 #1491 (계획 #1490)
@@ -111,6 +113,7 @@
           '<button type="button" class="sh-btn" data-a="next">▶</button>' +
           '<input type="date" class="sh-in" id="sh_from"> ~ <input type="date" class="sh-in" id="sh_to">' +
           '<button type="button" class="sh-btn" data-a="load">조회</button>' +
+          '<span id="sh_tools" style="display:inline-flex;gap:4px;flex-wrap:wrap"></span>' +
           '<input type="search" class="sh-in" id="sh_q" placeholder="전체에서 찾기" style="width:150px">' +
           '<span style="flex:1"></span>' +
           '<button type="button" class="sh-btn pri" data-a="save" id="sh_save" disabled>저장</button>' +
@@ -150,10 +153,18 @@
       SH.syncDates();
     },
 
+    tools: {},
+    addTool: function(k, label, fn){ (SH.tools[k] = SH.tools[k] || []).push({t:label, run:fn}); SH.paintTools(); },
+    paintTools: function(){
+      var el = document.getElementById('sh_tools'); if (!el) return; var list = SH.tools[SH.sheet] || [];
+      el.innerHTML = list.map(function(x, i){ return '<button type="button" class="sh-btn" data-tool="' + i + '" style="border-color:#0f766e;color:#0f766e">' + esc(x.t) + '</button>'; }).join('');
+      el.onclick = function(e){ var b = e.target.closest('button[data-tool]'); if (!b) return; e.stopPropagation(); var x = (SH.tools[SH.sheet] || [])[+b.dataset.tool]; if (x) { try { x.run(SH); } catch(err) { say('작업 실패: ' + err.message, 'e'); } } };
+    },
     syncDates: function(){
       var f = document.getElementById('sh_from'), t = document.getElementById('sh_to'), y = document.getElementById('sh_ym');
       if (f) f.value = SH.from; if (t) t.value = SH.to; if (y) y.value = (SH.from.slice(0,7) === SH.to.slice(0,7)) ? SH.from.slice(0,7) : '';
       document.querySelectorAll('#p-sh9250 .sh-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.k === SH.sheet); });
+      SH.paintTools();
     },
 
     nav: function(){
