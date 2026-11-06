@@ -1,6 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
+ * v1.5 [대표 11-06 10:0x 「출역보고 카톡 복사하기도 만들어주라. 고객사에 보고해야하거든」] 현장 상황판 「명단 복사」 옆 「카톡 보고」 단추 —
+ *      그날 출역을 청구처(고객사)별로 「11월 05일(목) 투입현황 / 거래처 / 총 N명 / [업무] N명 / 장소: 이름…」 문구로 만들어(DB1203 ceo_field_report_text)
+ *      창에 보여 주고(고칠 수 있음) 「복사」. 고객사가 여럿이면 고객사마다 따로 복사.
+ *      + 요약줄 합계에서 공수·연장 뒤 「원」 빼기(출역 시트)
  * v1.4 [대표 11-06 09:3x 「용역은 엑셀 출역에서 수정하는게 훨씬 편한데, 정규직은 엑셀에서 계산해서 고치는건 불편」] 「출역」 시트(DB1202) — 공수·연장·작업 내용·메모,
  *      저장은 청구 엑셀표(xl9193 인건비)와 같은 길. 정규직 급여는 급여 계산 화면 그대로
  * v1.3 [대표 11-06 09:2x 「옛 화면을 쓰지 않으니까 엑셀 형식으로만 하자」] 메뉴가 바로 이 표를 열도록 · 옛 화면에만 있던 작업 단추(통장 올리기·짝 맞추기·세무사 제출 등)를
@@ -348,7 +352,7 @@
       var name = (SHEETS.find(function(s){ return s.k === SH.sheet; }) || {}).t;
       var all = SH.data.rows.length, n = SH.view.length;
       var parts = ['<b>' + name + '</b>', SH.from + ' ~ ' + SH.to, (n === all ? all + '줄' : n + '줄 / 전체 ' + all + '줄')];
-      SH.cols().forEach(function(c){ if (c.sum) parts.push(c.t + ' <b>' + won(sums[c.k]) + '원</b>'); });
+      SH.cols().forEach(function(c){ if (c.sum) parts.push(c.t + ' <b>' + won(sums[c.k]) + (/^(work_md|ot_hours|pay_terms_days|docs)$/.test(c.k) ? '' : '원') + '</b>'); });
       if (SH.sheet === 'bank') { var un = SH.view.filter(function(r){ return !r.acct || r.acct === 'Z999'; }).length; if (un) parts.push('<span style="color:#b45309">계정 미지정 ' + un + '줄</span>'); }
       if (SH.sheet === 'tax') { var nd = SH.view.filter(function(r){ return !r.doc; }).length; var np = SH.view.filter(function(r){ return !r.paid; }).length; parts.push('문서 미연결 ' + nd + '줄'); parts.push('통장 짝 없음 ' + np + '줄'); }
       if (SH.sheet === 'pay') { var nb = SH.view.filter(function(r){ return !r.bank; }).length; if (nb) parts.push('통장 짝 없음 ' + nb + '줄'); }
@@ -627,6 +631,69 @@
     }
   };
 
+
+  /* ── v1.5 현장 상황판 「카톡 보고」 ── */
+  (function(){
+    var FR = {
+      btn: function(){
+        if (!owner()) return;
+        var all = [].slice.call(document.querySelectorAll('button'));
+        var anchor = all.find(function(b){ return (b.textContent || '').trim() === '명단 복사' && b.offsetParent; });
+        if (!anchor || anchor.parentNode.querySelector('.fr9250')) return;
+        var b = document.createElement('button'); b.type = 'button'; b.className = (anchor.className || '') + ' fr9250';
+        b.textContent = '카톡 보고'; b.title = '고객사 보고용 투입현황 문구 만들기·복사';
+        b.style.cssText = 'margin-left:4px;background:#fee500;border:1px solid #e5cc00;color:#191919;font-weight:700';
+        b.onclick = function(e){ e.preventDefault(); e.stopPropagation(); FR.open(anchor); };
+        anchor.parentNode.insertBefore(b, anchor.nextSibling);
+      },
+      day: function(anchor){
+        var pg = anchor.closest('.page') || document;
+        var d = [].slice.call(pg.querySelectorAll('input[type="date"]')).map(function(x){ return x.value; }).filter(Boolean)[0];
+        return d || kstToday();
+      },
+      open: function(anchor){
+        var d = FR.day(anchor), c = client(); if (!c) { say('로그인 연결을 찾지 못했습니다', 'e'); return; }
+        c.rpc('ceo_field_report_text', {p_date: d}).then(function(res){
+          var r = res.data || {};
+          if (res.error || !r.ok) { say('보고 문구를 못 만들었습니다: ' + ((res.error && res.error.message) || r.msg || ''), 'e'); return; }
+          if (!r.items || !r.items.length) { say(r.msg || '이날 고객사 청구 출역이 없습니다'); return; }
+          FR.show(r);
+        });
+      },
+      copy: function(txt){
+        var done = function(){ say('복사했습니다 — 카톡 창에 붙여넣기(Ctrl+V) 하십시오', 's'); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function(){ FR.copyOld(txt); done(); });
+        else { FR.copyOld(txt); done(); }
+      },
+      copyOld: function(txt){ var t = document.createElement('textarea'); t.value = txt; t.style.cssText = 'position:fixed;left:-9999px'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch(e){} t.remove(); },
+      show: function(r){
+        var old = document.getElementById('fr9250'); if (old) old.remove();
+        var w = document.createElement('div'); w.id = 'fr9250';
+        w.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:9999;display:flex;align-items:center;justify-content:center';
+        w.innerHTML = '<div style="background:#fff;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,.25);width:min(560px,94vw);max-height:90vh;overflow:auto;padding:16px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:15px">카톡 보고 · ' + esc(r.head) + '</b><button type="button" data-x="1" class="sh-btn">닫기</button></div>' +
+          r.items.map(function(it, i){
+            var rows = String(it.text).split('\n').length + 1;
+            return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:700">' + esc(it.partner) + ' · ' + it.n + '명</span>' +
+              '<button type="button" class="sh-btn pri" data-c="' + i + '">복사</button></div>' +
+              '<textarea data-t="' + i + '" rows="' + rows + '" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;line-height:1.5;border:1px solid #cbd5e1;border-radius:6px;padding:8px;resize:vertical">' + esc(it.text) + '</textarea></div>';
+          }).join('') +
+          '<div style="font-size:11px;color:#64748b">글자를 고친 뒤 「복사」하면 고친 그대로 복사됩니다 · 청구처 없는 사내·본사업무 출역은 빠집니다</div></div>';
+        document.body.appendChild(w);
+        w.addEventListener('click', function(e){
+          if (e.target === w || e.target.closest('[data-x]')) { w.remove(); return; }
+          var b = e.target.closest('[data-c]'); if (b) { var ta = w.querySelector('textarea[data-t="' + b.dataset.c + '"]'); FR.copy(ta.value); }
+        });
+        var first = w.querySelector('[data-c="0"]'); if (first) first.focus();
+      }
+    };
+    SH.fieldReport = FR;
+    var tm = null;
+    var kick = function(){ clearTimeout(tm); tm = setTimeout(FR.btn, 150); };
+    var watch = function(n){ if (!document.body) { if ((n || 0) < 60) setTimeout(function(){ watch((n || 0) + 1); }, 500); return; }
+      new MutationObserver(kick).observe(document.body, {childList:true, subtree:true}); kick(); };
+    watch(0);
+  })();
   window.SH9250 = SH;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', SH.init); else SH.init();
 })();
