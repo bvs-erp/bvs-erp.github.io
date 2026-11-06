@@ -1,6 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
+ * v1.9 [대표 11-06 12:2x 「안열려. 빨리 청구서 인쇄해서 보내야」] 문서 원장이 엑셀표로 바뀐 뒤 ERP가 문서 목록(D.sd)을 안 불러와
+ *      문서 창·인쇄·Ctrl+K 문서 찾기가 모두 빈손 → 엑셀표가 열릴 때·문서 창/인쇄 누를 때 문서 목록이 비었으면 먼저 불러옴(SH.ensureDocs — loadAll('sd'), 최대 8초 기다림)
  * v1.8 [대표 11-06 12:1x 「메뉴만 남기기」] 상단 「장 장부 엑셀표」 단추 없앰 · 표 안의 탭 줄 숨김(메뉴 서브탭이 곧 탭) · 화면 제목 = 표 이름(통장·카드…) · Ctrl+K 검색은 그대로
  * v1.7 [대표 11-06 12:0x 「너비 조정은 전혀 안되고」] 머리칸 오른쪽 끝을 끌어 열 너비 조정(두 번 누르면 글자에 맞춤) · 시트별로 기억(이 브라우저)
  * v1.6 [대표 11-06 11:5x 「엑셀로 한건 좋은데 이거 청구서 인쇄하려면 뭘 눌러야돼?」] 문서 원장: 줄을 두 번 누르거나 Enter → 예전 문서 창(인쇄·수정 단추 그대로),
@@ -174,14 +176,26 @@
     },
     selRow: function(){ return SH.sel ? SH.view[SH.sel.r] : null; },
     docObj: function(no){ return (window.D && Array.isArray(D.sd)) ? D.sd.filter(function(x){ return x.doc_no === no; })[0] : null; },
+    /* 문서 목록(D.sd)이 비었으면 ERP 기본 불러오기 loadAll('sd')로 한 번 불러옴 */
+    ensureDocs: function(){
+      var has = function(){ return !!(window.D && Array.isArray(D.sd) && D.sd.length); };
+      if (has()) return Promise.resolve(true);
+      if (SH._docLoading) return SH._docLoading;
+      SH._docLoading = Promise.resolve().then(function(){ if (typeof window.loadAll === 'function') return window.loadAll('sd'); }).catch(function(){})
+        .then(function(){ return new Promise(function(res){ var n = 0; (function wait(){ if (has() || ++n > 32) return res(has()); setTimeout(wait, 250); })(); }); })
+        .then(function(ok){ SH._docLoading = null; return ok; });
+      return SH._docLoading;
+    },
     docOpen: function(no){
       if (!no) { say('먼저 문서 줄을 하나 고르십시오', 'e'); return; }
+      if (!SH.docObj(no)) { say('문서 목록을 불러오는 중…'); SH.ensureDocs().then(function(ok){ if (ok && SH.docObj(no)) SH.docOpen(no); else say('문서 목록을 못 불러왔습니다 — 새로고침(F5) 뒤 다시', 'e'); }); return; }
       var d = SH.docObj(no);
       if (d && typeof window.openDoc === 'function') { try { window.openDoc(d); return; } catch(e) { console.error('[sheet9250 openDoc]', e); } }
       SH.docPrint(no);
     },
     docPrint: function(no){
       if (!no) { say('먼저 인쇄할 문서 줄을 하나 고르십시오', 'e'); return; }
+      if (!SH.docObj(no)) { say('문서 목록을 불러오는 중…'); SH.ensureDocs().then(function(ok){ if (ok && SH.docObj(no)) SH.docPrint(no); else say('문서 목록을 못 불러왔습니다 — 새로고침(F5) 뒤 다시', 'e'); }); return; }
       if (typeof window.printDoc === 'function') { try { window.printDoc(no); return; } catch(e) { console.error('[sheet9250 printDoc]', e); } }
       say('인쇄 화면을 찾지 못했습니다(ERP 새로고침 후 다시)', 'e');
     },
@@ -238,6 +252,7 @@
       if (k && k !== SH.sheet) { if (!SH.leaveOk()) return; SH.sheet = k; SH.data = null; }
       SH.syncDates();
       if (!SH.data) SH.load(); else SH.paint();
+      if (SH.sheet === 'doc') SH.ensureDocs();
       setTimeout(SH.focus, 30);
     },
 
