@@ -1,3 +1,4 @@
+/* xl9193 v9.240 [Claude · 대표 11-06 12:0x 「여기저기 엑셀표… 왜케 복잡해」 → 「메뉴만 남기기」] 상단 XL «엑셀표» · 하단 서브탭 «엑셀표» · 콕핏 «엑셀표» 단추를 더 붙이지 않음(Ctrl+K 검색은 그대로). 화면 이름 「청구 엑셀표」. 메뉴 입구 XL.openSheet(k). */
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * xl9193.js — 「엑셀표」 엑셀처럼 바로 고치는 표 (v9.193)
@@ -98,7 +99,8 @@
 
         injectNav: function() {
       // 1. 콕핏 처리/현황 영역 내 버튼 주입 (기존 호환)
-      try {
+      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      if (false) try {
         var todoSec = document.getElementById('sec-todo') || document.querySelector('.sec-todo');
         if (todoSec && !document.getElementById('btnCockpitXl9193')) {
           var head = todoSec.querySelector('.sttl, .sec-title, h3, h4') || todoSec;
@@ -114,7 +116,8 @@
       } catch(e) {}
 
       // 2. 상단 modbar (1콕핏 2휴먼 3딜 4캐시플로우 옆) 에 «엑셀표» 버튼 추가
-      try {
+      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      if (false) try {
         var mb = document.getElementById('modbar');
         if (mb && !document.getElementById('btnModXl9193')) {
           var xlModBtn = document.createElement('button');
@@ -130,7 +133,8 @@
       } catch(e) {}
 
       // 3. shTabs 래핑: 1콕핏·3사이트(딜)·4캐시플로우 하단 서브탭(mtabs) 맨 끝에 «엑셀표» 탭 자동 부착
-      try {
+      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      if (false) try {
         if (typeof window.shTabs === 'function' && !window.shTabs._xlWrapped) {
           var _origShTabs = window.shTabs;
           window.shTabs = function() {
@@ -391,9 +395,9 @@
         p.style.display = 'flex';
       }
       var ttl = document.getElementById('ttl');
-      if (ttl) ttl.textContent = '«엑셀표»';
+      if (ttl) ttl.textContent = '청구 엑셀표';
       var crumb = document.getElementById('crumb');
-      if (crumb) crumb.textContent = '대표 전용 · «엑셀표»';
+      if (crumb) crumb.textContent = '대표 전용 · 청구 엑셀표';
 
       // 탭 활성화 상태 표시
       var mtabXl = document.querySelector('.mtab-xl9193');
@@ -1022,6 +1026,8 @@
   };
 
   // 전역 노출 및 초기화
+  /* v9.240 메뉴에서 바로 여는 입구: XL.openSheet('mat' 자재 | 'labor' 인건비 | 'inv' 청구서 글자) */
+  XL.openSheet = function(k){ try { XL.open(); var sel = document.getElementById('xl9193_sheet_sel'); if (k && sel && sel.querySelector('option[value="' + k + '"]')) { sel.value = k; XL.curSheet = k; } if (typeof XL.load === 'function') XL.load(); } catch(e) { console.error('[v9240 openSheet]', e); } };
   window.XL = XL;
   window.XL9193 = XL;
 
