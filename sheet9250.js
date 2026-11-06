@@ -1,6 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
+ * v1.10 [대표 11-06 13:0x 「인쇄하기 누르니 화면이 백지야」] Claude 잘못 — v1.0부터 넣은 인쇄 규칙(@media print)이 ERP 전체 인쇄에 걸려
+ *      청구서·견적서 등 모든 인쇄가 백지 → 엑셀표 「인쇄」 누를 때만(body.sh9250-printing) 적용
  * v1.9 [대표 11-06 12:2x 「안열려. 빨리 청구서 인쇄해서 보내야」] 문서 원장이 엑셀표로 바뀐 뒤 ERP가 문서 목록(D.sd)을 안 불러와
  *      문서 창·인쇄·Ctrl+K 문서 찾기가 모두 빈손 → 엑셀표가 열릴 때·문서 창/인쇄 누를 때 문서 목록이 비었으면 먼저 불러옴(SH.ensureDocs — loadAll('sd'), 최대 8초 기다림)
  * v1.8 [대표 11-06 12:1x 「메뉴만 남기기」] 상단 「장 장부 엑셀표」 단추 없앰 · 표 안의 탭 줄 숨김(메뉴 서브탭이 곧 탭) · 화면 제목 = 표 이름(통장·카드…) · Ctrl+K 검색은 그대로
@@ -111,7 +113,7 @@
         '.sh-log{position:absolute;right:14px;top:96px;width:420px;max-height:60vh;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:20;font-size:12px}',
         '.sh-log table{width:100%;border-collapse:collapse}.sh-log td,.sh-log th{border-bottom:1px solid #eef2f7;padding:4px 6px;text-align:left}',
         '.sh-help{font-size:11px;color:#64748b}',
-        '@media print{body *{visibility:hidden}#p-sh9250,#p-sh9250 *{visibility:visible}#p-sh9250{position:absolute;left:0;top:0;height:auto;overflow:visible}.sh-bar,.sh-help,.sh-t thead tr.f,.sh-log{display:none!important}.sh-wrap{overflow:visible;border:none}.sh-t th,.sh-t td{font-size:9px;height:auto}}'
+        '@media print{body.sh9250-printing *{visibility:hidden}body.sh9250-printing #p-sh9250,body.sh9250-printing #p-sh9250 *{visibility:visible}body.sh9250-printing #p-sh9250{position:absolute;left:0;top:0;height:auto;overflow:visible}body.sh9250-printing .sh-bar,body.sh9250-printing .sh-help,body.sh9250-printing .sh-t thead tr.f,body.sh9250-printing .sh-log{display:none!important}body.sh9250-printing .sh-wrap{overflow:visible;border:none}body.sh9250-printing .sh-t th,body.sh9250-printing .sh-t td{font-size:9px;height:auto}}'
       ].join('\n');
       document.head.appendChild(c);
     },
@@ -305,7 +307,10 @@
       else if (a === 'drop') { SH.dirty = {}; SH.paint(); }
       else if (a === 'log') SH.toggleLog();
       else if (a === 'csv') SH.csv();
-      else if (a === 'print') window.print();
+      else if (a === 'print') { /* v1.10 엑셀표 인쇄 때만 이 표만 보이게 — 다른 인쇄(청구서·견적서)는 건드리지 않음 */
+        document.body.classList.add('sh9250-printing');
+        var off = function(){ document.body.classList.remove('sh9250-printing'); window.removeEventListener('afterprint', off); };
+        window.addEventListener('afterprint', off); setTimeout(function(){ window.print(); setTimeout(off, 1500); }, 0); }
       else if (a === 'close') SH.close();
     },
 
