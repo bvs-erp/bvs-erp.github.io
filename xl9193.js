@@ -2510,7 +2510,7 @@ window.V9228_APPLIED=true;
   if(window.V9238_APPLIED)return;
   try{if(![].some.call(document.querySelectorAll('link[rel=stylesheet]'),function(l){return /Noto\+Sans\+KR/.test(l.href)})){var lk=document.createElement('link');lk.rel='stylesheet';lk.href='https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap';document.head.appendChild(lk)}}catch(e){}
   var c=document.createElement('style');c.id='v9238css';
-  c.textContent='html body,html body *:not(code):not(pre):not(kbd):not(samp){font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif!important}'
+  c.textContent='html body,html body *:not(code):not(pre):not(kbd):not(samp){font-family:var(--font-sans)!important}'
     +'td.n,th.n,.n,td.k9234{font-variant-numeric:tabular-nums}';
   document.head.appendChild(c);
   window.V9238_APPLIED=true;
