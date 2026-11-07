@@ -85,7 +85,7 @@
     kids: function (k) { return QT.rows.filter(function (r) { return r.par === k; }); },
     level: function (r) { var n = 0, p = r.par; while (p) { n++; var pr = QT.get(p); p = pr ? pr.par : null; if (n > 30) break; } return n; },
     moveRow: function (dir) {
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var R = QT.rows, i = QT.sel.r, r = R[i]; if (!r) return;
       var end = QT.subEnd(i), block = R.slice(i, end + 1);
       if (dir < 0) {
@@ -243,7 +243,7 @@
         + '<div class="qtcf">시운전·A/S 대응 ' + inp('as_pct', 40, '0') + '% (직접원가의) <button onclick="QT9240.techLine()">시운전·기술지원비 줄 넣기</button></div>'
         + '<div class="qtcf">일반관리비 ' + inp('admin_pct', 40) + '% · 이윤 ' + inp('profit_pct', 40) + '% + 결제조건 <select class="qtcp" data-k="pay_pct">'
         + [['0', '현금·30일 이내 +0%'], ['2', '60일 +2%'], ['3', '90일·어음 +3%']].map(function (o) { return '<option value="' + o[0] + '"' + (String(+c.pay_pct || 0) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select> = 이윤 <b>' + num((+c.profit_pct || 0) + (+c.pay_pct || 0)) + '%</b> · 메모 ' + inp('memo', 160) + '</div>'
-        + '<div class="qtcs2">기준: 1공수 ' + won(b.md_cost_auto) + '원(' + esc(bs.from || '') + '~' + esc(bs.to || '') + ' 확정 출역 ' + num(bs.md) + '공수, 4대보험 회사분 ' + num(p.ins_pct) + '%)'
+        + '<div class="qtcs2">기준: 1공수 ' + won(b.md_cost_auto) + '원(' + esc(bs.from || '') + '~' + esc(bs.to || '') + ' 승인 출역 ' + num(bs.md) + '공수, 4대보험 회사분 ' + num(p.ins_pct) + '%)'
         + ' · 공장 1일 ' + won(b.factory_day_cost) + '원(임대료 공장 몫 ' + num(p.factory_rent_pct) + '% + 전기 ÷ ' + num(p.workdays) + '일)</div>'
         + '<div style="margin-top:6px"><b style="font-size:12px">관리비·이윤 따로 표시</b> <button onclick="QT9240.costCostPrice()">① 매입가를 단가로</button><button onclick="QT9240.costAsmLine()">② 조립비 = 노무비+공장경비+기타</button><button class="p" onclick="QT9240.costOhLines()">③ 일반관리비·기업이윤 줄 넣기</button></div>'
         + '<div style="margin-top:4px"><b style="font-size:12px">단가에 섞기</b> <button onclick="QT9240.costPut(false)">제안가를 선택한 줄에</button><button onclick="QT9240.costPut(true)">제안가를 조립비 줄에</button>'
@@ -269,7 +269,7 @@
       if (key) { var el = box.querySelector('input.qtci[data-k="' + key + '"]'); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} } }
     },
     costPut: function (asm) {
-      if (!QT.cc) return; if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if (!QT.cc) return; if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var r = null;
       if (asm) r = QT.rows.filter(function (x) { return !x.par && /조립/.test(x.name || ''); })[0];
       if (!r) r = QT.rows[QT.sel.r];
@@ -286,7 +286,7 @@
     techBase: function () { var b = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isTech(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) b += a; }); return b; },
     techSetPct: function (pct) { QT.rows.forEach(function (r) { if (QT.isTech(r)) { r.mk = pct; r.unit = '%'; r.ohKeep = false; } }); },
     techLine: function () {
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var pct = +parseNum((QT.cc || {}).as_pct) || 3; if (QT.cc) QT.cc.as_pct = pct;
       var r = QT.rows.filter(QT.isTech)[0];
       if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: QT.TECH, spec: '', qty: 1, unit: '%', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; var at = QT.rows.length; QT.rows.forEach(function (x, i) { if (QT.isOh(x) && i < at) at = i; }); QT.rows.splice(at, 0, r); }
@@ -322,12 +322,12 @@
     },
     ohSetPct: function (nm, pct) { QT.rows.forEach(function (r) { if (QT.isOh(r) && (String(r.name).trim() === nm || (nm === '기업이윤' && QT.isProfit(r)))) { r.mk = pct; r.unit = '%'; r.ohKeep = false; } }); },
     costCostPrice: function () {
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var n = 0; QT.rows.forEach(function (r) { if (QT.counted(r) && !QT.kids(r.k).length && r.cu != null && +r.cu > 0) { r.price = +r.cu; n++; } });
       QT.dirty = true; QT.render(); say('매입가를 단가로 ' + n + '줄 (저장해야 들어갑니다)');
     },
     costAsmLine: function () {
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var k = QT.costCalc(), v = k.labor + k.fexp + k.oth; if (!v) { say('조립 인원·일수·공장 사용 일수를 먼저 넣으세요', 'e'); return; }
       var r = QT.rows.filter(function (x) { return !x.par && /조립/.test(x.name || ''); })[0];
       if (!r) { r = { k: 'n' + (QT.seq++), par: null, code: '', name: '조립비', spec: '', qty: 1, unit: '식', price: 0, cu: null, cm: false, src: '', vendor: '', show: true, mk: null, memo: '', childShow: false }; var at = QT.rows.length; QT.rows.forEach(function (x, i) { if (QT.isOh(x) && i < at) at = i; }); QT.rows.splice(at, 0, r); }
@@ -335,7 +335,7 @@
       QT.dirty = true; QT.render(); say('조립비 ' + won(r.price * q) + '원 (노무비 ' + won(k.labor) + ' + 공장경비 ' + won(k.fexp) + ' + 기타 ' + won(k.oth) + ')');
     },
     costOhLines: function () {
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var c = QT.cc || {}, ap = +parseNum(c.admin_pct) || 0, pp = +parseNum(c.profit_pct) || 0, rd = QT.rounding || 100;
       var base = 0; QT.rows.forEach(function (r) { if (r.par || QT.isOh(r) || QT.isNego(r)) return; var a = QT.amount(r); if (a) base += a; });
       var put = function (nm, pct) {
@@ -422,7 +422,7 @@
       var cols = QT.cols(), no = QT.numbering(), d = QT.doc || {};
       QT.el('qt_title').value = d.title || '';
       QT.ptnPaint((QT.el('qt_ptnq') || {}).value);
-      QT.el('qt_info').textContent = (d.doc_date || '') + ' · ' + (d.status === 'draft' ? '초안' : '확정(고칠 수 없음)');
+      QT.el('qt_info').textContent = (d.doc_date || '') + ' · ' + (d.status === 'draft' ? '초안' : '승인(고칠 수 없음)');
       var vh = QT.vendors.map(function (v) { return '<th class="qtv" title="' + esc(v.pq) + '">' + esc(v.name) + (v.cat ? '<div class="qtc">' + esc(v.cat) + '</div>' : '') + '</th>'; }).join('');
       QT.el('qt_head').innerHTML = '<tr>' + cols.map(function (c) { return '<th style="width:' + c.w + 'px">' + c.t + '</th>'; }).join('') + vh + (QT.vendors.length ? '<th style="width:90px">고른 곳</th>' : '') + '</tr>';
       var S = 0, C = 0;
@@ -471,7 +471,7 @@
       try { QT.costPaint(); } catch (x) {}
       try { QT.el('qt_pm').value = QT.printMode(); } catch (x) {}
       var ro = (QT.doc && QT.doc.status) !== 'draft';
-      QT.el('qt_save').disabled = ro; QT.el('qt_save').title = ro ? '확정된 문서는 고칠 수 없습니다' : '';
+      QT.el('qt_save').disabled = ro; QT.el('qt_save').title = ro ? '승인된 문서는 고칠 수 없습니다' : '';
     },
     pickAt: function (i, vi) { var r = QT.rows[i]; var m = QT.matches(r)[vi]; if (m) QT.pick(r, m); },
     addVendorOnly: function (n) {
@@ -558,7 +558,7 @@
      
     save: async function () {
       if (QT.busy) return;
-      if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
+      if ((QT.doc && QT.doc.status) !== 'draft') { say('승인된 문서는 고칠 수 없습니다', 'e'); return; }
       var pos = {}; QT.rows.forEach(function (r, i) { pos[r.k] = i + 1; });
       var bad = QT.rows.some(function (r, i) { return r.par && !(pos[r.par] < i + 1); });
       if (bad) { say('줄 연결이 꼬였습니다 — 부모 줄이 아래에 있습니다', 'e'); return; }

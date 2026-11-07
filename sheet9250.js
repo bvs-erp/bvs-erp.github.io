@@ -394,7 +394,7 @@
           if (c.k === 'partner' && r.partner_how === '별칭' && !(key in SH.dirty)) cc += ' soft';
           var txt = SH.shown(r, c);
           var tip = c.ty === 'pick' && SH.rawVal(r, c) ? SH.rawVal(r, c) + ' ' + txt : txt;
-          if (c.k === 'partner' && r.partner_how === '별칭') tip += ' (통장 이름으로 추정 — 고르면 확정)';
+          if (c.k === 'partner' && r.partner_how === '별칭') tip += ' (통장 이름으로 추정 — 고르면 반영)';
           tds += '<td class="' + cc + '" data-r="' + i + '" data-c="' + j + '" title="' + esc(tip) + '">' + esc(txt) + '</td>';
         }
         body.push('<tr class="' + cls + '">' + tds + '</tr>');

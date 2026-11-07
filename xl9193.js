@@ -469,7 +469,7 @@
         var billHtml = '<span>이 달 청구서: ';
         if (bill && bill.length > 0) {
           billHtml += bill.map(function(b) {
-            return '<b style="color:#0f172a;">' + (b.doc_no || '미발행') + '</b> (공급가: ' + Number(b.supply||0).toLocaleString() + '원 / 세액: ' + Number(b.tax||0).toLocaleString() + '원)' + (b.draft ? ' <span style="color:#d97706;">[임시]</span>' : ' <span style="color:#059669;">[확정]</span>');
+            return '<b style="color:#0f172a;">' + (b.doc_no || '미발행') + '</b> (공급가: ' + Number(b.supply||0).toLocaleString() + '원 / 세액: ' + Number(b.tax||0).toLocaleString() + '원)' + (b.draft ? ' <span style="color:#d97706;">[임시]</span>' : ' <span style="color:#059669;">[승인]</span>');
           }).join(', ');
         } else {
           billHtml += '<span style="color:#94a3b8;">미발행</span>';
@@ -635,7 +635,7 @@
     startEdit: function(td) {
       if (td.getAttribute('data-editable') !== '1') {
         if (td.closest('tr').getAttribute('data-locked') === '1') {
-          if (typeof toast === 'function') toast('마감되거나 확정된 청구건은 수정할 수 없습니다.', 'i');
+          if (typeof toast === 'function') toast('마감되거나 승인된 청구건은 수정할 수 없습니다.', 'i');
         }
         return;
       }
@@ -1015,7 +1015,7 @@
       var billHtml = '<span>이 달 청구서: ';
       if (bill && bill.length > 0) {
         billHtml += bill.map(function(b) {
-          return '<b style="color:#0f172a;">' + (b.doc_no || '미발행') + '</b> (공급가: ' + Number(b.supply||0).toLocaleString() + '원 / 세액: ' + Number(b.tax||0).toLocaleString() + '원)' + (b.draft ? ' <span style="color:#d97706;">[임시]</span>' : ' <span style="color:#059669;">[확정]</span>');
+          return '<b style="color:#0f172a;">' + (b.doc_no || '미발행') + '</b> (공급가: ' + Number(b.supply||0).toLocaleString() + '원 / 세액: ' + Number(b.tax||0).toLocaleString() + '원)' + (b.draft ? ' <span style="color:#d97706;">[임시]</span>' : ' <span style="color:#059669;">[승인]</span>');
         }).join(', ');
       } else {
         billHtml += '<span style="color:#94a3b8;">미발행</span>';
@@ -1398,7 +1398,7 @@ window.V9198_APPLIED = true;
       var d = (typeof REG !== 'undefined' && REG.cache && REG.cache[curYm]) || {};
       var cl = !!d.closed;
       var totalN = regRows.length + bizRows.length;
-      regN.textContent = curYm + ' · 전체 ' + totalN + '명 (근로 ' + regRows.length + ' · 용역 ' + bizRows.length + ') · ' + (cl ? '확정됨' : '작성 중');
+      regN.textContent = curYm + ' · 전체 ' + totalN + '명 (근로 ' + regRows.length + ' · 용역 ' + bizRows.length + ') · ' + (cl ? '승인됨' : '작성 중');
     }
 
     
@@ -1972,12 +1972,12 @@ window.V9198_APPLIED = true;
       var nx=(D.sd||[]).filter(function(x){return x.prev_doc_no===no&&x.status!=='void'}).map(function(x){return x.doc_no});
       if(d.has_invoice||nx.length){toast(no+' 은(는) '+(d.has_invoice?'세금계산서가 이미 있어':'이 청구서로 만든 문서('+nx.join(', ')+')가 있어')+' 「새 버전」으로 고칩니다','w');return}
       var rb=!!(d.extra&&d.extra.bill_ym);
-      var ok=await ask('확정 풀기',no+' 청구서를 작성 중(임시)으로 되돌려 같은 번호로 고칩니다.'+(rb?'\n\n트레이 자재 청구서는 엑셀표 「청구서 - 글자」(품명·규격·일자·묶음 제목)와 「청구 - 자재비」(수량·단가)에서 고친 뒤 「확정 발행」을 다시 누르세요.':'\n\n고친 뒤 「확정 발행」을 다시 누르세요.'),{ok:'확정 풀기'});
+      var ok=await ask('승인 풀기',no+' 청구서를 작성 중(임시)으로 되돌려 같은 번호로 고칩니다.'+(rb?'\n\n트레이 자재 청구서는 엑셀표 「청구서 - 글자」(품명·규격·일자·묶음 제목)와 「청구 - 자재비」(수량·단가)에서 고친 뒤 「승인 후 발행」을 다시 누르세요.':'\n\n고친 뒤 「승인 후 발행」을 다시 누르세요.'),{ok:'승인 풀기'});
       if(!ok)return;
       var r=await sb.rpc('sd_set_status',{p_doc_no:no,p_status:'draft'});
       if(r.error||!(r.data&&r.data.ok)){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}
       d.status='draft';delete d._lines;
-      toast(no+' 확정 풀림 — 고친 뒤 「확정 발행」','g');
+      toast(no+' 승인 풀림 — 고친 뒤 「승인 후 발행」','g');
       if(rb){try{if(typeof drClose==='function')drClose()}catch(e){} try{if(window.XL&&XL.open){XL.open();var sel=document.getElementById('xl9193_sheet_sel');if(sel&&sel.querySelector('option[value="inv"]')){sel.value='inv';XL.curSheet='inv';var ym=String(d.extra.bill_ym);var yi=document.getElementById('xl9193_ym_in');if(yi){yi.value=ym}XL.curYm=ym;if(d.partner_id){var ps=document.getElementById('xl9193_ptn_sel');if(ps&&ps.querySelector('option[value="'+d.partner_id+'"]')){ps.value=d.partner_id;XL.curPartner=d.partner_id}}XL.load()}}}catch(e){console.error('[v9211]',e)}}
       else if(typeof docEdit285==='function')docEdit285(no);
     };
@@ -2028,7 +2028,7 @@ window.V9198_APPLIED = true;
     var row=(window.SG9189&&SG9189.rows||[]).filter(function(x){return x.body===target})[0];
     var invs=row?[].concat((row.st&&row.st.invoice)||[],row.invDoc?[row.invDoc]:[],row.combo?[row.combo]:[]):[];
     var inv=invs.filter(function(d){return d&&d.trade_side==='sales'&&d.status==='draft'})[0];
-    if(!inv){if(typeof toast==='function')toast('놓은 줄에 고칠 수 있는 매출 청구서(확정 전)가 없습니다','e');return}
+    if(!inv){if(typeof toast==='function')toast('놓은 줄에 고칠 수 있는 매출 청구서(승인 전)가 없습니다','e');return}
     var r;try{r=await sb.rpc('sd_bill_attach',{p_invoice:inv.doc_no,p_body:src})}catch(e){r={error:e}}
     if(r.error||!r.data||!r.data.ok){if(typeof toast==='function')toast((r.error&&r.error.message)||(r.data&&r.data.error)||'넣지 못했습니다','e');return}
     if(typeof toast==='function')toast(src+' → 청구서 '+inv.doc_no+'에 넣음','g');await reload()};
