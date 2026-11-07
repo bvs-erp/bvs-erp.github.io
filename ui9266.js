@@ -20,22 +20,19 @@
     ' html body #sb{display:flex!important;flex-direction:column;background:#fafafa!important;border-right:1px solid var(--ln)!important;overflow:auto}',
     ' #sb .nsrch,#sb #nav,#sb .sbf{display:none!important}',
     ' html body #mtabs{display:none!important}',
+    ' html body #modbar{display:none!important}',
     '}',
-    '#u66{padding:14px 10px 20px;display:flex;flex-direction:column;gap:2px;font-size:14px}',
-    '#u66 .h{font-size:11.5px;color:var(--tx3);font-weight:600;padding:6px 10px 6px}',
-    '#u66 .i{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:#2a2b30;cursor:pointer;line-height:1.25;user-select:none}',
+    '#u66{padding:14px 10px 20px;display:flex;flex-direction:column;gap:2px;font-size:13.5px}',
+    '#u66 .h{font-size:11.5px;color:var(--tx3);font-weight:700;padding:10px 10px 4px;letter-spacing:0.02em}',
+    '#u66 .i{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:#2a2b30;cursor:pointer;line-height:1.25;user-select:none;position:relative}',
     '#u66 .i:hover{background:#efeff1}',
     '#u66 .i.on{background:#e9e9ec;color:#111;font-weight:600}',
+    '#u66 .i.on::before{content:"";position:absolute;left:-6px;top:6px;bottom:6px;width:3px;background:#111113;border-radius:2px}',
     '#u66 .i svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.8}',
     '#u66 .i .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '#u66 .i .n{font-size:11.5px;color:var(--tx3);font-variant-numeric:tabular-nums}',
     '#u66 .i .x{opacity:.5;padding:0 2px}#u66 .i .x:hover{opacity:1}',
-    '#u66 .sp{height:10px}',
-    '#modbar{background:#fff!important;border-bottom:1px solid var(--ln)!important}',
-    '.ws-btn{border-radius:8px!important;margin:6px 2px!important;padding:7px 14px!important;font-size:14px!important;font-weight:500!important;color:var(--tx2)!important;border:0!important;background:none!important}',
-    '.ws-btn:hover{background:#f2f2f3!important}',
-    '.ws-btn.on{background:#111113!important;color:#fff!important;font-weight:600!important}',
-    '.ws-btn .ws-n{display:none!important}',
+    '#u66 .sp{height:8px}',
     '#top{background:#fff!important;border-bottom:1px solid var(--ln)!important}',
     '.nav-btn,.ksearch,#top .sel{border-radius:8px!important;border-color:var(--ln)!important}',
     '.nav-btn.active{background:#111113!important;color:#fff!important;border-color:#111113!important}',
@@ -102,16 +99,28 @@
     var box = document.getElementById('u66');
     if (!box) { box = document.createElement('div'); box.id = 'u66'; sb.insertBefore(box, sb.firstChild); }
     var list = (typeof wsList === 'function') ? wsList() : [];
-    var w = (window.WS || []).filter(function (x) { return window.SH && x.id === SH.ws; })[0] || list[0];
-    if (!w) { box.innerHTML = ''; return; }
-    var vs = wsViews(w), cur = window.ST && ST.menu;
-    var h = '<div class="h">' + esc(w.t) + '</div>' + vs.map(function (x) {
-      var n = count(x[0]);
-      return '<div class="i' + (x[0] === cur ? ' on' : '') + '" data-k="' + esc(x[0]) + '" onclick="go(' + J(x[0]) + ')"><svg viewBox="0 0 24 24">' + icon(x[0], x[1]) + '</svg><span class="t">' + esc(x[1]) + '</span>' + (n ? '<span class="n">' + esc(n) + '</span>' : '') + '</div>';
-    }).join('');
-    if (cur && !vs.some(function (x) { return x[0] === cur; }) && typeof menuFind === 'function') {
-      var it = menuFind(cur);
-      if (it) h += '<div class="sp"></div><div class="h">열린 화면</div><div class="i on" title="' + esc(it.m.g + ' › ' + it.t) + '"><svg viewBox="0 0 24 24">' + DOT + '</svg><span class="t">' + esc(it.t) + '</span><span class="x" onclick="event.stopPropagation();wsBack()">×</span></div>';
+    if (!list.length) { box.innerHTML = ''; return; }
+    var cur = window.ST && ST.menu;
+    
+    var h = '';
+    list.forEach(function(w, idx) {
+      var vs = wsViews(w);
+      if (!vs || !vs.length) return;
+      if (idx > 0) h += '<div class="sp"></div>';
+      h += '<div class="h">' + esc(w.t) + '</div>';
+      h += vs.map(function(x) {
+        var n = count(x[0]);
+        var on = (x[0] === cur);
+        return '<div class="i' + (on ? ' on' : '') + '" data-k="' + esc(x[0]) + '" onclick="go(' + J(x[0]) + ')"><svg viewBox="0 0 24 24">' + icon(x[0], x[1]) + '</svg><span class="t">' + esc(x[1]) + '</span>' + (n ? '<span class="n">' + esc(n) + '</span>' : '') + '</div>';
+      }).join('');
+    });
+
+    if (cur && typeof menuFind === 'function') {
+      var inList = list.some(function(w) { return wsViews(w).some(function(x) { return x[0] === cur; }); });
+      if (!inList) {
+        var it = menuFind(cur);
+        if (it) h += '<div class="sp"></div><div class="h">열린 화면</div><div class="i on" title="' + esc(it.m.g + ' › ' + it.t) + '"><svg viewBox="0 0 24 24">' + DOT + '</svg><span class="t">' + esc(it.t) + '</span><span class="x" onclick="event.stopPropagation();wsBack()">×</span></div>';
+      }
     }
     box.innerHTML = h;
   }
