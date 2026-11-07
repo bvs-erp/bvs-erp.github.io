@@ -2,7 +2,7 @@
   'use strict';
   if (window.TOP9267) return;
   var K = { d: null, at: 0, om: null, omAt: 0, busy: false, open: false };
-  var OM = { ICN: [37.272, 127.435], CJU: [36.642, 127.489] };   // 기상청 값 없을 때만 쓰는 대체 좌표(이천·청주)
+  var OM = { ICN: [37.272, 127.435], CJU: [36.642, 127.489] };
 
   var st = document.createElement('style'); st.id = 'top9267css';
   st.textContent = [
@@ -15,12 +15,11 @@
     '#tb267 b{font-weight:600;color:#111113;font-variant-numeric:tabular-nums}',
     '#tb267 .up{color:#e5484d}#tb267 .dn{color:#2563eb}',
     '#tb267 svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:#55565c}',
-    '#tb267 .warn{width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block}',
-    '@media (max-width:1600px){#tb267 .w3{display:none}}',
+        '@media (max-width:1600px){#tb267 .w3{display:none}}',
     '@media (max-width:1250px){#tb267 .w2{display:none}}',
     '@media (max-width:980px){#tb267{display:none}}',
     '@media print{#tb267,#tb267p{display:none!important}}',
-    '#tb267p{position:fixed;z-index:9000;top:52px;width:440px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #ebebed;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.12);padding:14px 16px;font-size:13px;color:#18181b;display:none}',
+    '#tb267p{position:fixed;z-index:9000;top:52px;width:440px;max-height:70vh;overflow-y:auto;overflow-x:hidden;background:#fff;border:1px solid #ebebed;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.12);padding:14px 16px;font-size:13px;color:#18181b;display:none}',
     '#tb267p.on{display:block}',
     '#tb267p h4{margin:12px 0 6px;font-size:12px;font-weight:600;color:#8b8d94}#tb267p h4:first-child{margin-top:0}',
     '#tb267p table{width:100%;border-collapse:collapse}#tb267p td{padding:6px 4px;border-bottom:1px solid #f1f1f3;font-variant-numeric:tabular-nums}',
@@ -71,22 +70,21 @@
 
   function paint() {
     var b = box(); if (!b) return;
-    var d = K.d || {}, h = '', tip = [];
+    var d = K.d || {}, h = '';
     wxList().forEach(function (w, i) {
       var cls = i ? ' w2' : '';
       h += '<span class="c' + cls + '"><svg viewBox="0 0 24 24">' + skyIco(w.sky) + '</svg><i>' + esc(w.name) + '</i><b>' + (w.now != null ? Math.round(w.now) + '°' : '–') + '</b>'
         + (w.tmin != null && w.tmax != null ? '<i class="w3">' + Math.round(w.tmin) + '/' + Math.round(w.tmax) + '°</i>' : '')
-        + (w.pop != null ? '<i class="w3">비 ' + w.pop + '%</i>' : '') + (w.fallback ? '<span class="warn" title="기상청 자료 받기 전 — 임시 Open-Meteo"></span>' : '') + '</span>';
-      tip.push(w.name + ' ' + (w.sky || '') + (w.fallback ? ' (임시 Open-Meteo — 기상청 연결 확인 중' + (w.error ? ': ' + String(w.error).slice(0, 80) : '') + ')' : ' (기상청 ' + (w.now_src || '') + ')'));
+        + (w.pop != null ? '<i class="w3">비 ' + w.pop + '%</i>' : '') + '</span>';
     });
     var f = d.fuel || {}, ds = f['경유'];
-    if (ds) { h += '<span class="c w2"><i>경유</i><b>' + n(ds.price) + '</b></span>'; tip.push('유가 오피넷 전국 평균 ' + (ds.date || '')); }
+    if (ds) { h += '<span class="c w2"><i>경유</i><b>' + n(ds.price) + '</b></span>'; }
     var u = (d.fx || {}).USD;
-    if (u) { h += '<span class="c"><i>USD</i><b>' + n(u.rate, 1) + '</b>' + chg(+u.rate, u.prev == null ? null : +u.prev, 1) + '</span>'; tip.push('환율 ' + (d.fx_src || '') + ' ' + (u.date || '')); }
+    if (u) { h += '<span class="c"><i>USD</i><b>' + n(u.rate, 1) + '</b>' + chg(+u.rate, u.prev == null ? null : +u.prev, 1) + '</span>'; }
     var cu = (d.lme || []).filter(function (x) { return x.code === 'CAD'; })[0];
-    if (cu) { h += '<span class="c w3"><i>구리</i><b>$' + n(cu.usd) + '</b>' + chg(+cu.usd, cu.prev == null ? null : +cu.prev, 0, true) + '</span>'; tip.push('LME 참고값(공식 공공 API 없음)'); }
-    b.innerHTML = h || '<span class="c"><i>날씨·환율 불러오는 중…</i></span>';
-    b.title = tip.join(' · ') + ' — 누르면 자세히';
+    if (cu) { h += '<span class="c w3"><i>구리</i><b>$' + n(cu.usd) + '</b>' + chg(+cu.usd, cu.prev == null ? null : +cu.prev, 0, true) + '</span>'; }
+    b.innerHTML = h;
+    b.removeAttribute('title');
     if (K.open) panel();
   }
 
@@ -94,24 +92,22 @@
     var p = document.getElementById('tb267p'), b = document.getElementById('tb267'); if (!p || !b) return;
     p.classList.toggle('on', K.open); if (!K.open) return;
     var r = b.getBoundingClientRect(); p.style.left = Math.max(8, Math.min(r.left, innerWidth - 456)) + 'px'; p.style.top = (r.bottom + 6) + 'px';
-    var d = K.d || {}, h = '<h4>날씨 · 기상청</h4><table>';
+    var d = K.d || {}, h = '<h4>날씨</h4><table>';
     wxList().forEach(function (w) {
       h += '<tr><td>' + esc(w.name) + '</td><td>' + esc(w.sky || '–') + '</td><td class="r"><b>' + (w.now != null ? Math.round(w.now * 10) / 10 + '°' : '–') + '</b></td><td class="r">'
-        + (w.tmin != null ? Math.round(w.tmin) + ' / ' + Math.round(w.tmax) + '°' : '') + '</td><td class="r">' + (w.pop != null ? '비 ' + w.pop + '%' : '') + '</td></tr>'
-        + '<tr><td colspan="5" class="s">' + (w.fallback ? '기상청 자료 아직 없음 → 임시 Open-Meteo' + (w.error ? ' · ' + esc(String(w.error).slice(0, 140)) : '')
-          : '기상청 ' + esc(w.now_src || '') + (w.obs_at ? ' ' + hm(w.obs_at) + ' 관측' : '') + (w.base_at ? ' · 예보 ' + hm(w.base_at) + ' 발표' : '') + (w.reh ? ' · 습도 ' + esc(w.reh) + '%' : '') + (w.wsd ? ' · 바람 ' + esc(w.wsd) + 'm/s' : '')) + '</td></tr>';
+        + (w.tmin != null ? Math.round(w.tmin) + ' / ' + Math.round(w.tmax) + '°' : '') + '</td><td class="r">' + (w.pop != null ? '비 ' + w.pop + '%' : '') + '</td></tr>';
     });
-    h += '</table><h4>환율 · ' + esc(d.fx_src || '') + '</h4><table>';
+    h += '</table><h4>환율</h4><table>';
     [['USD', '미국 달러'], ['JPY(100)', '일본 엔 100'], ['EUR', '유로'], ['CNH', '중국 위안']].forEach(function (c) {
       var x = (d.fx || {})[c[0]]; if (!x) return;
       h += '<tr><td>' + c[1] + '</td><td class="r"><b>' + n(x.rate, 2) + '</b></td><td class="r">' + chg(+x.rate, x.prev == null ? null : +x.prev, 2) + '</td><td class="r s">' + esc(x.date || '') + '</td></tr>';
     });
-    h += '</table><h4>LME · 참고값(공식 공공 API 없음, 5분마다)</h4><table>';
+    h += '</table><h4>LME</h4><table>';
     (d.lme || []).forEach(function (x) {
       h += '<tr><td>' + esc(x.name) + '</td><td class="r"><b>$' + n(x.usd) + '</b>/t</td><td class="r">' + chg(+x.usd, x.prev == null ? null : +x.prev, 0, true) + '</td><td class="r">' + (x.krw_kg ? n(x.krw_kg) + '원/kg' : '') + '</td></tr>';
     });
     var f = d.fuel || {};
-    h += '</table><h4>유가 · 오피넷 전국 평균</h4><table>';
+    h += '</table><h4>유가</h4><table>';
     ['경유', '휘발유'].forEach(function (k) { var x = f[k]; if (x) h += '<tr><td>' + k + '</td><td class="r"><b>' + n(x.price) + '</b>원/L</td><td class="r">' + chg(+x.price, x.prev == null ? null : +x.prev, 0) + '</td><td class="r s">' + esc(x.date || '') + '</td></tr>'; });
     h += '</table>';
     p.innerHTML = h;
