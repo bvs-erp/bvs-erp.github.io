@@ -12,6 +12,7 @@
     '--bg:#fafafa;--sf:#fff;--sf2:#f6f6f7;--ln:#ebebed;--ln2:#f2f2f3;--tx:#111113;--tx2:#55565c;--tx3:#8b8d94;',
     '--ac:#111113;--ac2:#f2f2f3;--acx:#000;--gh:#fff;--gl:#f0f0f2;--rh:#fafafa;--rs:#f3f4f6;--sbbg:#fafafa;',
     '--r:12px;--r2:8px;--sh:0 1px 2px rgba(0,0,0,.04);--shx:0 6px 24px rgba(0,0,0,.08)}',
+    '*,*::before,*::after{font-family:var(--font-sans)!important}',
     'body{letter-spacing:-0.01em}',
     '.num,td.amt,.mono,.kpi-value,td.r{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}',
     '@media (min-width:761px){',
