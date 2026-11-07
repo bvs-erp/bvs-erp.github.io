@@ -1,10 +1,10 @@
-/* xl9193 v9.240 [Claude · 대표 11-06 12:0x 「여기저기 엑셀표… 왜케 복잡해」 → 「메뉴만 남기기」] 상단 XL «엑셀표» · 하단 서브탭 «엑셀표» · 콕핏 «엑셀표» 단추를 더 붙이지 않음(Ctrl+K 검색은 그대로). 화면 이름 「청구 엑셀표」. 메뉴 입구 XL.openSheet(k). */
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * xl9193.js — 「엑셀표」 엑셀처럼 바로 고치는 표 (v9.193)
- * [C1414-대표지시] 급여 · 청구(인건비 · 자재비) 실시간 스프레드시트 편집기
- * ═══════════════════════════════════════════════════════════════════════════
- */
+ 
+
+
+
+
+
+
 (function(){
   'use strict';
 
@@ -19,7 +19,7 @@
         XL.sortCol = null;
         XL.sortAsc = true;
       } else if (mode === 'name') {
-        // 이름/작업자/품명 컬럼 탐색
+        
         var col = cols.find(function(c){
           var k = (c.k||'').toLowerCase(), l = (c.label||'').toLowerCase();
           return k.indexOf('name') >= 0 || k.indexOf('person') >= 0 || k.indexOf('emp') >= 0 || k.indexOf('worker') >= 0 ||
@@ -30,7 +30,7 @@
           XL.sortAsc = true;
         }
       } else if (mode === 'site') {
-        // 현장/프로젝트 컬럼 탐색
+        
         var col = cols.find(function(c){
           var k = (c.k||'').toLowerCase(), l = (c.label||'').toLowerCase();
           return k.indexOf('site') >= 0 || k.indexOf('project') >= 0 || k.indexOf('place') >= 0 ||
@@ -64,21 +64,21 @@
         }
       });
     },
-   // 'mat' | 'labor' | 'pay'
-    curYm: '',         // 'YYYY-MM'
-    curPartner: 'C0087', // 우주이엔지 기본
-    data: null,        // {cols, rows, sums, bill}
-    filter: {},        // colKey -> string
+   
+    curYm: '',         
+    curPartner: 'C0087', 
+    data: null,        
+    filter: {},        
     sortCol: null,
     sortAsc: true,
     historyLogs: [],
-    selectedCell: null, // {rowId, colKey, el}
-    editCell: null,     // {rowId, colKey, el, origVal}
+    selectedCell: null, 
+    editCell: null,     
     historyOpen: false,
 
     init: function() {
       if (typeof isOwner !== 'function' || !isOwner()) {
-        // v9.196: 페이지가 열릴 때는 로그인(세션 복원)이 아직 안 끝나 isOwner()가 false — 1초마다 다시 봄(30분까지). 대표가 아니면 끝까지 UI 노출 안 함
+        
         XL._initTry = (XL._initTry || 0) + 1;
         if (XL._initTry <= 1800) setTimeout(XL.init, 1000);
         return;
@@ -86,7 +86,7 @@
       if (XL._inited) return;
       XL._inited = true;
 
-      // 마감 안 된 가장 이른 대상 달 (지난달 기본, 예: 2026-10)
+      
       var now = new Date();
       var prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       var pm = String(prev.getMonth() + 1).padStart(2, '0');
@@ -98,8 +98,8 @@
     },
 
         injectNav: function() {
-      // 1. 콕핏 처리/현황 영역 내 버튼 주입 (기존 호환)
-      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      
+       
       if (false) try {
         var todoSec = document.getElementById('sec-todo') || document.querySelector('.sec-todo');
         if (todoSec && !document.getElementById('btnCockpitXl9193')) {
@@ -115,8 +115,8 @@
         }
       } catch(e) {}
 
-      // 2. 상단 modbar (1콕핏 2휴먼 3딜 4캐시플로우 옆) 에 «엑셀표» 버튼 추가
-      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      
+       
       if (false) try {
         var mb = document.getElementById('modbar');
         if (mb && !document.getElementById('btnModXl9193')) {
@@ -132,8 +132,8 @@
         }
       } catch(e) {}
 
-      // 3. shTabs 래핑: 1콕핏·3사이트(딜)·4캐시플로우 하단 서브탭(mtabs) 맨 끝에 «엑셀표» 탭 자동 부착
-      /* v9.240 대표 11-06 「메뉴만 남기기」: 이 단추는 더 붙이지 않음 — 메뉴 서브탭에서 XL.openSheet('mat'|'labor'|'inv') */
+      
+       
       if (false) try {
         if (typeof window.shTabs === 'function' && !window.shTabs._xlWrapped) {
           var _origShTabs = window.shTabs;
@@ -162,7 +162,7 @@
         }
       } catch(e) {}
 
-      // 4. cpItems (Ctrl + K) 래핑: 검색창 최상단에 «엑셀표» 노출
+      
       try {
         if (typeof window.cpItems === 'function' && !window.cpItems._xlWrapped) {
           var _origCpItems = window.cpItems;
@@ -187,7 +187,7 @@
         }
       } catch(e) {}
 
-      // 5. 트레이 청구창 (rb811Paint) 래핑: 트레이 M단가 환산 및 전산볼트 3M 환산 표시 보강
+      
       try {
         if (typeof window.rb811Paint === 'function' && !window.rb811Paint._xlWrapped) {
           var _origRb811 = window.rb811Paint;
@@ -209,8 +209,8 @@
 
                 var tds = tr.querySelectorAll('td');
                 if (tds.length < 8) return;
-                var tdQty = tds[3];     // 수량
-                var tdAlpha = tds[6];   // 재청구 단가
+                var tdQty = tds[3];     
+                var tdAlpha = tds[6];   
 
                 if (isTray) {
                   var len = 3;
@@ -327,7 +327,7 @@
       var main = document.getElementById('main') || document.body;
       main.appendChild(p);
 
-      // 이벤트 바인딩
+      
       document.getElementById('xl9193_sheet_sel').onchange = function(e) {
         XL.curSheet = e.target.value;
         var ptnWrap = document.getElementById('xl9193_ptn_wrap');
@@ -354,12 +354,12 @@
         };
       }
 
-      // 전역 키보드 조작 (Ctrl+Z, 붙여넣기, 방향키 이동)
+      
       p.addEventListener('keydown', XL.handleKeyDown);
       p.addEventListener('paste', XL.handlePaste);
     },
 
-    // v9.197: 엑셀표 닫기 — 엑셀표 화면을 숨기고 탭 표시를 되돌림
+    
     hide: function() {
       var p = document.getElementById('p-xl_sheet');
       if (p) { p.classList.remove('on'); p.style.display = 'none'; }
@@ -367,7 +367,7 @@
       var mx = document.querySelector('.mtab-xl9193');
       if (mx) mx.classList.remove('on');
     },
-    // v9.197: 다른 메뉴·탭(go / wsGo)으로 가면 엑셀표를 자동으로 닫음
+    
     wrapNav: function() {
       ['go', 'wsGo'].forEach(function(fn) {
         var f = window[fn];
@@ -384,10 +384,10 @@
         if (typeof toast === 'function') toast('대표 전용 메뉴입니다.', 'e');
         return;
       }
-      // 모든 .page 숨기고 #p-xl_sheet 표시
+      
       document.querySelectorAll('.page').forEach(function(pg) {
         pg.classList.remove('on');
-        if (pg.id !== 'p-xl_sheet') pg.style.display = ''; // v9.197: 다른 화면에 display:none을 박지 않음(닫기·탭 이동 때 빈 화면 원인)
+        if (pg.id !== 'p-xl_sheet') pg.style.display = ''; 
       });
       var p = document.getElementById('p-xl_sheet');
       if (p) {
@@ -399,7 +399,7 @@
       var crumb = document.getElementById('crumb');
       if (crumb) crumb.textContent = '대표 전용 · 청구 엑셀표';
 
-      // 탭 활성화 상태 표시
+      
       var mtabXl = document.querySelector('.mtab-xl9193');
       if (mtabXl) {
         document.querySelectorAll('#mtabs .mtab').forEach(function(t){ t.classList.remove('on'); });
@@ -459,7 +459,7 @@
       var sums = XL.data.sums || {};
       var bill = XL.data.bill || [];
 
-      // 1. 요약 바 렌더링
+      
       var billInfo = document.getElementById('xl9193_bill_info');
       var sumsInfo = document.getElementById('xl9193_sums_info');
 
@@ -487,7 +487,7 @@
         sumsInfo.innerHTML = sumParts.length > 0 ? sumParts.join(' · ') : '총 ' + rows.length + '건';
       }
 
-      // 2. 헤더 및 필터줄 렌더링
+      
       var thead = document.getElementById('xl9193_thead');
       var th1 = '<tr><th style="width:36px;padding:6px;border:1px solid #cbd5e1;background:#e2e8f0;text-align:center;">#</th>';
       var th2 = '<tr><th style="padding:3px;border:1px solid #cbd5e1;background:#f8fafc;"></th>';
@@ -532,7 +532,7 @@
       var cols = XL.data.cols || [];
       var rows = (XL.data.rows || []).slice();
 
-      // 필터링
+      
       rows = rows.filter(function(r) {
         for (var fk in XL.filter) {
           var fval = XL.filter[fk];
@@ -543,7 +543,7 @@
         return true;
       });
 
-      // 정렬
+      
       if (XL.sortCol) {
         var sk = XL.sortCol;
         var asc = XL.sortAsc ? 1 : -1;
@@ -600,13 +600,13 @@
       });
       tbody.innerHTML = trs.join('');
 
-      // 셀 이벤트 바인딩
+      
       tbody.querySelectorAll('td[data-col]').forEach(function(td) {
         td.onclick = function(e) { XL.selectCell(this); };
         td.ondblclick = function(e) { XL.startEdit(this); };
       });
 
-      // 합계줄(tfoot)
+      
       if (tfoot) {
         var tf = '<tr><td style="padding:6px;border:1px solid #cbd5e1;text-align:center;background:#e2e8f0;">합계</td>';
         cols.forEach(function(c) {
@@ -688,9 +688,9 @@
         return;
       }
 
-      // 저장 호출
+      
       ec.el.textContent = (ec.type === 'num' && newVal !== '') ? Number(newVal).toLocaleString() : newVal;
-      ec.el.style.background = '#fef9c3'; // 저장 중 노란색
+      ec.el.style.background = '#fef9c3'; 
 
       var params = {
         p_sheet: XL.curSheet,
@@ -706,18 +706,18 @@
         var d = res.data;
         if (err || !d || d.ok === false) {
           var failMsg = (d && d.msg) ? d.msg : (err ? err.message : '저장 실패');
-          ec.el.style.background = '#fee2e2'; // 실패 빨강
+          ec.el.style.background = '#fee2e2'; 
           ec.el.textContent = (ec.type === 'num' && ec.origVal !== '') ? Number(ec.origVal).toLocaleString() : ec.origVal;
           if (typeof toast === 'function') toast(failMsg, 'e');
           setTimeout(function(){ ec.el.style.background = ''; }, 1500);
           return;
         }
 
-        // 성공 플래시 초록
+        
         ec.el.style.background = '#dcfce7';
         setTimeout(function(){ ec.el.style.background = ''; }, 800);
 
-        // 행/합계 데이터 반영
+        
         if (d.sums) {
           XL.data.sums = d.sums;
           XL.updateSumsDisplay();
@@ -726,7 +726,7 @@
           XL.data.bill = d.bill;
           XL.updateBillDisplay();
         }
-        // 로컬 데이터 원본 셀 갱신
+        
         var rowObj = (XL.data.rows || []).find(function(r){ return String(r.id) === String(ec.rowId); });
         if (rowObj) {
           rowObj.cells[ec.colKey] = newVal;
@@ -771,19 +771,19 @@
     },
 
     handleKeyDown: function(e) {
-      if (XL.editCell) return; // 편집 중이면 인풋 자체 키 이벤트 처리
+      if (XL.editCell) return; 
       if (!XL.selectedCell || !XL.selectedCell.el) return;
 
       var el = XL.selectedCell.el;
 
-      // Ctrl + Z (되돌리기)
+      
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         XL.undoRecent();
         return;
       }
 
-      // F2 또는 문자 키 입력 시작 시 바로 수정 모드
+      
       if (e.key === 'F2') {
         e.preventDefault();
         XL.startEdit(el);
@@ -809,7 +809,7 @@
           XL.finishEdit(true);
         }
       } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        // 타이핑 시 바로 편집 진입
+        
         XL.startEdit(el);
         if (XL.editCell && XL.editCell.input) {
           XL.editCell.input.value = e.key;
@@ -827,7 +827,7 @@
 
       var lines = clip.trim().split(/\r?\n/).map(function(l){ return l.split('\t'); });
       if (lines.length === 1 && lines[0].length === 1) {
-        // 단일 셀 붙여넣기
+        
         XL.startEdit(XL.selectedCell.el);
         if (XL.editCell && XL.editCell.input) {
           XL.editCell.input.value = lines[0][0].trim();
@@ -836,7 +836,7 @@
         return;
       }
 
-      // 다중 셀 붙여넣기 (ceo_xl_save_many)
+      
       var startTd = XL.selectedCell.el;
       var startTr = startTd.parentElement;
       var tbody = startTr.parentElement;
@@ -883,7 +883,7 @@
           return;
         }
         if (typeof toast === 'function') toast(items.length + '개 칸이 저장되었습니다.', 's');
-        XL.load(); // 표 전체 새로고침
+        XL.load(); 
       }).catch(function(ex) {
         console.error('[XL9193] paste save error', ex);
         if (typeof toast === 'function') toast('붙여넣기 저장 중 오류가 발생했습니다.', 'e');
@@ -891,7 +891,7 @@
     },
 
     undoRecent: function() {
-      // 가장 최근 로그 조회 후 undo
+      
       window.sb.rpc('ceo_xl_log', {
         p_sheet: XL.curSheet,
         p_ym: XL.curYm,
@@ -992,7 +992,7 @@
         }
         sumsInfo.innerHTML = sumParts.join(' · ');
       }
-      // tfoot 갱신
+      
       var tfoot = document.getElementById('xl9193_tfoot');
       if (tfoot && XL.data && XL.data.cols) {
         var tf = '<tr><td style="padding:6px;border:1px solid #cbd5e1;text-align:center;background:#e2e8f0;">합계</td>';
@@ -1025,8 +1025,8 @@
     }
   };
 
-  // 전역 노출 및 초기화
-  /* v9.240 메뉴에서 바로 여는 입구: XL.openSheet('mat' 자재 | 'labor' 인건비 | 'inv' 청구서 글자) */
+  
+   
   XL.openSheet = function(k){ try { XL.open(); var sel = document.getElementById('xl9193_sheet_sel'); if (k && sel && sel.querySelector('option[value="' + k + '"]')) { sel.value = k; XL.curSheet = k; } if (typeof XL.load === 'function') XL.load(); } catch(e) { console.error('[v9240 openSheet]', e); } };
   window.XL = XL;
   window.XL9193 = XL;
@@ -1038,8 +1038,8 @@
   }
 })();
 
-/* ═══ v9.198 (대표 지시 11-04 16:2x) 인쇄 품목표 — ① 일자 칸을 No 옆에(줄 메모가 「MM/DD 구매」인 청구서) ② 그런 문서는 비고 칸 빼고 규격 칸 넓힘
-   ③ 품명·품번 한 줄(품번은 옆에 작은 글씨), 규격은 작은 글씨 두 줄까지 — 줄 높이를 줄여 A4 한 장 맞추기(fit305)가 걸리게 ═══ */
+
+
 (function(){
   var c=document.createElement('style');
   c.textContent='#pr table.lines.c198{table-layout:fixed;width:100%}#pr table.lines.c198 td{padding-top:2px!important;padding-bottom:2px!important;line-height:1.25!important}'
@@ -1087,7 +1087,7 @@
 })();
 window.V9198_APPLIED = true;
 
-/* ═══ v9.199 (대표 지시 11-04 16:3x 「공식서류에는 우리 문서번호를 보이지 말고」) 인쇄 머리 표에서 「…번호」 칸 중 값이 우리 문서번호(B26103101-I 같은 꼴)인 줄을 뺌 — 청구서·발주서·견적서 등 모든 인쇄 ═══ */
+ 
 (function(){
   if (window.V9199_APPLIED) return;
   var NO=/^[A-Z]\d{8}(-[A-Z]{1,3})?$/;
@@ -1106,21 +1106,21 @@ window.V9198_APPLIED = true;
   window.V9199_APPLIED = true;
 })();
 
-/* ═══ v9.204 [C1476-대표지시] #1430 트레이 자재·보관 청구서 인쇄 세 덩어리 소계 ═══ */
+ 
 (function(){
   var _origPrLines = prLines;
   prLines = function(lines, opt) {
     try {
       opt = opt || {};
       var L = lines || [];
-      // 트레이/우주 청구서 판별: 구매일 메모가 있거나, 공급가 음수 또는 트레이 보관 항목이 있는 경우
+      
       var isTrayBilling = L.some(function(l){
         return l && (/^\d\d\/\d\d 구매$/.test(l.memo||'') || (+l.supply_amt < 0) || String(l.item_name||'').indexOf('트레이 보관') === 0);
       });
 
       if (isTrayBilling && opt.cols) {
         var cols = opt.cols;
-        // Grouping: 1 = 자재, 2 = 대차·보관료, 3 = 기청구분 차감
+        
         var getGrp = function(l) {
           if (!l) return 1;
           if (l.grp === 'deduct' || (+l.supply_amt || 0) < 0) return 3;
@@ -1134,12 +1134,12 @@ window.V9198_APPLIED = true;
         var grouped = { 1: [], 2: [], 3: [] };
         L.forEach(function(l){ grouped[getGrp(l)].push(l); });
 
-        // If only 1 group exists, fallback to standard rendering
+        
         var activeGrps = [1, 2, 3].filter(function(g){ return grouped[g].length > 0; });
         if (activeGrps.length > 1) {
           var h = '<table class="lines c305 c198"><thead><tr>' + cols.map(function(c){ return '<th' + (c.w ? ' style="width:' + c.w + '"' : '') + '>' + c.t + '</th>'; }).join('') + '</tr></thead><tbody>';
 
-          var spanCol = cols.length - 2; // amount and tax columns
+          var spanCol = cols.length - 2; 
           if (spanCol < 1) spanCol = 1;
 
           var itemNo = 0;
@@ -1148,10 +1148,10 @@ window.V9198_APPLIED = true;
             var gSup = 0, gTax = 0;
             gLines.forEach(function(l){ gSup += (+l.supply_amt || 0); gTax += (+l.tax_amt || 0); });
 
-            // Group Header
+            
             h += '<tr style="background:#f1f5f9;font-weight:700;border-top:1px solid #cbd5e1;"><td colspan="' + cols.length + '" style="padding:4px 8px;text-align:left;color:#1e293b;font-size:11px;">' + grpNames[g] + '</td></tr>';
 
-            // Group Rows
+            
             gLines.forEach(function(l) {
               itemNo++;
               h += '<tr>' + cols.map(function(c){
@@ -1160,7 +1160,7 @@ window.V9198_APPLIED = true;
               }).join('') + '</tr>';
             });
 
-            // Group Subtotal Row
+            
             h += '<tr style="background:#f8fafc;font-weight:700;border-bottom:1px solid #cbd5e1;">'
               + '<td colspan="' + spanCol + '" class="r" style="text-align:right;font-size:11px;color:#475569;">' + grpNames[g].slice(2) + ' 소계</td>'
               + '<td class="n r" style="text-align:right;font-weight:700;">' + (typeof wonA === 'function' ? wonA(gSup) : gSup.toLocaleString()) + '</td>'
@@ -1178,13 +1178,13 @@ window.V9198_APPLIED = true;
   };
 })();
 
-/* ═══ v9.202 [C1475-대표지시] #1427 급여계산·대장 화면 정리 (중복 구역 제거 + 달력 연동 교정 + 우측 마감체크 제거 + 월급제 분기) ═══ */
+ 
 (function(){
-  // 캐시 객체
+  
   window._bizPayCache = window._bizPayCache || {};
   window._personMonthCache = window._personMonthCache || {};
 
-  // 스타일 주입 (중복 영역 숨김 및 우측 달력/명세서 최적화)
+  
   (function(){
     var styleId = 'style-v9202-clean';
     if (document.getElementById(styleId)) return;
@@ -1214,10 +1214,10 @@ window.V9198_APPLIED = true;
     document.head.appendChild(st);
   })();
 
-  // pdEnsure 차단 (하단 불필요한 구역 생성 및 쿼리 방지)
+  
   window.pdEnsure = function() { return; };
 
-  // 1. 사람 선택 핸들러 통합 (근로자/사업소득자 공통)
+  
   window.regSelUnified = function(empNo) {
     if (typeof REG !== 'undefined') {
       REG.sel = empNo;
@@ -1230,7 +1230,7 @@ window.V9198_APPLIED = true;
   window.regSel = window.regSelUnified;
   window.regSelBiz = window.regSelUnified;
 
-  // 2. 사업소득 요약 복사
+  
   window.regCopyBiz = function(empNo) {
     var m = (typeof M === 'function') ? M() : '';
     var bp = window._bizPayCache[m];
@@ -1253,7 +1253,7 @@ window.V9198_APPLIED = true;
     }
   };
 
-  // 3. regTbl 급여대장 테이블 내 사업소득자 통합 삽입 함수
+  
   function injectBizRowsToRegTable() {
     if (typeof isOwner !== 'function' || !isOwner()) return;
     var tbl = document.querySelector('#regTbl table.rg');
@@ -1283,7 +1283,7 @@ window.V9198_APPLIED = true;
     var bizRows = bpData.rows || [];
     if (!bizRows.length) return;
 
-    // 이미 주입되었는지 검사
+    
     if (tbl.querySelector('.rg-biz-row')) return;
 
     var tbody = tbl.querySelector('tbody');
@@ -1293,14 +1293,14 @@ window.V9198_APPLIED = true;
     var cols = (typeof REG_COLS !== 'undefined') ? REG_COLS : [];
     var totalColspan = cols.length + 2;
 
-    // 구분선 삽입
+    
     var divTr = document.createElement('tr');
     divTr.className = 'rg-biz-row rg-biz-divider';
     divTr.style.cssText = 'background:#f1f5f9;font-weight:700;color:#334155;border-top:2px solid #cbd5e1;';
     divTr.innerHTML = '<td colspan="' + totalColspan + '" style="padding:6px 10px;text-align:left;font-size:12px;">💼 사업소득 3.3% (프리랜서·용역) · ' + bizRows.length + '명 <span style="font-size:11px;font-weight:normal;color:#64748b;">(이름 클릭 시 우측에 이달 달력 & 단가 명세서 표시)</span></td>';
     tbody.appendChild(divTr);
 
-    // 사업소득자 행 삽입
+    
     var selEmp = (typeof REG !== 'undefined') ? REG.sel : null;
     bizRows.forEach(function(r) {
       var tr = document.createElement('tr');
@@ -1335,7 +1335,7 @@ window.V9198_APPLIED = true;
       tbody.appendChild(tr);
     });
 
-    // 선택된 행 클래스 .on 맞추기
+    
     tbody.querySelectorAll('tr').forEach(function(rTr){
       var nmTd = rTr.querySelector('td.nm');
       if (!nmTd) return;
@@ -1347,7 +1347,7 @@ window.V9198_APPLIED = true;
       }
     });
 
-    // tfoot 3단 구성
+    
     if (tfoot) {
       var regRows = (typeof regRows === 'function') ? regRows() : ((REG.cache[curYm]||{}).rows || []);
       var regSum = {};
@@ -1392,7 +1392,7 @@ window.V9198_APPLIED = true;
       tfoot.innerHTML = ftReg + ftBiz + ftAll;
     }
 
-    // 헤더 카운트
+    
     var regN = document.getElementById('regN');
     if (regN) {
       var d = (typeof REG !== 'undefined' && REG.cache && REG.cache[curYm]) || {};
@@ -1401,7 +1401,7 @@ window.V9198_APPLIED = true;
       regN.textContent = curYm + ' · 전체 ' + totalN + '명 (근로 ' + regRows.length + ' · 용역 ' + bizRows.length + ') · ' + (cl ? '확정됨' : '작성 중');
     }
 
-    // 상단 도구 모음에 노무비 수령 확인서 및 확정 버튼 보강
+    
     var act = document.getElementById('regAct');
     if (act && !act.querySelector('.btn-receipt-9202')) {
       var btnRec = document.createElement('button');
@@ -1415,7 +1415,7 @@ window.V9198_APPLIED = true;
     }
   }
 
-  // 4. regRail 래핑: 「급여 마감」 카드 제거 + 선택된 사람의 달력 & 명세서만 깔끔하게 노출
+  
   function wrapRegRail() {
     if (typeof window.regRail !== 'function' || window.regRail._v9202Wrapped) return;
 
@@ -1430,7 +1430,7 @@ window.V9198_APPLIED = true;
         var rail = document.getElementById('regRail');
         if (!rail || !curYm) return;
 
-        // [중요 #1427-3] 오른쪽 「2026-10 급여 마감」 체크리스트 카드 통째로 숨김
+        
         rail.querySelectorAll('.card').forEach(function(card) {
           var h4 = card.querySelector('h4');
           if (h4 && (h4.textContent.indexOf('급여 마감') >= 0 || h4.textContent.indexOf('마감') >= 0)) {
@@ -1444,12 +1444,12 @@ window.V9198_APPLIED = true;
         var bpData = window._bizPayCache[curYm] || { rows: [] };
         var bEmp = (bpData.rows || []).filter(function(x){ return x.employment_no === selEmp; })[0];
 
-        // 사업소득자 명세서 카드 생성/교체
+        
         var existBizCard = rail.querySelector('.card-biz-slip');
         if (existBizCard) existBizCard.remove();
 
         if (bEmp) {
-          // 기존 근로자 명세서 숨김
+          
           rail.querySelectorAll('.card').forEach(function(c){
             var h4 = c.querySelector('h4');
             if (h4 && h4.textContent.indexOf('급여명세서') >= 0) c.style.display = 'none';
@@ -1479,14 +1479,14 @@ window.V9198_APPLIED = true;
             + '</div>';
           rail.appendChild(bCard);
         } else {
-          // 근로자 명세서 복원
+          
           rail.querySelectorAll('.card').forEach(function(c){
             var h4 = c.querySelector('h4');
             if (h4 && h4.textContent.indexOf('급여명세서') >= 0) c.style.display = '';
           });
         }
 
-        // 달력 컨테이너 최상단 주입
+        
         var calBox = rail.querySelector('#calBox9201');
         if (!calBox) {
           calBox = document.createElement('div');
@@ -1505,7 +1505,7 @@ window.V9198_APPLIED = true;
     window.regRail._v9202Wrapped = true;
   }
 
-  // 5. 이달 달력 & 매일 단가 렌더러 (월급제/일급제 분기 지원)
+  
   function renderPersonMonthCalendar(container, empNo, ym) {
     container.setAttribute('data-emp', empNo);
     var cacheKey = empNo + '_' + ym;
@@ -1519,7 +1519,7 @@ window.V9198_APPLIED = true;
 
       if (window.sb && window.sb.rpc) {
         window.sb.rpc('ceo_person_month', { p_emp: empNo, p_ym: ym }).then(function(res) {
-          if (container.getAttribute('data-emp') !== empNo) return; // 다른 사람으로 전환됨
+          if (container.getAttribute('data-emp') !== empNo) return; 
           if (res.data && res.data.ok) {
             window._personMonthCache[cacheKey] = res.data;
             drawCalendarHtml(container, res.data);
@@ -1553,7 +1553,7 @@ window.V9198_APPLIED = true;
     var firstDayDow = new Date(yr, mo - 1, 1).getDay();
     var lastDate = new Date(yr, mo, 0).getDate();
 
-    // 상단 요약 헤더
+    
     var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
       + '<h4 style="margin:0;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:6px;">📅 ' + ym + ' 근무 달력 · <span style="color:#2563eb;">' + pName + '</span></h4>'
       + '<span class="pill tiny ' + (isMonthly ? '' : 'p') + '">' + (isMonthly ? '월급제' : '일급제(용역)') + '</span>'
@@ -1570,7 +1570,7 @@ window.V9198_APPLIED = true;
         + '</div>';
     }
 
-    // 7열 달력
+    
     h += '<div class="cal9201-grid">';
     var hdrs = ['일', '월', '화', '수', '목', '금', '토'];
     hdrs.forEach(function(hdr, i){
@@ -1630,7 +1630,7 @@ window.V9198_APPLIED = true;
     }
     h += '</div>';
 
-    // 하단 요약 검증 박스
+    
     if (!isMonthly) {
       h += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;margin-top:8px;">'
         + '<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;">📊 단가별 공수 검증 요약</div>'
@@ -1672,7 +1672,7 @@ window.V9198_APPLIED = true;
     container.innerHTML = h;
   }
 
-  // 6. 기업은행 대량이체 사업소득자 포함 래핑
+  
   function wrapBk290Transfer() {
     if (typeof window.bk290Transfer !== 'function' || window.bk290Transfer._v9202Wrapped) return;
 
@@ -1718,7 +1718,7 @@ window.V9198_APPLIED = true;
     window.bk290Transfer._v9202Wrapped = true;
   }
 
-  // 7. regPaint 래핑 등록 (REG.sel 복원 가드 적용)
+  
   function tryWrapAll() {
     if (typeof window.regPaint === 'function' && !window.regPaint._v9202Wrapped) {
       var _origRegPaint = window.regPaint;
@@ -1756,9 +1756,9 @@ window.V9198_APPLIED = true;
 
 })();
 
-/* ═══ v9.205 (Claude, 대표 11-04 18:2x) 트레이 자재·보관 청구서 인쇄 — v9.204 세 덩어리 소계 + v9.198 칸(No 옆 일자·품명/품번 한 줄·규격 넓게·비고 빼기)을 함께
-   v9.204가 v9.198 칸 정리를 건너뛰고 원래 칸(비고에 「10/06 구매」·대차 번호)으로 그리던 것, 소계 줄 칸 수가 하나 넘쳐 오른쪽 빈 칸 생기던 것 고침.
-   이 블록이 맨 바깥에서 트레이 재청구서(줄 메모 「MM/DD 구매」)만 직접 그림. 다른 문서는 안쪽 감싸기들로 그대로. ═══ */
+
+
+
 (function(){
   if (window.V9205_APPLIED) return;
   var DM=/^(\d\d\/\d\d) 구매$/, BN=/^[A-Z]\d{8}$/;
@@ -1817,9 +1817,9 @@ window.V9198_APPLIED = true;
 })();
 
 
-/* ===== v9.206 (C1477 대표 11-04 19:3x 「트레이용 대차는 20일 납품했으니 청구서에도 10/20으로」) =====
-   트레이 재청구서에 합쳐진 문서 줄(비고 = 문서 몸통 번호)은 일자 칸이 비었음 → 그 문서의 일자(문서 원장 D.sd)를 일자 칸에 넣음.
-   덩어리는 그대로 대차·보관료(extra). 화면 표시만, DB 그대로. 바깥에서 v9.205를 감쌈. */
+
+
+
 (function(){
   if(window.V9206_APPLIED)return;
   var BN=/^[A-Z]\d{8}$/,DM=/^\d\d\/\d\d 구매$/;
@@ -1843,18 +1843,18 @@ window.V9198_APPLIED = true;
   window.V9206_APPLIED=true;
 })();
 
-/* ═══ v9.210 (Claude, 대표 11-04 20:5x — v9.209 블록을 이것으로 바꿈) ─ 대표: 「숫자가 마지막 칸에 제대로 안 들어가 있고, 공급가액 세액 합계로 줄을 나누니까 1페이지에 안 들어가지네.. 공급가액 세액을 한 줄로, 합계액 한 줄로」「기청구분은 마이너스 - 로 표시하는 게 더 편리할 거 같은데 괄호보다는」
-   ⑦ 맨 아래: 「공급가액 · 세액」 한 줄(공급가액 칸·세액 칸에 맞춰) + 「합계 (VAT 포함)」 한 줄(공급가액·세액 두 칸 합침). 세 줄 → 두 줄.
-   ⑧ 음수는 괄호 대신 「-4,500,000」.  ⑨ 줄 위아래 여백 0·줄 간격 1.2 → 한 장에 여유.
-   ── 이하 v9.209 설명 ──
-   v9.209 (Claude, 대표 11-04 20:4x) 트레이 자재·보관 청구서 인쇄 — 칸 너비·한 장 맞춤·묶음 제목
-   대표: 「구매일별 납품 이런 설명은 필요가 없거든」「칸벌린 … 어떤 자재는 규격이 2줄로 되어서 인쇄 시 2장으로 되어 버리고 가독성도 안 좋아」
-   ① 묶음 제목 기본값 「① 자재」「② 대차 · 보관료」「③ 기청구분 차감」(설명 뺌). 문서별로 고친 제목(문서 extra.grp_titles, DB1174)이 있으면 그것.
-   ⑤ 엑셀표 표 고르기에 「청구서 - 글자」(DB1174 p_sheet='inv') — 건명·청구일자·묶음 제목·줄의 일자·품명·규격·단위. 금액은 「청구 - 자재비」 그대로.
-   ⑥ 인쇄 직전 그 문서 extra·줄을 새로 받아 엑셀표에서 고친 글자가 바로 나옴.
-   ② 규격 칸 200px, 규격·품명 한 줄(nowrap). 규격이 길면 글자만 작게(24자 넘으면 9px, 34자 넘으면 8px).
-   ③ 줄 높이 줄임(위아래 여백 1px, 글자 10.5px — 칸마다 직접 지정, 인쇄 창은 <style>을 안 받음) → 39줄 + 묶음 머리·소계 + 합계가 A4 한 장 안에. 합계·세액 줄은 다음 장으로 갈라지지 않게.
-   ④ v9.206(합쳐진 문서 줄 일자 = 그 문서 일자) 그대로 포함. 트레이 재청구서(줄 메모 「MM/DD 구매」)만, 다른 문서는 그대로 안쪽으로. `window.V9209_APPLIED` ═══ */
+
+
+
+
+
+
+
+
+
+
+
+
 (function(){
   if (window.V9210_APPLIED) return;
   var DM=/^(\d\d\/\d\d) 구매$/, BN=/^[A-Z]\d{8}$/;
@@ -1875,11 +1875,11 @@ window.V9198_APPLIED = true;
   };
   var titleOf=function(g){var t=(PR9209.cur&&PR9209.titles[PR9209.cur])||{};var v=t[String(g)];return (v!=null&&String(v).trim()!=='')?String(v):DEF[g]};
   var plain=function(s){return String(s||'').replace(/^[①②③④⑤]\s*/,'')};
-  var specCss=function(s){var n=String(s||'').length;return n>24?'white-space:normal!important;word-break:keep-all!important;overflow-wrap:anywhere!important;line-height:1.15!important;font-size:calc(var(--f29,10.5px) - 1.5px)!important;':''}; /* v9.232: 긴 규격은 칸 안에서 줄바꿈(옆 칸 침범 금지) */
+  var specCss=function(s){var n=String(s||'').length;return n>24?'white-space:normal!important;word-break:keep-all!important;overflow-wrap:anywhere!important;line-height:1.15!important;font-size:calc(var(--f29,10.5px) - 1.5px)!important;':''};  
   prLines=function(lines,opt){
     try{
       opt=opt||{};var L=lines||[];var cols=opt.cols||[];
-      var MMO=/^\d{1,2}월 구매$/,hasDate=L.some(function(l){return l&&DM.test(l.memo||'')}); /* v9.228 DB1185: 날짜 없이 그 달 합계(「10월 구매」)도 같은 양식, 그때는 일자 칸 없음 */
+      var MMO=/^\d{1,2}월 구매$/,hasDate=L.some(function(l){return l&&DM.test(l.memo||'')});  
       if((hasDate||L.some(function(l){return l&&MMO.test(l.memo||'')}))&&cols.length){
         var out=[];
         cols.forEach(function(cc){
@@ -1899,7 +1899,7 @@ window.V9198_APPLIED = true;
         var act=[1,2,3].filter(function(g){return G[g].length});
         var neg=function(x){return (typeof x==='string')?x.replace(/\(([\d,]+)\)/g,'-$1'):x};
         var w=function(v){v=+v||0;return (v<0?'-':'')+Math.abs(v).toLocaleString('ko-KR')};
-        var B='padding-top:var(--p29,0px)!important;padding-bottom:var(--p29,0px)!important;font-size:var(--f29,10.5px)!important;line-height:1.2!important;'; /* v9.229: 글자·줄 높이는 --f29·--p29(한 장 채우기)로 */
+        var B='padding-top:var(--p29,0px)!important;padding-bottom:var(--p29,0px)!important;font-size:var(--f29,10.5px)!important;line-height:1.2!important;';  
         var NW='white-space:nowrap!important;';
         var h='<table class="lines c305 c198 c209"><thead><tr>'+out.map(function(c){return '<th style="'+B+NW+(c.w?'width:'+c.w+';':'')+'">'+c.t+'</th>'}).join('')+'</tr></thead><tbody>';
         var no=0;
@@ -1927,7 +1927,7 @@ window.V9198_APPLIED = true;
     }catch(e){console.error('[v9209-prLines]',e)}
     return _prev.apply(this,arguments);
   };
-  /* 인쇄 직전: 그 문서의 묶음 제목(extra.grp_titles)·줄(고친 글자 반영)을 새로 받음 — 엑셀표 「청구서」 표에서 고친 것이 바로 인쇄에 나오게 */
+   
   if(typeof printDoc==='function'){
     var _pd=printDoc;
     printDoc=async function(no){
@@ -1943,7 +1943,7 @@ window.V9198_APPLIED = true;
       return _pd.apply(this,arguments);
     };
   }
-  /* 엑셀표 표 고르기에 「청구서 - 글자」 추가(DB1174 p_sheet='inv'). 금액은 「청구 - 자재비」에서 */
+   
   var addOpt=function(){
     var sel=document.getElementById('xl9193_sheet_sel');if(!sel)return false;
     if(!sel.querySelector('option[value="inv"]')){
@@ -1956,11 +1956,11 @@ window.V9198_APPLIED = true;
   window.V9209_APPLIED=true;window.V9210_APPLIED=true;
 })();
 
-/* ═══ v9.211 (Claude, 대표 11-04 21:0x) 확정된 청구서도 「확정 풀고 수정」
-   대표: 「마감 풀고 수정하고 싶은데, 마감 푸는 버튼이 없어졌어」 — v2.96의 「확정 풀고 수정」은 견적서·발주서만이었음(청구서는 「새 버전」).
-   청구서(invoice)도 세금계산서가 아직 없고 이 청구서로 만든 문서가 없으면 같은 번호 그대로 작성 중(임시)으로 되돌림(DB sd_set_status — 기존 함수).
-   되돌린 뒤 트레이 재청구서는 엑셀표(「청구서 - 글자」·「청구 - 자재비」)에서 고치고 「확정 발행」. 세금계산서가 있으면 지금처럼 「새 버전」.
-   정산완료·취소 문서는 그대로(버튼 안 나옴). `window.V9211_APPLIED` ═══ */
+
+
+
+
+
 (function(){
   if(window.V9211_APPLIED)return;
   try{ if(typeof UL296==='object'&&UL296&&!UL296.invoice)UL296.invoice='청구서'; }catch(e){}
@@ -1985,9 +1985,9 @@ window.V9198_APPLIED = true;
   window.V9211_APPLIED=true;
 })();
 
-/* ═══ v9.219 (Claude, 11-04 22:2x) 공식 인쇄 — 합친 청구서 줄 비고 칸의 우리 문서번호 숨김
-   대표 상시 규칙 「공식서류에는 우리 문서번호를 보이지 말고」. 표지 청구서(B26103103-I) 2번 줄 비고에 몸통 번호 「B26103101」이 찍히던 것.
-   트레이 재청구서(「MM/DD 구매」 메모)는 v9.209·v9.210이 따로 처리 — 그 밖의 문서에서 비고가 「영문 1자 + 숫자 8자리」면 인쇄에서만 비움(DB 그대로). `window.V9219_APPLIED` ═══ */
+
+
+
 (function(){
   if(window.V9219_APPLIED)return;
   var BN=/^[A-Z]\d{8}$/, DM=/^\d\d\/\d\d 구매$/;
@@ -2003,9 +2003,9 @@ window.V9198_APPLIED = true;
   window.V9219_APPLIED=true;
 })();
 
-/* ═══ v9.224 [Claude #1455] 문서 원장 — v9.220 다시 쓰면서 빠진 함수 5개 되살림(없을 때만 정의)
-   sg9189Open(문서 열기) · sg9189Detach(청구서에서 빼기) · sg9189DragStart/DragOver/Drop(몸통 끌어 청구서에 넣기)
-   DB: public.sd_bill_attach(p_invoice, p_body) / public.sd_bill_detach(p_invoice, p_body) — 대표 계정만 ═══ */
+
+
+
 (function(){
   if(window.V9224_APPLIED)return;
   function own(){try{return typeof isOwner==='function'&&isOwner()}catch(e){return false}}
@@ -2040,19 +2040,19 @@ window.V9198_APPLIED = true;
   window.V9224_APPLIED=true;
 })();
 
-/* ═══ v9.226 [Claude DB1182] 트레이 사다리형은 그 달 합계 한 줄(비고 「10월 구매」) → 자재내역서 일자 칸에 「10월」 (v9.210 일자 칸에 한 줄 추가). `window.V9226_APPLIED` ═══ */
+ 
 window.V9226_APPLIED=true;
 
-/* ═══ v9.228 [Claude DB1185] 대표 11-05 15:4x 「전부 날짜 없이 합산」 — 재청구 자재내역서 줄 비고가 모두 「10월 구매」면 v9.210 양식(묶음·소계·바닥 2줄) 그대로, 일자 칸만 뺌. `window.V9228_APPLIED` ═══ */
+ 
 window.V9228_APPLIED=true;
 
-/* ═══ v9.231 [Claude · 대표 11-05 16:4x·17:0x] 인쇄 3종(청구서·작업내역서·자재내역서) 한 양식으로 — (v9.229 안 대신)
-   ① 자재내역서 밑 「첨부: …」 줄 지움 — 청구서(표지)에만, 이름은 「작업내역서 1부 · 자재내역서 1부」
-   ② 위쪽은 세 문서 모두 「청구서」 모양: 파란 제목+작은 영문 제목, 공급받는자·공급자 칸 크기, 일자·건명 줄
-   ③ 일자·건명 줄을 공급받는자 칸 · 공급자 칸 경계에 맞춤(작업내역서는 작성일자 · 건명)
-   ④ 작업내역서: 색 줄임(일한 칸 연회색 한 색, 휴일 줄 옅은 회색·날짜만 빨간 글씨, 묶음 머리 회색), 「당일 금액」 칸 좁게(아래 합계 식은 두 줄로)
-   ⑤ A4 한 장 채우기: 먼저 글자를 키우고(자재 10.5→최대 12.5px, 작업 8→최대 12px), 남는 높이는 줄 간격으로 채움. 위쪽은 세 문서 같은 크기로 조금 촘촘히(표에 자리 더 줌).
-   DB·저장 없음. 동결 7종 손대지 않음. `window.V9231_APPLIED` ═══ */
+
+
+
+
+
+
+
 (function(){
   if(window.V9231_APPLIED)return;
   if(typeof buildSingleDocHtml!=='function'){console.warn('[v9231] buildSingleDocHtml 없음');return}
@@ -2061,7 +2061,7 @@ window.V9228_APPLIED=true;
   st.textContent=[
     '#pr .u29,#pr .u29 *{font-family:'+FONT+'!important}',
     '#pr .u29 .hd,#pr .wl2 .hd{gap:10px!important}',
-    /* 일자·건명 줄 — 청구서 일자 칸과 같은 크기 */
+     
     '#pr .m29{margin:0 0 8px!important}',
     '#pr .m29r{display:flex!important;gap:10px!important;margin-top:-1px!important}',
     '#pr .m29r:first-child{margin-top:0!important}',
@@ -2070,7 +2070,7 @@ window.V9228_APPLIED=true;
     '#pr .m29h .v{flex:1 1 auto!important;min-width:0!important;padding:3px 10px!important;font-size:11px!important;color:#0f172a!important;display:flex!important;align-items:center!important}',
     '#pr .m29h.full .k{flex:0 0 calc((100% - 10px) * 0.075)!important}',
     '#pr .m29h.empty{border-color:transparent!important}',
-    /* 세 문서 위쪽 같은 크기(청구서 모양, A4 한 장에 표가 더 들어가게 조금 촘촘히) */
+     
     '#pr .u29 h1,#pr .wl2.u29w h1{font-size:24px!important;letter-spacing:12px!important;text-indent:12px!important;text-align:center!important;margin:0 0 10px!important;font-weight:700!important;color:#1e3a8a!important}',
     '#pr .u29 h1 small,#pr .wl2.u29w h1 small{display:block!important;font-size:11.5px!important;letter-spacing:3px!important;text-indent:3px!important;font-weight:600!important;color:#475569!important;margin-top:3px!important}',
     '#pr .u29 .hd,#pr .wl2.u29w .hd{margin-bottom:8px!important}',
@@ -2079,7 +2079,7 @@ window.V9228_APPLIED=true;
     '#pr .u29 .box tr.cap th,#pr .wl2.u29w .box tr.cap th{font-size:12px!important;padding:4px!important}',
     '#pr .u29 img.sealimg,#pr .wl2.u29w img.sealimg{width:40px!important;height:40px!important}',
     '#pr .u29 .tot,#pr .wl2.u29w .tot{margin:8px 0!important;padding:8px 14px!important}',
-    /* 작업내역서 색 줄이기 */
+     
     '#pr .wl2.u29w .wv th.pg.pg{background:#e2e8f0!important;color:#0f172a!important;border:1px solid #94a3b8!important}',
     '#pr .wl2.u29w .wv th.pp.pp,#pr .wl2.u29w .wg th.h.h{background:#1e3a8a!important;border-color:#1e3a8a!important}',
     '#pr .wl2.u29w .wv tbody:not(.ft) td.d.d{background:#ffffff!important}',
@@ -2093,7 +2093,7 @@ window.V9228_APPLIED=true;
     '#pr .wl2.u29w .lg.lg{background:#eef2f7!important}',
     '#pr .wl2.u29w .wv td.d b{color:#0f172a!important}',
     '#pr .wl2.u29w .fx29{display:block!important;max-width:calc(var(--wf,8px) * 8.5)!important;margin-left:auto!important;white-space:normal!important;word-break:keep-all!important;line-height:1.2!important;text-align:right!important}',
-    /* 글자 키우기(--wf) */
+     
     '#pr .wl2.f29 table.wt td,#pr .wl2.f29 table.wt th{font-size:var(--wf,8px)!important}',
     '#pr .wl2.f29 table.w1 td,#pr .wl2.f29 table.w1 th{padding-top:var(--wp,1px)!important;padding-bottom:var(--wp,1px)!important}',
     '#pr .wl2.f29 .wh{font-size:calc(var(--wf,8px) + 1.5px)!important}',
@@ -2149,7 +2149,7 @@ window.V9228_APPLIED=true;
         if(wm){var bs=wm.querySelectorAll('b'),dt=bs.length>1?bs[1].innerHTML:(bs[0]?bs[0].innerHTML:'');
           swap(wm,grid([{k:'작성일자',v:dt},{k:'건 명',v:esc31(d.title||'')}]));}
         Array.prototype.slice.call(wl.querySelectorAll('table.wv tbody.ft tr')).forEach(function(r){
-          var c=r.cells[r.cells.length-1];var t=c?(c.textContent||''):'';if(c&&/×/.test(t)&&t.indexOf('=')>=0)c.textContent=t.slice(t.lastIndexOf('=')+1).trim(); /* v9.232: 「102 공수 × 220,000 =」 식은 빼고 금액만 */
+          var c=r.cells[r.cells.length-1];var t=c?(c.textContent||''):'';if(c&&/×/.test(t)&&t.indexOf('=')>=0)c.textContent=t.slice(t.lastIndexOf('=')+1).trim();  
         });
         return box.innerHTML;
       }
@@ -2157,7 +2157,7 @@ window.V9228_APPLIED=true;
     }catch(e){console.error('[v9231-build]',e);return h}
   };
 
-  /* 한 장 채우기 — 인쇄 폭(190mm)에서 재서 A4 한 장을 넘지 않게 */
+   
   var mmPx=function(){var t=document.createElement('div');t.style.cssText='position:absolute;visibility:hidden;left:-9999px;top:0;height:100mm;width:10px';document.body.appendChild(t);var v=t.offsetHeight/100;t.parentNode.removeChild(t);return v||3.7795};
   var bsearch=function(set,fits,steps){var lo=0,hi=1;set(1);if(fits())return 1;set(0);if(!fits())return 0;for(var k=0;k<(steps||9);k++){var mid=(lo+hi)/2;set(mid);if(fits())lo=mid;else hi=mid}return lo};
   var fitOne=function(u,kind,MM){
@@ -2165,7 +2165,7 @@ window.V9228_APPLIED=true;
     var W=Math.round(190*MM),LIM=kind==='wl'?Math.floor(265*MM)-6:Math.min(1010,Math.floor(268*MM));
     var tv=kind==='wl'?u.querySelector('table.wv'):null,tvOld=tv?(tv.getAttribute('style')||''):'';
     var cells=Array.prototype.slice.call(u.querySelectorAll('table td'));
-    var fits=function(){var tb=u.querySelectorAll('table');for(var i=0;i<tb.length;i++){if(tb[i].scrollWidth>u.clientWidth+1)return false}if(u.scrollHeight>LIM)return false;for(var j=0;j<cells.length;j++){var c=cells[j];if(c.scrollWidth>c.clientWidth+1)return false}return true}; /* v9.232: 칸 넘침도 검사 */
+    var fits=function(){var tb=u.querySelectorAll('table');for(var i=0;i<tb.length;i++){if(tb[i].scrollWidth>u.clientWidth+1)return false}if(u.scrollHeight>LIM)return false;for(var j=0;j<cells.length;j++){var c=cells[j];if(c.scrollWidth>c.clientWidth+1)return false}return true};  
     if(kind==='wl')u.classList.add('f29');
     u.style.setProperty('width',W+'px','important');u.style.setProperty('max-width',W+'px','important');
     if(kind==='wl'){u.style.setProperty('height','auto','important');if(tv)tv.style.setProperty('height','auto','important')}
@@ -2174,7 +2174,7 @@ window.V9228_APPLIED=true;
     if(kind==='wl'){
       var a=bsearch(function(s){put('--wf',(8+4*s).toFixed(2)+'px');put('--wp',(1+3*s).toFixed(2)+'px')},fits);
       put('--wf',(8+4*a).toFixed(2)+'px');put('--wp',(1+3*a).toFixed(2)+'px');
-      put('--wv','0px');var b=bsearch(function(s){put('--wv',(6*s).toFixed(2)+'px')},fits);put('--wv',(6*b).toFixed(2)+'px'); /* 남는 높이는 출역 표 줄 간격으로 */
+      put('--wv','0px');var b=bsearch(function(s){put('--wv',(6*s).toFixed(2)+'px')},fits);put('--wv',(6*b).toFixed(2)+'px');  
     }else{
       put('--p29','0px');
       var f=bsearch(function(s){put('--f29',(10.5+2*s).toFixed(2)+'px')},fits);
@@ -2202,8 +2202,8 @@ window.V9228_APPLIED=true;
   window.V9231_APPLIED=true;window.V9232_APPLIED=true;
 })();
 
-/* ═══ v9.232 [Claude · 대표 17:3x] 「BOM 엑셀 올리기 눌렀더니 메일이 없습니다」 — erp mailOpen이 버튼에 mail_id를 넣기 전에 id 변수를 써서 undefined가 넘어감.
-   여기서는 열린 메일 번호를 기억했다가 비어 있으면 채워 넣음(안티그래비티가 erp를 고치면 그대로 둬도 됨). `window.V9232B_APPLIED` ═══ */
+
+
 (function(){
   if(window.V9232B_APPLIED)return;
   var cur=null;
@@ -2213,11 +2213,11 @@ window.V9228_APPLIED=true;
   window.V9232B_APPLIED=true;
 })();
 
-/* ═══ v9.234 [Claude · 대표 11-05 19:0x] 견적서 「본문 줄(고객 BOM 조립품) + 그 아래 구성 목록(하위 품번·수량, 단가 없음)」
-   대표: 「하위품번으로 보기좋게 나누어 주는거지.. 일일이 개별 단가는 안들어가도」
-   ① 작성 화면: 상세 줄 단가가 모두 0이면 본문 줄 단가를 「상세 합 ÷ 수량」(=0)으로 덮어쓰지 않음 — 대표가 본문 줄 단가를 직접 넣음(매입가는 상세 매입가 합 ÷ 수량 그대로)
-   ② 인쇄: 그런 문서는 본문 줄 바로 아래에 구성 목록(No 1-1·품명/도번·규격·수량·단위·비고, 값 칸 비움)을 들여서 넣고, 2장째 상세내역서는 붙이지 않음
-   상세 줄에 단가가 하나라도 있으면 예전 상세내역서 방식(v3.10) 그대로. 동결 7종 손대지 않음. `window.V9234_APPLIED` ═══ */
+
+
+
+
+
 (function(){
   if(window.V9234_APPLIED)return;
   var st=document.createElement('style');st.id='v9234css';
@@ -2229,7 +2229,7 @@ window.V9228_APPLIED=true;
   document.head.appendChild(st);
   var e=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
   var q=function(v){v=+v||0;return Math.abs(v-Math.round(v))<1e-9?Math.round(v).toLocaleString('ko-KR'):String(v)};
-  /* ① 작성 화면 */
+   
   if(typeof d310Sync==='function'){
     var _s=d310Sync;
     d310Sync=function(){
@@ -2239,7 +2239,7 @@ window.V9228_APPLIED=true;
       return acc;
     };
   }
-  /* ② 인쇄 */
+   
   if(typeof prLines==='function'){
     var _p=prLines;
     prLines=function(lines,opt){
@@ -2274,12 +2274,12 @@ window.V9228_APPLIED=true;
   window.V9234_APPLIED=true;
 })();
 
-/* ═══ v9.235 [Claude · 대표 11-05 19:5x] (v9.236: 줄 20개 이하면 품명·규격 줄바꿈 허용·규격 칸 25%) 견적서 구성 목록(하위 품번) 인쇄 정리
-   대표: 「글씨 정렬이 너무 안돼」「CAM PLATE 한 줄 띄고 품번」「상세에서는 굳이 세액을 뺄까봐」「너비가 부족해서 칸이 상하로 늘어나 1장 인쇄가 힘들어」
-   대상: 구성 목록이 들어간 견적 표(v9.234 l9234 · 견적 엑셀표 t9240) — 그 밖의 문서 표는 손대지 않음
-   ① 세액 칸 뺌(합계 줄은 공급가액 칸 밑으로) ② 품번(도번)은 품명 옆 따로 「도번」 칸(작은 글씨) — 품명이 잘려 두세 줄로 늘어나지 않게
-   ③ 줄마다 한 줄 고정(넘치면 … ) · No(1-1) 가운데 ④ 칸 너비 다시 나눔 · 위아래 여백·글자 줄여 한 장 맞춤(나머지는 erp 한 장 맞춤 fit305가 줄임)
-   동결 7종 손대지 않음. `window.V9235_APPLIED`, 견적 엑셀표(qt9240.js)는 window.prTidy9235(html, lines)로 같이 씀 ═══ */
+
+
+
+
+
+
 (function(){
   if(window.V9235_APPLIED)return;
   var esc5=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
@@ -2294,7 +2294,7 @@ window.V9228_APPLIED=true;
       var t=tp.content.querySelector('table.l9234,table.t9240');if(!t)return html;
       var hr=t.tHead&&t.tHead.rows[0];if(!hr)return html;
       var heads=[].map.call(hr.cells,function(th){return (th.textContent||'').trim()});
-      /* ① 세액 칸 빼기 */
+       
       var ix=heads.indexOf('세액');
       if(ix>=0){
         [].slice.call(t.rows).forEach(function(tr){
@@ -2308,7 +2308,7 @@ window.V9228_APPLIED=true;
         });
         heads.splice(ix,1);
       }
-      /* ② 도번 칸 넣기 */
+       
       var iNm=-1;heads.forEach(function(h,i){if(h==='품명'||h==='품명 / 품번')iNm=i});
       var codes=(lines||[]).map(function(l){return l&&l.item_code?String(l.item_code).trim():''}).filter(Boolean).sort(function(a,b){return b.length-a.length});
       if(iNm>=0){
@@ -2331,13 +2331,13 @@ window.V9228_APPLIED=true;
           tr.insertBefore(ct,nc?nc.nextSibling:null);
         });
       }
-      /* ④ 칸 너비 */
+       
       [].forEach.call(hr.cells,function(th,i){var w=W[heads[i]];S(th,'width',w||'');S(th,'padding','3px 3px');S(th,'whiteSpace','nowrap')});
       S(t,'tableLayout','fixed');S(t,'width','100%');
       var iNo=heads.indexOf('No'),iCd=heads.indexOf('도번');
-      /* v9.237 칸 너비를 내용 길이로(대표 23:0x 「품명 도번 규격도 너비가 반응형으로 작동한 게 아니야… 규격이 두 줄된 칸들 때문에 칸 높낮이가 이랬다 저랬다」)
-         품명·도번·규격 세 칸은 실제 글자 길이(12px 기준 추정)로 나눠 갖고, 나머지 칸은 고정. 셋 다 한 줄에 들어가면 줄바꿈 없음(줄 높이 고름),
-         모자라면 가장 긴 규격 칸만 줄바꿈. 모든 칸 %로 지정해 화면·인쇄 폭이 달라도 같은 비율 */
+      
+
+
       var LRw=[].filter.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){return /(^|\s)(d9234|c9240|m9234|p9240)(\s|$)/.test(tr.className)});
       var est=function(txt,px){var w=0;String(txt||'').replace(/\s+/g,' ').trim().split('').forEach(function(ch){var c=ch.charCodeAt(0);w+=c>0x2e80?1.0:/[A-Z0-9#&@%]/.test(ch)?0.66:/[a-z]/.test(ch)?0.55:0.4});return Math.ceil(w*px)};
       var TOT=720,fixW={'No':34,'수량':36,'단위':34,'단가':74,'공급가액':86,'금액':86,'비고':58},flex={},need={};
@@ -2352,7 +2352,7 @@ window.V9228_APPLIED=true;
         if(avail-others<90){Object.keys(need).forEach(function(k){if(+k!==iSp)widthOf[k]=need[k]*(avail-90)/others})}}
       [].forEach.call(hr.cells,function(th,i){var px=flex[i]?widthOf[i]:(fixW[heads[i]]||50);S(th,'width',(Math.round(px/TOT*1000)/10)+'%')});
       var few=LRw.length<=20,wrapSp=!fits;
-      /* ③ 한 줄 고정·정렬 */
+       
       [].forEach.call(t.tBodies[0]?t.tBodies[0].rows:[],function(tr){
         var det=/(^|\s)(d9234|c9240)(\s|$)/.test(tr.className),main=/(^|\s)(m9234|p9240)(\s|$)/.test(tr.className);
         if(!det&&!main)return;
@@ -2378,12 +2378,12 @@ window.V9228_APPLIED=true;
   window.V9235_APPLIED=true;
 })();
 
-/* ═══ v9.239 [Claude · 대표 11-05 23:1x] 「품명 너비는 남아돌고, 규격 너비가 넓어지면 보기 좋아질거 아니야」
-   v9.235는 글자 수로 너비를 「짐작」해서 품명을 크게 잡고 규격은 남은 만큼만 줘서 두 줄이 됨(D-STK 40줄: 품명 198px·규격 109px, 실제 필요 136px·125px).
-   이제 미리보기가 그려진 뒤 품명·도번·규격 칸의 실제 글자 폭을 그 칸의 글꼴·크기 그대로 재서(canvas measureText),
-   ① 세 칸 모두 한 줄에 들어가면 각자 필요한 만큼 + 남는 폭은 비례로 나눔(전부 한 줄, 줄 높이 일정)
-   ② 모자라면 규격·도번을 먼저 한 줄로 주고 품명이 남은 폭에서 줄바꿈 ③ 그래도 모자라면 품명·규격이 모자란 만큼 나눠 줄바꿈.
-   글자 크기가 바뀌면(fill9236 키움 단계마다) 다시 잼. 인쇄 폭은 718px 기준. `window.cw9239` ═══ */
+
+
+
+
+
+
 (function(){
   if(window.V9239_APPLIED)return;
   var S=function(el,p,v){el.style.setProperty(p,v,'important')};
@@ -2402,7 +2402,7 @@ window.V9228_APPLIED=true;
       var Wp=Math.min(W,718),k=Wp/W;
       var avail=0;flex.forEach(function(i){avail+=hr.cells[i].getBoundingClientRect().width*k});
       var LR=[].filter.call(t.tBodies[0].rows,function(tr){return LRX.test(tr.className)});if(!LR.length)return;
-      /* 재기 전에 한 줄로 펴서 잼 */
+       
       LR.forEach(function(tr){flex.forEach(function(i){var td=tr.cells[i];if(td)S(td,'white-space','nowrap')})});
       var need={};flex.forEach(function(i){need[i]=Math.max(36,textW(hr.cells[i]))});
       LR.forEach(function(tr){flex.forEach(function(i){var td=tr.cells[i];if(!td||td.colSpan>1)return;var w=textW(td);if(w>need[i])need[i]=w})});
@@ -2426,14 +2426,14 @@ window.V9228_APPLIED=true;
   window.V9239_APPLIED=true;
 })();
 
-/* ═══ v9.236 [Claude · 대표 11-05 22:5x] 「자재가 많지 않음에도 하단 표를 딱 눌러 붙여놔서 가독성이 안좋아. 반응형으로 UI 좀 잘 짜줄 수 없을까?」
-   ① 「한 장에 맞추기」가 모든 문서를 84%로 줄이던 원인(안쪽 .sheet 겹) 고침 ② 인쇄 미리보기가 열린 뒤 A4 한 장(718×1015px, erp 한 장 맞춤 fit305와 같은 기준)에 남는 높이를 실제로 재서,
-   견적서 품목 표(l9234·t9240) 줄 위아래 여백·글자를 남는 만큼 키움(한 줄 최대 30px·12px). 남는 높이가 없으면(줄 많은 견적) 그대로 촘촘히.
-   키운 뒤 다시 재서 한 장을 넘으면 한 단계씩 되돌림. 동결 7종 손대지 않음. `window.V9236_APPLIED` ═══ */
+
+
+
+
 (function(){
   if(window.V9236_APPLIED)return;
-  /* 원인 고침: printDoc(#1450-2)이 #prBody(.sheet) 안에 .sheet.pr-main-sheet를 한 겹 더 씌워 min-height 1120px·여백이 두 번 들어감
-     → 「한 장에 맞추기」가 모든 문서를 늘 1,208px로 재서 약 84%로 줄였음. 한 장짜리 문서는 안쪽 겹을 투명하게(여러 장 인쇄는 그대로) */
+  
+
   (function(){var c=document.createElement('style');c.id='v9236css';
     c.textContent='#prBody>.pr-main-sheet:only-child{width:auto!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:none!important;border-radius:0!important;min-height:0!important;background:transparent!important}';
     document.head.appendChild(c)})();
@@ -2454,8 +2454,8 @@ window.V9228_APPLIED=true;
             if(!/(^|\s)k9234(\s|$)/.test(td.className)&&!td.style.getPropertyValue('font-size').match(/^9(\.5)?px/))S(td,'font-size',(big?(det?11.5:12):mid?(det?11:11.5):(det?10:10.5))+'px');});});
         var th=t.tHead&&t.tHead.rows[0];if(th)[].forEach.call(th.cells,function(c){S(c,'padding',(big?'6px 4px':mid?'4px 3px':'3px 3px'));if(big)S(c,'font-size','11.5px')});cw();};
       var add=Math.min(14,Math.floor(free/LR.length));
-      /* v9.239: 줄 간격(여백)은 남는 높이만큼 키우되, 글자는 품명·도번·규격이 한 줄로 들어가는 크기까지만 키움.
-         단계: 여백 큰 것부터 → 그 여백에서 글자 큰 것부터. 페이지에 들어가고 줄바꿈 없는 첫 조합을 씀. 없으면 페이지에 들어가는 가장 큰 여백 */
+      
+
       var fit=null,ok=null,wr=function(){return /w(,|$)/.test(t.dataset.cw9239||'')};
       for(;add>0&&!ok;add--){var f0=add>=6?2:add>=3?1:0;for(var fl=f0;fl>=0;fl--){apply(add,fl);if(measure(body)<=PAGE){if(!fit)fit=[add,fl];if(!wr()){ok=[add,fl];break}}}}
       var pick=ok||fit||[0,0];apply(pick[0],pick[1]);t.dataset.f9239=pick.join('/');
@@ -2466,15 +2466,15 @@ window.V9228_APPLIED=true;
     var _pd=printDoc;
     printDoc=function(){var r=_pd.apply(this,arguments);var go=function(){setTimeout(window.fill9236,60)};if(r&&typeof r.then==='function')r.then(go);else go();return r};
   }
-  /* 미리보기 내용이 바뀌면(문서 바꿔 열기·내용 고치기) 다시 맞춤 — printDoc 감싸기가 다른 덧씌움에 가려도 동작 */
+   
   (function hook(n){var pb=document.getElementById('prBody');if(!pb){if((n||0)<120)setTimeout(function(){hook((n||0)+1)},500);return}
     var tm=null;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(window.fill9236,90)}).observe(pb,{childList:true});})();
   window.V9236_APPLIED=true;
 })();
 
-/* ═══ v9.237 [Claude · 대표 11-05 23:0x] 「매출과 매입 색상 차이가 없어서 눈에 확실하게 안 들어온다. 매입은 파란색, 매출은 빨간색. 글씨에 색을 주는 것보다는 음영」
-   「구분」 칸(매출·매입)이 있는 표(문서 원장 등)의 줄 전체에 옅은 음영 + 「구분」 칸은 진한 색 표시. 글씨 색은 그대로.
-   매출 = 옅은 빨강, 매입 = 옅은 파랑. 화면 표만(인쇄 양식 아님). `window.V9237_APPLIED` ═══ */
+
+
+
 (function(){
   if(window.V9237_APPLIED)return;
   var c=document.createElement('style');c.id='v9237css';
@@ -2503,9 +2503,9 @@ window.V9228_APPLIED=true;
   window.V9237_APPLIED=true;
 })();
 
-/* ═══ v9.238 [Claude · 대표 11-05 23:0x] 「글씨체도 좀 맞춰줘… 우리 헌법으로 지정한 거 있잖아. Noto Sans KR… erp 전체에 제발」
-   erp 화면·인쇄 미리보기·견적 엑셀표 등 전부 Noto Sans KR 하나로(지금은 IBM Plex Sans KR가 앞에 있어 섞여 보임). 숫자 칸은 자릿수 맞춤(tabular-nums).
-   코드·고정폭 글자(code·pre·kbd·samp)는 그대로. `window.V9238_APPLIED` ═══ */
+
+
+
 (function(){
   if(window.V9238_APPLIED)return;
   try{if(![].some.call(document.querySelectorAll('link[rel=stylesheet]'),function(l){return /Noto\+Sans\+KR/.test(l.href)})){var lk=document.createElement('link');lk.rel='stylesheet';lk.href='https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap';document.head.appendChild(lk)}}catch(e){}

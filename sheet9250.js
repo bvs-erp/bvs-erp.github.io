@@ -1,34 +1,34 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * sheet9250.js v1.2 — 「장부 엑셀표」 통장 · 카드 · 세금계산서 · 문서 원장 · 급여 · 거래처 · 인사 (대표 전용)
- * v1.10 [대표 11-06 13:0x 「인쇄하기 누르니 화면이 백지야」] Claude 잘못 — v1.0부터 넣은 인쇄 규칙(@media print)이 ERP 전체 인쇄에 걸려
- *      청구서·견적서 등 모든 인쇄가 백지 → 엑셀표 「인쇄」 누를 때만(body.sh9250-printing) 적용
- * v1.9 [대표 11-06 12:2x 「안열려. 빨리 청구서 인쇄해서 보내야」] 문서 원장이 엑셀표로 바뀐 뒤 ERP가 문서 목록(D.sd)을 안 불러와
- *      문서 창·인쇄·Ctrl+K 문서 찾기가 모두 빈손 → 엑셀표가 열릴 때·문서 창/인쇄 누를 때 문서 목록이 비었으면 먼저 불러옴(SH.ensureDocs — loadAll('sd'), 최대 8초 기다림)
- * v1.8 [대표 11-06 12:1x 「메뉴만 남기기」] 상단 「장 장부 엑셀표」 단추 없앰 · 표 안의 탭 줄 숨김(메뉴 서브탭이 곧 탭) · 화면 제목 = 표 이름(통장·카드…) · Ctrl+K 검색은 그대로
- * v1.7 [대표 11-06 12:0x 「너비 조정은 전혀 안되고」] 머리칸 오른쪽 끝을 끌어 열 너비 조정(두 번 누르면 글자에 맞춤) · 시트별로 기억(이 브라우저)
- * v1.6 [대표 11-06 11:5x 「엑셀로 한건 좋은데 이거 청구서 인쇄하려면 뭘 눌러야돼?」] 문서 원장: 줄을 두 번 누르거나 Enter → 예전 문서 창(인쇄·수정 단추 그대로),
- *      작업 줄에 「인쇄」「문서 창」 단추(선택한 줄), 문서번호 칸 파란 글씨. (고칠 수 있는 노란 칸은 두 번 누르면 그대로 고치기)
- * v1.5 [대표 11-06 10:0x 「출역보고 카톡 복사하기도 만들어주라. 고객사에 보고해야하거든」] 현장 상황판 「명단 복사」 옆 「카톡 보고」 단추 —
- *      그날 출역을 청구처(고객사)별로 「11월 05일(목) 투입현황 / 거래처 / 총 N명 / [업무] N명 / 장소: 이름…」 문구로 만들어(DB1203 ceo_field_report_text)
- *      창에 보여 주고(고칠 수 있음) 「복사」. 고객사가 여럿이면 고객사마다 따로 복사.
- *      + 요약줄 합계에서 공수·연장 뒤 「원」 빼기(출역 시트)
- * v1.4 [대표 11-06 09:3x 「용역은 엑셀 출역에서 수정하는게 훨씬 편한데, 정규직은 엑셀에서 계산해서 고치는건 불편」] 「출역」 시트(DB1202) — 공수·연장·작업 내용·메모,
- *      저장은 청구 엑셀표(xl9193 인건비)와 같은 길. 정규직 급여는 급여 계산 화면 그대로
- * v1.3 [대표 11-06 09:2x 「옛 화면을 쓰지 않으니까 엑셀 형식으로만 하자」] 메뉴가 바로 이 표를 열도록 · 옛 화면에만 있던 작업 단추(통장 올리기·짝 맞추기·세무사 제출 등)를
- *      표 위 「작업」 줄로 옮겨 붙이는 자리: SH9250.addTool('bank', '통장 올리기', function(){…}) — 시트를 바꾸면 그 시트 단추만 보임
- * v1.2 시트 2개 추가(거래처·인사, DB1201 — 저장은 공통 수정층 ceo_record_set을 거침). 거래처·인사는 기간과 상관없이 전체(인사는 기간 시작 뒤 퇴사자 포함)
- * v1.1 시트 5개(통장·카드·세금계산서·문서 원장·급여 지급, DB1200) · [안티 #1490 검토 ③④] 계정·거래처 고르기 목록: 글자·초성(ㅅㅁㅌ)·코드로 찾기 + ↑↓ Enter · 저장된 칸 연두색 표시 · SH9250.open('bank'|'tax'|'pay') 외부 호출용
- * [Claude · 대표 11-06 01:2x 「BVS ERP를 전체 엑셀화… 통장, 계산서, 급여 등등 전 시스템을 변경해」] 게시요청 #1491 (계획 #1490)
- * DB: DB1199 ceo_sheet_load / ceo_sheet_save / ceo_sheet_undo / ceo_sheet_log
- * 처음부터 따로 쓴 파일 — erp.html·xl9193·qt9240 어느 함수도 덮어쓰지 않음(버튼 2곳만 덧붙임: 상단 modbar · Ctrl+K).
- * 엑셀처럼: 칸 누르면 선택 · 방향키 이동 · 글자 치면 바로 고침(Enter 아래 · Tab 옆 · Esc 취소) · Shift+방향키/Shift+클릭 범위
- *          Ctrl+C 복사(엑셀에 붙음) · Ctrl+V 붙여넣기(고칠 수 있는 칸만) · Ctrl+D 위 값 아래로 채우기 · Delete 비우기
- *          고친 칸 노란색 → Ctrl+S 또는 「저장」 한 번 · 머리 누르면 정렬 · 머리 아래 칸 필터(글자 / >1000 / <0 / !제외)
- *          필터된 줄만 합계 · 엑셀 내려받기(CSV) · 인쇄 · 변경 이력에서 한 칸씩 되돌리기
- * 원본(통장 입출금·일자, 홈택스 금액, 급여 금액)은 못 고침. 계좌번호·주민번호는 싣지 않음.
- * ═══════════════════════════════════════════════════════════════════════════
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function(){
   'use strict';
   if (window.SH9250) return;
@@ -53,10 +53,10 @@
 
   var SH = {
     sheet: 'bank', from: '', to: '', data: null, view: [], filter: {}, q: '', sortK: null, sortAsc: true,
-    dirty: {},          // 'id|col' -> val
-    sel: null,          // {r, c}  (view 줄 번호, 보이는 열 번호)
-    anchor: null,       // 범위 시작
-    edit: null,         // {r, c, input}
+    dirty: {},          
+    sel: null,          
+    anchor: null,       
+    edit: null,         
     logOpen: false,
 
     init: function(){
@@ -153,8 +153,8 @@
       p.querySelector('#sh_to').addEventListener('change', function(e){ SH.to = e.target.value; });
       p.querySelector('#sh_q').addEventListener('input', function(e){ SH.q = e.target.value.trim(); SH.paint(); });
       var w = p.querySelector('#sh_wrap');
-      /* 글자 받는 칸 하나(sh_ime): 늘 여기에 초점 → 한글 입력기(IME)가 첫 글자부터 그대로 들어옴.
-         고치기 시작하면 이 칸이 선택한 칸 위로 올라가 보이고, 끝나면 다시 숨음 */
+      
+
       var ime = document.createElement('input'); ime.id = 'sh_ime'; ime.className = 'sh-ime'; ime.setAttribute('autocomplete', 'off'); w.appendChild(ime); SH.ime = ime;
       w.addEventListener('mousedown', SH.onDown);
       w.addEventListener('dblclick', SH.onDbl);
@@ -163,7 +163,7 @@
       ime.addEventListener('input', function(){ if (!SH.edit) SH.beginTyping(); else if (SH.pk) SH.pickFill(); });
       ime.addEventListener('compositionupdate', function(){ if (SH.edit && SH.pk) setTimeout(SH.pickFill, 0); });
       ime.addEventListener('blur', function(){ setTimeout(function(){ if (SH.edit && document.activeElement !== ime) SH.commitEdit(true); }, 0); });
-      /* 복사·붙여넣기: 고치는 중이 아닐 때만 표 단위로 (고치는 중·필터 칸은 브라우저 기본 동작) */
+       
       ime.addEventListener('copy', function(e){ if (!SH.edit) SH.onCopy(e); });
       ime.addEventListener('cut', function(e){ if (!SH.edit) { SH.onCopy(e); SH.clearRange(); } });
       ime.addEventListener('paste', function(e){ if (!SH.edit) SH.onPaste(e); });
@@ -172,13 +172,13 @@
     },
 
     tools: {},
-    /* 시트별 「줄 열기」 — 고칠 수 없는 칸을 두 번 누르거나 Enter */
+     
     rowAct: {
       doc: function(row){ SH.docOpen(row.id); }
     },
     selRow: function(){ return SH.sel ? SH.view[SH.sel.r] : null; },
     docObj: function(no){ return (window.D && Array.isArray(D.sd)) ? D.sd.filter(function(x){ return x.doc_no === no; })[0] : null; },
-    /* 문서 목록(D.sd)이 비었으면 ERP 기본 불러오기 loadAll('sd')로 한 번 불러옴 */
+     
     ensureDocs: function(){
       var has = function(){ return !!(window.D && Array.isArray(D.sd) && D.sd.length); };
       if (has()) return Promise.resolve(true);
@@ -219,7 +219,7 @@
     nav: function(){
       try {
         var mb = document.getElementById('modbar');
-        if (false && mb && !document.getElementById('btnModSh9250')) { /* v1.8 메뉴만 남기기 */
+        if (false && mb && !document.getElementById('btnModSh9250')) {  
           var b = document.createElement('button'); b.id = 'btnModSh9250'; b.type = 'button'; b.className = 'mod-btn ws-btn';
           b.style.cssText = 'color:#0f766e!important;font-weight:700!important;border:1px solid #14b8a6;border-radius:4px;margin-left:4px;';
           b.innerHTML = '<span class="ws-n" style="background:#0f766e;color:#fff;">장</span>장부 엑셀표';
@@ -264,7 +264,7 @@
       try { if (typeof go === 'function') go('home'); else if (typeof renderAll === 'function') renderAll(); } catch(e) {}
     },
 
-    /* ── 열 너비: 끌어서 조정 · 두 번 누르면 글자에 맞춤 · 시트별 기억 ── */
+     
     colW: function(){ if (!SH._cw) { try { SH._cw = JSON.parse(localStorage.getItem('sh9250.cw') || '{}'); } catch(e) { SH._cw = {}; } } return SH._cw[SH.sheet] || (SH._cw[SH.sheet] = {}); },
     colWSave: function(){ try { localStorage.setItem('sh9250.cw', JSON.stringify(SH._cw || {})); } catch(e) {} },
     rzSet: function(k, px){ px = Math.max(36, Math.min(600, Math.round(px))); SH.colW()[k] = px; var t = document.getElementById('sh_t'); if (!t) return;
@@ -307,7 +307,7 @@
       else if (a === 'drop') { SH.dirty = {}; SH.paint(); }
       else if (a === 'log') SH.toggleLog();
       else if (a === 'csv') SH.csv();
-      else if (a === 'print') { /* v1.10 엑셀표 인쇄 때만 이 표만 보이게 — 다른 인쇄(청구서·견적서)는 건드리지 않음 */
+      else if (a === 'print') {  
         document.body.classList.add('sh9250-printing');
         var off = function(){ document.body.classList.remove('sh9250-printing'); window.removeEventListener('afterprint', off); };
         window.addEventListener('afterprint', off); setTimeout(function(){ window.print(); setTimeout(off, 1500); }, 0); }
@@ -444,7 +444,7 @@
       el.innerHTML = parts.join(' · ');
     },
 
-    /* ── 선택·이동 ── */
+     
     cell: function(r, c){ return document.querySelector('#sh_t td[data-r="' + r + '"][data-c="' + c + '"]'); },
     paintSel: function(){
       document.querySelectorAll('#sh_t td.sel, #sh_t td.rng').forEach(function(td){ td.classList.remove('sel', 'rng'); });
@@ -454,7 +454,7 @@
       var td = SH.cell(SH.sel.r, SH.sel.c); if (td) { td.classList.add('sel'); td.scrollIntoView({block:'nearest', inline:'nearest'}); }
       SH.place(!!SH.edit);
     },
-    /* 글자 받는 칸을 선택한 칸 위치로 (숨김 상태면 1px, 고치는 중이면 칸 크기) */
+     
     place: function(show){
       var ime = SH.ime, w = document.getElementById('sh_wrap'); if (!ime || !w) return;
       var td = SH.sel && SH.cell(SH.sel.r, SH.sel.c);
@@ -490,7 +490,7 @@
     editable: function(r, c){ var col = SH.cols()[c], row = SH.view[r]; return !!(col && row && col.edit && !row.ro); },
 
     onKey: function(e){
-      if (e.isComposing || e.keyCode === 229) return;            // 한글 조합 중에는 입력기에 맡김
+      if (e.isComposing || e.keyCode === 229) return;            
       if (SH.edit) {
         if (SH.pk && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); SH.pickMove(e.key === 'ArrowDown' ? 1 : -1); return; }
         if (SH.pk && e.key === 'Enter' && SH.pk.list.length && SH.pk.typed) { e.preventDefault(); SH.pickChoose(SH.pk.hi); SH.move(e.shiftKey ? -1 : 1, 0); return; }
@@ -503,7 +503,7 @@
       if (ctrl && (e.key === 's' || e.key === 'S')) { e.preventDefault(); SH.save(); return; }
       if (ctrl && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); SH.fillDown(); return; }
       if (ctrl && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); if (SH.view.length) { SH.anchor = {r:0, c:0}; SH.sel = {r:SH.view.length - 1, c:SH.cols().length - 1}; SH.paintSel(); } return; }
-      if (ctrl || e.altKey) return; // 복사·붙여넣기는 copy/paste 이벤트로
+      if (ctrl || e.altKey) return; 
       switch (e.key) {
         case 'ArrowUp': e.preventDefault(); SH.move(-1, 0, e.shiftKey); return;
         case 'ArrowDown': e.preventDefault(); SH.move(1, 0, e.shiftKey); return;
@@ -519,11 +519,11 @@
         case 'Escape': e.preventDefault(); SH.anchor = null; SH.paintSel(); return;
       }
       if (e.key.length === 1 && SH.sel && !SH.editable(SH.sel.r, SH.sel.c)) { e.preventDefault(); SH.roMsg(); }
-      /* 고칠 수 있는 칸이면 막지 않음 → 글자가 sh_ime에 들어가고 input 이벤트에서 고치기 시작 */
+       
     },
     roMsg: function(){ var t = Date.now(); if (t - (SH._roAt || 0) > 2500) { SH._roAt = t; say('이 칸은 원본이라 고칠 수 없습니다 (노란 바탕 칸만 고칩니다)'); } },
 
-    /* ── 칸 고치기 ── */
+     
     openEditor: function(val, selectAll){
       var row = SH.view[SH.sel.r], col = SH.cols()[SH.sel.c], ime = SH.ime;
       SH.edit = {r:SH.sel.r, c:SH.sel.c, id:row.id};
@@ -533,7 +533,7 @@
       if (selectAll) ime.select();
       if (col.ty === 'pick' && SH.optMap[col.opt]) SH.pickOpen(col, val == null);
     },
-    /* ── 고르기 목록 (계정·거래처): 글자 · 초성 · 코드 ── */
+     
     cho: function(s){ var C = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'; return String(s || '').replace(/[가-힣]/g, function(ch){ return C[Math.floor((ch.charCodeAt(0) - 0xAC00) / 588)]; }); },
     pickOpen: function(col, typed){
       var el = document.getElementById('sh_pick'), w = document.getElementById('sh_wrap');
@@ -571,7 +571,7 @@
         (out.length > 200 ? '<div class="none">… ' + (out.length - 200) + '개 더 — 더 쳐서 좁히십시오</div>' : '') : '<div class="none">맞는 항목 없음</div>';
       SH.pickScroll();
     },
-    pickScroll: function(){ var pk = SH.pk; if (!pk) return; var d = pk.el.querySelector('div[data-i="' + pk.hi + '"]'); if (!d) return; /* 목록 안에서만 굴림(표·화면은 안 움직임) */
+    pickScroll: function(){ var pk = SH.pk; if (!pk) return; var d = pk.el.querySelector('div[data-i="' + pk.hi + '"]'); if (!d) return;  
       var el = pk.el; if (d.offsetTop < el.scrollTop) el.scrollTop = d.offsetTop; else if (d.offsetTop + d.offsetHeight > el.scrollTop + el.clientHeight) el.scrollTop = d.offsetTop + d.offsetHeight - el.clientHeight; },
     pickMove: function(d){
       var pk = SH.pk; if (!pk || !pk.list.length) return; pk.typed = true;
@@ -583,11 +583,11 @@
       var opt = pk.o.list[i]; SH.edit.chosen = opt.v; SH.ime.value = opt.t; SH.commitEdit();
     },
     pickClose: function(){ if (SH.pk) { SH.pk.el.style.display = 'none'; SH.pk.el.innerHTML = ''; SH.pk = null; } },
-    beginTyping: function(){                                   // 선택 칸에서 글자를 치기 시작함
+    beginTyping: function(){                                   
       if (!SH.sel || !SH.editable(SH.sel.r, SH.sel.c)) { SH.ime.value = ''; if (SH.sel) SH.roMsg(); return; }
-      SH.openEditor(null, false);                              // 이미 들어온 글자(조합 중 포함) 그대로 둠
+      SH.openEditor(null, false);                              
     },
-    startEdit: function(){                                     // Enter·F2·두 번 누르기: 지금 값을 펼쳐 놓고 고침
+    startEdit: function(){                                     
       if (!SH.sel) return;
       if (!SH.editable(SH.sel.r, SH.sel.c)) { if (SH.rowAct[SH.sheet]) { SH.rowAct[SH.sheet](SH.view[SH.sel.r]); return; } SH.roMsg(); return; }
       var row = SH.view[SH.sel.r], col = SH.cols()[SH.sel.c];
@@ -648,7 +648,7 @@
       SH.paint(); say('붙여넣기 ' + n + '칸' + (skip ? ' · 원본이라 건너뜀 ' + skip + '칸' : '') + (bad ? ' · 목록에 없어 못 넣음 ' + bad + '칸' : ''), bad ? 'e' : 'i');
     },
 
-    /* ── 저장·이력 ── */
+     
     save: function(){
       SH.commitEdit();
       var keys = Object.keys(SH.dirty); if (!keys.length || SH._saving) return;
@@ -707,7 +707,7 @@
   };
 
 
-  /* ── v1.5 현장 상황판 「카톡 보고」 ── */
+   
   (function(){
     var FR = {
       btn: function(){

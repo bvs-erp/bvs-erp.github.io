@@ -429,7 +429,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 </head>
 <body>
 <div class="wrap">
-  <!-- 로그인 -->
+  
   <div id="gate">
     <div class="gate-theme-wrap">
       <button class="gate-theme-btn" onclick="toggleTheme()" id="gateThemeBtn" title="낮/밤 모드 전환">
@@ -457,20 +457,20 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <button class="btn p w" onclick="doChangePw()">저장</button>
       <div class="msg" id="pmsg"></div>
     </div>
-    <!-- 홈 화면 앱 설치 & 추가 가이드 영역 -->
+    
     <div style="margin-top:14px;text-align:center">
-      <!-- PWA 원클릭 설치 버튼 (안드로이드 크롬/삼성인터넷 등 지원 시 활성화) -->
+      
       <button id="pwaInstallBtn" type="button" class="btn p w hide" onclick="installPwa()" style="font-size:14.5px;font-weight:700;padding:12px 14px;border-radius:12px;box-shadow:0 3px 10px rgba(29,78,216,0.25);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>스마트폰 홈 화면에 바로 설치하기</span>
       </button>
 
-      <!-- 아코디언 가이드 토글 버튼 -->
+      
       <button type="button" class="btn sm" onclick="toggleInstallGuide()" id="btnToggleGuide" style="border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;background:var(--sf);border:1px solid var(--ln);box-shadow:var(--sh);color:var(--tx2);display:inline-flex;align-items:center;gap:6px">
         <span>홈 화면에 앱 추가하는 방법</span> <span id="guideArrow" style="font-size:11px;color:var(--tx3)">▼</span>
       </button>
 
-      <!-- 아코디언 상세 안내 카드 -->
+      
       <div id="installGuideCard" class="card hide" style="margin-top:12px;text-align:left;padding:16px;background:var(--sf);border:1.5px solid var(--ln);box-shadow:var(--shx);border-radius:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <b style="font-size:14.5px;display:flex;align-items:center;gap:6px">
@@ -482,7 +482,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           홈 화면에 추가하시면 매번 링크를 찾을 필요 없이 <b>스마트폰 바탕화면 아이콘</b>을 눌러 바로 출퇴근·작업일보를 열 수 있습니다.
         </p>
 
-        <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
+        
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
           <button type="button" id="tabGuideAndroid" class="guide-tab-btn on" onclick="switchGuideTab('android')">
             삼성 / 갤럭시
@@ -492,7 +492,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           </button>
         </div>
 
-        <!-- 1) 삼성/갤럭시 안내 -->
+        
         <div id="guideAndroidContent">
           <div class="guide-step-box">
             <b><span class="pill b" style="font-size:10.5px">1단계</span> 브라우저 메뉴 열기</b>
@@ -509,7 +509,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           </div>
         </div>
 
-        <!-- 2) 아이폰/Safari 안내 -->
+        
         <div id="guideIosContent" class="hide">
           <div class="guide-step-box">
             <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
@@ -529,10 +529,10 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
     </div>
   </div>
 
-  <!-- 앱 -->
-  <!-- 앱 본체 -->
+  
+  
   <div id="app" class="hide">
-    <!-- BVS ERP 표준 최상단 48px 헤더 (#top) -->
+    
     <header id="top">
       <button class="ibtn mob-menu-btn" onclick="openMobNavModal()" title="전체 메뉴"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
       <div class="brand" onclick="location.reload()" title="데일리 새로고침">
@@ -547,7 +547,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </header>
 
-    <!-- 사원 정보 스트립 (.user-strip) -->
+    
     <div class="user-strip">
       <div class="u-info">
         <span class="u-badge" id="uGradePill">엔지니어</span>
@@ -567,7 +567,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </div>
 
-    <!-- 모바일 전체 메뉴 모달 (#mobNavModal) -->
+    
     <div id="mobNavModal" class="hide" onclick="if(event.target===this)closeMobNavModal()">
       <div class="mob-nav-panel">
         <div class="mob-nav-hdr">
@@ -686,7 +686,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <div class="note tiny">같은 날 같은 현장에 다시 등록하면 덮어씁니다.</div>
     </section>
 
-    <!-- 일지 -->
+    
     <section class="page" id="p-log">
       <div class="card">
         <h2>업무일지 <small class="dim tiny" id="logDateLbl"></small></h2>
@@ -705,17 +705,17 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <div class="card"><h2>최근 일지</h2><div id="logFeed"></div></div>
     </section>
 
-    <!-- 리드: 팀 공수 승인 및 현황 (WO-42) -->
-    <!-- 리드 관제 허브 (WO-42, WO-52, WO-53) -->
+    
+    
     <section class="page" id="p-lead">
-      <!-- WO-53 상단 3개 세그먼트 전환 바 (sticky) -->
+      
       <div class="lead-segment-nav">
         <button type="button" class="lead-seg-btn on" id="btnSegDay" onclick="switchLeadSeg('day')">당일 관제</button>
         <button type="button" class="lead-seg-btn" id="btnSegDeploy" onclick="switchLeadSeg('deploy')">투입현황</button>
         <button type="button" class="lead-seg-btn" id="btnSegMonth" onclick="switchLeadSeg('month')">월 달력</button>
       </div>
 
-      <!-- [세그먼트 1] 당일 관제 -->
+      
       <div id="leadSegDay">
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -745,7 +745,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 
         
 
-        <!-- WO-57: 일지 미작성 관제 카드 -->
+        
         <div class="card" id="leadPendingLogCard">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <h2>업무일지 미작성 <small class="pill r" id="leadPendingLogCnt" style="font-size:11px;font-weight:700">0건</small></h2>
@@ -758,14 +758,14 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <div id="leadPendingLogRows"></div>
         </div>
 
-        <!-- 당일 팀원 출퇴근 및 투입 현황 -->
+        
         <div class="card">
           <h2>팀원 당일 출퇴근 현황 <small class="dim tiny" id="leadWorkersN">0명</small></h2>
           <div id="leadWorkersRows"></div>
         </div>
       </div>
 
-      <!-- [세그먼트 2] 투입현황 (WO-53 통합) -->
+      
       <div id="leadSegDeploy" class="hide">
 <div class="card">
         <h2>투입현황</h2>
@@ -786,7 +786,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
       </div>
 
-      <!-- [세그먼트 3] 월 달력 (WO-52 월간 공수 달력) -->
+      
       <div id="leadSegMonth" class="hide">
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -808,7 +808,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
           <div id="leadCalMsg" class="tiny dim" style="margin-top:8px;text-align:center"></div>
         </div>
 
-        <!-- 월 팀 공수 누적 집계 (M/D) -->
+        
         <div class="card">
           <h2>이번 달 팀 공수 누적 집계 (M/D)</h2>
           <div id="leadMonthRollup"></div>
@@ -816,10 +816,10 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </section>
 
-    <!-- 리드: 투입현황 -->
+    
     
 
-    <!-- 리드: 펌프실 -->
+    
     <section class="page" id="p-pump">
       <div class="card">
         <h2>펌프실 작업보고</h2>
@@ -838,7 +838,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </section>
 
-    <!-- 안전 · 교육 -->
+    
     <section class="page" id="p-safety">
       <div class="card" id="sfCard">
         <h2>작업 전 안전점검 <small class="dim tiny" id="sfDateLbl"></small></h2>
@@ -861,7 +861,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <div class="card"><h2>최근 안전점검</h2><div id="sfFeed"></div></div>
     </section>
 
-    <!-- 휴가·휴무 신청 (v11) -->
+    
     <section class="page" id="p-leave">
       <div class="card">
         <h2>휴가 · 휴무 신청</h2>
@@ -914,7 +914,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
   </div>
 </div>
 
-<!-- 스마트폰 홈 화면 추가 안내 모달 (인앱 전용) -->
+
 <div class="guide-modal-wrap hide" id="homeGuideModal" onclick="if(event.target===this)closeHomeGuideModal()">
   <div class="guide-modal-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -924,7 +924,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       <button type="button" class="btn sm" onclick="closeHomeGuideModal()" style="border-radius:8px;padding:4px 10px;font-size:12px">닫기</button>
     </div>
 
-    <!-- PWA 원클릭 설치 버튼 (지원 브라우저) -->
+    
     <button id="pwaModalInstallBtn" type="button" class="btn p w hide" onclick="installPwa()" style="font-size:14.5px;font-weight:700;padding:12px 14px;border-radius:12px;box-shadow:0 3px 10px rgba(29,78,216,0.25);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span>스마트폰 홈 화면에 바로 설치하기</span>
@@ -934,7 +934,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       스마트폰 바탕화면에 BVS 데일리를 추가해 두시면, 매번 주소창을 열지 않고 <b>바탕화면의 앱 아이콘</b>을 터치하여 바로 이용할 수 있습니다.
     </p>
 
-    <!-- 탭 버튼: 갤럭시 vs 아이폰 -->
+    
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
       <button type="button" id="modalTabGuideAndroid" class="guide-tab-btn on" onclick="switchModalGuideTab('android')">
         삼성 / 갤럭시
@@ -944,7 +944,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </button>
     </div>
 
-    <!-- 모달 안드로이드 -->
+    
     <div id="modalGuideAndroidContent">
       <div class="guide-step-box">
         <b><span class="pill b" style="font-size:10.5px">1단계</span> 브라우저 메뉴 열기</b>
@@ -961,7 +961,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
       </div>
     </div>
 
-    <!-- 모달 아이폰 -->
+    
     <div id="modalGuideIosContent" class="hide">
       <div class="guide-step-box">
         <b><span class="pill b" style="font-size:10.5px">1단계</span> 사파리(Safari) 공유 버튼</b>
@@ -995,11 +995,11 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 <div id="toasts"></div>
 <script src="./erp-core.js?v=1.05"></script>
 <script>
-/* ═══════════ 테마 관리: 낮모드(라이트) vs 밤모드(다크) ═══════════ */
+ 
 function getPreferredTheme(){
   var saved=localStorage.getItem('bvs_worker_theme');
   if(saved==='dark'||saved==='light') return saved;
-  return 'dark'; /* WO-40: 기본값 다크 */
+  return 'dark';  
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
@@ -1020,7 +1020,7 @@ function toggleTheme(){
 }
 try{applyTheme(getPreferredTheme())}catch(e){}
 
-/* ── 퀵 일자 선택 (어제/오늘/내일) ── */
+ 
 function quickDate(offset){
   var d=new Date();
   d.setDate(d.getDate()+offset);
@@ -1029,7 +1029,7 @@ function quickDate(offset){
   onDate();
 }
 
-/* ── 안전점검 전 항목 원클릭 체크 ── */
+ 
 var DEFAULT_SF_ITEMS=[
   {code:'ppe',label:'개인 보호구 착용 (안전모·안전화·보안경·장갑)'},
   {code:'body',label:'건강 및 작업 컨디션 양호 (당일 작업 수행 가능 상태)'},
@@ -1048,7 +1048,7 @@ function sfCheckAllOk(){
   toast('모든 점검 항목이 정상으로 체크되었습니다','g');
 }
 
-/* ── 원터치 실시간 새로고침 (동기화) ── */
+ 
 async function syncRefresh(btn){
   if(btn) btn.classList.add('spin');
   try{
@@ -1061,7 +1061,7 @@ async function syncRefresh(btn){
   }
 }
 
-/* ── 로컬 스마트 업무일지 정리기 (클린룸 현장 전용 폴백) ── */
+ 
 function localSmartRefine(text, site, date, name){
   var rawLines = text.split(/[\r\n]+/).map(function(s){return s.trim()}).filter(Boolean);
   var lines = [];
@@ -1107,7 +1107,7 @@ function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()
 function hhmm(t){if(!t)return '';var m=String(t).match(/(\d{2}):(\d{2})/);return m?m[1]+':'+m[2]:''}
 window.onerror=function(m){toast('오류: '+m,'e')};
 
-/* ═══════════ PWA 설치 & 홈 화면 추가 가이드 로직 ═══════════ */
+ 
 var deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
@@ -1194,7 +1194,7 @@ async function afterLogin(){
   if(ME.status!=='ok'){el('lmsg').innerHTML='<span class="neg">'+esc(ME.message||'사용할 수 없는 계정입니다')+'</span>';el('loginCard').classList.remove('hide');el('pwCard').classList.add('hide');return}
   el('gate').classList.add('hide');el('app').classList.remove('hide');el('tabs').classList.remove('hide');
   el('uName').textContent=ME.name||ME.email||'';
-  el('uSub').textContent=((ME.staff_no||ME.employment_no)?'사번 '+(ME.staff_no||ME.employment_no)+' · ':'')+today(); /* v1.09 사번 BE/BC */
+  el('uSub').textContent=((ME.staff_no||ME.employment_no)?'사번 '+(ME.staff_no||ME.employment_no)+' · ':'')+today();  
   if(el('uAvatar')){
     var nm=(ME.name||ME.email||'BV').trim();
     el('uAvatar').textContent=nm.slice(0,2);
@@ -1218,7 +1218,7 @@ async function doChangePw(){var a=el('npw').value,b=el('npw2').value,m=el('pmsg'
 async function doLogout(){try{await sb.auth.signOut()}catch(e){}location.reload()}
 
 async function loadAll(){
-  /* v2.01 초고속 2단계 로딩: 첫 화면 핵심 5대 테이블 즉시 로드 (1.9초대 속도 실현) */
+   
   var res=await Promise.all([
     sb.from('my_sites').select('*'),
     sb.from('my_labor').select('*').order('work_date',{ascending:false}).limit(60),
@@ -1232,10 +1232,10 @@ async function loadAll(){
   D.places=(res[3]&&!res[3].error&&res[3].data)||[];
   D.lbl=(res[4]&&!res[4].error&&res[4].data)||[];
 
-  /* 첫 화면 즉시 렌더링 */
+   
   updateWorkerTerms();placesBuild();renderPlaces();renderState();renderList();
 
-  /* 나머지 탭별 전용 데이터는 백그라운드에서 지연 로드 (화면 멈춤 방지) */
+   
   setTimeout(loadExtraTabsData, 150);
 }
 
@@ -1266,7 +1266,7 @@ async function loadExtraTabsData(){
   }
 }
 
-/* ── 안전점검 · 교육 서명 ── */
+ 
 function sfToday(){return SF.date||today()}
 function sfRecord(d){return (D.safety||[]).filter(function(x){return String(x.check_date)===d})[0]}
 function renderSafety(){
@@ -1321,7 +1321,7 @@ async function edSign(id){
   toast('서명 완료','g');await loadAll();
 }
 
-/* ── 장소 → 라인: 장소 목록은 로그인 후 DB(op_place_list)에서 받는다 ── */
+ 
 var PLACE_GROUPS=[],PLACES=[];
 function placeRow(pf){return (D.places||[]).filter(function(r){return r.place_code===pf})[0]||{}}
 function placesBuild(){var rows=(D.places||[]).slice();
@@ -1331,8 +1331,8 @@ function placesBuild(){var rows=(D.places||[]).slice();
   var g=[],gi={};rows.forEach(function(r){var k=r.group_name||'';if(!(k in gi)){gi[k]=g.length;g.push({label:k,items:[],isHQ:!!r.is_hq,isOff:!!r.is_off})}g[gi[k]].items.push([r.place_code,r.place_name])});
   PLACE_GROUPS=g}
 function placeOf(sid){var x=(D.sites||[]).filter(function(s){return s.site_id===sid})[0];return (x&&x.place_code)||String(sid||'').split('-')[0]}
-function sitesOf(pf){return D.sites.filter(function(s){return (s.place_code||String(s.site_id).split('-')[0])===pf})}  /* v1.05: 라인은 묶음의 장소 코드로 */
-function lineLabel(s){if(s.line_name){return s.line_name==='-'?'라인 미정':s.line_name}if(s.work_name)return s.work_name; /* v1.07 장소만 있는 곳은 업무 이름 */var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
+function sitesOf(pf){return D.sites.filter(function(s){return (s.place_code||String(s.site_id).split('-')[0])===pf})}   
+function lineLabel(s){if(s.line_name){return s.line_name==='-'?'라인 미정':s.line_name}if(s.work_name)return s.work_name;  var parts=String(s.site_name).trim().split(/\s+/);var l=parts.length>1?parts.slice(1).join(' '):parts[0];
   if(/^-?\(?없음\)?$/.test(l)||l==='-(없음)')return parts[0];
   var pf=String(s.site_id).split('-')[0];return l}
 function renderPlaces(){
@@ -1401,7 +1401,7 @@ function updateSiteSummaryBadge(){
 function projectCode(){var r=placeRow(SEL.place);if(r.pump_ok&&el('w_pump')&&el('w_pump').checked)return 'PJ-PUMP';return r.project_code||'PJ-SETUP'}
 function siteName(id){var s=D.sites.filter(function(x){return x.site_id===id})[0];return s?s.site_name:id}
 
-/* ── 오늘 상태 · 시계 ── */
+ 
 function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function tickClock(){el('nowIn').textContent='지금 '+nowHM();el('nowOut').textContent='지금 '+nowHM()}
 function entryOf(date){return D.labor.filter(function(r){return String(r.work_date)===date&&r.status!=='void'})[0]}
@@ -1424,7 +1424,7 @@ function renderState(){var d=el('w_date').value,e=entryOf(d),box=el('stateBox');
   el('btnIn').classList.toggle('done',!!st);el('btnOut').classList.toggle('on',!!st&&!en);
 }
 
-/* ── 제출 공통 ── */
+ 
 async function submitLabor(p,okMsg){var m=el('w_msg');
   if(!SEL.site){m.innerHTML='<span class="neg">장소와 라인을 골라 주세요</span>';return null}
   m.textContent='등록 중…';
@@ -1433,13 +1433,13 @@ async function submitLabor(p,okMsg){var m=el('w_msg');
   if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return null}
   m.innerHTML='<span class="pos">'+okMsg+'</span>';toast(okMsg,'g');el('w_desc').value='';await loadAll();return r.data;
 }
-/* ── 출근 / 작업 시작 ── */
+ 
 async function clockIn(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
   if(e&&hhmm(e.work_start)){if(!(await ERPC.ask('확인', tm.alreadyInMsg(hhmm(e.work_start)))))return}
   var t=nowHM();await submitLabor({hours:8,work_start:t,work_end:null,site_id:e?e.site_id:null,project_code:e?e.project_code:null},tm.inSuccess(t));
   sfNudge(d);
 }
-/* 출근을 막지는 않는다 — 공수 기록이 빠지는 쪽이 더 나쁘다. 안내만 띄운다. */
+ 
 function sfNudge(d){
   if(d!==today())return;
   if(!(D.sfItems||[]).length)return;
@@ -1448,12 +1448,12 @@ function sfNudge(d){
   b.classList.remove('hide');
 }
 function sfGo(){el('sfNudge').classList.add('hide');go('safety')}
-/* ── 퇴근 / 작업 종료 → 근무시간 확인 ── */
+ 
 var CF={hours:8,start:null,end:null,entry:null};
 function calcHours(st,en){var a=st.split(':'),b=en.split(':');var h=(+b[0]+ +b[1]/60)-(+a[0]+ +a[1]/60);if(h<0)h+=24;if(h>5)h-=1;return Math.max(0.5,Math.round(h*2)/2)}
 async function clockOut(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
   if(!e||!hhmm(e.work_start)){el('w_msg').innerHTML='<span class="neg">'+tm.noInMsg+'</span>';return}
-  /* v1.01: 출근을 일찍 눌러도 기본은 1공수 8시간. 잔업은 본인이 골라야 붙는다. 실제 체류시간은 참고로만 보여준다 */
+   
   var t=nowHM();CF={entry:e,start:hhmm(e.work_start),end:t,ot:0,half:false,hours:8,stay:calcHours(hhmm(e.work_start),t)};
   el('cfWhy').textContent=tm.cfWhy(CF.start,t);cfRender();
   el('todayCard').classList.add('hide');el('confirmCard').classList.remove('hide');window.scrollTo(0,0);
@@ -1470,13 +1470,13 @@ function cfCancel(){el('confirmCard').classList.add('hide');el('todayCard').clas
 async function cfOk(){cfCancel();var e=CF.entry,tm=termMap();
   await submitLabor({hours:CF.hours,work_start:CF.start,work_end:CF.end,site_id:e.site_id,project_code:e.project_code},tm.outSuccess(CF.end,CF.hours));
 }
-/* ── 시간보정 ── */
+ 
 async function fixSubmit(h,label){var d=el('w_date').value,e=entryOf(d);
   if(e&&!(await ERPC.ask('확인', d+' 기록('+(+e.work_md).toFixed(1)+'공수)을 '+label+'로 바꿀까요?')))return;
   await submitLabor({hours:h,work_start:e?hhmm(e.work_start)||null:null,work_end:null,site_id:e?e.site_id:null},d+' '+label+' 등록');
 }
 
-/* ══════ 노무 준법: 정규직(출퇴근) vs 용역직(작업 시작/종료) 용어 분리 ══════ */
+ 
 function isRegularWorker(){
   if(ME){
     if(ME.employment_type==='regular'||ME.employment_type==='정규직')return true;
@@ -1570,12 +1570,12 @@ function updateWorkerTerms(){
   }
 }
 
-/* ══════ 역할 ══════ */
+ 
 var IS_LEAD=false;
 async function loadRole(){try{var r=await sb.rpc('my_is_lead');IS_LEAD=!!(r&&r.data)}catch(e){IS_LEAD=false}
   document.querySelectorAll('.tabs .lead').forEach(function(t){t.classList.toggle('hide',!IS_LEAD)})}
 
-/* ══════ 공용: 복사 · 공유 ══════ */
+ 
 function copyText(id){var t=el(id).textContent;if(!t.trim()){toast('내용 없음','e');return}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('복사됨','g')},function(){fallbackCopy(t)})}else fallbackCopy(t)}
 function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('복사됨','g')}catch(e){toast('복사 실패','e')}ta.remove()}
@@ -1586,7 +1586,7 @@ function kdate(d){var x=new Date(d+'T00:00:00');return (x.getMonth()+1)+'월 '+x
 function dateChips(id,dates,cur,fn){el(id).innerHTML=dates.map(function(d){return '<span class="chip'+(d===cur?' on':'')+'" onclick="'+fn+'('+ERPC.jsq(d)+')">'+(d===today()?'오늘':d.slice(5).replace('-','/'))+'</span>'}).join('')}
 function lastDays(n){var out=[];for(var i=0;i<n;i++){var d=new Date();d.setDate(d.getDate()-i);out.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return out}
 
-/* ══════ 업무일지 ══════ */
+ 
 var LOG={date:null,mic:null};
 function logOpen(d){LOG.date=d||LOG.date||today();var dates=lastDays(7);if(dates.indexOf(LOG.date)<0)dates.unshift(LOG.date);
   dateChips('logDates',dates,LOG.date,'logOpen');el('logDateLbl').textContent=kdate(LOG.date);
@@ -1617,7 +1617,7 @@ async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 
   }catch(err){
     console.warn('Edge function error, using smart fallback:', err);
   }
-  // 엣지함수 미응답 또는 키 미등록 시 스마트 로컬 엔진 폴백 (절대 멈추지 않음)
+  
   if(!out){
     out=localSmartRefine(t, sName, LOG.date, ME.name);
   }
@@ -1628,7 +1628,7 @@ async function aiRefine(){var t=el('logText').value.trim();if(!t){toast('먼저 
 function aiApply(){el('logText').value=el('aiText').textContent;aiDismiss()}
 
 
-/* ══════ WO-57: 업무일지 미작성 모니터링 (work_log_pending) ══════ */
+ 
 async function loadPendingWorkLogs(){
   if(!IS_LEAD) return;
   var box = el('leadPendingLogRows');
@@ -1683,7 +1683,7 @@ function copyPendingLogNotice(text, name){
   }
 }
 
-/* ══════ WO-53: 리드 세그먼트 전환 (당일 관제 · 투입현황 · 월 달력) ══════ */
+ 
 var LEAD_CURRENT_SEG = 'day';
 function switchLeadSeg(seg){
   LEAD_CURRENT_SEG = seg;
@@ -1704,7 +1704,7 @@ function switchLeadSeg(seg){
   }
 }
 
-/* ══════ WO-52: 리드 월간 공수 달력 (세로: 팀원명 sticky, 가로: 1~말일, 합계: 출근·MD·OT, 무금액) ══════ */
+ 
 var LEAD_CAL = { yearMonth: '' };
 
 function leadMonthPrev(){
@@ -1736,11 +1736,11 @@ async function leadMonthCalendarOpen(ym){
   var daysArr = [];
   for(var d = 1; d <= daysInMonth; d++){
     var dt = new Date(year, month - 1, d);
-    var dayOfWeek = dt.getDay(); // 0: Sun, 6: Sat
+    var dayOfWeek = dt.getDay(); 
     daysArr.push({ day: d, dow: dayOfWeek, dateStr: ym + '-' + (d < 10 ? '0' : '') + d });
   }
 
-  // Header render
+  
   var theadHtml = '<tr>'
     + '<th class="col-name">팀원</th>';
   daysArr.forEach(function(d){
@@ -1854,7 +1854,7 @@ async function leadMonthCalendarOpen(ym){
   }
 }
 
-/* ══════ WO-42: 현장 팀 리드 전용 관제 (팀원 급여·단가·계좌 완전 비공개) ══════ */
+ 
 var LEAD = { date: null, rows: [] };
 
 async function leadOpen(d){
@@ -1885,7 +1885,7 @@ async function leadOpen(d){
     
     el('leadWorkersN').textContent = rows.length + '명';
 
-    // [팀장 확인 전 카드 삭제완료 - #1454]
+    
 
     el('leadWorkersRows').innerHTML = rows.map(function(x){
       var isSubmitted = x.status === 'submitted';
@@ -1943,27 +1943,27 @@ function renderLeadMonthlyRollup(rows){
     + '</table>';
 }
 
-/* v1.01 W6: 리드 확인을 서버에 기록한다(lead_confirm_labor). 대표 승인과는 별개이며 상태는 바꾸지 않는다 */
+ 
 async function leadConfirm(ids, label){
   var r = await sb.rpc('lead_confirm_labor', { p_date: LEAD.date, p_entry_ids: ids });
   if(r.error || !r.data || !r.data.ok){ toast('확인 실패: ' + ((r.error && r.error.message) || (r.data && r.data.error) || ''), 'e'); return; }
   toast(label + ' ' + r.data.confirmed + '건 확인', 'g');
   leadOpen(LEAD.date);
 }
-function leadApproveRow(idx){ return; // #1454 제거
+function leadApproveRow(idx){ return; 
 
   var row = LEAD.PEND && LEAD.PEND[idx];
   if(!row || !row.id){ toast('대상을 찾지 못했습니다. 새로고침 후 다시 눌러 주세요', 'e'); return; }
   leadConfirm([row.id], row.name);
 }
-function leadApproveAll(){ return; // #1454 제거
+function leadApproveAll(){ return; 
 
   var ids = (LEAD.PEND || []).map(function(x){ return x.id; }).filter(Boolean);
   if(!ids.length) return;
   leadConfirm(ids, '팀 전원');
 }
 
-/* ══════ 리드: 투입현황 ══════ */
+ 
 var DP={date:null};
 async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDays(7),DP.date,'dpOpen');el('dpBlocks').innerHTML='<div class="dim tiny">불러오는 중…</div>';
   var r=await sb.rpc('lead_deployment',{p_date:DP.date});
@@ -2001,7 +2001,7 @@ async function dpOpen(d){DP.date=d||DP.date||today();dateChips('dpDates',lastDay
   el('dpRows').innerHTML=(d.rows||[]).map(function(x){return '<div class="item"><div class="m"><div class="s">'+esc(x.name)+' <span class="pill '+(x.status==='submitted'?'b':x.status==='approved'?'g':'')+'">'+esc((STMAP[x.status]||[x.status])[0])+'</span></div><div class="t">'+esc(x.site||'')+' · '+esc(x.project)+(x.partner?' · '+esc(x.partner):'')+(x.start?' · '+hhmm(x.start)+' 시작':'')+'</div></div><div class="r"><b>'+(+x.md||0).toFixed(1)+'</b><small class="dim">'+((+x.ot)>0?'+'+x.ot+'h':'공수')+'</small></div></div>'}).join('')||'<div class="empty">기록 없음</div>';
 }
 
-/* ══════ 리드: 내일 배치 ══════ */
+ 
 var PL={date:null,staff:[],rows:{}};
 function tomorrow(){var d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 async function plOpen(d){PL.date=d||PL.date||tomorrow();el('pl_date').value=PL.date;
@@ -2016,7 +2016,7 @@ function sitePlaceName(id){
   if(!s) return id;
   var code=placeOf(s.site_id);
   var found=PLACES.filter(function(p){return p[0]===code})[0];
-  if(found){var pr=placeRow(code);return (pr.group_name&&pr.group_name!=='비근무'&&pr.group_name!==found[1]?pr.group_name:'')+found[1]} /* v1.07 SK이천·삼성평택처럼 붙여 씀 */
+  if(found){var pr=placeRow(code);return (pr.group_name&&pr.group_name!=='비근무'&&pr.group_name!==found[1]?pr.group_name:'')+found[1]}  
   return (s.site_name||'').split(' ')[0]||s.site_name||id;
 }
 function plText(){
@@ -2037,7 +2037,7 @@ async function plSave(){var m=el('plMsg');m.textContent='저장 중…';var rows
   if(r.error||!r.data||!r.data.ok){m.innerHTML='<span class="neg">'+esc((r.error&&r.error.message)||(r.data&&r.data.error)||'실패')+'</span>';return}
   m.innerHTML='<span class="pos">'+r.data.rows+'명 배치 저장</span>';toast('배치 저장','g');plText()}
 
-/* ══════ 리드: 펌프실 ══════ */
+ 
 var PM={date:null,site:null,rows:[]};
 function pmOpen(d){PM.date=d||PM.date||today();el('pm_date').value=PM.date;pmLoadReport();
   var ss=D.sites.filter(function(s){return /^(IC|CJ)-/.test(s.site_id)&&!/-(IC|CJ)$/.test(s.site_id)});
@@ -2066,7 +2066,7 @@ async function withdraw(id){if(!(await ERPC.ask('확인', '이 기록을 취소�
 function renderList(){
   var ym=today().slice(0,7),cur=D.labor.filter(function(r){return String(r.work_date).slice(0,7)===ym});
   var md=cur.reduce(function(a,r){return a+(+r.work_md||0)},0),ot=cur.reduce(function(a,r){return a+(+r.ot_hours||0)},0);
-  var um=el('uMon');if(um){um.textContent=(+ym.slice(5,7))+'월 '+md.toFixed(1)+'공수';um.classList.toggle('hide',false)} /* v1.08 이번 달 내 공수(누르면 내 기록) */
+  var um=el('uMon');if(um){um.textContent=(+ym.slice(5,7))+'월 '+md.toFixed(1)+'공수';um.classList.toggle('hide',false)}  
   el('myKpi').innerHTML='<div class="kpi"><div class="k">'+ym+' 근무일</div><div class="v">'+cur.length+'</div></div><div class="kpi"><div class="k">공수</div><div class="v">'+md.toFixed(1)+'</div></div><div class="kpi"><div class="k">잔업 h</div><div class="v">'+ot.toFixed(1)+'</div></div>';
   el('listN').textContent=D.labor.length?'최근 '+D.labor.length+'건':'';
   el('list').innerHTML=D.labor.length?D.labor.map(function(r){var st=STMAP[r.status]||[r.status,''];var d=String(r.work_date);
@@ -2081,7 +2081,7 @@ function L(k,d){var r=(D.lbl||[]).filter(function(x){return x.label_key===k})[0]
 function renderMe(){var m=D.me||{};el('meRows').innerHTML=ME_F.map(function(f){f=f.slice();if(!f[1])f[1]=L('id.'+f[0],'출입ID');var v=m[f[0]];if(f[3]==='yn')v=v==null?'':(v?'유':'무');return '<div class="item"><div class="m"><div class="t">'+f[1]+'</div><div class="s">'+(v?esc(v):'<span class="dim">–</span>')+'</div></div>'+(f[2]?'<button class="btn sm" onclick="meEdit('+ERPC.jsq(f[0])+','+ERPC.jsq(f[1])+')">수정</button>':'')+'</div>'}).join('')}
 async function meEdit(k,label){var cur=(D.me||{})[k];if(k==='own_vehicle_known')cur=cur?'유':'무';var v=await ERPC.ask(label,k==='own_vehicle_known'?'유 / 무':'',{input:true,value:cur==null?'':String(cur),ok:'저장'});if(v===null)return;
   var r=await sb.rpc('my_update_profile',{p_field:k,p_value:v});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('저장됨','g');await loadAll();renderMe()}
-/* ══════ 내 보상 (월급제 본인 행만) ══════ */
+ 
 var CP={ten:null,grade:null};
 function cf(R,k,d){var v=parseFloat(R[k]);return isNaN(v)?d:v}
 async function compLoad(){try{var r=await Promise.all([sb.from('my_comp').select('*'),sb.from('my_pay_rules').select('*'),sb.rpc('my_grade')]);D.comp=((r[0]&&r[0].data)||[])[0]||null;D.rules=(((r[1]&&r[1].data)||[])[0]||{}).rules||{};D.grade=(r[2]&&r[2].data)||null;}catch(e){D.comp=null}renderGrade();renderComp()}
@@ -2115,7 +2115,7 @@ function renderComp(){var c=D.comp,R=D.rules||{},box=el('comp');if(!c){box.inner
 function cpTen(v){CP.ten=+v;var c=D.comp,R=D.rules||{};el('cpTen').textContent=CP.ten;el('cpTenV').textContent=won(compOrd(c,R,CP.ten,+c.tech_grade))}
 function cpGrade(v){CP.grade=+v;var c=D.comp,R=D.rules||{};var now=compOrd(c,R,0,+c.tech_grade),g=compOrd(c,R,0,CP.grade);el('cpGradeV').textContent=won(g);el('cpGradeD').textContent=CP.grade!==+c.tech_grade?'(현재 대비 '+(g-now>=0?'+':'')+won(g-now)+')':''}
 
-/* ── 내 기술등급 ── */
+ 
 function gpct(a,b){if(!b||b<=0)return 100;return Math.max(0,Math.min(100,Math.round(a/b*100)))}
 function renderGrade(){
   var box=el('gradeCard');if(!box)return;var g=D.grade;
@@ -2180,7 +2180,7 @@ function renderPay(){
   }).join('');
 }
 
-/* ── 계약서 전자서명 ── */
+ 
 var DOC={id:null,row:null,ok:false,drawn:false,ctx:null};
 function docBadge(st){var m={issued:['서명 필요','y'],signed:['회사 날인 대기',''],countersigned:['완료','g']};var a=m[st]||['',''];return '<span class="pill '+a[1]+'">'+a[0]+'</span>'}
 function renderDocs(){
@@ -2194,7 +2194,7 @@ function renderDocs(){
     return;
   }
 
-  // 서명 대기 문서 최상단 정렬
+  
   var sorted = rows.slice().sort(function(a,b){
     var ord = {issued: 0, signed: 1, countersigned: 2, void: 3};
     return (ord[a.status] || 9) - (ord[b.status] || 9);
@@ -2276,7 +2276,7 @@ function sigInit(){
   var dpr=window.devicePixelRatio||1,w=cv.clientWidth||300,h=150;
   cv.width=w*dpr;cv.height=h*dpr;
   var c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.4;c.lineCap='round';c.lineJoin='round';
-  c.strokeStyle='#1d4ed8'; // 테마 무관 정본 계약서(흰 종이)에 선명한 정격 블루 잉크
+  c.strokeStyle='#1d4ed8'; 
   c.lineWidth=2.8;DOC.ctx=c;DOC.drawn=false;
   var down=false,lx=0,ly=0;
   function pt(ev){var r=cv.getBoundingClientRect();return [ev.clientX-r.left,ev.clientY-r.top]}
@@ -2304,7 +2304,7 @@ async function docSign(){
 }
 
 
-/* ═══════════ 휴가·휴무 신청 (v11) ═══════════ */
+ 
 var LV={kind:'휴가'};
 function lvToday(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function lvFmt(d){var x=new Date(d+'T00:00:00');return (x.getMonth()+1)+'/'+x.getDate()+'('+'일월화수목금토'[x.getDay()]+')'}
@@ -2339,7 +2339,7 @@ function go(p){document.querySelectorAll('.page').forEach(function(x){x.classLis
   if(p==='log'){loadAll().then(function(){logOpen()});return}if(p==='lead'){leadOpen();switchLeadSeg(LEAD_CURRENT_SEG||'day');return}if(p==='deploy'){go('lead');switchLeadSeg('deploy');return}if(p==='pump'){pmOpen();return}if(p==='me'){loadAll().then(renderMe);return}if(p==='pay'){loadAll().then(compLoad);return}if(p==='doc'){loadAll().then(renderDocs);return}if(p==='leave'){leaveOpen();return}if(p!=='in')loadAll()}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!el('gate').classList.contains('hide')){if(!el('pwCard').classList.contains('hide'))doChangePw();else doLogin()}});
 loadLib(0);
-/* v1.03 하단 탭: 자주 쓰는 4칸 + 더보기 */
+ 
 var TAB_MAIN={in:1,log:1,safety:1,list:1};
 function moreSetup(){var tb=el('tabs');if(!tb||el('tabMore'))return;
   tb.querySelectorAll('div[data-p]').forEach(function(t){if(!TAB_MAIN[t.dataset.p])t.classList.add('sec2')});
@@ -2369,7 +2369,7 @@ function closeMobNavModal(){
   var m=el('mobNavModal');if(m)m.classList.add('hide');
 }
 
-/* v1.10 내 기록: 월 고르기 · 정규직은 근태 현황(잔업 시간만), 용역은 공수 · 취소된 줄과 내부 메모는 숨김 */
+ 
 var LIST={ym:'',showVoid:false};
 function listDesc(t){return String(t||'').replace(/\s*\[[^\]]*\]\s*/g,' ').replace(/\s{2,}/g,' ').trim()}
 function listSetYm(ym){LIST.ym=ym;LIST.showVoid=false;renderList()}
@@ -2398,7 +2398,7 @@ function renderList(){
     :'<div class="empty">'+mon+' 기록 없음</div>')
     +(vd?'<div style="text-align:center;margin-top:10px"><button class="btn sm" onclick="LIST.showVoid=!LIST.showVoid;renderList()">'+(LIST.showVoid?'취소된 기록 숨기기':'취소된 기록 '+vd+'건 보기')+'</button></div>':'');
 }
-/* v1.11 내 경력(업무경험, 장비별 근무 이력) · 월별 정산 카드 → 그 달 달력(공수·잔업·수당 붙은 날) */
+ 
 (function(){var c=document.createElement('style');c.textContent=
  '.xq{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.xq .kpi{flex:1;min-width:90px}'
 +'.xt{width:100%;border-collapse:collapse;font-size:12.5px}.xt th,.xt td{padding:6px 4px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}.xt th{font-weight:600;color:var(--tx2);font-size:11.5px}.xt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}'
@@ -2461,7 +2461,7 @@ function pcHtml(ym,x){var reg=isRegularWorker(),y=+ym.slice(0,4),m=+ym.slice(5,7
   else h+='<div class="tiny dim">이 달에는 붙은 수당이 없습니다.</div>';
   h+='<div class="tiny dim" style="margin-top:6px">출장일비는 그날 간 현장이 기본 지역 밖이면 자동으로 붙습니다. 금액이 다르면 「기록」에서 그날 「이의」를 누르십시오.</div></div>';
   return h}
-/* v1.11 날짜 칩 → 날짜 고르기(일지), 칩 모양 정리 · 펌프실 탭 제거(프로젝트 종료) */
+ 
 (function(){var c=document.createElement('style');c.textContent=
  '.chips{display:flex;flex-wrap:wrap;gap:6px}.chips .chip{display:inline-block;padding:5px 10px;border:1px solid var(--ln);border-radius:2px;font-size:12px;background:var(--sf);color:var(--tx2);cursor:pointer;white-space:nowrap}.chips .chip.on{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}'
 +'#logDates{display:none!important}.tabs div[data-p="pump"]{display:none!important}#p-pump{display:none!important}.logpick{display:flex;align-items:center;gap:8px;margin-bottom:10px}.logpick input{flex:1;max-width:190px}';document.head.appendChild(c)})();
@@ -2472,7 +2472,7 @@ logOpen=function(d){_logOpen111(d);var lb=el('logDates');if(!lb)return;var pk=el
 var _pmOpen111=typeof pmOpen==='function'?pmOpen:null;
 pmOpen=function(){toast('펌프실 작업보고는 프로젝트 종료로 닫혔습니다');go('in')}
 var _moreItems111=moreItems;moreItems=function(){return _moreItems111().filter(function(t){return t.dataset.p!=='pump'})}
-/* v1.11 리드 › 내일 배치: 장소 고르기를 청구처별로 묶고 「장소 · 하는 일 (청구처)」로 표기 — 같은 이름(BVS이천 3개·교육 2개) 구분 */
+ 
 function plBill(s){var b=String(s.billing_short||'').toUpperCase();return b==='WJ'?'우주':b==='BVS'||b==='BV'?'BVS':b||'기타'}
 function plLabel(s){var w=s.work_name||((s.line_name&&s.line_name!=='-')?s.line_name:'');return s.site_name+(w&&s.site_name.indexOf(w)<0?' · '+w:'')}
 plRender=function(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.site_id)}),grp={},ord=[];
@@ -2481,7 +2481,7 @@ plRender=function(){var sites=D.sites.filter(function(s){return !/^OFF-/.test(s.
   var opts=function(cur){return ord.map(function(b){return '<optgroup label="'+esc(b)+' 청구">'+grp[b].map(function(s){return '<option value="'+esc(s.site_id)+'"'+(s.site_id===cur?' selected':'')+'>'+esc(plLabel(s))+' ('+esc(b)+')</option>'}).join('')+'</optgroup>'}).join('')};
   el('plRows').innerHTML=PL.staff.map(function(w){var cur=PL.rows[w.employment_no]||{};return '<div class="pmrow" style="grid-template-columns:76px 1fr 32px"><div style="font-weight:600;font-size:14px">'+esc(w.name)+'</div><select onchange="PL.rows['+ERPC.jsq(w.employment_no)+']={site_id:this.value,memo:\'\'}"><option value="">(미배치)</option>'+opts(cur.site_id)+'</select><span class="x dim tiny">'+(w.last_site?esc(String(w.last_site).split('-')[0]):'')+'</span></div>'}).join('');
   plText()};
-/* v1.12 앱 이름 「BVS 데일리」 · 펌프실 작업 체크 제거 · 우주이천 장소 버튼·배치 목록에서 제외(종료 프로젝트) · 정규직 화면의 「공수」 표현을 근무·근태로 */
+ 
 (function(){var c=document.createElement('style');c.textContent='#pumpBox{display:none!important}';document.head.appendChild(c)})();
 var HIDE_PLACE={UO:1};
 var _renderPlaces112=renderPlaces;renderPlaces=function(){var _so=sitesOf;sitesOf=function(pf){return HIDE_PLACE[pf]?[]:_so(pf)};try{_renderPlaces112.apply(this,arguments)}finally{sitesOf=_so}
@@ -2494,7 +2494,7 @@ function regWords(root){if(!isRegularWorker())return;root=root||el('app');if(!ro
 (function(){var app=el('app');if(!app)return;var tm=null;new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;regWords()},30)}).observe(app,{childList:true,subtree:true,characterData:true});regWords()})();
 var _renderPay112=renderPay;renderPay=function(){_renderPay112.apply(this,arguments);if(!isRegularWorker())return;var box=el('pay');if(!box)return;
   box.querySelectorAll('.pay-card-sub').forEach(function(s){s.innerHTML=s.innerHTML.replace(/투입 공수: <b>([\d.]+) M\/D<\/b>/,function(_,n){return '근무일: <b>'+Math.round(+n)+'일</b>'})})};
-/* v1.12 기록 탭: 달력(월 넘기기 ‹ ›) + 날짜 누르면 그날 상세. 정규직은 근태(근무·잔업), 용역은 공수 */
+ 
 (function(){var c=document.createElement('style');c.textContent=
  '.kcal-h{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px}.kcal-h b{font-size:16px}.kcal-h .nb{width:36px;height:34px;border:1px solid var(--ln);border-radius:2px;background:var(--sf);font-size:18px;line-height:32px;text-align:center;cursor:pointer;color:var(--tx2)}'
 +'.kcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.kcal .wd{font-size:11px;color:var(--tx3);text-align:center;padding:2px 0 4px}.kcal .wd.su{color:#dc2626}.kcal .wd.sa{color:#2563eb}'
@@ -2536,7 +2536,7 @@ renderList=function(){
       :'<div class="tiny dim">이 날은 기록이 없습니다.</div>')+'</div>'}
   el('list').innerHTML=cal+det+(rows.length?'':'<div class="tiny dim" style="margin-top:8px">이 달 기록 없음</div>');
 };
-/* v1.12 기록 달력에 휴가·휴무·병가 신청을 함께 표시(신청 중은 테두리, 승인·확정은 채움) */
+ 
 (function(){var c=document.createElement('style');c.textContent='.kcal .tg.a{background:rgba(16,185,129,.16);color:#047857;font-weight:700}.kcal .tg.ap{border:1px dashed #d97706;color:#b45309;font-weight:600}';document.head.appendChild(c)})();
 LIST.abs=null;LIST.absBusy=false;
 function listAbsLoad(){if(LIST.abs||LIST.absBusy)return;LIST.absBusy=true;
@@ -2551,7 +2551,7 @@ renderList=function(){_renderList112.apply(this,arguments);listAbsLoad();if(!LIS
     var first=kd.querySelector('.item,.tiny');if(first)first.insertAdjacentHTML('beforebegin',h);else kd.insertAdjacentHTML('beforeend',h)}}};
 var _leaveSubmit112=leaveSubmit;leaveSubmit=async function(){var r=await _leaveSubmit112.apply(this,arguments);LIST.abs=null;return r};
 var _leaveCancel112=leaveCancel;leaveCancel=async function(){var r=await _leaveCancel112.apply(this,arguments);LIST.abs=null;return r};
-/* v1.12 내 경력 아래 프로필: 묶음 카드(기본·거주와 이동·장비 사이즈·출입ID·교육 이수) 2열 표, 고칠 수 있는 칸은 누르면 바로 수정 */
+ 
 (function(){var c=document.createElement('style');c.textContent=
  '.pf{margin-top:12px}.pf .pfg{border:1px solid var(--ln);border-radius:6px;margin-bottom:10px;overflow:hidden}.pf .pfh{font-size:12px;font-weight:700;color:var(--tx2);background:var(--sf2);padding:7px 12px}'
 +'.pf .pfr{display:grid;grid-template-columns:96px 1fr;align-items:center;padding:9px 12px;border-top:1px solid var(--ln);font-size:13px}.pf .pfr .k{color:var(--tx3);font-size:12px}.pf .pfr .v{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}'
@@ -2570,7 +2570,7 @@ function pfPaint(){var box=el('meRows2');if(!box)return;var m=D.me||{};
    +'<div class="pfg"><div class="pfh">교육 이수</div><div class="edu">'+PF_EDU.map(function(f){var v=m[f[0]],on=!!v&&!/^(n|no|x|-|미|없)/i.test(String(v));return '<div class="ec'+(on?' on':'')+'"><span class="m">'+(on?'✓':'')+'</span><span>'+esc(f[1])+(on&&/\d{2,4}[-./]\d/.test(String(v))?' <small class="dim">'+esc(String(v).slice(0,10))+'</small>':'')+'</span></div>'}).join('')+'</div></div></div>';}
 var _renderMe112=renderMe;renderMe=function(){_renderMe112.apply(this,arguments);try{pfPaint()}catch(e){console.error(e)}
   var d=el('meRows')&&el('meRows').querySelector('details.xd');if(d){var s=d.querySelector('summary');if(s)s.innerHTML='내 프로필 · 사이즈 · 교육 이수 <span class="dim tiny">(누르면 수정)</span>';var p=d.querySelector('p.tiny');if(p)p.remove()}};
-/* v1.12 출근·퇴근 버튼: 이미 찍은 날은 「출근완료 08:30」「퇴근완료 17:30」으로 보이고, 누르면 수정할지 먼저 묻는다 · 숫자 카드(.kpis) 모양 */
+ 
 (function(){var c=document.createElement('style');c.textContent=
  '.btn-clock.out.done{background:#dcfce7;border-color:#86efac;color:#15803d}.btn-clock.in.done,.btn-clock.out.done{position:relative}.btn-clock.done b::before{content:"✓ ";font-size:13px}'
 +'.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 10px}.kpis .kpi,.xq .kpi{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px 12px;min-width:0}.kpi .k{font-size:11px;color:var(--tx3);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kpi .v{font-size:22px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--tx)}.kpi .v small{font-size:12px;color:var(--tx3);font-weight:500;margin-left:2px}'
@@ -2590,7 +2590,7 @@ clockIn=async function(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
 var _clockOut112=clockOut;clockOut=async function(){var d=el('w_date').value,e=entryOf(d),tm=termMap();
   if(e&&hhmm(e.work_end)){if(!(await ERPC.ask(tm.outLabel+' 수정',hhmm(e.work_end)+'에 '+tm.outLabel+'한 것으로 등록되어 있습니다.\n지금 시각('+nowHM()+')으로 다시 계산하시겠습니까?',{ok:'수정'})))return}
   return _clockOut112.apply(this,arguments)};
-/* v1.13 일지: 「어제 일지 복사」 — 가장 최근에 쓴 일지(그날 이전)를 오늘 칸에 채움 */
+ 
 var _logOpen113=logOpen;logOpen=function(d){_logOpen113(d);var pk=el('logPick');if(!pk||el('logCopyPrev'))return;
   var b=document.createElement('button');b.id='logCopyPrev';b.className='btn sm';b.textContent='어제 일지 복사';b.onclick=logCopyPrev;pk.appendChild(b)};
 async function logCopyPrev(){var cur=LOG.date||today();var prev=(D.labor||[]).filter(function(r){return r.work_log&&String(r.work_date)<cur&&r.status!=='void'}).sort(function(a,b){return String(b.work_date).localeCompare(String(a.work_date))})[0];
@@ -2598,7 +2598,7 @@ async function logCopyPrev(){var cur=LOG.date||today();var prev=(D.labor||[]).fi
   var ta=el('logText');if(ta.value.trim()&&!(await ERPC.ask('일지 복사',kdate(prev.work_date)+' 일지로 지금 적힌 내용을 바꿉니다. 계속할까요?',{ok:'바꾸기'})))return;
   ta.value=prev.work_log;ta.focus();toast(kdate(prev.work_date)+' 일지를 가져왔습니다. 오늘 바뀐 부분만 고치고 저장하십시오','g')}
 
-/* ═══ 1.15 (R60 #3) 일지 상단 「오늘의 TBM 3대 확인」 — 보호구 착용 · 작업허가 확인 · 위험요소 인지. 3개 다 체크하면 일지에 [TBM 확인완료] 꼬리표가 붙고, 목록에서는 숨겨짐 ═══ */
+ 
 var TBM115={items:[['pp','보호구 착용 (안전모·안전화·보안경)'],['pw','작업허가 확인'],['hz','위험요소 인지·공유']],TAG:'[TBM 확인완료]'};
 function tbm115All(){return TBM115.items.every(function(it){var c=el('tbm_'+it[0]);return c&&c.checked})}
 function tbm115Paint(){var b=el('tbmBox');if(!b)return;b.classList.toggle('ok',tbm115All());var s=el('tbmState');if(s)s.textContent=tbm115All()?'확인완료 — 저장 시 일지에 기록':'작업 전 3개 확인'}
@@ -2630,7 +2630,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.16 (R61 #3) 일지 TBM 상자에 「작업 마감 5S」 2개 체크 추가 — 공구·계측기 전수 회수, 작업 잔재물 청소. 둘 다 체크하고 저장하면 [5S 완료] 꼬리표 ═══ */
+ 
 var S5116={items:[['tool','공구·계측기 전수 회수 (토크렌치·계측기 분실 없음)'],['clean','작업 잔재물 청소 완료 (케이블타이 꼬리·이물 없음)']],TAG:'[5S 완료]'};
 function s5116All(){return S5116.items.every(function(it){var c=el('s5_'+it[0]);return c&&c.checked})}
 function s5116Paint(){var s=el('s5State');if(s)s.textContent=s5116All()?'마감 확인완료 — 저장 시 일지에 기록':'퇴근 전 2개 확인';var b=el('s5Box');if(b)b.classList.toggle('ok',s5116All())}
@@ -2662,7 +2662,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.17 (안티그래비티 R67 #3) 일지 TBM 상자 아래 「오늘의 위험작업」 4개 토글(화기·고소 2m 이상·밀폐공간·활선 전기) — 고른 것은 일지에 [위험요소: 화기, 고소] 꼬리표로 저장(목록에선 숨김) ═══ */
+ 
 var HZ117={items:[['fire','화기'],['high','고소 (2m 이상)'],['conf','밀폐공간'],['live','활선·전기']],RE:/\s*\[위험요소:[^\]]*\]\s*/g};
 function hz117Sel(){return HZ117.items.filter(function(it){var b=el('hz_'+it[0]);return b&&b.classList.contains('on')}).map(function(it){return it[1].replace(/\s*\(.*\)$/,'')})}
 function hz117Tog(k){var b=el('hz_'+k);if(!b)return;b.classList.toggle('on');var s=el('hzState');if(s)s.textContent=hz117Sel().length?hz117Sel().join(', ')+' — 저장 시 일지에 기록':'해당 없으면 비워 두십시오'}
@@ -2694,7 +2694,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.18 (안티그래비티 R69 #3) 작업 마감 5S에 「공구 배터리 전용 방화함 보관·충전」 항목 추가 — 3개 모두 체크해야 [5S 완료] ═══ */
+ 
 (function(){
   try{
     if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='batt'}))S5116.items.push(['batt','전동공구 배터리 충전기 분리·전용 방화함 보관']);
@@ -2703,7 +2703,7 @@ saveLog=async function(){
 })();
 
 
-/* ═══ 1.19 (안티그래비티 R70 #3) 위험작업 「고소」를 고르면 아래에 고소장비 안전점검 3개 체크(과상승방지봉·아웃트리거·안전고리) — 모두 체크하고 저장하면 [고소장비 점검완료] 꼬리표 ═══ */
+ 
 var HC119={items:[['stop','과상승방지봉 정상'],['out','아웃트리거 설치·수평 확인'],['hook','안전고리(안전대) 체결']],TAG:'[고소장비 점검완료]'};
 function hc119All(){return HC119.items.every(function(it){var c=el('hc_'+it[0]);return c&&c.checked})}
 function hc119Paint(){var b=el('hcBox'),on=el('hz_high')&&el('hz_high').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',hc119All());var s=el('hcState');if(s)s.textContent=hc119All()?'점검완료 — 저장 시 일지에 기록':'고소장비 사용 전 3개 확인'}
@@ -2738,7 +2738,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.20 (안티그래비티 R71 #2) 위험작업 「밀폐공간」을 고르면 밀폐공간 안전점검 3개 체크(산소농도 18~23.5%·유해가스 불검출·환기팬 연속 가동) — 모두 체크하고 저장하면 [밀폐안전 점검완료] 꼬리표 ═══ */
+ 
 var CS120={items:[['o2','산소농도 적정 (18~23.5%) 측정'],['gas','유해가스 측정 (CO·H2S 불검출)'],['fan','송풍기·환기팬 연속 가동']],TAG:'[밀폐안전 점검완료]'};
 function cs120All(){return CS120.items.every(function(it){var c=el('cs_'+it[0]);return c&&c.checked})}
 function cs120Paint(){var b=el('csBox'),on=el('hz_conf')&&el('hz_conf').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',cs120All());var s=el('csState');if(s)s.textContent=cs120All()?'점검완료 — 저장 시 일지에 기록':'밀폐공간 진입 전 3개 확인'}
@@ -2773,7 +2773,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.21 (안티그래비티 R72 #1) 위험작업 「화기」를 고르면 화기작업 안전점검 3개 체크(소화기 비치·방화포 설치·화재감시자 배치) — 모두 체크하고 저장하면 [화기안전 점검완료] 꼬리표 ═══ */
+ 
 var FW121={items:[['ext','소화기 2대 작업 반경 5m 내 비치'],['blanket','불티 비산방지포(방화포) 설치'],['watch','화재감시자 지정·배치']],TAG:'[화기안전 점검완료]'};
 function fw121All(){return FW121.items.every(function(it){var c=el('fw_'+it[0]);return c&&c.checked})}
 function fw121Paint(){var b=el('fwBox'),on=el('hz_fire')&&el('hz_fire').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',fw121All());var s=el('fwState');if(s)s.textContent=fw121All()?'점검완료 — 저장 시 일지에 기록':'화기작업 전 3개 확인'}
@@ -2808,7 +2808,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.22 (안티그래비티 R73 #1) 위험작업 「활선·전기」를 고르면 전기작업 안전점검 3개 체크(절연보호구·검전·LOTO·2인 1조) — 모두 체크하고 저장하면 [전기안전 점검완료] 꼬리표. 4대 위험작업 점검 완결 ═══ */
+ 
 var EL122={items:[['ppe','절연보호구(절연장갑·절연화) 착용'],['loto','검전기 무전압 확인·LOTO(잠금·표지) 체결'],['pair','절연공구 사용·2인 1조 작업']],TAG:'[전기안전 점검완료]'};
 function el122All(){return EL122.items.every(function(it){var c=el('elc_'+it[0]);return c&&c.checked})}
 function el122Paint(){var b=el('elBox'),on=el('hz_live')&&el('hz_live').classList.contains('on');if(!b)return;b.style.display=on?'':'none';b.classList.toggle('ok',el122All());var s=el('elState');if(s)s.textContent=el122All()?'점검완료 — 저장 시 일지에 기록':'전기작업 전 3개 확인'}
@@ -2843,7 +2843,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.23 (안티그래비티 R74 #1) 일지 › 「일일보고 복사」 — 현장·날짜·공수·연장·작업내용·안전점검(TBM·5S·위험작업 점검) 꼬리표를 모아 단톡방용 보고 문구를 클립보드에 복사 ═══ */
+ 
 function dr123Text(){
   var d=LOG.date||today(),e=entryOf(d),t=(el('logText')&&el('logText').value)||(e&&e.work_log)||'';
   var tags=(t.match(/\[[^\]]+\]/g)||[]).map(function(s){return s.slice(1,-1)});
@@ -2864,7 +2864,7 @@ logOpen=function(d){
 };
 
 
-/* ═══ 1.24 (안티그래비티 R75 #1, 변형) 「오늘의 TBM 확인」에 4번째 항목 「공구·장비 작동 전 점검(전원선 피복·비상정지·방호장치)」 추가 — 4개 모두 체크해야 [TBM 확인완료]. 별도 상자 대신 TBM에 넣어 일지를 간단하게 유지 ═══ */
+ 
 (function(){
   try{
     if(TBM115&&TBM115.items&&!TBM115.items.some(function(it){return it[0]==='tool'}))TBM115.items.push(['tool','공구·장비 작동 전 점검 (전원선 피복·비상정지·방호장치)']);
@@ -2873,7 +2873,7 @@ logOpen=function(d){
 })();
 
 
-/* ═══ 1.25 (대표 지적 10/07 07:30) 근태 현황 달력이 화면 밖으로 튀어나오는 문제 — 7칸 격자를 minmax(0,1fr)로 두고 칸·꼬리표에 min-width:0을 줘 폰 너비 안에 맞춤(정산 달력 .pcal도 같이) ═══ */
+ 
 (function(){try{var c=document.createElement('style');c.id='fix125';c.textContent=
  '.kcal,.pcal{grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%;max-width:100%;box-sizing:border-box}'
 +'.kcal .dy,.pcal .c{min-width:0;overflow:hidden;box-sizing:border-box}'
@@ -2884,7 +2884,7 @@ logOpen=function(d){
 document.head.appendChild(c)}catch(e){}})();
 
 
-/* ═══ 1.26 (안티그래비티 R78 #1) 업무일지 › 글 입력 중 화면 맨 아래 「일지 저장」 고정 바 — 키패드가 올라와도 저장 버튼이 보이도록 visualViewport 기준으로 키패드 바로 위에 붙임 ═══ */
+ 
 (function(){try{
   var c=document.createElement('style');c.id='sv126css';c.textContent='#sv126{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:580px;z-index:35;display:none;padding:8px 12px;background:var(--sf);border-top:1px solid var(--ln);box-shadow:0 -4px 12px rgba(0,0,0,.08);box-sizing:border-box}#sv126.on{display:flex;gap:8px;align-items:center}#sv126 .btn{flex:1}#sv126 .cnt{font-size:11px;color:var(--dim,#888);white-space:nowrap}';
   document.head.appendChild(c);
@@ -2912,7 +2912,7 @@ document.head.appendChild(c)}catch(e){}})();
 }catch(e){console.error(e)}})();
 
 
-/* ═══ 1.27 (안티그래비티 R79 #2) 업무일지 › 작성 중 글·체크 상태 자동 임시저장(입력 후 1.5초·30초마다, 이 폰 안에만) + 다시 들어왔을 때 「작성 중이던 일지 복구」 바. 일지 저장이 성공하면 임시본 삭제 ═══ */
+ 
 var DR127={t:null,dirty:false};
 function dr127Key(){return 'dr127:'+((typeof LOG!=='undefined'&&LOG&&LOG.date)||'')}
 function dr127Read(){try{var s=localStorage.getItem(dr127Key());return s?JSON.parse(s):null}catch(e){return null}}
@@ -2941,7 +2941,7 @@ function dr127Offer(){var b=el('dr127bar');if(b)b.remove();var d=dr127Read();if(
 }catch(e){console.error(e)}})();
 
 
-/* ═══ 1.28 (안티그래비티 R83 #2 + R84 #2) 일지 › ① 「음주 측정·보호구」 상자 — 음주 측정 정상(0.000%)·4대 보호구(안전모·안전화·각반·보안경) 둘 다 체크하면 [음주측정 정상·보호구 착용] 꼬리표 ② 「자재·공구 메모」 한 줄 — 저장 시 일지 끝에 [자재] 줄로 붙고 다시 열면 칸에 돌아옴. 일일보고 복사(1.23)에도 같이 나감 ═══ */
+ 
 var AM128={items:[['alc','음주 측정 정상 (0.000%)'],['ppe','보호구 착용 — 안전모·안전화·각반·보안경']],TAG:'[음주측정 정상·보호구 착용]'};
 function am128All(){return AM128.items.every(function(it){var c=el('am_'+it[0]);return c&&c.checked})}
 function am128Paint(){var b=el('amBox');if(!b)return;b.classList.toggle('ok',am128All());var s=el('amState');if(s)s.textContent=am128All()?'확인완료 — 저장 시 일지에 기록':'출근 전 2개 확인'}
@@ -2975,7 +2975,7 @@ saveLog=async function(){
 };
 
 
-/* ═══ 1.29 (안티그래비티 R85 #2) 안전 › 맨 위 「작업중지 — 긴급 대피」 빨간 버튼 — 사유(가스·화재·추락·붕괴·감전·기타) 고르면 대피 안내 문구가 클립보드에 복사되고(단톡방 붙여넣기), 오늘 일지 맨 앞에 [작업중지 HH:MM 사유] 줄이 서버에 기록됨. 근거: 산업안전보건법 제52조(근로자의 작업중지권), 제51조(사업주의 작업중지) ═══ */
+ 
 var ST129={items:[['gas','유해가스·질식'],['fire','화재·폭발'],['fall','추락·고소 위험'],['col','붕괴·낙하물'],['elec','감전·활선'],['etc','기타 급박한 위험']],open:false};
 function st129Text(why){var hm=nowHM?nowHM():'',who=(typeof ME!=='undefined'&&ME&&ME.name)||'',site='';try{site=(typeof siteName==='function'&&siteName(el('w_site')&&el('w_site').value))||''}catch(e){}
   return '[긴급 작업중지] '+hm+(site?' '+site:'')+'\n사유: '+why+'\n전원 즉시 작업 중단하고 안전한 곳으로 대피하십시오. 장비 전원·밸브는 안전하면 차단, 아니면 그대로 두고 나오십시오.\n집결지에서 인원 확인 후 대표·원청 안전팀에 보고합니다. 위험이 해소될 때까지 재진입 금지.\n보고: '+who+' (산업안전보건법 제52조 작업중지권)'}
@@ -2990,7 +2990,7 @@ function st129Paint(){var b=el('st129');if(!b)return;b.innerHTML='<button type="
 (function(){try{var card=el('sfCard');if(!card||el('st129'))return;var d=document.createElement('div');d.id='st129';d.style.cssText='margin:0 0 12px';card.insertAdjacentElement('afterbegin',d);st129Paint()}catch(e){}})();
 
 
-/* ═══ 1.30 (안티그래비티 R88 #2) 일지 › 「일일 위험성평가」 상자 — 오늘 작업의 위험요인 3가지 대책을 확인하면 [위험성평가 완료] 꼬리표. 1.17 위험요소 토글(화기·고소·밀폐·활선)이 켜져 있으면 그 항목 대책이 먼저 보임. 근거: 산업안전보건법 제36조(위험성평가), 중대재해처벌법 제4조 ═══ */
+ 
 var RA130={items:[['fall','추락·낙하·협착 — 안전대 체결·자재 결속·협착 구간 통제 확인'],['elec','감전·화재 — 전원 차단·누전차단기·소화기 비치 확인'],['comm','대책 전파 — 작업자 전원에게 오늘의 위험요인·대피 경로 공유']],TAG:'[위험성평가 완료]'};
 function ra130All(){return RA130.items.every(function(it){var c=el('ra_'+it[0]);return c&&c.checked})}
 function ra130Paint(){var b=el('raBox');if(!b)return;b.classList.toggle('ok',ra130All());var s=el('raState');if(s)s.textContent=ra130All()?'확인완료 — 저장 시 일지에 기록':'작업 전 3개 확인';
@@ -3007,7 +3007,7 @@ var _saveLog130=saveLog;
 saveLog=async function(){try{var ta=el('logText');if(ta&&el('raBox')){var t=ta.value.replace(/\s*\[위험성평가 완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(ra130All())t=(t?t+'\n':'')+RA130.TAG;ta.value=t}}catch(e){}return _saveLog130.apply(this,arguments)};
 
 
-/* ═══ 1.31 (안티그래비티 R89 #2) 일지 › 「공구함 시건」 한 줄 — 퇴근 전 공구함 잠금·열쇠 보관 확인하면 [공구함 시건 완료] 꼬리표(일일보고 복사에 포함) ═══ */
+ 
 var TL131={TAG:'[공구함 시건 완료]'};
 var _logOpen131=logOpen;
 logOpen=function(d){_logOpen131.apply(this,arguments);try{var ta=el('logText');if(!ta)return;
@@ -3017,7 +3017,7 @@ logOpen=function(d){_logOpen131.apply(this,arguments);try{var ta=el('logText');i
 var _saveLog131=saveLog;
 saveLog=async function(){try{var ta=el('logText'),c=el('tl_lock');if(ta&&c){var t=ta.value.replace(/\s*\[공구함 시건 완료\]\s*/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(c.checked)t=(t?t+'\n':'')+TL131.TAG;ta.value=t}}catch(e){}return _saveLog131.apply(this,arguments)};
 
-/* ═══ 1.32 (안티그래비티 R92 #2·R93 #2·R96 #2) 일지 › 「오늘 최고기온·폭염 수칙」 + 「내일 출근 예정」 칩 + 고소장비 점검에 「비상정지 스위치」 항목 ═══ */
+ 
 (function(){try{if(HC119&&HC119.items&&!HC119.items.some(function(it){return it[0]==='estop'}))HC119.items.push(['estop','비상정지 스위치·하강 레버 작동 확인'])}catch(e){}})();
 var WX132={TAG:/\[폭염 수칙 이행[^\]]*\]/g,NX:/\[내일 출근 예정[^\]]*\]/g};
 function wx132Paint(){var t=parseFloat((el('wxTemp')||{}).value),hot=isFinite(t)&&t>=33,warm=isFinite(t)&&t>=31;var r=el('wxRule'),s=el('wxState');if(r)r.style.display=hot||warm?'':'none';
@@ -3039,7 +3039,7 @@ saveLog=async function(){try{var ta=el('logText');if(ta&&el('wxBox')){var t=ta.v
     var tp=parseFloat((el('wxTemp')||{}).value);if(isFinite(tp)){if(tp>=33&&el('wx_ok')&&el('wx_ok').checked)t=(t?t+'\n':'')+'[폭염 수칙 이행 '+tp+'℃]';else t=(t?t+'\n':'')+'[기온 '+tp+'℃]'}
     var no=+((el('nxOff')||{}).value||0),nw=((el('nxWho')||{}).value||'').trim();t=(t?t+'\n':'')+(no>0?'[내일 출근 예정 휴무 '+no+'명'+(nw?' · '+nw:'')+']':'[내일 출근 예정 전원]');ta.value=t}}catch(e){}return _saveLog132.apply(this,arguments)};
 
-/* ═══ 1.33 (안티그래비티 R100 #2·R99 #2) 5S 마감에 「폐자재·잔재물 반출(지정 장소 처리)」 항목 추가 + 자재 메모 옆 「부족 — 긴급 발주」 토글(저장 시 [자재 부족] 꼬리표, 일일보고 복사에 「자재 부족」 표시) ═══ */
+ 
 (function(){try{if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='waste'}))S5116.items.push(['waste','폐자재·잔재물 반출 — 지정 집하장 처리, 작업구역 방치 없음'])}catch(e){}})();
 var MS133={TAG:'[자재 부족]'};
 var _logOpen133=logOpen;
@@ -3051,7 +3051,7 @@ saveLog=async function(){try{var ta=el('logText'),c=el('ms133');if(ta&&c){var t=
 var _dr123Text133=dr123Text;
 dr123Text=function(){var t=_dr123Text133.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'';if(v.indexOf(MS133.TAG)>=0)t+='\n자재: 부족 — 긴급 발주 요청'+(mt128Get(v)?' ('+mt128Get(v)+')':'');if(/\[5S 완료\]/.test(v))t+='\n정리정돈·잔재물 반출 이상 없음'}catch(e){}return t};
 
-/* ═══ 1.34 (안티그래비티 R106 #2) 일지 › 음주·보호구 상자 아래 「보호구 교체 요청」 — 안전모·안전화·각반·보안경·장갑 중 고르고 수량 → [보호구 교체 요청: 안전화 2·각반 1] 꼬리표(일일보고 복사에 「보호구 교체 요청」 줄) ═══ */
+ 
 var PR134={items:['안전모','안전화','각반','보안경','장갑'],RE:/\[보호구 교체 요청:[^\]]*\]/g};
 function pr134Get(){var o=[];PR134.items.forEach(function(k,i){var n=+((el('pr134_'+i)||{}).value||0);if(n>0)o.push(k+' '+n)});return o}
 function pr134Paint(){var s=el('prState'),o=pr134Get();if(s)s.textContent=o.length?'요청: '+o.join('·')+' — 저장 시 본사에 전달':'파손·노후 보호구가 있으면 수량을 적으세요';var b=el('prBox');if(b)b.style.borderColor=o.length?'#b45309':''}
@@ -3066,12 +3066,12 @@ saveLog=async function(){try{var ta=el('logText');if(ta&&el('prBox')){var t=ta.v
 var _dr123Text134=dr123Text;
 dr123Text=function(){var t=_dr123Text134.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[보호구 교체 요청:([^\]]*)\]/);if(m)t+='\n보호구 교체 요청:'+m[1]}catch(e){}return t};
 
-/* ═══ 1.35 (안티그래비티 R107 #2) 5S 마감에 「퇴실 점검 — 작업구역 출입문 시건·전등 소등」 항목 추가(모두 체크 시 [5S 완료] 꼬리표, 일일보고 복사에 「시건·소등 완료」 문구) ═══ */
+ 
 (function(){try{if(S5116&&S5116.items&&!S5116.items.some(function(it){return it[0]==='lock'}))S5116.items.push(['lock','퇴실 점검 — 작업구역 출입문 시건·전등 소등 확인'])}catch(e){}})();
 var _dr123Text135=dr123Text;
 dr123Text=function(){var t=_dr123Text135.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'';if(/\[5S 완료\]/.test(v)&&t.indexOf('시건·소등')<0)t+='\n퇴실 점검: 출입문 시건·소등 완료'}catch(e){}return t};
 
-/* ═══ 1.36 (안티그래비티 R104 #2) 일지 › 「일일보고 인쇄(A4)」 — 일일보고 복사(1.23) 내용 + 점검 꼬리표(TBM·5S·위험작업·고소·밀폐·화기·음주보호구·기온·자재·보호구)를 A4 한 장 서식으로 새 창에 띄움(브라우저 인쇄 → PDF 저장). 사진·서명은 저장소 정책 결정 뒤 ═══ */
+ 
 function pr136Html(){var d=LOG.date||today(),e=(typeof entryOf==='function'?entryOf(d):null),raw=(el('logText')&&el('logText').value)||(e&&e.work_log)||'';
   var tags=(raw.match(/\[[^\]]+\]/g)||[]).map(function(s){return s.slice(1,-1)}),body=raw.replace(/\s*\[[^\]]*\]\s*/g,'\n').replace(/\n{2,}/g,'\n').trim();
   var site=e?siteName(e.site_id):'',md=e?(+e.work_md||0):0,ot=e?(+e.ot_hours||0):0,me=(typeof ME!=='undefined'&&ME&&ME.name)||'';
@@ -3088,7 +3088,7 @@ function pr136Open(){var h=pr136Html();var w=window.open('','_blank');if(!w){toa
 var _logOpen136=logOpen;
 logOpen=function(d){_logOpen136.apply(this,arguments);try{var b=el('dr123');if(!b||el('pr136'))return;var p=document.createElement('button');p.id='pr136';p.className='btn w';p.style.marginTop='8px';p.textContent='일일보고 인쇄 (A4 · 감리 제출용)';p.onclick=pr136Open;b.insertAdjacentElement('afterend',p)}catch(e){}};
 
-/* ═══ 1.37 (안티그래비티 R109 #2) 밀폐공간 안전점검(1.20)에 「가스 측정치」 입력 — 산소 18~23.5%, 황화수소 10ppm 미만, 일산화탄소 30ppm 미만(안전보건규칙 제618조 적정공기). 기준 밖이면 「작업 금지 — 환기 후 재측정」 경보, 저장 시 [가스 측정 O2 N% H2S Nppm CO Nppm] 꼬리표(A4 보고서 현장 상황에 인자) ═══ */
+ 
 var GS137={RE:/\[가스 측정[^\]]*\]/g};
 function gs137Val(){var g=function(id){var v=(el(id)||{}).value;return v===''||v==null?null:+v};return {o2:g('gs137_o2'),h2s:g('gs137_h2s'),co:g('gs137_co')}}
 function gs137Paint(){var v=gs137Val(),s=el('gsState'),bad=[];if(v.o2!=null&&(v.o2<18||v.o2>23.5))bad.push('산소 '+v.o2+'%');if(v.h2s!=null&&v.h2s>=10)bad.push('황화수소 '+v.h2s+'ppm');if(v.co!=null&&v.co>=30)bad.push('일산화탄소 '+v.co+'ppm');
@@ -3104,7 +3104,7 @@ saveLog=async function(){try{var ta=el('logText');if(ta&&el('gsBox')){var t=ta.v
 var _dr123Text137=dr123Text;
 dr123Text=function(){var t=_dr123Text137.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[가스 측정[^\]]*\]/);if(m)t+='\n밀폐공간 '+m[0].slice(1,-1)}catch(e){}return t};
 
-/* ═══ 1.38 (안티그래비티 R110 #2) 일지 › 「관리감독자 순회점검」 토글 + 조치사항 한 줄 — 산안법 §16(관리감독자 업무)·안전보건규칙 §35 일일 순회점검. 저장 시 [관리감독자 순회점검 완료 · 조치 N건: …] 꼬리표, 일일보고 복사·A4 인쇄(관리감독자 확인 줄) 인자 ═══ */
+ 
 var SV138={RE:/\[관리감독자 순회점검[^\]]*\]/g};
 var _logOpen138=logOpen;
 logOpen=function(d){_logOpen138.apply(this,arguments);try{var ta=el('logText');if(!ta)return;
@@ -3119,7 +3119,7 @@ dr123Text=function(){var t=_dr123Text138.apply(this,arguments);try{var v=(el('lo
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{var v=(el('logText')&&el('logText').value)||'',m=v.match(/\[관리감독자 순회점검 완료(?: · 조치: ([^\]]*))?\]/);var row='<tr><th>관리감독자 순회점검</th><td>'+(m?'이행 완료'+(m[1]?' · 조치: '+String(m[1]).replace(/</g,'&lt;'):' · 조치사항 없음'):'<span class="dim">기록 없음</span>')+'</td></tr>';h=h.replace('<table class="sig">',row.replace('<tr>','<table><tr>')+'</table><table class="sig">')}catch(e){}return h}}catch(e){}})();
 
 
-/* ═══ 1.39 (대표 지시 10/07 18:2x) 「화기·밀폐 작업은 아직 하지 않는 업무」 — 일지 위험작업 고르기에서 「화기」「밀폐공간」 버튼을 숨김. 따라서 화기 점검(1.21)·밀폐 점검(1.20)·가스 측정(1.37) 칸도 나오지 않음. A4 일일보고 바닥 글의 밀폐공간 조항도 뺌. 예전 일지에 화기·밀폐가 저장돼 있으면 그 날은 버튼이 보여 끌 수 있음. 다시 쓰려면 HZ139.off를 빈 목록으로 ═══ */
+ 
 var HZ139={off:['fire','conf']};
 function hz139Apply(){try{HZ139.off.forEach(function(k){var b=el('hz_'+k);if(b)b.style.display=b.classList.contains('on')?'':'none'})}catch(e){}}
 var _logOpen139=logOpen;
@@ -3129,8 +3129,8 @@ hz117Tog=function(k){_hzTog139.apply(this,arguments);hz139Apply()};
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);if(HZ139.off.indexOf('conf')>=0)h=h.replace('안전보건규칙 제619조 밀폐공간, ','');return h}}catch(e){}})();
 
 
-/* ═══ 1.42 보완(R119 #2): 보관본 자동 저장 전 서버 일지가 그 사이 바뀌었으면 멈추고 「보관본 불러오기/버리기」 선택 ═══ */
-/* ═══ 1.40 (안티그래비티 R114 F3·UI2 / R115 #2·#5 조율) ① 일지 저장 때 통신이 끊겨 있으면(FAB·지하 피트) 그 일지를 이 폰에 보관하고 「연결되면 자동 저장」 — 연결이 돌아오면(또는 1분마다) 순서대로 서버에 저장, 같은 날짜를 그 사이 다시 저장했으면 보관본은 버림. 임시저장(1.27)은 그대로 ② 일지 화면 「일지 저장」 단추를 화면 아래(하단 탭 위)에 붙여 엄지로 바로 누름, 높이 48px ═══ */
+ 
+ 
 var OQ140={KEY:'oq140',busy:false};
 (function(){var s=document.createElement('style');s.textContent='#p-log button[onclick="saveLog()"]{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));z-index:30;min-height:48px;box-shadow:0 4px 14px rgba(0,0,0,.18)}#oq140bar{margin:0 0 8px;padding:8px 10px;border-radius:10px;background:#ecfdf5;border:1px solid #16a34a;color:#166534;font-size:12.5px}';document.head.appendChild(s)})();
 function oq140Read(){try{return JSON.parse(localStorage.getItem(OQ140.KEY)||'[]')||[]}catch(e){return []}}
@@ -3160,22 +3160,22 @@ var _logOpen140=logOpen;
 logOpen=function(d){var r=_logOpen140.apply(this,arguments);oq140Bar();return r};
 
 
-/* ═══ 1.41 (안티그래비티 R116 #5 조율) 일일보고 A4 인쇄 — @page A4 세로·여백 12mm를 지정하고 본문 여백 이중 적용을 없앰, 표·서명란이 쪽 경계에서 잘리지 않게(break-inside:avoid). 브라우저 기본 여백 차이로 2쪽으로 밀리던 문제 차단 ═══ */
+ 
 (function(){try{if(typeof pr136Html!=='function')return;var _p=pr136Html;pr136Html=function(){var h=_p.apply(this,arguments);try{h=h.replace('margin:16mm 14mm}','margin:0}').replace('</style>','@page{size:A4 portrait;margin:12mm 12mm 12mm 12mm}table,tr,.sig,pre{break-inside:avoid;page-break-inside:avoid}@media print{body{margin:0}}</style>')}catch(e){}return h}}catch(e){}})();
 
-/* ═══ 1.43 (안티그래비티 R135 #5) 일지 작업내용 등 긴 글 칸이 글 길이에 맞춰 저절로 늘어남(화면 60%까지) — 휴대폰에서 칸 안 스크롤과 화면 스크롤이 엉키지 않게. 일지를 열 때 이미 적힌 글도 맞춰 펼침 ═══ */
+ 
 (function(){function ax(t){if(!t||t.tagName!=='TEXTAREA'||t.getAttribute('data-noax')!=null||!t.isConnected||!t.offsetParent)return;if(t._ax0==null)t._ax0=t.offsetHeight||0;t.style.overflowY='hidden';t.style.height='auto';var h=t.scrollHeight+2,mx=Math.max(160,Math.round(window.innerHeight*0.6));if(h>mx){t.style.height=mx+'px';t.style.overflowY='auto'}else t.style.height=Math.max(h,t._ax0)+'px'}
   window.AX_FIT=function(root){try{(root||document).querySelectorAll('textarea').forEach(ax)}catch(e){}};
   document.addEventListener('input',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true);
   document.addEventListener('focusin',function(e){if(e.target&&e.target.tagName==='TEXTAREA')ax(e.target)},true)})();
 (function(){try{if(typeof logOpen!=='function')return;var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);setTimeout(function(){AX_FIT()},60);return r}}catch(e){}})();
-/* ═══ 1.44 (안티그래비티 R142 #2 조율) 오늘 일지 화면에 「저장하고 퇴근 확인」 — 오늘 출근만 하고 아직 퇴근 전일 때만 보임. 누르면 일지를 저장하고 바로 오늘 탭의 퇴근 확인 화면(반일·1공수·잔업 고르기)을 엶. 퇴근은 그 화면에서 본인이 「확인」해야 기록됨 ═══ */
+ 
 async function lo144Go(){var b=el('lo144');if(b)b.disabled=true;try{await saveLog();var m=el('logMsg');if(m&&!/저장됨/.test(m.textContent||'')){if(b)b.disabled=false;return}
   go('in');var w=el('w_date');if(w&&w.value!==today()){w.value=today();try{w.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}setTimeout(function(){try{clockOut()}catch(e){}},50)}catch(e){toast('저장 실패','e')}if(b)b.disabled=false}
 function lo144Paint(){var btn=document.querySelector('#p-log button[onclick="saveLog()"]');if(!btn)return;var b=el('lo144');var e=entryOf(today());var show=LOG.date===today()&&e&&hhmm(e.work_start)&&!hhmm(e.work_end);
   if(!b){b=document.createElement('button');b.id='lo144';b.className='btn w';b.style.cssText='margin-top:8px;background:#16a34a;color:#fff;border-color:#16a34a';b.textContent='저장하고 퇴근 확인';b.onclick=lo144Go;btn.insertAdjacentElement('afterend',b)}b.style.display=show?'':'none'}
 (function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{lo144Paint()}catch(e){}return r}})();
-/* ═══ 1.45 (안티그래비티 R144 #2·R133 #2) 일지 › 「날씨」 칩 4개(맑음·흐림·비·눈) — 누르면 일지에 [날씨: 맑음] 꼬리표, 다시 누르면 지움. 일일보고 복사(1.23)에 「날씨」 줄로 들어감 ═══ */
+ 
 var WE145={RE:/\[날씨: [^\]]*\]\s*/g,L:['맑음','흐림','비','눈']};
 function we145Cur(){var t=(el('logText')||{}).value||'',m=t.match(/\[날씨: ([^\]]*)\]/);return m?m[1]:''}
 function we145Set(w){var ta=el('logText');if(!ta)return;var t=ta.value.replace(WE145.RE,'').replace(/\n{3,}/g,'\n\n').trim();if(w&&we145Cur()!==w)t='[날씨: '+w+']'+(t?'\n'+t:'');ta.value=t;try{ta.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}we145Paint()}
@@ -3185,15 +3185,15 @@ function we145Paint(){var b=el('we145');if(!b)return;var c=we145Cur();b.querySel
   var anchor=el('wxBox')||null;if(anchor)anchor.insertAdjacentElement('beforebegin',b);else ta.insertAdjacentElement('beforebegin',b)}we145Paint()}catch(e){}return r}})();
 (function(){try{var _d=dr123Text;dr123Text=function(){var t=_d.apply(this,arguments);try{var w=we145Cur();if(w&&t.indexOf('날씨:')<0)t=t.replace(/\n공수:/,'\n날씨: '+w+'\n공수:')}catch(e){}return t}}catch(e){}})();
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='logText')try{we145Paint()}catch(x){}},true);
-/* ═══ 1.46 (대표 지시 10/08) 이름을 「BVS 데일리」로 통일(머리글·전체 메뉴 제목) + 출퇴근 화면 「퇴근」 아래 「일지 입력」 단추 — 위에서 고른 날짜의 일지 화면으로 바로 감. 그날 일지가 이미 있으면 「일지 보기·수정 (작성됨)」 ═══ */
+ 
 function lg146Go(){try{var d=(el('w_date')&&el('w_date').value)||today();LOG.date=d}catch(e){}go('log')}
 function lg146Paint(){var b=el('lg146');if(!b)return;var d=(el('w_date')&&el('w_date').value)||today(),e=null;try{e=entryOf(d)}catch(x){}var has=!!(e&&String(e.work_log||'').trim());b.innerHTML=has?'일지 보기·수정 <small style="font-weight:600;opacity:.8">(작성됨)</small>':'일지 입력';b.style.background=has?'':'var(--accent,#2563eb)';b.style.color=has?'':'#fff';b.style.borderColor=has?'':'var(--accent,#2563eb)'}
 (function(){var m=el('w_msg');if(m&&!el('lg146')){var b=document.createElement('button');b.type='button';b.id='lg146';b.className='btn w';b.style.cssText='margin-top:10px;min-height:48px;font-size:16px;font-weight:800';b.textContent='일지 입력';b.onclick=lg146Go;m.insertAdjacentElement('beforebegin',b)}
   try{var _r=renderState;renderState=function(){var r=_r.apply(this,arguments);try{lg146Paint()}catch(e){}return r}}catch(e){}
   var w=el('w_date');if(w)w.addEventListener('change',function(){try{lg146Paint()}catch(e){}});try{lg146Paint()}catch(e){}})();
-/* ═══ 1.47 (안티그래비티 R155 #2) 일지 화면 위 「← 출퇴근 화면」 — 1.46 「일지 입력」으로 넘어온 뒤 한 번에 돌아감(출퇴근 ↔ 일지 왕복) ═══ */
+ 
 (function(){var _l=logOpen;logOpen=function(){var r=_l.apply(this,arguments);try{var pg=el('p-log');if(pg&&!el('bk147')){var c=pg.querySelector('.card');if(c){var b=document.createElement('button');b.type='button';b.id='bk147';b.className='btn sm';b.style.cssText='margin:0 0 8px;min-height:36px';b.textContent='← 출퇴근 화면';b.onclick=function(){go('in')};c.insertBefore(b,c.firstChild)}}}catch(e){}return r}})();
-/* ═══ 1.48 (대표 지시 10/08 정정) 출퇴근 화면 「퇴근」 바로 아래에 일지 입력 칸 — 화면을 옮기지 않고 그 자리에서 적고 「일지 저장」. 위에서 고른 날짜 기준, 그날 근무 기록(출근)이 있어야 저장됨. 날씨·안전 체크까지 하려면 아래 「일지 화면에서 자세히」. 1.46 「일지 입력」 단추는 이 칸으로 대체 ═══ */
+ 
 var QL148={d:null,dirty:false};
 function ql148Date(){return (el('w_date')&&el('w_date').value)||today()}
 function ql148Paint(force){var box=el('ql148');if(!box)return;var d=ql148Date(),e=null;try{e=entryOf(d)}catch(x){}var ta=el('ql148t'),st=el('ql148s'),bt=el('ql148b');
@@ -3217,8 +3217,8 @@ async function ql148More(){if(QL148.dirty){var ok=await ql148Save();if(!ok)retur
   try{var _p=lg146Paint;lg146Paint=function(){var r=_p.apply(this,arguments);var o=el('lg146');if(o)o.style.display='none';return r}}catch(e){}
   var w=el('w_date');if(w)w.addEventListener('change',function(){QL148.dirty=false;try{ql148Paint(true)}catch(e){}});try{ql148Paint(true)}catch(e){}})();
 
-/* ═══ v1.49 맨 위 띠: 이천·청주 날씨 · 오늘 유가(오피넷 휘발유·경유) · 환율(USD/KRW) — 유가·환율은 파이로 수집분 daily_market() ═══
-   + 그날 출근 예정(배치 계획)이 있고 아직 출근 전이면 예정 현장을 자동으로 골라 둠 */
+
+
 (function(){var c=document.createElement('style');c.textContent=
  '#mk149{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 12px;background:var(--sf);border-bottom:1px solid var(--ln2);font-size:12px;line-height:1.3;cursor:pointer}'
 +'#mk149>div{min-width:0;border:1px solid var(--ln2);border-radius:6px;padding:4px 7px;background:var(--sf2)}#mk149 i{display:block;font-style:normal;font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -3248,20 +3248,20 @@ async function mk149Load(force){if(MK149.busy)return;MK149.busy=1;var now=Date.n
   if((force||!MK149.mk||now-MK149.mkAt>10*60e3)&&typeof sb!=='undefined'&&sb)jobs.push(Promise.resolve(sb.rpc('daily_market')).then(function(r){if(r&&!r.error&&r.data&&r.data.ok)MK149.mk=r.data;MK149.mkAt=Date.now()}).catch(function(){MK149.mkAt=Date.now()}));
   try{await Promise.all(jobs)}finally{MK149.busy=0;mk149Paint()}}
 (function(){var _la=loadAll;loadAll=function(){var r=_la.apply(this,arguments);try{mk149Load(false)}catch(e){}return r}})();
-/* 출근 예정 현장 자동 선택 (그날 처음 한 번, 출근 전일 때만) */
+ 
 var PL149={};
 (function(){var _rs=renderState;renderState=function(){try{var d=el('w_date')&&el('w_date').value;
   if(d&&!PL149[d]&&!entryOf(d)&&(D.sites||[]).length){var p=(D.plan||[]).filter(function(x){return String(x.plan_date)===d})[0];
     if(p){PL149[d]=1;if(SEL.site!==p.site_id&&(D.sites||[]).some(function(s){return s.site_id===p.site_id})){SEL.site=p.site_id;SEL.place=String(p.site_id).split('-')[0];renderPlaces()}}}}catch(e){}
   return _rs.apply(this,arguments)}})();
-/* ═══ 1.50 (안티그래비티 R156 #1) 기록 달력에서 날짜를 누르면 나오는 그날 카드(kday)에 「이 날 일지 보기·입력」 — 그날 근무 기록이 있을 때만, 일지가 있으면 「(작성됨)」 ═══ */
+ 
 (function(){var _r=renderList;renderList=function(){var r=_r.apply(this,arguments);try{var d=LIST.day,k=document.querySelector('.kday');if(!d||!k||k.querySelector('.lg150'))return r;var e=null;try{e=entryOf(d)}catch(x){}if(!e)return r;
   var has=!!String(e.work_log||'').trim(),h=k.firstElementChild,b=document.createElement('button');b.type='button';b.className='btn sm lg150';b.style.cssText='float:right;margin-top:-2px';b.innerHTML=has?'일지 보기·수정 <small style="opacity:.75">(작성됨)</small>':'이 날 일지 입력';
   b.onclick=function(ev){ev.stopPropagation();LOG.date=d;go('log')};if(h)h.appendChild(b);else k.insertBefore(b,k.firstChild)}catch(x){}return r}})();
 
-/* ═══ 1.51 (대표 지시 10/08 · 직원 의견) 출근 고르기 단순화 — 「최근 출근」 한 번 누르면 끝 · 아니면 지역 → 현장 → 라인(업무) → 장비사·작업·장비번호.
-   청구처·프로젝트는 고르지 않는다: 현장(사업장)으로 DB가 자동 기록(op_submit_labor). 라인은 line_memo, 「장비사 장비번호 작업」은 work_desc 로 저장 → 콕핏 「업무」 칸·장비번호 누적에 그대로 쓰임.
-   옛 장소 표는 「다른 장소 · 전체 목록」 안에 그대로 둠 ═══ */
+
+
+
 var FL151={reg:null,co:null,site:null,line:'',work:null,maker:'',task:'장비셋업',equip:'',init:false};
 var FL151_REG=[
   {k:'IC',n:'이천',ll:[37.27,127.44],cos:[{n:'SK하이닉스',site:'IC-IC',lines:['M14','M16'],eq:1},{n:'BVS 본사',works:[['트레이 제작','WJ-BVS-TRAY'],['본사업무','BV-IC'],['기구조립','STS-BVS-ASM']]}]},
@@ -3338,7 +3338,7 @@ function fl151Mount(){if(el('fl151'))return;var wp=el('w_place');if(!wp)return;v
 (function(){var _o=onDate;onDate=function(){var r=_o.apply(this,arguments);try{fl151Paint()}catch(e){}return r}})();
 (function(){var _s=submitLabor;submitLabor=async function(){var r=await _s.apply(this,arguments);try{fl151Paint()}catch(e){}return r}})();
 
-/* ═══ 1.52 (대표 지시 10/08) 전체 메뉴 「사규 보기」 — 취업규칙·별표·근로계약서 안내를 읽기 전용으로(근로기준법 제14조 게시, 취업규칙 제76조). 자료는 reg_list/reg_body ═══ */
+ 
 var RG152={list:null,body:{}};
 (function(){var c=document.createElement('style');c.textContent='#rg152{position:fixed;inset:0;z-index:9500;background:var(--bg);display:flex;flex-direction:column}#rg152.hide{display:none}#rg152 .hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ln);background:var(--sf)}#rg152 .hd b{flex:1;font-size:15px}'
 +'#rg152 .bd{flex:1;overflow:auto;padding:12px 14px}#rg152 .it{padding:12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);margin-bottom:8px;cursor:pointer}#rg152 .it small{display:block;color:var(--tx3);font-size:11.5px;margin-top:2px}'
@@ -3363,7 +3363,7 @@ async function rg152Find(q){q=String(q||'').trim();if(q.length<2){rg152List(q);r
   var d=document.createElement('div');d.className='mob-nav-item rg152n';d.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg> 사규 보기 (취업규칙)';d.onclick=function(){try{closeMobNavModal()}catch(e){}rg152Open()};
   if(at)lst.insertBefore(d,at);else lst.appendChild(d)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add()})();
-/* ═══ 1.53 (안티그래비티 R157 #3·R158 #4) 맨 위 띠의 이천·청주 날씨를 누르면 앞으로 12시간 기온·강수확률·바람 — 야외 반입·셋업 판단용 ═══ */
+ 
 (function(){var c=document.createElement('style');c.textContent='#wx153{position:fixed;left:12px;right:12px;top:110px;z-index:9400;background:var(--sf);border:1px solid var(--ln);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px 12px}#wx153 table{width:100%;border-collapse:collapse;font-size:12.5px}#wx153 td,#wx153 th{padding:4px 3px;text-align:center;border-top:1px solid var(--ln2)}#wx153 th{font-size:11px;color:var(--tx3);font-weight:600}#wx153 .hd{display:flex;align-items:center;margin-bottom:6px}#wx153 .hd b{flex:1}';document.head.appendChild(c)})();
 async function wx153Open(i){var c=MK149_CITY[i];if(!c)return;var b=el('wx153');if(!b){b=document.createElement('div');b.id='wx153';document.body.appendChild(b)}b.style.display='';b.innerHTML='<div class="hd"><b>'+c[0]+' 앞으로 12시간</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><div class="tiny">불러오는 중…</div>';
   try{var r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+c[1]+'&longitude='+c[2]+'&hourly=temperature_2m,precipitation_probability,wind_speed_10m,weather_code&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=2');if(!r.ok)throw new Error('날씨 '+r.status);var j=await r.json(),h=j.hourly||{},T=h.time||[];
@@ -3373,9 +3373,9 @@ async function wx153Open(i){var c=MK149_CITY[i];if(!c)return;var b=el('wx153');i
   catch(e){b.innerHTML='<div class="hd"><b>'+c[0]+'</b><button class="btn sm" onclick="el(\'wx153\').style.display=\'none\'">닫기</button></div><div class="neg">'+esc(e.message||e)+'</div>'}}
 document.addEventListener('click',function(e){var bx=el('mk149');if(!bx||!bx.contains(e.target))return;var cells=[].slice.call(bx.children),i=cells.findIndex(function(c){return c.contains(e.target)});if(i===0||i===1){e.stopPropagation();e.preventDefault();wx153Open(i)}},true);
 
-/* ═══ 1.54 (대표 지시 10/08) 「프로젝트 일정」 — 회사가 지금 무슨 프로젝트를 하는지, 누가 어디로 가는지 달력으로.
-   프로젝트별 고유 색 띠 · 날짜를 누르면 「10월 12일(월) BVS 전사 프로젝트 일정」 명단(현장·사람·시간). 금액은 없음. 자료 project_schedule.
-   + R159 #2 지역→현장→라인을 다 고르면 바로 누르는 「출근하기」 큰 단추 ═══ */
+
+
+
 var SC154={ym:null,data:null,sel:null,busy:0};
 (function(){var c=document.createElement('style');c.textContent=
  '#sc154b{display:flex;align-items:center;gap:8px;margin:0;padding:8px 12px;background:var(--sf);border-bottom:1px solid var(--ln2);cursor:pointer;font-size:13px}'
@@ -3432,21 +3432,21 @@ function sc154Paint(){var b=el('sc154');if(!b)return;var ym=sc154Ym(),p=ym.split
       :'<div class="tiny">이날 등록된 출근·배치 예정이 없습니다.</div>')+'</div>'}
   h+='<div class="tiny dim" style="margin-top:10px">진한 칸은 실제 출근, 흐린 칸은 대표가 미리 올린 배치 예정입니다. 내 이름은 노란색으로 표시됩니다.</div></div>';
   b.innerHTML=h}
-/* 메뉴에 「프로젝트 일정」 */
+ 
 (function(){function add(){var lst=document.querySelector('#mobNavModal .mob-nav-list');if(!lst||lst.querySelector('.sc154n'))return;
   var d=document.createElement('div');d.className='mob-nav-item sc154n';d.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h8"/></svg> 프로젝트 일정 (달력)';
   d.onclick=function(){try{closeMobNavModal()}catch(e){}sc154Open()};var f=lst.firstChild;if(f)lst.insertBefore(d,f.nextSibling);else lst.appendChild(d)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add()})();
 (function(){var _la=loadAll;loadAll=async function(){var r=await _la.apply(this,arguments);try{if(!SC154.data)sc154Load();else sc154Bar()}catch(e){}return r}})();
-/* R159 #2 — 고르기가 끝나면 바로 누르는 「출근하기」 */
+ 
 (function(){var _p=fl151Paint;fl151Paint=function(){var x=_p.apply(this,arguments);try{var b=el('fl151');if(!b)return x;var d=el('w_date')&&el('w_date').value,e=d?entryOf(d):null,done=!!(e&&hhmm(e.work_start));
   var ok=!done&&SEL&&SEL.site&&(FL151.co||/^ED-EDU$|^OFF-/.test(SEL.site));if(!ok)return x;
   var lab=[FL151.co,FL151.line,FL151.maker,FL151.equip,FL151.task].filter(function(v){return v&&String(v).trim()}).join(' · ');
   var bt=document.createElement('button');bt.type='button';bt.id='fl154go';bt.innerHTML='출근하기<small>'+esc(lab||'고른 장소로 출근')+'</small>';bt.onclick=function(){var e2=entryOf(el('w_date').value);if(e2&&hhmm(e2.work_start))return;clockIn()};b.appendChild(bt)}catch(err){console.error(err)}return x}})();
 
 
-/* ═══ 1.55 (안티그래비티 R160 #1·#5) 프로젝트 일정 달력에서 오늘 내 배치가 있으면 「이 현장으로 출근」 → 출근 고르기에 장소·라인·작업이 채워진 채로 돌아감 ·
-   법정공휴일 빨강(core.holidays) ═══ */
+
+
 (function(){var c=document.createElement('style');c.textContent='#sc154 .cal .d.ho em{color:#dc2626}#sc154 .cal .d.ho{background:rgba(220,38,38,.06)}#sc154 .cal .d small.hn{display:block;font-size:9px;color:#dc2626;line-height:1.1;white-space:nowrap;overflow:hidden}'
  +'#sc154 .go155{display:inline-block;margin-top:6px;padding:6px 12px;border:0;border-radius:8px;background:#16a34a;color:#fff;font-weight:700;font-size:13px}';document.head.appendChild(c)})();
 (function(){var _p=sc154Paint;sc154Paint=function(){var r=_p.apply(this,arguments);try{var d=SC154.data||{},b=el('sc154');if(!b||!d.holidays)return r;var ym=sc154Ym();
@@ -3464,19 +3464,19 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
   setTimeout(function(){var b=el('fl154go')||el('fl151');if(b)try{b.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}},150)}
 
 
-/* ═══ 1.56 (안티그래비티 R161 #4) 출근 고르기 「출근하기」 위에 오늘이 토·일·공휴일이면 빨간 「휴일 근무일」 안내 ═══ */
+ 
 (function(){var c=document.createElement('style');c.textContent='#fl151 .ho156{display:inline-block;margin:8px 0 2px;padding:3px 10px;border-radius:999px;background:rgba(220,38,38,.1);color:#dc2626;font-size:12px;font-weight:700}';document.head.appendChild(c)})();
 (function(){var _p=fl151Paint;fl151Paint=function(){var x=_p.apply(this,arguments);try{var b=el('fl151'),bt=el('fl154go');if(!b||!bt)return x;var d=(el('w_date')&&el('w_date').value)||(typeof today==='function'?today():'');if(!d)return x;
   var w=new Date(d+'T00:00:00Z').getUTCDay(),hn=(((SC154||{}).data||{}).holidays||[]).filter(function(h){return String(h.d).slice(0,10)===d})[0];
   var lab=hn?(hn.n||'공휴일'):(w===0?'일요일':(w===6?'토요일':''));if(!lab)return x;
   var c=document.createElement('div');c.className='ho156';c.textContent='휴일 근무일 · '+lab;bt.parentNode.insertBefore(c,bt)}catch(e){console.error(e)}return x}})();
 
-/* ═══ v1.66 (대표 지시 10/21 「직원들이 청구처를 보면 안 돼, 그 작업을 하러 간 것만 이해하게」 — 1.65 청구처 표시 취소)
-   BVS본사 작업 칩은 작업 이름만: 트레이 제작 · 장비 조립 · 비철 작업 · 본사업무 (고객사·청구처 이름 없음) ═══ */
+
+
 (function(){try{var _l=lineLabel,NM={'PJ-ASM':'장비 조립','PJ-SCRAP':'비철 작업','PJ-TRAY':'트레이 제작','PJ-HQ':'본사업무'};
   lineLabel=function(s){var t=_l.apply(this,arguments);try{if(s&&s.place_code==='BV'&&!s.line_name&&NM[s.work_code])t=NM[s.work_code]}catch(e){}return t}}catch(e){}})();
-/* ═══ 새 버전 알림 (대표 지적 10/08 — 열어 둔 창이 예전 프로그램으로 계속 돌아 고친 것이 안 보이던 문제) ═══
-   3분마다·창으로 돌아올 때 서버의 최신 버전을 확인 → 다르면 아래에 「새 버전 — 눌러서 새로고침」. 창이 뒤에 있고 입력 창이 닫혀 있으면 저절로 새로고침 */
+
+
 (function(){var cur=(document.querySelector('meta[name=app-version]')||{}).content||((document.title.match(/v([\d.]+)/)||[])[1]);if(!cur)return;var nv=null;
   function busy(){var d=document.getElementById('dr');if(d&&d.classList.contains('on'))return true;var m=document.querySelector('.modal.on,.ed-modal.on,#edModal.on,.sheet.on');return !!m}
   function show(v){nv=v;var b=document.getElementById('updBar');if(!b){b=document.createElement('div');b.id='updBar';b.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#1d4ed8;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);cursor:pointer;white-space:nowrap';b.onclick=function(){location.reload()};document.body.appendChild(b)}
@@ -3485,8 +3485,8 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
   document.addEventListener('visibilitychange',function(){if(document.hidden){if(nv&&!busy())location.reload()}else chk()});
   setInterval(chk,180000);setTimeout(chk,15000)})();
 
-/* ═══ 새 버전 알림 보완 (안티그래비티 R162 #2·#3, R164 #2·#5) — 입력 중이거나 창·서랍이 열려 있거나 휴대폰 화면이면 알림을 위쪽으로 올려
-   아래 저장·출근·퇴근 버튼을 가리지 않게 · 작성 중에 알림을 누르면 한 번 묻고 새로고침 · 「✕」 누르면 10분 숨김 ═══ */
+
+
 (function(){var K='updHideUntil';
   function hid(){try{return +(sessionStorage.getItem(K)||0)>Date.now()}catch(e){return false}}
   function busy(){var d=document.getElementById('dr');if(d&&d.classList.contains('on'))return true;
@@ -3500,9 +3500,9 @@ function sc155Go(){var d=SC154.data||{},me=sc154Me(),m=(d.days||[]).filter(funct
       x.onclick=function(e){e.stopPropagation();try{sessionStorage.setItem(K,String(Date.now()+600000))}catch(_){}b.style.display='none'};b.appendChild(x)}
     if(!b.__w){b.__w=1;b.onclick=function(){if(busy()&&!confirm('작성 중인 내용이 있으면 사라집니다. 지금 새로고침할까요?'))return;location.reload()}}}
   setInterval(fix,1500);document.addEventListener('focusin',fix);document.addEventListener('focusout',function(){setTimeout(fix,60)});window.addEventListener('resize',fix)})();
-/* ═══ 1.59 (대표 지시 10/08) 급여명세서 — 대표가 발행한 본인 명세서만(근로기준법 제48조② 임금명세서 교부)
-   「급여」 화면 맨 위 「급여명세서」 목록 · 출퇴근 화면 위 「○월 급여명세서 도착」 알림(확인 전까지)
-   명세서: 지급 항목·공제 항목별 금액, 계산 방법, 지급액계·공제액계·차인지급액, 「확인했습니다」(열람·확인 시각 기록), 인쇄·PDF ═══ */
+
+
+
 (function(){var c=document.createElement('style');c.textContent=''
  +'#ps159w{position:fixed;inset:0;z-index:9500;background:rgba(15,23,42,.55);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:12px}'
  +'#ps159w .pp{background:#fff;color:#111;width:min(760px,100%);border-radius:10px;padding:18px 16px 14px;box-shadow:0 10px 40px rgba(0,0,0,.3)}'
@@ -3525,10 +3525,10 @@ var PS159={list:null};
 function ps159Ym(ym){var p=String(ym||'').split('-');return p[0]+'년 '+(+p[1])+'월분'}
 async function ps159Load(){try{var r=await sb.rpc('my_payslips');PS159.list=(r&&r.data)||[]}catch(e){PS159.list=[]}ps159Paint()}
 function ps159Paint(){var L=PS159.list||[];
-  /* 급여 화면 카드 */
+   
   var pg=el('p-pay');if(pg){var c=el('ps159c');if(!c){c=document.createElement('div');c.id='ps159c';c.className='card';pg.insertBefore(c,pg.firstChild)}
     c.innerHTML='<h2>급여명세서</h2>'+(L.length?L.map(function(s){return '<div class="row" style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line,#e2e8f0);cursor:pointer" onclick="ps159Open('+(+s.id)+')"><b style="flex:1">'+esc(ps159Ym(s.ym))+'</b><span class="tiny dim">실지급 '+won(s.net)+'원</span>'+(s.acked?'<span class="tiny dim">확인함</span>':'<span class="tiny" style="color:#1d4ed8;font-weight:700">새 명세서</span>')+'</div>'}).join(''):'<p class="tiny dim" style="margin:6px 0">발행된 명세서가 없습니다. 매월 급여 마감 뒤 발행됩니다.</p>')}
-  /* 출퇴근 화면 알림 */
+   
   var nu=L.filter(function(s){return !s.acked})[0],pin=el('p-in'),bn=el('ps159bn');
   if(nu&&pin){if(!bn){bn=document.createElement('div');bn.id='ps159bn';pin.insertBefore(bn,pin.firstChild)}bn.innerHTML='<span>'+esc(ps159Ym(nu.ym).replace('분',''))+' 급여명세서가 도착했습니다</span><span class="go">보기 ›</span>';bn.onclick=function(){ps159Open(+nu.id)}}
   else if(bn)bn.remove()}
@@ -3552,8 +3552,8 @@ async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_paysli
 (function(){var _l=loadAll;loadAll=async function(){var r=await _l.apply(this,arguments);try{if(!PS159.t||Date.now()-PS159.t>60000){PS159.t=Date.now();ps159Load()}}catch(e){}return r}})();
 (function(){var mn=document.querySelector('.mob-nav-list');if(mn&&!el('ps159m')){var d=document.createElement('div');d.id='ps159m';d.className='mob-nav-item';d.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="12" y2="17"/></svg> 급여명세서';d.onclick=function(){go('pay');try{closeMobNavModal()}catch(e){}};var ref=[].filter.call(mn.querySelectorAll('.mob-nav-grp'),function(g){return /시스템/.test(g.textContent)})[0];mn.insertBefore(d,ref||null)}})();
 
-/* ═══ 1.60 (대표 지시 10/08 정정) 프로젝트 일정은 「어느 날 어떤 프로젝트가 돌아가는지」만 — 다른 사람 이름·출퇴근 시각·인원수는 안 보임(DB project_schedule이 대표 외에는 날짜·프로젝트만 내려줌)
-   본인이 그날 그 프로젝트에 출근·예정이면 「나」 표시만. 대표 아이디는 예전처럼 전체 ═══ */
+
+
 (function(){var c=document.createElement('style');c.textContent='#sc154 .cal .d span.me160{outline:2px solid #facc15;outline-offset:-2px}';document.head.appendChild(c)})();
 (function(){var _p=sc154Paint;sc154Paint=function(){var d=SC154.data;if(!d||d.err||d.full)return _p.apply(this,arguments);
   var b=el('sc154');if(!b)return;var ym=sc154Ym(),p=ym.split('-');
@@ -3578,13 +3578,13 @@ async function ps159Ack(id,b){if(b)b.disabled=true;var r=await sb.rpc('my_paysli
   b.innerHTML=h}})();
 
 
-/* ═══ 1.61 (대표 지시 10/09) 연장근무 6시간 같은 긴 잔업도 앱에서 바로 — 퇴근 「근무시간 확인」 잔업 칸 없음·1~8시간, 「출퇴근을 못 눌렀을 때」에 연장 4h~8h(12~16시간)
-   잔업이 4시간을 넘으면 「합쳐서 고르고 일지에 기록」 안내(1.62 문구 정정 — 승인 절차는 자동 확정제). 서버(op_submit_labor)는 원래 하루 16시간까지 받음 — 값 계산은 그대로 ═══ */
+
+
 (function(){var _r=cfRender;cfRender=function(){var x=_r.apply(this,arguments);try{if(!CF.half&&CF.ot>4){var n=el('cfNote');if(n)n.insertAdjacentHTML('beforeend','<br><span class="tiny dim">잔업 '+CF.ot+'시간으로 기록됩니다. 오전·오후 나눠 했으면 합쳐서 고르고 일지에 적어 주세요</span>')}}catch(e){}return x}})();
 
-/* ═══ 1.63 (대표 지시 10/09) 퇴근 = 「오늘 근무를 고르는 순간」. 출근·퇴근 시각은 기록용일 뿐(점심·휴게 없이 일하고 3시쯤 끝나는 날이 많음)
-   퇴근을 누르면 반일 / 하루 / 하루+연장 1~8시간 중 하나를 꼭 눌러야 「퇴근 완료」가 눌림(미리 골라 둔 값 없음). 이 값이 고객사 청구·급여로 이어짐
-   체류시간으로 잔업을 따지던 경고 삭제 · 출근을 못 눌렀어도 퇴근에서 바로 고름 · 지난 날짜도 같은 창 · 「출퇴근을 못 눌렀을 때 시간보정」 칸 없앰 ═══ */
+
+
+
 (function(){var c=document.createElement('style');c.textContent=''
  +'#confirmCard .c163{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 10px}#confirmCard .o163{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}'
  +'#confirmCard .c163 button,#confirmCard .o163 button{min-height:52px;border:1px solid var(--ln);border-radius:6px;background:var(--sf);color:var(--tx);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}'
@@ -3616,7 +3616,7 @@ cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e
   CF163.h=null;return r};
 (function(){function rm(){var g=document.querySelector('.fix-grid');var c=g&&g.closest('.card');if(c)c.remove()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rm);else rm()})();
 
-/* ═══ 1.64 (대표 지시 10/13) BVS 창립기념일(10/13) 및 사내 기념일·생일 축하 배너 & 작업일자 힌트 표시 ═══ */
+ 
 (function(){
   var c=document.createElement('style');
   c.textContent='#annivBanner{background:linear-gradient(135deg,rgba(29,78,216,0.08),rgba(245,158,11,0.15));border:1.5px solid rgba(245,158,11,0.5);border-radius:8px;padding:10px 13px;margin:0 0 12px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:var(--tx);box-shadow:0 2px 8px rgba(245,158,11,0.12)}'
@@ -3676,7 +3676,7 @@ cfOk=async function(){var h=CF163.h;if(!h){toast('근무를 골라 주세요','e
   else{setTimeout(paintAnniv,50)}
 })();
 
-/* v1.80 (안티그래비티 R999 ③ 10-24): 리드 「내일 배치」 위 전체 / 미배치 / 배치됨 + 이름 찾기(✕·Esc) */
+ 
 var PLF980={f:'all',q:''};
 function plF980Apply(){var R=el('plRows');if(!R)return;var q=String(PLF980.q||'').trim().toLowerCase(),t=0,m=0,n=0;
   [].forEach.call(R.querySelectorAll('.pmrow'),function(r){var s=r.querySelector('select'),on=!!(s&&s.value),nm=(r.firstElementChild&&r.firstElementChild.textContent||'').toLowerCase();t++;if(on)n++;else m++;
@@ -3689,11 +3689,11 @@ function plF980Clr(){PLF980.q='';var i=el('plFq980');if(i)i.value='';plF980Apply
       R.parentNode.insertBefore(d,R)}
     if(!R.__f980){R.__f980=1;R.addEventListener('change',function(){setTimeout(plF980Apply,0)})}plF980Apply()}catch(e){console.error(e)}return r}})();
 
-/* v1.81 (안티그래비티 R1000 ① 10-24): 내일 배치 거를 때 숨긴 사람의 「업무: …」 줄도 함께 숨김(줄이 붙은 뒤에 다시 거름) */
+ 
 (function(){if(typeof plF980Apply!=='function')return;var _a=plF980Apply;plF980Apply=function(){var r=_a.apply(this,arguments);try{var R=el('plRows');if(R)[].forEach.call(R.querySelectorAll('.pmrow'),function(row){var m=row.nextElementSibling;if(m&&m.classList.contains('pp-memo'))m.style.display=row.style.display})}catch(e){}return r}})();
 (function(){if(typeof plRender!=='function')return;var _r=plRender;plRender=function(){var r=_r.apply(this,arguments);setTimeout(function(){try{plF980Apply()}catch(e){}},0);return r}})();
 
-/* v1.82 (안티그래비티 R1001 ③·R1002 ③ 10-24): 내일 배치 줄 오른쪽 최근 현장 약어 누르면 그 사람만 최근 현장으로 · 투입현황 고객사 제목 누르면 그 고객사 인원만, 이름·현장 찾기 */
+ 
 (function(){var c=document.createElement('style');c.textContent='#plRows span.x.k982{cursor:pointer;text-decoration:underline dotted;color:#1d4ed8}.dpblk h3.k982{cursor:pointer}.dpblk h3.k982.on{color:#1d4ed8;text-decoration:underline}';document.head.appendChild(c)})();
 function pl982One(i){var w=(PL.staff||[])[i],R=el('plRows');if(!w||!w.last_site||!R)return;var row=R.querySelectorAll('.pmrow')[i],sel=row&&row.querySelector('select');if(!sel)return;
   sel.value=w.last_site;if(sel.value!==w.last_site){sel.value=(PL.rows[w.employment_no]||{}).site_id||'';toast('최근 현장이 배치 목록에 없습니다');return}
@@ -3719,14 +3719,14 @@ function dp982Clr(){DP982.q='';var i=el('dpQ982');if(i)i.value='';dp982Apply()}
       R2.parentNode.insertBefore(b,R2)}
     dp982Apply()}catch(e){console.error(e)}}})();
 
-/* v1.83 (안티그래비티 R1003 ③ 10-24): 펌프실 입력 — 마지막 한 줄의 ✕는 줄을 지우지 않고 값만 비움 · Bay에서 Enter → 수량 칸, 수량에서 Enter → 등록 */
+ 
 (function(){if(typeof pmRenderRows!=='function')return;var _r=pmRenderRows;pmRenderRows=function(){var r=_r.apply(this,arguments);try{var B=el('pmItems');if(!B)return r;var R=B.querySelectorAll('.pmrow');
     [].forEach.call(R,function(row,i){var ins=row.querySelectorAll('input'),bay=ins[0],qty=ins[1],x=row.querySelector('span.x');
       if(x&&PM.rows.length<=1){x.removeAttribute('onclick');x.title='값 비우기';x.onclick=function(){PM.rows[0]={bay:'',item_code:'CABLE',qty:''};pmRenderRows();var f=el('pmItems').querySelector('input');if(f)f.focus()}}
       if(bay)bay.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();if(qty)qty.focus()}});
       if(qty)qty.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.isComposing){e.preventDefault();qty.blur();pmSubmit()}})})}catch(e){console.error(e)}return r}})();
 
-/* v1.84 (안티그래비티 R1004 ③ 10-24): 내 기록 달력 위 「현장·업무 찾기」 — 맞는 날만 진하게, 나머지 흐리게 · 맞는 날 수(정규직)·공수(용역) 합계 · ✕·Esc */
+ 
 (function(){var c=document.createElement('style');c.textContent='#list .dy.d984{opacity:.25}#list .dy.m984{outline:2px solid #1d4ed8;outline-offset:-2px}.l984{display:flex;gap:6px;align-items:center;margin:0 0 8px}.l984 input{flex:1;min-width:120px;padding:6px 8px;border:1px solid var(--ln,#cbd5e1);border-radius:8px;font-size:13px}';document.head.appendChild(c)})();
 var L984={q:''};
 function l984Apply(){var L=el('list');if(!L)return;var q=String(L984.q||'').trim().toLowerCase().replace(/\s+/g,''),ym=LIST.ym||today().slice(0,7),reg=isRegularWorker(),hit={},md=0,n=0;
@@ -3738,7 +3738,7 @@ function l984Clr(){L984.q='';var i=el('l984q');if(i)i.value='';l984Apply()}
       d.innerHTML='<input id="l984q" placeholder="현장·업무 찾기 (예: 5EKF, 셋업)" value="'+esc(L984.q||'')+'" oninput="L984.q=this.value;l984Apply()" onkeydown="if(event.key===\'Escape\')l984Clr();else if(event.key===\'Enter\'){event.preventDefault();this.blur()}"><button class="btn sm" id="l984x" style="flex:none;display:none" onclick="l984Clr()">✕</button><span class="tiny dim" id="l984n"></span>';
       L.parentNode.insertBefore(d,L)}l984Apply()}catch(e){console.error(e)}return r}})();
 
-/* v1.85 (안티그래비티 R1005 ③·R1006 ③ 10-24): 리드 출역 확인 위 이름·현장 찾기(대기·출역·당월 집계 함께 거름, ✕·Esc) · 트레이 제작표 길이·종류 칸 Enter = 줄 넣기(길이 칸에 계속), 전수조사 자투리 칸 Enter = 넣기, 목록 외 자재 수량 Enter = 추가 */
+ 
 var LD985={q:''};
 function ld985Apply(){var q=String(LD985.q||'').trim().toLowerCase().replace(/\s+/g,''),n=0,t=0;
   ['leadWorkersRows'].forEach(function(id){var B=el(id);if(!B)return;[].forEach.call(B.querySelectorAll(':scope > .item'),function(it){var ok=!q||String(it.textContent||'').toLowerCase().replace(/\s+/g,'').indexOf(q)>=0;it.style.display=ok?'':'none';if(id==='leadWorkersRows'){t++;if(ok)n++}})});
@@ -3755,7 +3755,7 @@ document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposin
   if(id==='trNw_q'){e.preventDefault();trNewAdd()}},true);
 </script>
 <script>
-/* 트레이 자재 계산 — 데일리앱·ERP 공통 (대표 지시 10-21). 금액 없음. */
+ 
 var TRC=(function(){
   var COLOR_NAME={R:'빨강',B:'파랑',K:'검정'};
   function num(v,d){v=Number(v);return isFinite(v)?v:(d||0)}
@@ -3765,21 +3765,21 @@ var TRC=(function(){
   function colorLabel(c){var a=cols(c);if(!a.length)return '색 없음';return a.map(function(x){return COLOR_NAME[x]||x}).join('·')}
   function piecesOf(cut){var p=(cut.pieces||[]).map(function(x){return num(x)}).filter(function(x){return x>0});var out=[];for(var k=0;k<num(cut.mult,1);k++)out=out.concat(p);return out}
   function trayCode(w){return 'TRY-TRAY-'+w}
-  /* 상태: pool[item] = [{off_id|null, len, mine}] — 자투리(실물·계산상) */
+   
   function newState(offcuts){var s={pool:{},seq:0};(offcuts||[]).forEach(function(o){(s.pool[o.item_code]=s.pool[o.item_code]||[]).push({off_id:o.off_id,len:num(o.len_mm),cut:null})});return s}
   function addTo(o,k,v){if(!v)return;o[k]=Math.round(((o[k]||0)+v)*10000)/10000}
-  /* 꺾임: joins 글자 '+' 곧은 이음, 'L' 왼쪽 꺾임, 'R' 오른쪽 꺾임, '∠' 방향 미정(오른쪽부터 번갈아) */
+   
   function isBend(c){return c==='L'||c==='R'||c==='∠'}
   function dirsOf(joins,n){var js=String(joins||''),out=[],last='R';for(var i=0;i<n;i++){var c=js.charAt(i)||'+';if(!isBend(c)){out.push('+');continue}var d=c==='∠'?(last==='L'?'R':'L'):c;out.push(d);last=d}return out}
-  /* 대표 지시(10-22): 꺾여 비켜 갔다가 원래 방향으로 돌아온 구간의 숫자는 「꺾임 시작부터 그 끝까지 세로 길이」
-     → 실제 자르는 길이 = 그 숫자 − 비스듬한 구간들의 세로 성분. 결과 real[], 완성 세로·가로 비켜감 */
+  
+
   function realOf(cut,ang){var ps=(cut.pieces||[]).map(function(x){return num(x)}),ds=dirsOf(cut.joins,Math.max(0,ps.length-1)),a=num(ang,45),dev=0,P=0,out=[],vx=0,vy=0;
     ps.forEach(function(L,i){var prev=dev;if(i){var d=ds[i-1];if(d==='R')dev+=a;else if(d==='L')dev-=a}
       var real=L;if(dev===0&&prev!==0){real=Math.round((L-P)*10)/10;P=0}else if(dev!==0)P+=L*Math.cos(dev*Math.PI/180);
       out.push(real);vy+=real*Math.cos(dev*Math.PI/180);vx+=real*Math.sin(dev*Math.PI/180)});
     return {real:out,vert:Math.round(vy*10)/10,side:Math.round(Math.abs(vx)*10)/10}}
   function bendCut(w,ang){return Math.round(num(w)*Math.tan(num(ang,45)*Math.PI/360)*10)/10}
-  /* 한 묶음(꺾임으로 이어진 조각들) 나누기: 한 본 안에 들어가면 꺾어서 한 덩어리, 넘으면 끊고 조절 커넥터 */
+   
   function chainsOf(cut,bar,minSeg,real){minSeg=minSeg||300;var ps=(real||(cut.pieces||[]).map(function(x){return num(x)})).filter(function(x){return x>0}),ds=dirsOf(cut.joins,Math.max(0,ps.length-1)),ch=[],cur=null,st={straight:0,bendConn:0,bendCut:0,over:[],split:[]};
     ps.forEach(function(p,i){if(!cur){cur={len:p,segs:[p],bends:[]};return}var d=ds[i-1];
       if(isBend(d)&&cur.len+p<=bar){cur.bends.push({at:cur.len,dir:d,j:i-1});cur.len+=p;cur.segs.push(p);st.bendCut++}
@@ -3787,11 +3787,11 @@ var TRC=(function(){
         st.straight++;var rest=Math.round((p-room)*10)/10;st.split.push({i:i,inBar:room,rest:rest,len:p});cur={len:rest,segs:[rest],bends:[],cont:true}}
       else{ch.push(cur);if(isBend(d)){st.bendConn++;st.over.push(i)}else st.straight++;cur={len:p,segs:[p],bends:[]}}});
     if(cur)ch.push(cur);return {chains:ch,st:st,dirs:ds}}
-  /* 한 줄 계산. st를 바꾼다. 결과: use{code:qty}, bars{code:n}, used[off_id], newOff, scrap, warn, plan[본별 재단], chains(트레이 꺾임 정보) */
+   
   function cutCalc(cut,st,rules,im){
     rules=rules||{};im=im||{};var R={use:{},bars:{},used:[],newOff:[],scrap:[],warn:[],plan:[],cut_id:cut.cut_id};
     var minOff=num(rules.min_offcut_mm,300),kerf=num(rules.kerf_mm,0),runs=num(cut.mult,1);
-    var cs=cols(cut.colors);/* 대표 지시(10-22): 격벽도 트레이처럼 한 장에 같은 길이 — 색이 둘 이상이면 트레이 한 본에 격벽 한 장(색 수와 무관) */var nsep=cs.length>1?Math.max(1,Math.round(num(rules.sep_per_tray,1))):0;
+    var cs=cols(cut.colors); var nsep=cs.length>1?Math.max(1,Math.round(num(rules.sep_per_tray,1))):0;
     var tcode=trayCode(cut.width),tbar=num((im[tcode]||{}).len,3000)||3000;
     var RL=realOf(cut,rules.bend_angle);R.real=RL.real;R.vert=RL.vert;R.side=RL.side;var CH=chainsOf(cut,tbar,minOff,/[LR∠]/.test(String(cut.joins||''))?RL.real:null);R.chains=CH.chains;R.dirs=CH.dirs;R.splits=CH.st.split;R.cutW=bendCut(cut.width,rules.bend_angle);R.angle=num(rules.bend_angle,45);
     if(CH.st.over.length)R.warn.push('W'+cut.width+' '+runText(cut.pieces,cut.joins)+': 꺾임으로 이어진 길이가 한 본('+tbar+')을 넘어 '+CH.st.over.length+'곳은 끊고 조절 커넥터');
@@ -3818,7 +3818,7 @@ var TRC=(function(){
       R.plan=R.plan.concat(srcs);
     });
     var straight=CH.st.straight*runs,bendConn=CH.st.bendConn*runs;R.bendCuts=CH.st.bendCut*runs;R.field={};
-    /* 대표 지시(10-22): 공장에서 볼트·너트를 쓰는 곳은 꺾음과 케이블 여유용뿐 — 곧은 이음·줄 끝 이음·라이저 커넥터와 그 볼트·너트는 현장에서 쓰므로 「현장 챙김」(R.field). 여유분 %는 제작표 전체 「가져올 자재」에서만 더함 */
+     
     var bpc=num(rules.bolt_per_conn,0);
     function addF(code,v){if(!code||!v)return;addTo(R.use,code,v);addTo(R.field,code,v)}
     var bconn=bendConn*num(rules.bend_per_joint,0);if(rules.bend_item)addTo(R.use,rules.bend_item,bconn);
@@ -3830,20 +3830,20 @@ var TRC=(function(){
     var bolts=(connRaw+riserRaw)*bpc;addF(rules.bolt_item,bolts);addF(rules.nut_item,bolts);
     addTo(R.use,'TRY-ENDCAP-'+cut.width,runs*num(rules.endcap_per_run,0));
     function meters(code,m){if(!code||!m)return;var it=im[code]||{};var u=String(it.unit||'');var len=num(it.len,0);addTo(R.use,code,(u==='M'||!len)?m:Math.round(m*1000/len*1000)/1000)}
-    /* 뱀띠: 색마다 양면 — 트레이 길이 × color_m_per_m(기본 2) m. 예) 빨검파 3000 → 색마다 6m */
+     
     var npc=piecesOf(cut).length,ci=rules.color_items||{},totM=RL.real.reduce(function(a,x){return a+(x>0?x:0)},0)*runs/1000;
     cs.forEach(function(c){meters(ci[c],npc*num(rules.color_m_per_piece,0)+totM*num(rules.color_m_per_m,0))});
     meters(rules.band_item,npc*num(rules.band_m_per_piece,0));
     return R;
   }
-  /* 대표 지시(10-22): 호기(제작표)마다 현장에 거의 늘 챙겨가는 기본 자재 rules.job_kit=[{code,len?,qty}].
-     len이 있으면 그 길이로 잘라 가는 것 — 그 자재 한 본(예: C찬넬 3M)에서 큰 것부터 채워 본 수를 셈 */
+  
+
   function kitCalc(rules,im){var K=(rules||{}).job_kit||[],use={},lines=[],cut={};
     K.forEach(function(x){var code=x.code,q=Math.max(0,Math.round(num(x.qty))),L=num(x.len);if(!code||!q)return;lines.push({code:code,len:L||null,qty:q});
       var bar=num((im[code]||{}).len,0);if(L>0&&bar>0&&L<bar){for(var k=0;k<q;k++)(cut[code]=cut[code]||[]).push(L)}else addTo(use,code,q)});
     Object.keys(cut).forEach(function(code){var bar=num((im[code]||{}).len,3000),bins=[];cut[code].sort(function(a,b){return b-a}).forEach(function(L){var b=null;for(var i=0;i<bins.length;i++)if(bins[i]>=L&&(!b||bins[i]<b.v))b={i:i,v:bins[i]};if(b)bins[b.i]-=L;else bins.push(bar-L)});addTo(use,code,bins.length)});
     return {use:use,lines:lines}}
-  /* 아직 안 끝난 줄 전체 → 필요량·부족 */
+   
   function plan(data){
     var im=itemMap(data.items),st=newState(data.offcuts),need={},bars={},per={},warn=[];
     (data.jobs||[]).filter(function(j){return j.status!=='done'&&j.status!=='cancel'}).forEach(function(j){
@@ -3857,7 +3857,7 @@ var TRC=(function(){
       return {item_code:i.item_code,name:i.name,spec:i.spec,unit:i.unit,on_hand:h,need:n,short:r2(Math.max(0,n-h)),after:r2(h-n),offcuts:offs,count_on:i.count_on,safety:i.safety}});
     return {rows:rows,need:need,per:per,warn:warn,leftover:st.pool};
   }
-  /* 완료 화면용: 다른 줄은 무시하고 지금 있는 자투리로만 계산 */
+   
   function forDone(cut,data){return cutCalc(cut,newState(data.offcuts),data.rules,itemMap(data.items))}
   function offSummary(lens){if(!lens||!lens.length)return '';var m={};lens.forEach(function(l){m[l]=(m[l]||0)+1});
     return Object.keys(m).map(Number).sort(function(a,b){return b-a}).map(function(l){return l+(m[l]>1?'×'+m[l]:'')}).join(' · ')}
@@ -3869,7 +3869,7 @@ var TRC=(function(){
   return {kitCalc:kitCalc,spareUp:spareUp,realOf:realOf,withDirs:withDirs,dirsOf:dirsOf,isBend:isBend,bendCut:bendCut,chainsOf:chainsOf,parseRun:parseRun,runText:runText,cutCalc:cutCalc,plan:plan,forDone:forDone,offSummary:offSummary,parsePieces:parsePieces,colorLabel:colorLabel,cols:cols,itemMap:itemMap,piecesOf:piecesOf,COLOR_NAME:COLOR_NAME};
 })();
 
-/* 트레이 — 리드 전용. 재고·제작표·전수조사·규칙. 수량만, 금액·청구처 없음 (대표 지시 10-21) */
+ 
 var TR={seg:'stock',data:null,edit:null,form:null,done:null,cnt:null,all:false,err:null};
 function trLabel(i){if(!i)return '';var c=i.item_code||'';var sp=c.match(/^TRY-SPIRAL-([RBK])$/);if(sp)return '뱀띠 '+({R:'빨강',B:'파랑',K:'검정'})[sp[1]];var m=c.match(/^TRY-TRAY-(\d+)$/);if(m)return '트레이 W'+m[1];m=c.match(/^TRY-ENDCAP-(\d+)$/);if(m)return '엔드캡 W'+m[1];
   m=c.match(/^TRY-COVER-(\d+)(-HD20)?$/);if(m)return '커버 W'+m[1]+(m[2]?' 용융 2.0T':'');return (i.name||c)+(i.spec?' '+i.spec:'')}
@@ -3897,7 +3897,7 @@ function trPaint(){var b=el('trBody');if(!b||!TR.data)return;if(TR.edit)trDraftS
   b.innerHTML=TR.seg==='jobs'?trJobsHtml():TR.seg==='count'?trCountHtml():TR.seg==='rules'?trRulesHtml():trStockHtml()}
 function trDraftNote(){var ru=(TR.data||{}).rules||{};return ru.draft?'<div class="tr-note">계산 규칙은 초안입니다(대표 확인 전). 완료할 때 실제 쓴 양으로 고치면 그 숫자로 남습니다.</div>':''}
 
-/* ── 재고 ── */
+ 
 function trStockHtml(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
   var head=lc.count_on?'마지막 전수조사 '+esc(String(lc.count_on).slice(5))+' · '+lc.n+'품목':'아직 전수조사 전 — 지금 숫자는 매입 합계입니다';
   var rows=p.rows.filter(function(x){return TR.all||x.on_hand||x.need||x.offcuts.length});
@@ -3917,25 +3917,25 @@ function trStockHtml(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
     +'<div class="tiny dim" style="margin-top:8px">필요 = 아직 완료 안 된 제작표 전체. 자투리를 먼저 쓰고 모자라면 새 본으로 계산합니다.</div></div>';
   return h}
 
-/* ── 제작표 ── */
+ 
 function trDow(d){try{return '('+'일월화수목금토'.charAt(new Date(String(d).slice(0,10)+'T00:00:00Z').getUTCDay())+')'}catch(e){return ''}}
 function trStatus(s){return {plan:'준비',making:'제작 중',done:'완료',cancel:'취소'}[s]||s}
 function trCutText(c){return 'W'+c.width+' · '+TRC.runText(c.pieces,c.joins)+(Number(c.mult)>1?' ×'+c.mult:'')+' · '+esc(c.kind||'')+' · '+esc(TRC.colorLabel(c.colors))}
 function trQtyU(k,q){var i=trIm()[k]||{};if(String(i.unit)==='롤'&&Number(i.len)>0)return trQty(Number(q)*Number(i.len)/1000)+'m';return trQty(q)}
 function trUseText(u){var im=trIm();return Object.keys(u||{}).filter(function(k){return u[k]}).map(function(k){return esc(trLabel(im[k]||{item_code:k}))+' '+trQtyU(k,u[k])}).join(' · ')}
-/* 호기마다 기본 챙김(대표 지시 10-22: 전산볼트·PVC 덕트·C찬넬·세파르타) — 줄 하나가 아니라 제작표(호기) 하나에 한 번 */
+ 
 function trJobOf(cutId){return (TR.data.jobs||[]).filter(function(j){return (j.cuts||[]).some(function(c){return c.cut_id===cutId})})[0]||null}
 function trKitText(){var K=TRC.kitCalc(TR.data.rules,trIm()),im=trIm(),g={},order=[];K.lines.forEach(function(x){if(!g[x.code]){g[x.code]=[];order.push(x.code)}g[x.code].push(x)});
   return order.map(function(k){var i=im[k]||{item_code:k},L=g[k],bar=Number(i.len)||0,cutp=L.some(function(x){return x.len&&bar&&x.len<bar});
     var nm=esc(String(i.name||k).replace(/\(.*\)/,''));
     return '<div class="tr-pk tr-kpk"><span>'+nm+'</span><span>'+L.map(function(x){return (x.len?trQty(x.len/1000)+'M ':(bar?trQty(bar/1000)+'M ':''))+'<b>'+x.qty+'</b>'+(String(i.unit)==='본'||x.len?'개':' '+esc(i.unit||''))}).join(' · ')+(cutp?' <span class="tiny dim">('+trQty(bar/1000)+'M '+K.use[k]+'본 잘라서)</span>':'')+'</span></div>'}).join('')}
-/* 공장에서 쓰는 것 / 현장 챙김 나눠 보이기 (대표 지시 10-22) */
+ 
 function trUseSplit(r){var f=r.field||{},a={},b={};Object.keys(r.use||{}).forEach(function(k){var v=Math.round(((r.use[k]||0)-(f[k]||0))*1000)/1000;if(v>0)a[k]=v;if(f[k])b[k]=f[k]});
   var t=trUseText(a),u=trUseText(b);return (t||'')+(u?(t?' · ':'')+'<span class="tr-fld">현장 '+u+'</span>':'')}
 function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d);TR.open=TR.open||{};
   var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">제작표</h2>'+(IS_LEAD?'<button class="btn sm p" style="flex:none" onclick="trEdit()">+ 새 제작표</button>':'')+'</div>'+(IS_LEAD?trDraftNote()+(function(){var g=trDraftGet();return g?'<div class="tr-note">작성 중이던 제작표 '+esc(g.e.site_code||'(현장 미정)')+' · '+g.e.cuts.length+'줄 <button class="btn sm p" onclick="trDraftResume()">이어서 쓰기</button> <button class="btn sm" onclick="trDraftDrop()">버리기</button></div>':''})():'<div class="tiny dim" style="margin-top:4px">줄을 누르면 재단·꺾기 방법이 나옵니다.</div>')+'</div>';
   if(!(d.jobs||[]).length)h+='<div class="card"><p class="dim">아직 제작표가 없습니다.'+(IS_LEAD?' 화이트보드 대신 여기에 적어 주세요.':'')+'</p></div>';
-  /* 대표 지시(10-22): 제작표는 호기명 한 줄로 접어 두고 설치 일자순(빠른 날 먼저, 미정은 맨 뒤). 누르면 펼침 */
+   
   TR.jopen=TR.jopen||{};
   var jobs=(d.jobs||[]).slice().sort(function(a,b){var x=a.install_on?String(a.install_on):'9999',y=b.install_on?String(b.install_on):'9999';return x<y?-1:x>y?1:(a.job_id-b.job_id)});
   jobs.forEach(function(j){
@@ -3960,7 +3960,7 @@ function trJobsHtml(){if(TR.edit)return trEditHtml();var d=TR.data,p=TRC.plan(d)
     if(IS_LEAD&&j.status!=='done')h+='<div class="row2" style="margin-top:8px"><button class="btn sm" onclick="trEdit('+j.job_id+')">고치기</button><button class="btn sm" onclick="trCancelJob('+j.job_id+')">지우기</button></div>';
     h+='</div>'});
   return h}
-/* 가져올 자재 — 이 제작표의 아직 안 끝난 줄 전체, 층별로도 */
+ 
 function trPickOf(rows,p){var bars={},offs={},prev={},other={},fld={},im=trIm(),ru=TR.data.rules||{};
   rows.forEach(function(R){var c=R.c;if(c.done_on)return;var r=p.per[c.cut_id];if(!r)return;
     (r.plan||[]).forEach(function(P){if(P.kind==='new')bars[P.code]=(bars[P.code]||0)+1;else if(P.kind==='off')(offs[P.code]=offs[P.code]||[]).push(P.len);else (prev[P.code]=prev[P.code]||[]).push(P.len)});
@@ -3974,7 +3974,7 @@ function trPickHtml(j,G,p){var all=[];G.forEach(function(g){all=all.concat(g.row
   var h='<div class="tr-pick"><div style="display:flex;justify-content:space-between;align-items:center"><b>가져올 자재</b>'+(G.length>1?'<a href="#" class="tiny" onclick="event.preventDefault();TR.open[\''+k+'\']=!TR.open[\''+k+'\'];trPaint()">'+(op?'층별 접기':'층별로 보기')+'</a>':'')+'</div>'+body;
   if(op&&G.length>1)G.forEach(function(g){var b=trPickOf(g.rows,p);if(b)h+='<div class="tiny" style="font-weight:700;margin-top:8px">'+esc(trFlLabel(g.fl))+'</div>'+b});
   return h+'</div>'}
-/* 줄 하나 — 본별 재단 + 꺾기 자르는 곳 + 모양 */
+ 
 function trCutDetail(c,r){var im=trIm(),h='<div class="tr-det">';
   var byCode={};(r.plan||[]).forEach(function(P){(byCode[P.code]=byCode[P.code]||[]).push(P)});
   Object.keys(byCode).forEach(function(code){h+='<div class="tiny" style="font-weight:700;margin:2px 0">'+esc(trLabel(im[code]||{item_code:code}))+' 재단</div>';
@@ -3995,7 +3995,7 @@ function trCutDetail(c,r){var im=trIm(),h='<div class="tr-det">';
   h+=trShapeSvg(c,r);
   return h+'</div>'}
 function trSide(nx,ny){return Math.abs(nx)>0.3?(nx>0?'오른쪽':'왼쪽'):(ny>0?'아래쪽':'위쪽')}
-/* 그림: 위에서 아래로 시작(0614 화이트보드처럼). R = 가는 방향 기준 오른쪽(그림 왼쪽), L = 그림 오른쪽 */
+ 
 function trGeo(c,r){var ps=(r&&r.real)||c.pieces||[],dirs=TRC.dirsOf(c.joins,Math.max(0,ps.length-1)),ang=(r&&r.angle)||45,th=90,x=0,y=0,S=[],J=[];
   ps.forEach(function(len,i){if(i){var d=dirs[i-1],rad0=th*Math.PI/180,nx=-Math.sin(rad0),ny=Math.cos(rad0),sg=d==='R'?1:-1;
       J.push({x:x,y:y,d:d,th0:th,inSide:TRC.isBend(d)?trSide(sg*nx,sg*ny):'',outSide:TRC.isBend(d)?trSide(-sg*nx,-sg*ny):''});if(d==='R')th+=ang;else if(d==='L')th-=ang}
@@ -4104,7 +4104,7 @@ async function trSaveJob(){var e=TR.edit;if(!String(e.site_code||'').trim()){toa
 async function trCancelJob(id){if(!(await ERPC.ask('확인','이 제작표를 지울까요?',{danger:true})))return;
   var r=await sb.rpc('tray_job_cancel',{p_job:id});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('지웠습니다','g');trOpen('jobs')}
 
-/* ── 완료: 자동 계산 → 실제와 다르면 고치기 ── */
+ 
 function trDoneOpen(id){var c=trFindCut(id);if(!c)return;var r=TRC.forDone(c,TR.data);var im=trIm();
   var offAll=(TR.data.offcuts||[]).reduce(function(o,x){o[x.off_id]=x;return o},{});
   TR.done={cut_id:id,on:trTodayKst(),use:Object.keys(r.use).map(function(k){return {item_code:k,qty:r.use[k]}}),
@@ -4137,7 +4137,7 @@ async function trDoneSave(){var D=TR.done;if(!D)return;var offs=[];
 async function trUndo(id){if(!(await ERPC.ask('확인','완료를 취소하고 쓴 자재를 재고로 돌릴까요?')))return;
   var r=await sb.rpc('tray_cut_undo',{p_cut:id});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('완료 취소','g');trOpen('jobs')}
 
-/* ── 전수조사 ── */
+ 
 function trCntInit(){var s=trLsGet();if(s&&s.v===1){TR.cnt=s;return}
   var offs={};(TR.data.offcuts||[]).forEach(function(o){(offs[o.item_code]=offs[o.item_code]||[]).push(Number(o.len_mm))});
   TR.cnt={v:1,on:trTodayKst(),qty:{},offs:offs,dirty:{},add:[]}}
@@ -4178,7 +4178,7 @@ async function trCntSubmit(){var C=TR.cnt,q=C.qty;var items=Object.keys(q).filte
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');return}
   toast('전수조사 저장 — '+r.data.items+'품목','g');TR.cnt=null;trLsSet(null);trOpen('stock')}
 
-/* ── 규칙 ── */
+ 
 var TR_RULES=[['#','자르기'],['min_offcut_mm','이보다 짧은 끝은 버림','mm'],['kerf_mm','절단 손실','mm'],['bend_angle','꺾는 각도','°'],
   ['#','공장에서 쓰는 것 (완료 때 재고에서 빠짐)'],['bend_bolt_per_bend','본 안에서 꺾은 곳 하나당 볼트·너트','개'],['bend_per_joint','본을 넘어 끊은 꺾임 하나당 조절 커넥터','개'],['slack_bolt_per_run','케이블 여유용(종류 「여유」) 한 줄당 볼트·너트','개'],
   ['color_m_per_m','뱀띠 — 색 하나당 트레이 길이의 몇 배(양면 = 2)','배'],['band_m_per_piece','조각 하나당 알밴드','M'],['endcap_per_run','한 줄당 엔드캡','개'],
@@ -4196,8 +4196,8 @@ async function trRulesSave(){var p={};for(var i=0;i<TR_RULES.length;i++){var k=T
   if(TR.kit)p.job_kit=TR.kit.filter(function(x){return x.code&&Number(x.qty)>0}).map(function(x){return {code:x.code,len:Number(x.len)>0?Number(x.len):null,qty:Math.round(Number(x.qty))}});
   var r=await sb.rpc('tray_rules_save',{p:p});if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'실패','e');return}toast('규칙 저장','g');TR.kit=null;trOpen('rules')}
 
-/* ── 한번에 완료 (대표 지시 10-22): 제작표의 안 끝난 줄을 골라 한 번에 완료 + 자재별 실제 쓴 양·남은 길이를 한 화면에서.
-   계산은 고른 줄을 화면 순서대로 이어서(앞 줄 남은 끝을 뒷줄이 씀) 한 번 — 저장은 줄마다 tray_cut_done(쓴 양은 줄별 계산 비율대로, 고친 차이는 마지막 줄에) ── */
+
+
 function trBatchJob(){var B=TR.batch;return B?((TR.data.jobs||[]).filter(function(j){return j.job_id===B.job_id})[0]||null):null}
 function trBatchCuts(j){var out=[];trGroupByFloor(j.cuts,j).forEach(function(G){G.rows.forEach(function(R){if(!R.c.done_on)out.push({c:R.c,fl:G.fl})})});return out}
 function trBatchOpen(id){TR.batch={job_id:id,sel:{},on:trTodayKst(),use:{},off:{},noOff:{},add:[]};var j=trBatchJob();if(!j)return;trBatchCuts(j).forEach(function(x){TR.batch.sel[x.c.cut_id]=true});TR.done=null;trPaint()}
@@ -4231,7 +4231,7 @@ function trBatchHtml(j,G){var B=TR.batch,im=trIm(),C=trBatchCalc(j),offAll=(TR.d
   h+='<div class="f" style="display:flex;align-items:center;gap:8px;margin-top:8px"><label style="margin:0">완료일</label><input class="in" type="date" value="'+B.on+'" oninput="TR.batch.on=this.value" style="padding:6px 8px;min-height:0;max-width:160px"></div>'
     +'<div class="row2"><button class="btn sm" onclick="TR.batch=null;trPaint()">닫기</button><button class="btn sm p" id="trBGo" onclick="trBatchSave()">'+C.rows.length+'줄 완료 처리</button></div></div>';
   return h}
-/* 줄별로 나누기: 계산값은 줄별 그대로, 고친 차이는 그 자재를 쓴 마지막 줄(없으면 마지막 줄)에. 줄어든 차이는 뒤에서부터 0까지 */
+ 
 function trBatchSplit(C){var B=TR.batch,n=C.per.length,U=C.per.map(function(p){var o={};Object.keys(p.use).forEach(function(k){if(p.use[k])o[k]=p.use[k]});return o}),bad=false;
   var codes={};Object.keys(C.tot).forEach(function(k){codes[k]=1});Object.keys(B.use).forEach(function(k){codes[k]=1});
   Object.keys(codes).forEach(function(k){var e=B.use[k]!=null&&String(B.use[k]).trim()!==''?Number(B.use[k]):(C.tot[k]||0);if(!isFinite(e)||e<0){bad=true;return}
@@ -4254,7 +4254,7 @@ async function trBatchSave(){var B=TR.batch,j=trBatchJob();if(!B||!j)return;var 
     if(r.error||!r.data||!r.data.ok){err=(r.error&&r.error.message)||(r.data&&r.data.error)||'실패';break}ok++}
   TR.batch=null;if(err)toast(ok+'줄 완료 · 나머지 '+(S.payload.length-ok)+'줄 실패 ('+err+')','e');else toast(ok+'줄 완료 — 재고에서 뺐습니다','g');trOpen('jobs')}
 
-/* ── 탭·화면 붙이기 (기존 go는 감싸기만) ── */
+ 
 (function(){
   var css=document.createElement('style');css.textContent='.tr-note{font-size:12px;background:var(--sf2);border-left:3px solid #d97706;padding:6px 8px;margin:6px 0;border-radius:4px}'
     +'.tr-tbl{font-size:13px}.tr-r{display:grid;grid-template-columns:1fr 64px 52px 70px;gap:6px;padding:7px 0;border-bottom:1px solid var(--ln);align-items:center}.tr-r>span:not(:first-child){text-align:right}'
@@ -4279,10 +4279,10 @@ async function trBatchSave(){var B=TR.batch,j=trBatchJob();if(!B||!j)return;var 
   if(_goTr){go=function(p){var r=_goTr.apply(this,arguments);if(p==='tray')trOpen();return r}}
 })();
 
-/* ═══ 데일리 1.73 (대표 지시 10-22) 리드 › 내일 배치에 「카톡 예상일정 붙여넣기」
-   직원방에 올린 「N일(요일) 예상일정」 글을 그대로 붙여 넣으면 날짜·업무 줄·이름 줄을 읽어 업무별로 묶고, 현장을 골라 출근 예정으로 저장.
-   업무 줄은 출근 예정 메모로 남아 다음 날 직원이 출근을 누르면 그날 업무로 이어짐(ERP 콕핏 「카톡 붙여넣기」와 같은 방식).
-   명단에 없는 이름(고객사 인원 등)은 빠짐. 저장은 붙여 넣은 사람만 덮어씀(다른 사람 배치는 그대로). 금액·청구처 없음 ═══ */
+
+
+
+
 var PP={open:false,txt:'',P:null,sel:[],date:''};
 function ppKst(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,10)}
 function ppDate(day){var t=new Date(ppKst()+'T00:00:00Z');for(var k=1;k<=45;k++){var x=new Date(t.getTime()+k*86400000);if(x.getUTCDate()===day)return x.toISOString().slice(0,10)}return ''}
@@ -4327,7 +4327,7 @@ async function ppSave(){var P=PP.P;if(!P)return;var d=PP.date;if(!d){toast('날�
   var r;try{r=await sb.rpc('lead_set_plan',{p:{plan_date:d,rows:list}})}catch(e){r={error:e}}
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'저장 실패','e');if(g)g.disabled=false;return}
   toast(kdate(d)+' 출근 예정 '+r.data.rows+'명 저장','g');PP.open=false;PP.P=null;PP.txt='';ppPaint();plOpen(d)}
-/* 화면 붙이기 + 배치 줄에 업무(메모) 보이기·현장 바꿔도 업무 유지 + 저장 때 대표 등 명단 밖 배치·프로젝트 지키기 (기존 함수는 감싸기만) */
+ 
 (function(){var inp=el('pl_date'),card=inp&&inp.closest('.card');
   if(card&&!el('ppBox')){var row=inp.parentNode,b=document.createElement('button');b.className='btn';b.style.cssText='width:100%;margin-top:8px';b.textContent='카톡 예상일정 붙여넣기';b.onclick=ppToggle;
     row.insertAdjacentElement('afterend',b);var box=document.createElement('div');box.id='ppBox';b.insertAdjacentElement('afterend',box)}
@@ -4345,7 +4345,7 @@ async function ppSave(){var P=PP.P;if(!P)return;var d=PP.date;if(!d){toast('날�
 })();
 
 
-/* v1.76 (안티그래비티 R993 ② 10-24): 제작표 탭 위 「진행 중 / 완료 포함」 · 호기·위치 찾기 · 모두 펼치기/접기 */
+ 
 (function(){var c=document.createElement('style');c.textContent='.tr-jf{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.tr-jf .chip{padding:4px 10px;border:1px solid var(--ln,#cbd5e1);border-radius:14px;font-size:12.5px;background:var(--sf,#fff);cursor:pointer}.tr-jf .chip.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}.tr-jf input{flex:1;min-width:120px;padding:6px 8px;border:1px solid var(--ln,#cbd5e1);border-radius:8px;font-size:13px}.tr-jf a{font-size:12.5px;color:#1d4ed8;cursor:pointer}';document.head.appendChild(c)})();
 var TRJF={all:false,q:''};
 function trJfMatch(j){if(!TRJF.all&&j.status==='done')return false;var q=String(TRJF.q||'').trim().toLowerCase().replace(/\s+/g,'');if(!q)return true;
@@ -4362,13 +4362,13 @@ function trJfSorted(){return ((TR.data&&TR.data.jobs)||[]).slice().sort(function
 (function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(TR.edit||!TR.data)return r;var J=trJfSorted(),C=document.querySelectorAll('#trBody .card.tr-job'),n=0;
     if(C.length!==J.length)return r;J.forEach(function(j,i){var ok=trJfMatch(j)||(TR.batch&&TR.batch.job_id===j.job_id);C[i].style.display=ok?'':'none';if(ok)n++});var t=el('trJn');if(t)t.textContent=n<J.length?n+'개 보임':''}catch(e){console.error(e)}return r}})();
 
-/* v1.77 (안티그래비티 R994 ③ 10-24): 제작표 호기·위치 찾기 — 치는 즉시 걸러짐(다시 그리지 않아 한글 입력 안 끊김), 「✕」 지우기 */
+ 
 function trJfFilter(){try{var J=trJfSorted(),C=document.querySelectorAll('#trBody .card.tr-job'),n=0;if(C.length!==J.length)return;J.forEach(function(j,i){var ok=trJfMatch(j)||(TR.batch&&TR.batch.job_id===j.job_id);C[i].style.display=ok?'':'none';if(ok)n++});var t=el('trJn');if(t)t.textContent=n<J.length?n+'개 보임':'';var x=el('trJx');if(x)x.style.display=TRJF.q?'':'none'}catch(e){console.error(e)}}
 function trJfClr(){TRJF.q='';var x=el('trJq');if(x)x.value='';trJfFilter()}
 (function(){if(typeof trJobsHtml!=='function')return;var _h=trJobsHtml;trJobsHtml=function(){var h=_h.apply(this,arguments);try{
   h=h.replace(' onchange="trJfQ(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();trJfQ(this.value)}">',' oninput="TRJF.q=this.value;trJfFilter()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}else if(event.key===\'Escape\'){trJfClr()}"><button class="btn sm" id="trJx" style="flex:none;'+(TRJF.q?'':'display:none')+'" onclick="trJfClr()">✕</button>')}catch(e){}return h}})();
 
-/* v1.78 (안티그래비티 R996·R997 10-24): 트레이 재고 「부족한 것만 (N)」, 전수조사 품목 찾기(✕)·「적은 것만 (N)」 */
+ 
 var TRS978={short:false},TRC978={q:'',mine:false};
 function trSt978Apply(){var b=el('trBody');if(!b)return;var rs=b.querySelectorAll('.tr-tbl .tr-r:not(.tr-h)');if(!rs.length)return;
   [].forEach.call(rs,function(r){r.style.display=TRS978.short&&!r.classList.contains('tr-short')?'none':''});
@@ -4389,25 +4389,25 @@ function trCn978Clr(){TRC978.q='';var i=el('trCq');if(i)i.value='';trCn978Apply(
   var k=h.indexOf('</div></div>');return k>0?h.slice(0,k+12)+bar+h.slice(k+12):bar+h}catch(e){return h}}})();
 (function(){if(typeof trPaint!=='function')return;var _p=trPaint;trPaint=function(){var r=_p.apply(this,arguments);try{if(el('trCq'))trCn978Apply();if(document.querySelector('#trBody .tr-tbl'))trSt978Apply()}catch(e){console.error(e)}return r}})();
 
-/* v1.79 (안티그래비티 R998 ③ 10-24): 전수조사 수량을 적으면 위 「적은 것만 (N)」 숫자도 바로 바뀜 */
+ 
 (function(){if(typeof trCountHtml!=='function')return;var _h=trCountHtml;trCountHtml=function(){var h=_h.apply(this,arguments);try{h=h.replace(/적은 것만 \((\d+)\)/,'적은 것만 (<b id="trCnN978" style="font-weight:inherit">$1</b>)')}catch(e){}return h}})();
 (function(){if(typeof trCntQty!=='function')return;var _q=trCntQty;trCntQty=function(){var r=_q.apply(this,arguments);try{var x=el('trCnN978');if(x)x.textContent=trCn978N()}catch(e){}return r}})();
 
-/* v1.86 (안티그래비티 R1007 ③ 10-24): 트레이 「한번에 완료」 줄 목록 위 전체 고르기 · 전체 풀기 · 완료/한번에 완료의 쓴 양·남은 길이 칸 Enter = 완료 처리 */
+ 
 function trB986All(v){var B=TR.batch,j=B&&trBatchJob();if(!j)return;trBatchCuts(j).forEach(function(x){B.sel[x.c.cut_id]=!!v});trPaint()}
 (function(){if(typeof trBatchHtml!=='function')return;var _h=trBatchHtml;trBatchHtml=function(){var h=_h.apply(this,arguments);if(typeof h!=='string')return h;
   var a='실제와 다르면 고치세요.</div>';return h.replace(a,a+'<div class="tiny" style="margin:-2px 0 6px"><a style="color:#1d4ed8;cursor:pointer" onclick="trB986All(true)">전체 고르기</a> · <a style="color:#1d4ed8;cursor:pointer" onclick="trB986All(false)">전체 풀기</a></div>')}})();
 document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target;if(!t||t.tagName!=='INPUT'||t.type==='checkbox')return;var box=t.closest&&t.closest('.tr-done');if(!box)return;
   e.preventDefault();try{t.dispatchEvent(new Event('input',{bubbles:true}))}catch(x){}t.blur();if(box.querySelector('.tr-bc'))trBatchSave();else trDoneSave()},true);
 
-/* v1.87 (안티그래비티 R1008 ③ 10-24): 카톡 예상일정 붙여넣기 — 현장 못 찾은 업무는 주황 테두리 + 「현장 미선택 N건」, 읽은 직후 첫 미선택 칸으로 이동 · Ctrl+Enter = 출근 예정 저장 */
+ 
 function pp987Mark(){var box=el('ppBox');if(!box)return 0;var n=0;[].forEach.call(box.querySelectorAll('select'),function(s){var no=!s.value;s.style.outline=no?'2px solid #f59e0b':'';if(no)n++});
   var g=el('ppGo'),t=el('pp987n');if(g&&!t){t=document.createElement('div');t.id='pp987n';t.className='tiny';t.style.cssText='margin-top:6px;color:#b45309';g.parentNode.insertBefore(t,g)}if(t)t.textContent=n?'현장 미선택 '+n+'건 — 주황 칸에서 현장을 고르세요(안 고르면 저장되지 않을 수 있음)':'';return n}
 (function(){if(typeof ppPaint!=='function')return;var _p=ppPaint;ppPaint=function(){var r=_p.apply(this,arguments);try{var box=el('ppBox');if(box&&!box.__k987){box.__k987=1;box.addEventListener('change',function(e){if(e.target&&e.target.tagName==='SELECT')pp987Mark()});
       box.addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&!e.isComposing){var g=el('ppGo');if(g&&!g.disabled){e.preventDefault();ppSave()}}})}pp987Mark()}catch(e){console.error(e)}return r}})();
 (function(){if(typeof ppRead!=='function')return;var _r=ppRead;ppRead=async function(){var r=await _r.apply(this,arguments);try{var box=el('ppBox'),s=box&&[].filter.call(box.querySelectorAll('select'),function(x){return !x.value})[0];if(s){s.scrollIntoView({block:'center',behavior:'smooth'});s.focus()}}catch(e){}return r}})();
 
-/* v1.88 (안티그래비티 R1009 ③·R1010 ③ 10-24): 펌프실 — 줄 더하면 새 줄 Bay 칸으로, 수량 칸 Enter = 다음 줄(마지막 줄이면 새 줄), Ctrl+Enter = 등록, 「포설 X대 · 후크밴드 Y대」 합계 · 내일 배치 — 배치된 사람의 「업무: …」를 누르면 그 자리에서 고침(없으면 「+ 업무 메모」) */
+ 
 function pm988Sum(){var c=0,h=0;(PM.rows||[]).forEach(function(r){var q=+r.qty||0;if(r.item_code==='HOOK')h+=q;else c+=q});var x=el('pm988n');
   if(!x){var b=[].filter.call(document.querySelectorAll('button'),function(z){return /pmAddRow/.test(z.getAttribute('onclick')||'')})[0];if(!b)return;x=document.createElement('span');x.id='pm988n';x.className='tiny dim';x.style.marginLeft='8px';b.parentNode.insertBefore(x,b.nextSibling)}
   x.textContent=(c||h)?'포설 '+c+'대 · 후크밴드 '+h+'대 (총 '+(c+h)+'대)':''}
@@ -4428,7 +4428,7 @@ function pl988Edit(emp,box){var c=PL.rows[emp]||{};if(!c.site_id)return;var inp=
       else{m.style.cursor='pointer';m.title='누르면 고치기'}
       m.onclick=function(){pl988Edit(w.employment_no,m)}});setTimeout(function(){try{plF980Apply()}catch(e){}},0)}catch(e){console.error(e)}return r}})();
 
-/* v1.89 (안티그래비티 R1011 ③ 10-24): 리드 월 달력 — 이름·현장 찾기(✕·Esc), 아래 날짜별 출근 인원·전체 출근일·M/D·OT 합계 줄(거른 사람 기준), 날짜·칸 누르면 그날 당일 관제 · 펌프실 종류 바꿔도 합계 바로 */
+ 
 var LC989={q:''};
 function lc989Apply(){var T=el('leadCalTable'),tb=el('leadCalTbody');if(!T||!tb)return;var q=String(LC989.q||'').trim().toLowerCase().replace(/\s+/g,''),rows=[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')});
   var nd=(el('leadCalThead')&&el('leadCalThead').querySelectorAll('tr:first-child th').length||4)-4,cnt=[],sd=0,smd=0,sot=0,vis=0;for(var i=0;i<nd;i++)cnt.push(0);
@@ -4447,7 +4447,7 @@ function lc989Go(day){var ym=(LEAD_CAL&&LEAD_CAL.yearMonth)||today().slice(0,7),
     [].forEach.call((el('leadCalThead')||T).querySelectorAll('th'),function(h){if(/^\d+$/.test(h.textContent.trim())){h.style.cursor='pointer';h.title='누르면 그날 당일 관제'}});lc989Apply()}catch(e){console.error(e)}return r}})();
 document.addEventListener('change',function(e){if(e.target&&e.target.closest&&e.target.closest('#pmItems'))setTimeout(function(){try{pm988Sum()}catch(x){}},0)});
 
-/* v1.90 (안티그래비티 R1012 ③ 10-25): 리드 월 달력 — 현장·업무로 찾으면(이름이 아니면) 그 현장 칸만 또렷하게, 날짜별 인원·사람별 출근·M/D·OT·합계도 그 현장 칸만 셈(지우면 원래대로) */
+ 
 (function(){var c=document.createElement('style');c.textContent='#leadCalTbody td.d990{opacity:.25}';document.head.appendChild(c)})();
 function lc990Md(td){var t=String(td.textContent||'').trim();return t==='½'?0.5:(parseFloat(t)||0)}
 function lc990Ot(td){var m=/OT\s*([\d.]+)h/.exec(td.title||'');return m?+m[1]:0}
@@ -4461,7 +4461,7 @@ function lc990Ot(td){var m=/OT\s*([\d.]+)h/.exec(td.title||'');return m?+m[1]:0}
       var su=tr.querySelectorAll('td.col-sum');if(su.length>=3){su[0].textContent=dd+'일';su[1].textContent=md.toFixed(1);su[2].textContent=ot>0?'+'+ot+'h':'0'}sd+=dd;smd+=md;sot+=ot});
     if(tf){tf.children[0].textContent='합계 ('+vis+'명 · 이 현장만)';for(var j=0;j<nd;j++)tf.children[j+1].textContent=cnt[j]||'';var k=tf.children;k[nd+1].textContent=sd+'일';k[nd+2].textContent=smd.toFixed(1);k[nd+3].textContent=sot?'+'+sot+'h':'0'}}catch(e){console.error(e)}return r}})();
 
-/* v1.91 (안티그래비티 R1013 ③·R1014 ③ 10-25): 전수조사 — 「지금 N」 누르면 수량 칸에 채움, 수량 Enter = 다음 품목, 목록 외 자재 칸 Enter = 추가, 아래 「저장 (N품목)」에 자투리만 고친 품목도 셈 · 월 달력 — 휴가·병가·교육·휴무로 찾아도 그 칸을 세고 강조, 팀원·출근·M/D·OT 머리글 정렬, 사람 칸 누르면 당일 관제에서 그 사람 줄로 */
+ 
 (function(){var c=document.createElement('style');c.textContent='.tr-kv .tiny.dim.k991{cursor:pointer;text-decoration:underline dotted}#leadCalTbody td.m991{outline:2px solid #2563eb;outline-offset:-2px}#leadCalThead th.s991{cursor:pointer}@keyframes k991{0%,100%{background:transparent}30%,70%{background:#fde68a}}.item.f991{animation:k991 1.2s 2}';document.head.appendChild(c)})();
 (function(){if(typeof trCntN!=='function')return;var _n=trCntN;trCntN=function(){try{return trCn978N()+((TR.cnt&&TR.cnt.add)||[]).length}catch(e){return _n.apply(this,arguments)}}})();
 (function(){if(typeof trCountHtml!=='function')return;var _h=trCountHtml;trCountHtml=function(){var h=_h.apply(this,arguments);return typeof h==='string'?h.split('<div class="tiny dim">지금 ').join('<div class="tiny dim k991" title="누르면 이 숫자를 수량 칸에">지금 '):h}})();
@@ -4469,7 +4469,7 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing)return;var t=e.target,id=t&&t.id||'';
   if(/^trNw_/.test(id)&&id!=='trNw_q'){e.preventDefault();trNewAdd();return}
   if(t&&t.tagName==='INPUT'&&t.placeholder==='수량'&&t.closest('.tr-kv')&&!t.closest('.tr-done')){e.preventDefault();var L=[].filter.call(document.querySelectorAll('.tr-kv input[placeholder="수량"]'),function(x){return x.offsetParent}),i=L.indexOf(t);if(L[i+1]){L[i+1].focus();L[i+1].scrollIntoView({block:'center',behavior:'smooth'})}else t.blur()}},true);
-/* 월 달력 */
+ 
 (function(){if(typeof lc989Apply!=='function')return;var _a=lc989Apply;lc989Apply=function(){var r=_a.apply(this,arguments);try{var tb=el('leadCalTbody');if(!tb)return r;[].forEach.call(tb.querySelectorAll('td.m991'),function(c){c.classList.remove('m991')});
     var q=String(LC989.q||'').trim().toLowerCase().replace(/\s+/g,'');if(!q)return r;var rows=[].filter.call(tb.querySelectorAll('tr'),function(tr){return tr.querySelector('td.col-name')});
     if(rows.some(function(tr){return String(tr.querySelector('td.col-name').textContent).toLowerCase().replace(/\s+/g,'').indexOf(q)>=0}))return r;
@@ -4488,14 +4488,14 @@ function lc991Sort(i){var tb=el('leadCalTbody');if(!tb)return;if(LC991.k===i)LC9
 (function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){var nm=LC991.name;LC991.name=null;var r=await _o.apply(this,arguments);if(nm){try{var it=[].filter.call(document.querySelectorAll('#leadWorkersRows .item'),function(x){return x.offsetParent&&String(x.textContent).indexOf(nm)>=0})[0];
     if(it){it.scrollIntoView({block:'center',behavior:'smooth'});it.classList.remove('f991');void it.offsetWidth;it.classList.add('f991');setTimeout(function(){it.classList.remove('f991')},2600)}}catch(e){}}return r}})();
 
-/* v1.92 (안티그래비티 R1015 ③ 10-25): 당일 관제 — 최근 7일 밖 날짜로 오면 날짜 칩 맨 앞에 그 날짜 · 월 달력에서 사람 칸으로 왔는데 이름·현장 찾기에 가려지면 찾기를 풀고 그 줄로 · 찾기로 거르는 중 「전체 확인」은 보이는 대기 건만 */
+ 
 (function(){if(typeof leadOpen!=='function')return;var _o=leadOpen;leadOpen=async function(){try{if(LC991.name&&LD985.q&&String(LC991.name).toLowerCase().indexOf(String(LD985.q).trim().toLowerCase())<0)ld985Clr()}catch(e){}
   var r=await _o.apply(this,arguments);try{var L=lastDays(7);if(LEAD.date&&L.indexOf(LEAD.date)<0)dateChips('leadDates',[LEAD.date].concat(L),LEAD.date,'leadOpen')}catch(e){}return r}})();
-// leadApproveAll removed
 
-/* v1.93 (대표 지시 10-27, Claude 직접): ① 고객사(우주이엔지) 트레이 전용 로그인 — 직원 계정이 아니라 전화번호 + 6자리 PIN(대표가 ERP에서 발급).
-   로그인하면 트레이 탭(재고·제작표)만 보이고, DB도 tray_ext_* 함수만 부름(단가·매입처·금액·계약번호·사번 없음). 제작표는 새로 쓰기 + 본인이 쓴 것만 고치기·지우기. 완료 처리는 BVS 리드만.
-   ② 리드 › 트레이 › 재고에 [자재 자르기] — 3M 1본 → 2M·1M로 자른 기록(tray_stock_cut), 원가는 길이 비례, 300mm 이상 남은 길이는 자투리로. 방금 자른 것은 [되돌리기] ═══ */
+
+
+
+
 var EXT={on:false,token:'',name:''};
 function extTokGet(){try{return localStorage.getItem('bvs_tray_ext')||''}catch(e){return ''}}
 function extTokSet(t){try{if(t)localStorage.setItem('bvs_tray_ext',t);else localStorage.removeItem('bvs_tray_ext')}catch(e){}}
@@ -4585,8 +4585,8 @@ function extJobsHtml(){var d=TR.data||{},jobs=(typeof trJfSorted==='function')?t
     h+='</div>'});
   return h}
 
-/* v1.94 (대표 지시 10-27): 재고 표는 「재고 · 필요」 두 칸만 — 필요 = 아직 완료 안 된 제작표에 들어갈 양(자투리 먼저, 모자라면 새 본). 모자라면 필요 칸에 「부족 N」.
-   협력사 화면: 완료된 제작표도 보이게(완료 포함 기본) · 맨 위 날씨·유가·환율 띠 보이게(tray_ext_market) */
+
+
 function stk194Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
   var head=lc.count_on?'마지막 전수조사 '+esc(String(lc.count_on).slice(5))+' · '+lc.n+'품목':'아직 전수조사 전 — 지금 숫자는 매입 합계입니다';
   var ns=p.rows.filter(function(x){return x.short}).length;
@@ -4608,7 +4608,7 @@ function stk194Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{};
     +'<div class="tiny dim" style="margin-top:8px">필요 = 아직 완료 안 된 제작표에 들어갈 양입니다. 자투리를 먼저 쓰고 모자라면 새 본으로 셉니다.</div></div>';
   return h}
 (function(){var c=document.createElement('style');c.textContent='.tr-r.tr-r3{grid-template-columns:1fr 78px 78px}.tr-r.tr-r3 span:nth-child(2),.tr-r.tr-r3 span:nth-child(3){text-align:right}';document.head.appendChild(c)})();
-/* v1.95 (대표 지시 10-27 18:2x): 제작표 제작일(made_on). 제작일이 마지막 전수조사일보다 앞이면 「기록용」 — 저장 때 DB가 완료로 남기고 재고에서 빼지 않음(DB 1129) */
+ 
 function mk195Cnt(){var d=TR.data||{},lc=d.last_count||{};if(lc.count_on)return String(lc.count_on).slice(0,10);var mx='';(d.items||[]).forEach(function(i){var c=String(i.count_on||'');if(c>mx)mx=c});return mx}
 function mk195Note(v){var c=mk195Cnt();v=String(v||'').slice(0,10);if(!v||!c)return '';return v<c?'<span class="wn">전수조사('+esc(c.slice(5))+') 전 제작 — 기록용으로 저장되고 재고에서 빼지 않습니다</span>':''}
 (function(){
@@ -4621,10 +4621,10 @@ function mk195Note(v){var c=mk195Cnt();v=String(v||'').slice(0,10);if(!v||!c)ret
     var J=(typeof trJfSorted==='function')?trJfSorted():(TR.data.jobs||[]),C=document.querySelectorAll('#trBody .card.tr-job');if(C.length!==J.length)return r;
     J.forEach(function(j,i){if(!j.made_on||C[i].querySelector('.mk195'))return;var t=C[i].querySelector('.tiny.dim');if(t)t.insertAdjacentHTML('beforeend','<span class="mk195"> · 제작 '+esc(String(j.made_on).slice(5,10))+'</span>')})}catch(x){}return r}}
 })();
-/* v1.96 (대표 지시 10-27 18:0x): 「재단표」 → 「제작표」(화면 글자) · 제작 설명의 긴 소수(112.10000000000002) 한 자리로 */
+ 
 (function(){if(typeof trCutDetail==='function'){var _d=trCutDetail;trCutDetail=function(){var h=_d.apply(this,arguments);return String(h).replace(/(\d+\.\d{4,})/g,function(m){return String(Math.round(Number(m)*10)/10)})}}})();
-/* v1.97 (대표 지시 10-27 18:2x~18:3x): 재고 표에 작은 그림 + 다른 이름(예: 라이저 커넥터 = 수직커넥터) + 다른 이름으로도 찾기.
-   3M 단위로 사는 것(트레이·커버·격벽·덕트)은 「N개 · 3M짜리」, 미리 잘라 두는 것(전산볼트·C찬넬)은 한 줄로 묶어 「총 M + 3M·2M·1M 개수」. 그림은 DB icon_key(1130), 없으면 품목 코드로 고름 */
+
+
 var TRI197={q:''};
 var TRI_SVG={
 tray:'<path d="M3 9v14h26V9"/><path d="M8 19h3M15 19h3M22 19h2"/>',
@@ -4721,14 +4721,14 @@ function stk197Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{},im=trIm();
     +'.tri-find{display:flex;gap:8px;align-items:center;margin-bottom:6px}.tri-find .in{flex:1;padding:8px 10px;min-height:0}'
     +'.tri-pop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.tri-pc{background:var(--bg,#fff);color:inherit;border-radius:12px;padding:18px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}';
   document.head.appendChild(c)})();
-/* v1.98 (대표 지시 10-28 09:2x): 라이저 커넥터(수직커넥터) 그림 — 대표가 보낸 제품 사진 기준 — 위는 둥근 머리에 둥근 구멍 1개, 아래는 넓은 판에 세로 긴 구멍 4개, 양옆 직각으로 꺾인 날개 */
-/* v1.99 (대표 지시 10-28 09:3x): 조인트 커넥터(ㄷ자형, 케이블트레이용)·조인트 커넥터 L(L자형, 덕트용)·수평조절 커넥터(경첩) 그림을 대표가 보낸 제품 사진대로 */
-/* v2.00 (대표 지시 10-28 09:5x): 자재 구분 3가지 — ① 케이블트레이(트레이 바디·커버·세퍼레이터·엔드캡, 수직엘보 트레이 포함) ② 연결부품(나머지 전체) ③ 볼트류(셋트앙카·전산볼트(1M·2M·연결너트 포함)·근각 볼트·근각 너트·볼트 캡) */
+ 
+ 
+ 
 (function(){
   if(typeof trGroup==='function'){trGroup=function(c){c=String(c||'');if(/^TRY-(TRAY|COVER|SEP|ENDCAP|VELBOW|TTRAY)/.test(c)||c==='TRY-CAP-100')return 0;if(/^TRY-(ANC-SET|ROD|SHANK|CAP-[KR])/.test(c))return 2;return 1}}
   if(typeof TR_GROUPS!=='undefined'){TR_GROUPS.length=0;TR_GROUPS.push('케이블트레이','연결부품','볼트류')}
 })();
-/* 케이블트레이 묶음 안 순서: 바디 → 커버 → 세퍼레이터 → 엔드캡 → 기타 */
+ 
 (function(){if(typeof stk197Html!=='function')return;var _s=stk197Html;stk197Html=function(){var h=_s.apply(this,arguments);try{
   var a=h.indexOf('<div class="tr-g">'+TR_GROUPS[0]+'</div>');if(a<0)return h;a+=('<div class="tr-g">'+TR_GROUPS[0]+'</div>').length;
   var e=h.indexOf('<div class="tr-g">',a),e2=h.indexOf('</div><div class="row2"',a);if(e<0||(e2>=0&&e2<e))e=e2;if(e<0)return h;
@@ -4736,7 +4736,7 @@ function stk197Html(){var d=TR.data,p=TRC.plan(d),lc=d.last_count||{},im=trIm();
   var key=function(p){var m=p.match(/data-q="([^"]*)"/),q=m?m[1]:'';return /^트레이w/.test(q)?0:/^커버|^트레이커버/.test(q)?1:/세파레터/.test(q)?2:/엔드캡/.test(q)?3:4};
   parts=parts.map(function(p,i){return {p:p,i:i,k:key(p)}}).sort(function(x,y){return x.k-y.k||x.i-y.i}).map(function(o){return o.p});
   return h.slice(0,a)+parts.join('')+h.slice(e)}catch(x){return h}}})();
-/* ── 자재 자르기 (리드) ── */
+ 
 var CUT={open:false,from:'',qty:1,pcs:{},last:null};
 function cutParents(){var im=trIm(),out=[];Object.keys(im).forEach(function(k){var i=im[k];if(Number(i.len)>0&&String(i.unit)==='본'&&cutKids(k).length)out.push(i)});return out}
 function cutKids(code){var im=trIm();return Object.keys(im).filter(function(k){return k.indexOf(code+'-')===0&&Number(im[k].len)>0}).map(function(k){return im[k]}).sort(function(a,b){return Number(b.len)-Number(a.len)})}

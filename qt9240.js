@@ -1,23 +1,23 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * qt9240.js — 「견적 엑셀표」 v1.8 (Claude 작성 · 2026-11-05)
- * v1.1: 위쪽에 매출처 고르기(검색 + 목록) — 저장할 때 같이 저장 (ceo_quote_sheet_save partner_id)
- * v1.8: 기업이윤 = (제조원가 + 일반관리비) × % · 관리비·이윤·시운전비 줄은 규격 비우고 수량 칸에 %, 단위 「%」(인쇄도 수량 7 · 단위 % · 단가 빈칸)
- * v1.7: 줄 위·아래 옮기기(▲▼ 단추 · Alt+↑/↓) — 고른 줄을 하위 줄째로 같은 단계 앞뒤 줄과 자리 바꿈
- * v1.6: 네고·할인 줄(이름이 네고/할인/D·C 이거나 금액이 마이너스인 맨 위 줄)은 관리비·이윤·시운전비 계산 바탕(제조원가)에서 뺌
- * v1.5: ① 인쇄 방식(관리비·이윤 따로 / 단가에 섞기 — 저장은 따로, 인쇄 때만 섞음, 합계 그대로) ② 시운전·기술지원비 줄(직접원가의 %) ③ 결제조건 가산(이윤 %에 더함)
- * v1.4: 일반관리비·기업이윤 줄은 줄이 바뀔 때마다 자동 다시 계산(규격 「제조원가의 7%」의 %를 고치면 그 %로, 금액을 직접 치면 % 를 거꾸로 계산해 규격에 적음)
- * v1.3: 메일 서랍 「빈 견적서 만들기」(ceo_quote_from_mail) + 「원가 계산」 칸(재료비·공수·공장 사용 일수·기타 경비·일반관리비·이윤 → 제안 견적가, ceo_cost_basis·ceo_quote_cost_save)
- * v1.2: 트리 인쇄 표를 xl9193 v9.235 prTidy9235로 정리(세액 칸 뺌 · 도번 따로 칸 · 줄마다 한 줄 · 한 장 맞춤)
- * 설계: 261105_BVS_견적엑셀표_BOM트리_매입업체비교_설계_v1.0.md / DB1192(#1474)
- * 대표 지시: 고객 BOM → 우리 견적(엄마-자녀 트리) → 매입업체 여러 곳 비교. 엑셀처럼.
- *  - 왼쪽: 판매 견적 트리(도번·품명·규격·수량·단위·매입가·가산%·판매단가·금액·이익·하위 단가 보이기·비고)
- *  - 오른쪽: 연결된 매입견적 업체마다 한 칸, 줄마다 최저가 굵게, 눌러서 고르기(처음엔 최저가 자동)
- *  - 저장: public.ceo_quote_sheet_save / 불러오기: public.ceo_quote_sheet_load (대표 전용)
- *  - 인쇄: 줄에 parent_no가 있으면 트리 모양(1 → 1-1 → 1-1-1), 단가 안 보이는 줄은 값 칸 비움
- * erp.html에 덧씌우지 않는 별도 파일. erp.html은 이 파일을 xl9193.js 다음에 불러오기만.
- * ═══════════════════════════════════════════════════════════════════════════
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.QT9240_APPLIED) return;
@@ -32,7 +32,7 @@
   var QT = {
     doc: null, rows: [], vendors: [], sel: { r: 0, c: 'price' }, dirty: false, seq: 1, rounding: 100, busy: false,
 
-    /* ── 열기 ── */
+     
     open: async function (docNo) {
       if (typeof isOwner === 'function' && !isOwner()) { say('대표 전용입니다', 'e'); return; }
       if (!docNo) { say('견적서 번호가 없습니다', 'e'); return; }
@@ -54,7 +54,7 @@
     },
     el: function (id) { return document.getElementById(id); },
 
-    /* ── 불러온 값 → 화면 줄 ── */
+     
     fromLoad: function (data) {
       QT.doc = data.doc || {};
       QT.vendors = (data.vendors || []).map(function (v) {
@@ -70,16 +70,16 @@
         byLn[l.line_no] = r; return r;
       });
       QT.rows.forEach(function (r) { if (r.parLn != null && byLn[r.parLn]) r.par = byLn[r.parLn].k; });
-      /* 하위 단가 보이기 = 자녀 중 하나라도 단가 보임 */
+       
       QT.rows.forEach(function (r) { var ch = QT.kids(r.k); r.childShow = ch.some(function (c) { return c.show; }); });
-      /* 매입가 없는 줄은 업체 최저가로 자동(대표 결정: 최저가 자동 + 대표 변경) */
+       
       var auto = 0;
       QT.rows.forEach(function (r) { if (r.cu == null && !QT.kids(r.k).length) { var b = QT.best(r); if (b) { QT.pick(r, b, true); auto++; } } });
-      QT.dirty = auto > 0; /* 최저가 자동으로 고른 줄이 있으면 저장해야 반영 */
+      QT.dirty = auto > 0;  
       if (auto) setTimeout(function () { say('업체 최저가로 매입가 ' + auto + '줄 자동으로 골랐습니다 — 저장하면 반영'); }, 300);
     },
 
-    /* ── 트리 도우미 ── */
+     
     idx: function (k) { for (var i = 0; i < QT.rows.length; i++) if (QT.rows[i].k === k) return i; return -1; },
     get: function (k) { var i = QT.idx(k); return i >= 0 ? QT.rows[i] : null; },
     kids: function (k) { return QT.rows.filter(function (r) { return r.par === k; }); },
@@ -99,7 +99,7 @@
       }
       QT.dirty = true; QT.render(); try { QT.el('qt_grid').focus(); } catch (e) {}
     },
-    subEnd: function (i) { /* i번 줄 아래 자손이 끝나는 위치(포함) */
+    subEnd: function (i) {  
       var lv = QT.level(QT.rows[i]), j = i + 1;
       while (j < QT.rows.length && QT.level(QT.rows[j]) > lv) j++;
       return j - 1;
@@ -117,13 +117,13 @@
       if (QT.hasShownChild(r)) { var s = 0; QT.desc(r).forEach(function (d) { if (QT.counted(d)) s += Math.round((+d.qty || 0) * (+d.price || 0)); }); return s; }
       return null;
     },
-    numbering: function () { /* 1, 1-1, 1-1-1 */
+    numbering: function () {  
       var cnt = {}, out = {};
       QT.rows.forEach(function (r) { var key = r.par || '_'; cnt[key] = (cnt[key] || 0) + 1; out[r.k] = (r.par ? out[r.par] + '-' : '') + cnt[key]; });
       return out;
     },
 
-    /* ── 업체 맞추기 ── */
+     
     matches: function (r) {
       var kc = norm(r.code), kn = norm(r.name), out = [];
       QT.vendors.forEach(function (v) {
@@ -136,7 +136,7 @@
     },
     best: function (r) { var b = null; QT.matches(r).forEach(function (m) { if (m && m.l.price > 0 && (!b || m.l.price < b.l.price)) b = m; }); return b; },
     pick: function (r, m, quiet) {
-      r.cu = m.l.price; r.src = m.v.pq; r.vendor = m.v.name; r.cm = QT.kids(r.k).length > 0; /* 부모 줄을 업체가 통으로 견적 냈으면 그 값 우선 */
+      r.cu = m.l.price; r.src = m.v.pq; r.vendor = m.v.name; r.cm = QT.kids(r.k).length > 0;  
       if (!quiet) { QT.dirty = true; QT.render(); }
     },
     allBest: function () { var n = 0; QT.rows.forEach(function (r) { if (QT.kids(r.k).length) return; var b = QT.best(r); if (b) { QT.pick(r, b, true); n++; } }); QT.dirty = true; QT.render(); say('최저가로 ' + n + '줄 고름'); },
@@ -148,7 +148,7 @@
       return out;
     },
 
-    /* ── 줄 바꾸기 ── */
+     
     indent: function () {
       var i = QT.sel.r; if (i <= 0) return; var r = QT.rows[i], lv = QT.level(r), j = i - 1;
       while (j >= 0 && QT.level(QT.rows[j]) > lv) j--;
@@ -159,7 +159,7 @@
       var i = QT.sel.r, r = QT.rows[i]; if (!r || !r.par) return;
       var p = QT.get(r.par), pi = QT.idx(p.k), pe = QT.subEnd(pi), e = QT.subEnd(i);
       var block = QT.rows.splice(i, e - i + 1);
-      pe -= block.length; /* 부모 자손 끝 위치가 앞으로 당겨짐 */
+      pe -= block.length;  
       r.par = p.par;
       Array.prototype.splice.apply(QT.rows, [pe + 1, 0].concat(block));
       QT.sel.r = pe + 1; QT.dirty = true; QT.render();
@@ -183,7 +183,7 @@
       QT.dirty = true; QT.render(); say('가산 ' + m + '% · ' + n + '줄 단가 넣음');
     },
 
-    /* ── 칸 정의 ── */
+     
     cols: function () {
       return [
         { k: 'no', t: 'No', w: 56, ro: true },
@@ -208,7 +208,7 @@
       return true;
     },
 
-    /* ── 원가 계산 (v1.3) ── */
+     
     cc: null, basis: null,
     costOpen: async function () {
       var box = QT.el('qt_cost'); if (!box) return;
@@ -263,7 +263,7 @@
           if (key === 'admin_pct') QT.ohSetPct('일반관리비', v); else if (key === 'profit_pct') QT.ohSetPct('기업이윤', v + (+QT.cc.pay_pct || 0)); else QT.techSetPct(v); QT.render(); };
       });
     },
-    costPaintSoft: function () { /* 입력 중 커서 유지: 표만 다시 */
+    costPaintSoft: function () {  
       var box = QT.el('qt_cost'); if (!box) return; var a = document.activeElement, key = a && a.getAttribute && a.getAttribute('data-k'), pos = a && a.selectionStart;
       QT.costPaint();
       if (key) { var el = box.querySelector('input.qtci[data-k="' + key + '"]'); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} } }
@@ -302,7 +302,7 @@
     },
     ohPct: function (r) { return QT.pctOf(r); },
     isProfit: function (r) { return QT.isOh(r) && /이윤/.test(String(r.name || '')); },
-    pctBase: function (r) { /* 이 줄 %를 곱할 바탕 */
+    pctBase: function (r) {  
       if (QT.isTech(r)) return QT.techBase();
       var b = QT.ohBase(); if (!QT.isProfit(r)) return b;
       QT.rows.forEach(function (x) { if (QT.isOh(x) && !QT.isProfit(x)) b += +x.price || 0; }); return b;
@@ -387,7 +387,7 @@
       if (!d.existed) { QT.cc = null; QT.costOpen(); }
     },
 
-    /* ── 매출처 고르기 (v1.1) ── */
+     
     ptnList: function () {
       var L = (window.D && Array.isArray(D.ptn)) ? D.ptn : [];
       return L.filter(function (p) { return p && p.partner_id && p.name && p.is_active !== false; });
@@ -416,7 +416,7 @@
       say(v ? '매출처: ' + (p ? p.name : v) + ' — 저장을 눌러야 들어갑니다' : '매출처를 비웠습니다 — 저장을 눌러야 반영됩니다');
     },
 
-    /* ── 그리기 ── */
+     
     render: function () {
       try { QT.ohSync(); } catch (x) { console.error('[qt9240-oh]', x); }
       var cols = QT.cols(), no = QT.numbering(), d = QT.doc || {};
@@ -480,7 +480,7 @@
       QT.dirty = true; QT.render();
     },
 
-    /* ── 칸 고치기 ── */
+     
     setCell: function (i, ck, val) {
       var r = QT.rows[i]; if (!r) return;
       if (ck === 'qty' && QT.isPctRow(r)) { var qp = parseNum(String(val).replace('%', '')); if (qp == null) return; r.mk = qp; r.unit = '%'; r.ohKeep = false; }
@@ -555,7 +555,7 @@
       QT.render(); say('붙여넣기 ' + n + '칸');
     },
 
-    /* ── 저장 ── */
+     
     save: async function () {
       if (QT.busy) return;
       if ((QT.doc && QT.doc.status) !== 'draft') { say('확정된 문서는 고칠 수 없습니다', 'e'); return; }
@@ -590,7 +590,7 @@
       var iv = setInterval(back, 500);
     },
 
-    /* ── 화면 틀 ── */
+     
     ensureUi: function () {
       if (QT.el('qt9240')) return;
       var st = document.createElement('style'); st.id = 'qt9240css';
@@ -667,7 +667,7 @@
   window.QT9240 = QT;
   window.qtOpen = function (no) { return QT.open(no); };
 
-  /* ── 여는 단추: 문서·메일 서랍에 판매견적 번호(-Q)가 보이면 「견적 엑셀표로 열기」 ── */
+   
   var QRX = /\bB\d{8}-Q\d*\b/;
   var injectMail = function () {
     try {
@@ -705,7 +705,7 @@
   var hookDr = function () { var dr = document.getElementById('dr'); if (!dr) return false; new MutationObserver(kick).observe(dr, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); return true; };
   if (!hookDr()) { var n0 = 0, iv0 = setInterval(function () { if (hookDr() || ++n0 > 120) clearInterval(iv0); }, 500); }
 
-  /* ── 인쇄: 줄에 parent_no가 있으면 트리 모양 ── */
+   
   if (typeof prLines === 'function') {
     var _p = prLines;
     prLines = function (lines, opt) {
@@ -755,7 +755,7 @@
     document.head.appendChild(pst);
   }
 
-  /* ── v1.5 인쇄 「단가에 섞기」: 견적서 extra.cost_calc.print_oh = 'blend' 이면 관리비·이윤·시운전비 줄을 빼고 그 금액을 단가 줄에 비율대로 섞음(100원 단위(안 맞으면 10원), 합계 그대로) ── */
+   
   var OHN = /^(일반관리비|기업이윤|이윤|시운전·기술지원비)$/;
   window.qtBlend9240 = function (lines) {
     var L = (lines || []).map(function (l) { return Object.assign({}, l); });
