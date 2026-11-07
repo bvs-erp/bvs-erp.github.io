@@ -2,6 +2,7 @@
   'use strict';
   if (window.MAIL9264) return;
   if (typeof window.mailLoad !== 'function' || typeof window.mailOpen !== 'function') return;
+
   var css = document.createElement('style');
   css.textContent =
     '.m9snip{color:var(--tx3,#6b7280);font-size:12px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:560px;margin-top:2px}' +
@@ -24,12 +25,15 @@
     '#m9pv .bd{flex:1;overflow:auto;background:#f3f4f6;display:flex;align-items:flex-start;justify-content:center}' +
     '#m9pv iframe{width:100%;height:100%;border:0;background:#fff}#m9pv img{max-width:100%;margin:12px auto;display:block}';
   document.head.appendChild(css);
+
   var E = function (s) { return (typeof window.esc === 'function') ? window.esc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var $ = function (id) { return document.getElementById(id); };
   var J = function (v) { return (window.ERPC && ERPC.jsq) ? ERPC.jsq(v) : JSON.stringify(v); };
   var say = function (m, k) { if (typeof window.toast === 'function') window.toast(m, k); };
+
   try { window.MAIL_TABS = [['open', '처리 대기', ['신규', '확인']], ['done', '보관', ['보관완료', '보관요청']], ['ex', '제외', ['제외']], ['all', '전체', null]];
         if (window.MAIL && !MAIL_TABS.some(function (x) { return x[0] === MAIL.tab; })) MAIL.tab = 'open'; } catch (e) {}
+
   function when(v) {
     if (!v) return '–';
     var d = new Date(v); if (isNaN(d)) return E(v);
@@ -48,11 +52,13 @@
     var all = (m.to_addrs || []).concat(m.cc_addrs || []).map(function (x) { return String(x).toLowerCase(); });
     return (all.indexOf('tax@bvs.kr') >= 0 ? '<span class="m9tag m9k-tax">tax@</span>' : '') + (all.indexOf('info@bvs.kr') >= 0 ? '<span class="m9tag">info@</span>' : '');
   }
+
   window.mailDesc = function () {
     var d = $('mailDesc'); if (!d) return;
     var R = (window.MAIL && MAIL.rows) || [], last = R.reduce(function (a, m) { return (!a || m.received_at > a) ? m.received_at : a; }, null);
     d.textContent = '실시간 수신' + (last ? ' · 최근 메일 ' + (typeof mailDt === 'function' ? mailDt(last) : when(last)) : '');
   };
+
   window.mailLoad = async function () {
     if (!isOwner() || !window.sb || MAIL.busy) return; MAIL.busy = true;
     var tab = MAIL_TABS.filter(function (x) { return x[0] === MAIL.tab; })[0] || MAIL_TABS[0];
@@ -91,6 +97,7 @@
     } catch (e) { console.error(e); say('메일 목록 오류: ' + (e.message || e), 'e'); }
     finally { MAIL.busy = false; }
   };
+
   function safeDoc(html, allowImg) {
     var csp = "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:" + (allowImg ? ' https: http:' : '');
     return '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' + csp + '">' +
@@ -119,9 +126,9 @@
   function kindOf(a) {
     var n = String(a.name || '').toLowerCase(), t = String(a.mime || '').toLowerCase();
     if (/pdf/.test(t) || /\.pdf$/.test(n)) return 'pdf';
-    if (/^image\
+    if (/^image\//.test(t) || /\.(png|jpe?g|gif|webp|bmp)$/.test(n)) return 'img';
     if (/html/.test(t) || /\.html?$/.test(n)) return 'html';
-    if (/^text\
+    if (/^text\//.test(t) || /\.(txt|csv|log)$/.test(n)) return 'txt';
     return '';
   }
   function pvClose() { var p = $('m9pv'); if (p) p.remove(); }
@@ -152,6 +159,7 @@
     try { var u = await signed(a.sp, a.name, true); var x = document.createElement('a'); x.href = u; x.rel = 'noopener'; document.body.appendChild(x); x.click(); x.remove(); }
     catch (e) { say('내려받기 실패: ' + (e.message || e), 'e'); }
   }
+
   function attTable(list, dupMap) {
     if (!list.length) return '<div class="dim">첨부 없음</div>';
     return '<table class="m9att"><tbody>' + list.map(function (a, i) {
@@ -166,6 +174,7 @@
         '</td><td class="r dim">' + (typeof mailSize === 'function' ? mailSize(a.size) : '') + '</td><td class="r">' + act + '</td></tr>';
     }).join('') + '</tbody></table>';
   }
+
   window.mailOpen = async function (m) {
     if (m.status === '신규') {
       try { var r0 = await sb.rpc('ceo_mail_decide', { p_mail_id: m.mail_id, p_action: '확인' });
@@ -178,16 +187,19 @@
     var ed = (m.status === '신규' || m.status === '확인');
     var ptns = ((window.D && D.ptn) || []).slice().sort(function (a, c) { return String(a.name).localeCompare(String(c.name), 'ko'); }).map(function (p) { return [p.partner_id, p.name]; });
     var id = m.mail_id;
+
     var head = kv([['받은 때', mailDt(m.received_at, true)], ['보낸 사람', E(m._from || m.from_addr || '') + (m._ptn ? ' <span class="dim">· ' + E(m._ptn) + '</span>' : '')],
       ['받는 주소', E((m.to_addrs || []).join(', '))]].concat((m.cc_addrs || []).length ? [['참조', E((m.cc_addrs || []).join(', '))]] : [])
       .concat([['상태', E(m.status === '보관완료' ? '보관' : m.status) + (m.kind && m.kind !== '미분류' ? ' · ' + E(m.kind) : '') + (m.decided_at ? ' <span class="dim">' + mailDt(m.decided_at, true) + '</span>' : '')], ['메일 번호', E(id)]]));
     var secWarn = (m.kind === '보안 의심' || (m.flags || []).indexOf('보안 의심') >= 0)
       ? '<div style="margin:10px 0;padding:8px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-size:13px"><b>보안 의심 메일</b> — 링크를 누르거나 첨부를 열지 마십시오. 보낸 사람 이름과 주소가 다르거나 계정·비밀번호를 묻는 메일입니다.</div>' : '';
+
     var form = ed ? ('<div class="m9sec">분류</div><input type="hidden" id="ml_ent" value="BVS">' +
       '<div class="fr"><div class="f"><label>분류</label>' + mailSel('ml_kind', MAIL_KIND, m.kind) + '</div><div class="f"><label>문서종류</label>' + mailSel('ml_doc', MAIL_DOC, m.doc_type, '선택') + '</div></div>' +
       '<div class="fr"><div class="f"><label>거래처</label>' + mailSel('ml_ptn', ptns, m.partner_id, '선택') + '</div><div class="f"><label>문서 연결 (문서번호)</label><input id="ml_doc_no" class="in" value="' + E(m.linked_doc_no || '') + '"></div></div>' +
       '<div class="fr"><div class="f" style="flex:1"><label>메모</label><input id="ml_memo" class="in" value="' + E(m.memo || '') + '"></div></div>')
       : ('<div class="m9sec">분류</div>' + kv([['분류', E(m.kind || '')], ['문서종류', E(m.doc_type || '')], ['거래처', E(m._ptn || '')], ['문서 연결', E(m.linked_doc_no || '')], ['메모', E(m.memo || '')]]));
+
     var quoteish = /견적/.test(m.doc_type || '') || m.kind === '거래문서';
     var qb = [];
     if (typeof window.mlRfqBomPick === 'function') qb.push('<button type="button" class="btn sm" onclick="mlRfqBomPick(' + id + ')">BOM 엑셀로 판매견적</button>');
@@ -195,15 +207,18 @@
     if (window.QT9240 && typeof QT9240.fromMail === 'function') qb.push('<button type="button" class="btn sm" onclick="QT9240.fromMail(' + id + ')">빈 견적서</button>');
     var quote = qb.length ? ('<details class="m9q"' + (quoteish ? ' open' : '') + '><summary>견적 만들기</summary><div class="row">' + qb.join('') + '</div>' +
       '<input type="file" id="ml_rfq_bom_file" accept=".xlsx,.xls" style="display:none" onchange="mlRfqBomRead(this.files)"><span class="qt9240mail" style="display:none"></span></details>') : '';
+
     var body = head + secWarn +
       '<div class="m9sec">본문<span class="sp"></span><span id="m9bt"></span></div><div id="m9body"></div>' +
       '<div class="m9sec">첨부 ' + att.length + '</div>' + attTable(att, dupMap) + form + quote;
+
     var foot = '';
     if (ed) foot = '<button class="btn p" onclick="mailAct(' + id + ',\'보관\')">보관</button> <button class="btn" onclick="mailAct(' + id + ',\'저장\')">저장</button> <button class="btn" onclick="mailAct(' + id + ',\'제외\')">제외</button> ';
     else if (m.status === '제외' || m.status === '보관완료' || m.status === '보관요청') foot = '<button class="btn" onclick="mailAct(' + id + ',\'되돌리기\')">되돌리기</button> ';
     foot += '<button class="btn" onclick="drClose()">닫기</button>';
     drOpen(m.subject || '(제목 없음)', body, foot);
     var dr = $('dr'); if (dr) dr.classList.add('wide');
+
     var host = $('m9body'), bt = $('m9bt');
     if (host) {
       var html = b.html, text = b.text;
@@ -232,6 +247,7 @@
       }
     } catch (e) { console.error(e); }
   };
+
   window.MAIL9264 = { preview: preview, download: download, safeDoc: safeDoc };
   try { if (document.getElementById('p-mail') && document.getElementById('p-mail').offsetParent && typeof renderMail === 'function') renderMail(); } catch (e) {}
 })();
