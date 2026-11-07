@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "BVS 데일리",
+  "short_name": "BVS 데일리",
+  "description": "BVS 현장 데일리",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/bvs-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/bvs-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/bvs-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
