@@ -27,7 +27,17 @@
     '#nd9262 .bt button.p{background:#1F5FD1;border-color:#1F5FD1;color:#fff;font-weight:700}';
   document.head.appendChild(css);
   function close() { var m = document.getElementById('nd9262'); if (m) m.remove(); }
+  function keyRow(it) {
+    var over = it.left != null && it.left < 0, err = !!it.error;
+    var tag = err ? '조회 멈춤' : over ? '만료됨' : '만료 ' + (it.left === 0 ? '오늘' : it.left + '일 전');
+    return '<div class="it" data-key="K:' + esc(it.key) + '">' +
+      '<div><span class="tg" style="background:' + (err || over ? '#C62828' : '#8A6D00') + '">' + tag + '</span><span class="nm">' + esc(it.name) + '</span></div>' +
+      '<div class="ds">만료일 ' + esc(it.due) + (err ? ' · <span class="df">' + esc(it.error) + '</span>' : '') + '</div>' +
+      '<table><tr><td>갱신하는 곳</td><td>' + esc(it.where || '') + '</td></tr><tr><td>Supabase Secrets</td><td>' + esc(it.secrets || '') + '</td></tr></table>' +
+      '<div class="bt"><button class="p" data-a="renewed">새 키 넣고 갱신했음</button></div></div>';
+  }
   function row(it) {
+    if (it.kind === 'apikey') return keyRow(it);
     var k = KIND[it.kind] || KIND.nodoc;
     var h = '<div class="it" data-key="' + esc(it.key) + '">' +
       '<div><span class="tg" style="background:' + k[2] + '">' + k[0] + '</span><span class="nm">' + esc(it.partner || '') + '</span></div>' +
@@ -48,7 +58,8 @@
     if (a === 'open') { close(); if (typeof window.openDoc === 'function') window.openDoc(it.doc_no); return; }
     el.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
     try {
-      if (a === 'later') r = await window.sb.rpc('ceo_invoice_nudge_later', { p_key: it.key, p_days: 7 });
+      if (a === 'renewed') r = await window.sb.rpc('ceo_api_key_renewed', { p_key: it.key });
+      else if (a === 'later') r = await window.sb.rpc('ceo_invoice_nudge_later', { p_key: it.key, p_days: 7 });
       else if (a === 'confirm') r = await window.sb.rpc('ceo_invoice_confirm', { p_doc_no: it.doc_no });
       else if (a === 'link') r = await window.sb.rpc('ceo_invoice_confirm', { p_doc_no: it.doc_no, p_approval_no: it.approval_no });
       else if (a === 'make') r = await window.sb.rpc('ceo_hometax_make_doc', { p_approval_no: it.approval_no });
@@ -60,7 +71,7 @@
         el.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
         return;
       }
-      say(a === 'later' ? '7일 뒤에 다시 알려 드립니다' : a === 'make' ? '계산서 문서를 만들었습니다 ' + (d.doc_no || '') : '청구서 ' + it.doc_no + ' 확정했습니다', 'g');
+      say(a === 'renewed' ? '갱신 기록했습니다 — 다음 만료 ' + (d.next_due || '') : a === 'later' ? '7일 뒤에 다시 알려 드립니다' : a === 'make' ? '계산서 문서를 만들었습니다 ' + (d.doc_no || '') : '청구서 ' + it.doc_no + ' 확정했습니다', 'g');
       el.remove();
       if (a !== 'later' && typeof window.loadAll === 'function') { try { window.loadAll(); } catch (e) {} }
       var m = document.getElementById('nd9262'); if (m && !m.querySelector('.it')) close();
@@ -74,7 +85,8 @@
     var m = document.createElement('div'); m.id = 'nd9262';
     var nC = items.filter(function (x) { return x.kind === 'confirm' || x.kind === 'link'; }).length;
     var nM = items.filter(function (x) { return x.kind === 'mismatch'; }).length;
-    var t = '세금계산서 확인 ' + items.length + '건' + (nC ? ' · 확정 ' + nC : '') + (nM ? ' · 금액 다름 ' + nM : '');
+    var nK = items.filter(function (x) { return x.kind === 'apikey'; }).length, nI = items.length - nK;
+    var t = [nK ? '키 만료 ' + nK + '건' : '', nI ? '세금계산서 확인 ' + nI + '건' + (nC ? ' · 확정 ' + nC : '') + (nM ? ' · 금액 다름 ' + nM : '') : ''].filter(Boolean).join(' / ');
     m.innerHTML = '<div class="bx"><div class="hd"><span>' + t + '</span><button type="button" aria-label="닫기">×</button></div>' + items.map(row).join('') + '</div>';
     document.body.appendChild(m);
     m.querySelector('.hd button').onclick = close;
@@ -89,13 +101,16 @@
     if (!force && Date.now() - last < 10 * 60 * 1000) return;
     busy = true; last = Date.now();
     try {
-      var r = await window.sb.rpc('ceo_invoice_nudges');
-      var d = (r && r.data) || {};
-      if (!r.error && d.ok && Array.isArray(d.items) && d.items.length) show(d.items);
+      var res = await Promise.all([window.sb.rpc('ceo_api_alerts'), window.sb.rpc('ceo_invoice_nudges')]);
+      var all = [];
+      res.forEach(function (r, i) {
+        var d = (r && r.data) || {};
+        if (!r.error && d.ok && Array.isArray(d.items)) d.items.forEach(function (x) { if (i === 0) x.kind = 'apikey'; all.push(x); });
+      });
+      if (all.length) show(all);
     } catch (e) { console.warn('nudge9262', e); }
     finally { busy = false; }
   }
-  // 로그인 뒤 ME가 채워질 때까지 기다렸다가 한 번
   var n = 0, t = setInterval(function () {
     if (typeof window.isOwner === 'function' && window.ME) { clearInterval(t); setTimeout(function () { check(true); }, 1500); }
     else if (++n > 240) clearInterval(t);
