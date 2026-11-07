@@ -12,7 +12,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>BVS 데일리 v2.01</title>
+<title>BVS 데일리</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -999,7 +999,7 @@ textarea.in{min-height:74px;resize:vertical;line-height:1.45}
 function getPreferredTheme(){
   var saved=localStorage.getItem('bvs_worker_theme');
   if(saved==='dark'||saved==='light') return saved;
-  return 'dark';  
+  return 'light';  
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
@@ -4768,5 +4768,6 @@ async function cutUndo(){if(!CUT.last||!CUT.last.tag)return;if(!(await ERPC.ask(
   if(r.error||!r.data||!r.data.ok){toast((r.error&&r.error.message)||(r.data&&r.data.error)||'되돌리기 실패','e');return}
   CUT.last=null;try{localStorage.removeItem('bvs_tray_cut_last')}catch(e){}toast('되돌렸습니다','g');trOpen('stock')}
 </script>
+<script src="gate9260.js?v=2"></script>
 </body>
 </html>
